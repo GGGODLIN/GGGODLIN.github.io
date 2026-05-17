@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
 :root {
   /* Color — Anthropic warm editorial */
   --bg-primary: #f4f3ee;
@@ -31,8 +33,6 @@
   --baseline: 8px;
   --section-gap: 96px;
 }
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 * {
   box-sizing: border-box;
