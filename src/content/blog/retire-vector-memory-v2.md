@@ -5,6 +5,8 @@ pubDate: 2026-05-18
 tags: ["claude-code", "memory", "vector-db", "retrospective"]
 ---
 
+# 退役向量記憶——928 次寫入、3 次讀取
+
 Cursor 爆紅之後一批人的直覺反應是：把向量撈取帶進個人工作流。底層邏輯是「AI 之所以懂整個 repo，是因為 embedding 把程式碼語意都抓起來了，那記憶系統也應該這樣搞」。我原本也這樣想。
 
 後來發現根本原因不在撈取演算法。
