@@ -1,0 +1,34 @@
+/* Editorial Linear — Editorial Minimalism
+ * Source: rohitg00/awesome-claude-design design-md/editorial/linear.md
+ * Light: native | Dark: native (both spec'd in DESIGN.md)
+ */
+
+[data-theme="editorial-linear"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-inverse: #0f0f14;
+  --text-primary: #0f0f14;
+  --text-secondary: #6b6b76;
+  --text-muted: #a0a0ab;
+  --accent: #5e6ad2;
+  --accent-hover: #4e5acb;
+  --accent-soft: #8b94e0;
+  --border: #e4e4e7;
+
+  --font-display: Inter, system-ui, -apple-system, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+
+[data-theme="editorial-linear"][data-mode="dark"] {
+  --bg-primary: #0f0f14;
+  --bg-secondary: #1a1a20;
+  --bg-inverse: #ffffff;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a0a0ab;
+  --text-muted: #6b6b76;
+  --accent: #7c87e0;
+  --accent-hover: #9098e8;
+  --accent-soft: #5e6ad2;
+  --border: #2a2a30;
+}

@@ -1,0 +1,39 @@
+/* Exaggerated Minimalism
+ * Source: UIUXPROMAX styles.csv #47
+ * Light: native | Dark: derived (uupm Mode-support: Full, dark is my inversion)
+ * Keywords: Bold minimalism, oversized typography, high contrast, statement design
+ * Effect: oversized display type via --text-4xl bump + Playfair Display
+ */
+
+[data-theme="exaggerated-min"] {
+  --bg-primary: #faf5f2;
+  --bg-secondary: #f6f6f6;
+  --bg-inverse: #0f172a;
+  --text-primary: #0f172a;
+  --text-secondary: #78716c;
+  --text-muted: #a8a29e;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-soft: #f59e0b;
+  --border: #eeeded;
+
+  --font-display: "Playfair Display", Georgia, "Iowan Old Style", serif;
+  --font-body: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  --text-4xl: clamp(3rem, 8vw, 5.5rem);
+  --text-3xl: clamp(2.5rem, 6vw, 3.75rem);
+}
+
+[data-theme="exaggerated-min"][data-mode="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-inverse: #faf5f2;
+  --text-primary: #faf5f2;
+  --text-secondary: #a8a29e;
+  --text-muted: #78716c;
+  --accent: #fba94b;
+  --accent-hover: #fcd181;
+  --accent-soft: #d97706;
+  --border: #334155;
+}

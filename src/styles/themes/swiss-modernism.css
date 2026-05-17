@@ -1,0 +1,35 @@
+/* Swiss Modernism 2.0
+ * Source: UIUXPROMAX styles.csv #50
+ * Light: native | Dark: derived (uupm Mode-support: Full, but only ships light hex — dark is my inversion)
+ * Keywords: Grid system, Helvetica, modular, mathematical spacing, WCAG AAA
+ */
+
+[data-theme="swiss-modernism"] {
+  --bg-primary: #fafafa;
+  --bg-secondary: #e8ecf0;
+  --bg-inverse: #18181b;
+  --text-primary: #09090b;
+  --text-secondary: #3f3f46;
+  --text-muted: #71717a;
+  --accent: #ec4899;
+  --accent-hover: #db2777;
+  --accent-soft: #f9a8d4;
+  --border: #e4e4e7;
+
+  --font-display: Inter, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+  --font-body: Inter, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+
+[data-theme="swiss-modernism"][data-mode="dark"] {
+  --bg-primary: #0c0c0d;
+  --bg-secondary: #18181b;
+  --bg-inverse: #fafafa;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #f472b6;
+  --accent-hover: #f9a8d4;
+  --accent-soft: #db2777;
+  --border: #27272a;
+}

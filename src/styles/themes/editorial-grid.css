@@ -1,0 +1,36 @@
+/* Editorial Grid / Magazine
+ * Source: UIUXPROMAX styles.csv #66
+ * Light: native | Dark: derived (uupm Mode-support: Full, dark is my inversion)
+ * Keywords: Magazine layout, asymmetric grid, drop caps, print-inspired, WCAG AAA
+ * Spec: --body-font: Georgia/Merriweather, --heading-font: bold sans, accent = brand color (chose magazine burgundy)
+ */
+
+[data-theme="editorial-grid"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafaf9;
+  --bg-inverse: #18181b;
+  --text-primary: #18181b;
+  --text-secondary: #57534e;
+  --text-muted: #78716c;
+  --accent: #9f1239;
+  --accent-hover: #7a0e2c;
+  --accent-soft: #be2c4d;
+  --border: #e7e5e4;
+
+  --font-display: "Public Sans", "Inter", "Helvetica Neue", sans-serif;
+  --font-body: Georgia, "Iowan Old Style", "Merriweather", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+
+[data-theme="editorial-grid"][data-mode="dark"] {
+  --bg-primary: #18181b;
+  --bg-secondary: #27272a;
+  --bg-inverse: #fafaf9;
+  --text-primary: #fafaf9;
+  --text-secondary: #a8a29e;
+  --text-muted: #78716c;
+  --accent: #f43f5e;
+  --accent-hover: #fb7185;
+  --accent-soft: #9f1239;
+  --border: #3f3f46;
+}

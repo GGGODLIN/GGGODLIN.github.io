@@ -1,0 +1,455 @@
+---
+const themes = [
+  {
+    id: "anthropic-warm",
+    label: "Anthropic warm",
+    source: "awesome-claude-design",
+    light: "native",
+    dark: "self-made",
+  },
+  {
+    id: "editorial-linear",
+    label: "Editorial Linear",
+    source: "awesome-claude-design",
+    light: "native",
+    dark: "native",
+  },
+  {
+    id: "terminal-ollama",
+    label: "Terminal Ollama",
+    source: "awesome-claude-design",
+    light: "self-made",
+    dark: "native",
+  },
+  {
+    id: "swiss-modernism",
+    label: "Swiss Modernism 2.0",
+    source: "UIUXPROMAX #50",
+    light: "native",
+    dark: "derived",
+  },
+  {
+    id: "editorial-grid",
+    label: "Editorial Grid",
+    source: "UIUXPROMAX #66",
+    light: "native",
+    dark: "derived",
+  },
+  {
+    id: "exaggerated-min",
+    label: "Exaggerated Minimalism",
+    source: "UIUXPROMAX #47",
+    light: "native",
+    dark: "derived",
+  },
+];
+
+const modes = [
+  { id: "system", label: "System" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+];
+---
+
+<button
+  class="ts-trigger"
+  id="ts-trigger"
+  aria-label="Open theme switcher"
+  aria-expanded="false"
+  aria-controls="ts-panel"
+  type="button"
+>
+  Theme
+</button>
+
+<aside
+  class="ts-panel"
+  id="ts-panel"
+  aria-hidden="true"
+  aria-label="Theme switcher"
+>
+  <div class="ts-header">
+    <strong>Theme</strong>
+    <button
+      class="ts-close"
+      id="ts-close"
+      aria-label="Close theme switcher"
+      type="button"
+    >×</button>
+  </div>
+
+  <ul class="ts-themes" role="radiogroup" aria-label="Theme choice">
+    {themes.map((t) => {
+      const fully = t.light === "native" && t.dark === "native";
+      const badge = fully ? "native" : "mixed";
+      const tooltip = `Source: ${t.source}\nLight: ${t.light}\nDark: ${t.dark}`;
+      return (
+        <li>
+          <label class="ts-theme-item">
+            <input
+              type="radio"
+              name="ts-theme"
+              value={t.id}
+              data-theme-id={t.id}
+            />
+            <span class="ts-label">{t.label}</span>
+            <span
+              class={`ts-badge ts-badge--${badge}`}
+              title={tooltip}
+            >{badge}</span>
+          </label>
+        </li>
+      );
+    })}
+  </ul>
+
+  <div class="ts-section-divider"></div>
+
+  <div class="ts-modes" role="radiogroup" aria-label="Color mode">
+    <span class="ts-modes-label">Mode</span>
+    <div class="ts-modes-group">
+      {modes.map((m) => (
+        <button
+          type="button"
+          class="ts-mode-btn"
+          data-mode-id={m.id}
+          aria-pressed="false"
+        >{m.label}</button>
+      ))}
+    </div>
+  </div>
+
+  <div class="ts-footer">
+    <small>Picks save to URL + localStorage.</small>
+  </div>
+</aside>
+
+<style>
+  .ts-trigger {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    padding: 8px 14px;
+    background: var(--bg-inverse);
+    color: var(--bg-primary);
+    border: 1px solid var(--bg-inverse);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .ts-trigger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+  .ts-trigger[aria-expanded="true"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ts-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 101;
+    width: 300px;
+    max-width: calc(100vw - 40px);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .ts-panel[aria-hidden="false"] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .ts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .ts-header strong {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .ts-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .ts-close:hover { color: var(--text-primary); }
+
+  .ts-themes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .ts-themes li { margin: 0; }
+
+  .ts-theme-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 100ms ease;
+  }
+  .ts-theme-item:hover { background: var(--bg-secondary); }
+  .ts-theme-item input[type="radio"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ts-label {
+    flex: 1;
+    color: var(--text-primary);
+  }
+  .ts-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: help;
+  }
+  .ts-badge--native {
+    background: var(--accent-soft, var(--accent));
+    color: var(--bg-primary);
+    opacity: 0.85;
+  }
+  .ts-badge--mixed {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+  }
+
+  .ts-section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .ts-modes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ts-modes-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+  }
+  .ts-modes-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .ts-mode-btn {
+    padding: 6px 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 100ms ease, color 100ms ease, border-color 100ms ease;
+  }
+  .ts-mode-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  .ts-mode-btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+
+  .ts-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .ts-footer small {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  @media (max-width: 480px) {
+    .ts-panel {
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      width: auto;
+    }
+    .ts-trigger {
+      bottom: 10px;
+      right: 10px;
+    }
+  }
+</style>
+
+<script>
+  function initThemeSwitcher() {
+    const triggerRaw = document.getElementById("ts-trigger");
+    const panelRaw = document.getElementById("ts-panel");
+    const closeRaw = document.getElementById("ts-close");
+    if (!triggerRaw || !panelRaw || !closeRaw) return;
+    const trigger: HTMLElement = triggerRaw;
+    const panel: HTMLElement = panelRaw;
+    const closeBtn: HTMLElement = closeRaw;
+
+    const VALID_THEMES = new Set([
+      "anthropic-warm",
+      "editorial-linear",
+      "terminal-ollama",
+      "swiss-modernism",
+      "editorial-grid",
+      "exaggerated-min",
+    ]);
+    const VALID_MODES = new Set(["system", "light", "dark"]);
+
+    function getCurrentTheme(): string {
+      const v = document.documentElement.getAttribute("data-theme");
+      return v && VALID_THEMES.has(v) ? v : "anthropic-warm";
+    }
+    function getUserMode(): string {
+      const v = document.documentElement.getAttribute("data-user-mode");
+      return v && VALID_MODES.has(v) ? v : "system";
+    }
+    function resolveMode(userMode: string): string {
+      if (userMode === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      return userMode;
+    }
+
+    function applyTheme(theme: string, userMode: string) {
+      const resolved = resolveMode(userMode);
+      document.documentElement.setAttribute("data-theme", theme);
+      document.documentElement.setAttribute("data-mode", resolved);
+      document.documentElement.setAttribute("data-user-mode", userMode);
+      localStorage.setItem("gggodlin-theme", theme);
+      localStorage.setItem("gggodlin-mode", userMode);
+
+      const url = new URL(location.href);
+      url.searchParams.set("theme", theme);
+      url.searchParams.set("mode", userMode);
+      history.replaceState(null, "", url.toString());
+
+      syncUI();
+    }
+
+    function syncUI() {
+      const theme = getCurrentTheme();
+      const userMode = getUserMode();
+      panel
+        ?.querySelectorAll<HTMLInputElement>('input[name="ts-theme"]')
+        .forEach((r) => {
+          r.checked = r.value === theme;
+        });
+      panel
+        ?.querySelectorAll<HTMLButtonElement>(".ts-mode-btn")
+        .forEach((b) => {
+          b.setAttribute(
+            "aria-pressed",
+            b.dataset.modeId === userMode ? "true" : "false",
+          );
+        });
+    }
+
+    function openPanel() {
+      panel.setAttribute("aria-hidden", "false");
+      trigger.setAttribute("aria-expanded", "true");
+    }
+    function closePanel() {
+      panel.setAttribute("aria-hidden", "true");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+
+    trigger.addEventListener("click", openPanel);
+    closeBtn.addEventListener("click", closePanel);
+
+    panel
+      .querySelectorAll<HTMLInputElement>('input[name="ts-theme"]')
+      .forEach((radio) => {
+        radio.addEventListener("change", () => {
+          if (radio.checked) applyTheme(radio.value, getUserMode());
+        });
+      });
+
+    panel
+      .querySelectorAll<HTMLButtonElement>(".ts-mode-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const m = btn.dataset.modeId;
+          if (m) applyTheme(getCurrentTheme(), m);
+        });
+      });
+
+    document.addEventListener("click", (e) => {
+      if (
+        panel.getAttribute("aria-hidden") === "false" &&
+        !panel.contains(e.target as Node) &&
+        !trigger.contains(e.target as Node)
+      ) {
+        closePanel();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
+    });
+
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    mql.addEventListener("change", () => {
+      if (getUserMode() === "system") {
+        document.documentElement.setAttribute(
+          "data-mode",
+          mql.matches ? "dark" : "light",
+        );
+      }
+    });
+
+    syncUI();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initThemeSwitcher);
+  } else {
+    initThemeSwitcher();
+  }
+</script>

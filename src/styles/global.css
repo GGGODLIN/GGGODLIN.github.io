@@ -1,24 +1,16 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&display=swap");
+@import "./themes/anthropic-warm.css";
+@import "./themes/editorial-linear.css";
+@import "./themes/terminal-ollama.css";
+@import "./themes/swiss-modernism.css";
+@import "./themes/editorial-grid.css";
+@import "./themes/exaggerated-min.css";
 
 :root {
-  /* Color — Anthropic warm editorial */
-  --bg-primary: #f4f3ee;
-  --bg-secondary: #eeede6;
-  --bg-inverse: #191817;
-  --text-primary: #191817;
-  --text-secondary: #5a554e;
-  --text-muted: #8a847a;
-  --accent: #c96442;
-  --accent-hover: #b55738;
-  --accent-soft: #e89268;
-  --border: #d8d3c8;
+  --content-width: 680px;
+  --baseline: 8px;
+  --section-gap: 96px;
 
-  /* Typography */
-  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
-  --font-body: Inter, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
-
-  /* Scale (modular 1.25) */
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-base: 1.0625rem;
@@ -27,11 +19,6 @@
   --text-2xl: 2rem;
   --text-3xl: 2.5rem;
   --text-4xl: 3.125rem;
-
-  /* Layout */
-  --content-width: 680px;
-  --baseline: 8px;
-  --section-gap: 96px;
 }
 
 * {
@@ -51,6 +38,7 @@ body {
   font-size: var(--text-base);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  transition: background 200ms ease, color 200ms ease;
 }
 
 .container {

@@ -1,0 +1,35 @@
+/* Terminal Ollama — Terminal-Core
+ * Source: rohitg00/awesome-claude-design design-md/terminal/ollama.md
+ * Light: self-made (inverted from native dark) | Dark: native (Ollama is dark-first)
+ * Note: "no chromatic accent" per spec — accent stays achromatic
+ */
+
+[data-theme="terminal-ollama"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-inverse: #000000;
+  --text-primary: #000000;
+  --text-secondary: #5a5a5a;
+  --text-muted: #8a8a8a;
+  --accent: #000000;
+  --accent-hover: #404040;
+  --accent-soft: #5a5a5a;
+  --border: #d4d4d4;
+
+  --font-display: "JetBrains Mono", "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --font-body: "JetBrains Mono", "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+}
+
+[data-theme="terminal-ollama"][data-mode="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-inverse: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #8a8a8a;
+  --text-muted: #5a5a5a;
+  --accent: #ffffff;
+  --accent-hover: #d4d4d4;
+  --accent-soft: #8a8a8a;
+  --border: #1f1f1f;
+}

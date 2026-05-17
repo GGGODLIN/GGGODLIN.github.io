@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import ThemeBoot from "../components/ThemeBoot.astro";
+import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 
 interface Props {
   title: string;
@@ -13,12 +15,13 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
 ---
 
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} — gggodlin</title>
     <meta name="description" content={description} />
+    <ThemeBoot />
   </head>
   <body>
     <article class="container">
@@ -32,6 +35,7 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
         <a href="/">← 回首頁</a>
       </footer>
     </article>
+    <ThemeSwitcher />
     <style>
       .post-meta {
         font-family: var(--font-mono);

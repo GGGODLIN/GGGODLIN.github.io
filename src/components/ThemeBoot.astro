@@ -1,0 +1,47 @@
+---
+// Runs synchronously in <head> before body renders, to prevent FOUC.
+// Reads URL ?theme=X&mode=Y, then localStorage, falls back to defaults.
+// Resolves mode=system → prefers-color-scheme.
+---
+
+<script is:inline>
+  (() => {
+    const VALID_THEMES = new Set([
+      "anthropic-warm",
+      "editorial-linear",
+      "terminal-ollama",
+      "swiss-modernism",
+      "editorial-grid",
+      "exaggerated-min",
+    ]);
+    const VALID_MODES = new Set(["system", "light", "dark"]);
+
+    const params = new URLSearchParams(location.search);
+    const qpTheme = params.get("theme");
+    const qpMode = params.get("mode");
+
+    let theme = VALID_THEMES.has(qpTheme)
+      ? qpTheme
+      : localStorage.getItem("gggodlin-theme");
+    if (!VALID_THEMES.has(theme)) theme = "anthropic-warm";
+
+    let userMode = VALID_MODES.has(qpMode)
+      ? qpMode
+      : localStorage.getItem("gggodlin-mode");
+    if (!VALID_MODES.has(userMode)) userMode = "system";
+
+    localStorage.setItem("gggodlin-theme", theme);
+    localStorage.setItem("gggodlin-mode", userMode);
+
+    const resolvedMode =
+      userMode === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : userMode;
+
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-mode", resolvedMode);
+    document.documentElement.setAttribute("data-user-mode", userMode);
+  })();
+</script>
