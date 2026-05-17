@@ -3,3 +3,6 @@ style/line-raw/*.txt
 style/cc-raw/*.txt
 style/cc-raw/*.json
 tools/
+node_modules/
+dist/
+.astro/
