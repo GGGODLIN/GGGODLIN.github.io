@@ -9,11 +9,7 @@ interface Props {
 }
 
 const { title, description, pubDate, tags } = Astro.props;
-const formattedDate = pubDate.toLocaleDateString("zh-TW", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${pubDate.getDate()}日`;
 ---
 
 <!doctype html>
