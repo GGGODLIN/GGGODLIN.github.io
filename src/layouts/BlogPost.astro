@@ -1,0 +1,57 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+}
+
+const { title, description, pubDate, tags } = Astro.props;
+const formattedDate = pubDate.toLocaleDateString("zh-TW", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — gggodlin</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <article class="container">
+      <header>
+        <p class="post-meta">
+          {formattedDate}{tags.length > 0 ? " · " + tags.join(" / ") : ""}
+        </p>
+      </header>
+      <slot />
+      <footer class="post-footer">
+        <a href="/">← 回首頁</a>
+      </footer>
+    </article>
+    <style>
+      .post-meta {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: calc(var(--baseline) * 4);
+      }
+      .post-footer {
+        margin-top: var(--section-gap);
+        padding-top: calc(var(--baseline) * 3);
+        border-top: 1px solid var(--border);
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+      }
+    </style>
+  </body>
+</html>
