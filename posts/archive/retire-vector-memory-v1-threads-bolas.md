@@ -1,11 +1,12 @@
 ---
-title: "我把自己裝的向量記憶砍掉了——928 次寫入換來 3 次搜尋"
-description: "安裝 mempalace 跑了 2-3 週，hook 自動寫入 928 次，我主動查了 3 次，0.09% 的搜尋/drawer 比，6 個對照測試 grep 全勝——最後親手拔掉。"
-pubDate: 2026-05-18
-tags: ["claude-code", "memory", "vector-db", "retrospective"]
+title: 把 mempalace 退役了，928 次寫入換來 3 次搜尋
+description: 安裝 mempalace 跑了 2-3 週，hook 自動寫入 928 次，我主動查了 3 次，0.09% 的搜尋/寫入比，6 個對照測試 grep 全勝——最後親手拔掉。
+voice: v1-threads-bolas
+status: 實驗 draft（第一篇 refresh，從 MATERIAL 重寫，非已發布版）
+source: posts/retire-vector-memory-MATERIAL.md
 ---
 
-# 我把自己裝的向量記憶砍掉了——928 次寫入換來 3 次搜尋
+# 把 mempalace 退役了，928 次寫入換來 3 次搜尋
 
 前兩天翻了一下 hook.log，22,890 行，然後驚覺自己居然把一個用了快三週的工具拔掉了，還完全不覺得可惜。
 
@@ -17,7 +18,7 @@ Cursor 2023 爆紅，核心敘事是「AI 第一次真懂整個 repo」，底層
 
 我也是這批人。
 
-2026-04-07，mempalace 開源上線，作者 Milla Jovovich + Ben Sigman，自帶話題性（好萊塢跨界搞 AI 開源這種事本身就很難不注意）。宣稱 LongMemEval R@5 96.6%（當時數字），本機跑、原文照存、0 API token，星數那陣子幾週內衝到 5 萬左右。當時 Claude Code 的 memory 感覺有點不夠用，時間點剛好。
+2026-04-07，mempalace 開源上線，作者 Milla Jovovich + Ben Sigman，自帶話題性（好萊塢跨界搞 AI 開源這種事本身就很難不注意）。宣稱 LongMemEval R@5 96.6%，本機跑、原文照存、0 API token，幾週後 star 數衝到 5 萬。當時 Claude Code 的 memory 感覺有點不夠用，時間點剛好。
 
 裝了。然後認真配了 Stop hook + PreCompact hook 讓它自動在每次對話結束後把 session 存進向量資料庫。早期踩到 mining 範圍沒限定的坑——整個 `~/.claude` 目錄都被掃進去，儲存量膨脹到 84GB。寫了一個 `update-symlinks.sh` 只指向主 session jsonl 解決，繼續跑。
 
@@ -28,7 +29,7 @@ Cursor 2023 爆紅，核心敘事是「AI 第一次真懂整個 repo」，底層
 hook 每次都有 log，每次對話結束都有觸發，感覺一直在動。直到翻了一下統計才發現：
 
 - AUTO-SAVE 寫入：**928 次**
-- 真實搜尋 query：**3 次**（cmux / TanStack Start / session 備份 github 各一次）
+- 真實搜尋 query：**3 次**（ccstatusline benchmark / extra credits / session 備份 github 各一次）
 - 累計 drawers：**3,429 條**
 - 搜尋/drawer 比：**0.09%**
 
@@ -99,12 +100,10 @@ Claude Code binary 2.1.98+ 版本裡藏了 `/dream` skill（Piebald-AI/claude-co
 
 ## 什麼情況下才需要向量
 
-語料性質決定工具選擇。大部分開發工作查詢是「找某個結論」「查某個決策是什麼」「這個工具當時的設定」——這是 grep 的領域。向量適合的「純概念連接」查詢，在個人開發流裡是少數派。
+大部分個人開發查詢屬於「找具體結論、環境事實、實體名稱」，是 grep 的強項。向量語意搜尋的少數優勢（純概念連接）在個人工作流裡是少數派。
 
-要不要個人向量 memory，先問自己這兩件事：整理品質夠嗎？查詢性質是概念連接還是找結論？
+先把 MEMORY.md 用 cluster index 結構寫好，不到一個月後再回頭問自己是否需要向量——大多數人那時候應該會發現，根本沒有需要問第二次的機會。
 
-如果兩題都不確定，先把 MEMORY.md 用 cluster index 結構寫好，不到一個月後再問自己要不要向量。
+---
 
-我跑了三週、寫了 928 次、推到 3429 個 drawers，答案是不要。
-
-大道至簡，效果都不如讓 claude 自己 grep。☺️
+*2026-05-17 / 退役後第 19 天*
