@@ -1,9 +1,11 @@
 ---
-title: "exit 0 不代表你在跑"
+title: "為什麼我不再相信 Explore Agent 說他做完了"
 description: "LLM 工具鏈裡「報告成功」和「真的完成」差得很遠——subagent 捏造、安裝靜默失敗、排程一個月零進展、測試腳本自我推翻，四種場景、二十幾個案例，Anthropic 知道但選擇不修。"
 pubDate: 2026-05-24
 tags: ["claude-code", "subagent", "fabrication", "verify"]
 ---
+
+# 為什麼我不再相信 Explore Agent 說他做完了
 
 今天在研究「為什麼 subagent 會捏造結果」，所以派了一個 agent 出去整理這一個月以來撞到的 case。
 
@@ -40,7 +42,7 @@ tags: ["claude-code", "subagent", "fabrication", "verify"]
 
 **A 場景：subagent 或模型自行捏造（8 個）**。派出去的 agent，因為看不到真實的 codebase，就補出聽起來合理的檔名、路徑、元件。回傳的東西有模有樣，查不到。
 
-典型案例：5/20 派 agent 查 cvs 結帳邏輯，回傳 `product.quantity_limit.total_limit`、`t('cvs.quantity_limit.*')`、`QuantityLimitHelp.tsx` 三個路徑，一個都不存在。
+典型案例：5/20 派 agent 查某個功能的實作位置，它回傳一個 dot-notation 設定欄位、一個 i18n key、一個元件檔——三條路徑，一個都不存在。
 
 這種最難防——每一格看起來都對。
 
