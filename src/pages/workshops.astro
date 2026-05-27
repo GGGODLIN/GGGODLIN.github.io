@@ -1,0 +1,86 @@
+---
+import "../styles/global.css";
+import ThemeBoot from "../components/ThemeBoot.astro";
+import ThemeSwitcher from "../components/ThemeSwitcher.astro";
+import Nav from "../components/Nav.astro";
+
+const workshops = [
+  {
+    title: "Claude Code 實戰：superpowers 與 SDD",
+    href: "/slides/superpowers-sdd.html",
+  },
+  {
+    title: "本地模型 — Ako Workshop · 2026-05-26",
+    href: "/slides/local-models.html",
+  },
+];
+---
+
+<!doctype html>
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workshops — gggodlin</title>
+    <meta name="description" content="Workshop 投影片：Claude Code、本地模型。" />
+    <ThemeBoot />
+  </head>
+  <body>
+    <main class="container">
+      <header class="site-header">
+        <div class="header-row">
+          <h1><a href="/">GGGODLIN</a></h1>
+          <Nav />
+        </div>
+      </header>
+      <section class="workshop-list">
+        <h2>Workshops</h2>
+        {
+          workshops.map((w) => (
+            <article class="workshop-item">
+              <a href={w.href}>
+                <h3>{w.title}</h3>
+              </a>
+            </article>
+          ))
+        }
+      </section>
+    </main>
+    <ThemeSwitcher />
+    <style>
+      .site-header {
+        margin-bottom: var(--section-gap);
+      }
+      .header-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .header-row h1 {
+        margin: 0;
+      }
+      .header-row h1 a {
+        color: inherit;
+        border: none;
+      }
+      .header-row h1 a:hover {
+        color: var(--accent);
+        border: none;
+      }
+      .workshop-item {
+        margin-bottom: calc(var(--baseline) * 4);
+      }
+      .workshop-item h3 {
+        margin: 0;
+      }
+      .workshop-item a {
+        border: none;
+      }
+      .workshop-item a:hover h3 {
+        color: var(--accent);
+      }
+    </style>
+  </body>
+</html>

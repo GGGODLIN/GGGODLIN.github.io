@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import ThemeBoot from "../components/ThemeBoot.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.astro";
+import Nav from "../components/Nav.astro";
 
 interface Props {
   title: string;
@@ -24,7 +25,13 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
     <ThemeBoot />
   </head>
   <body>
-    <article class="container">
+    <header class="site-bar">
+      <div class="site-bar-inner">
+        <a class="brand" href="/">GGGODLIN</a>
+        <Nav />
+      </div>
+    </header>
+    <article class="container article-body">
       <header>
         <p class="post-meta">
           {formattedDate}{tags.length > 0 ? " · " + tags.join(" / ") : ""}
@@ -37,6 +44,33 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
     </article>
     <ThemeSwitcher />
     <style>
+      .site-bar {
+        border-bottom: 1px solid var(--border);
+      }
+      .site-bar-inner {
+        max-width: var(--content-width);
+        margin: 0 auto;
+        padding: calc(var(--baseline) * 2) calc(var(--baseline) * 3);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .brand {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        border: none;
+      }
+      .brand:hover {
+        color: var(--accent);
+        border: none;
+      }
+      .article-body {
+        padding-top: calc(var(--baseline) * 5);
+      }
       .post-meta {
         font-family: var(--font-mono);
         font-size: var(--text-xs);
@@ -51,6 +85,11 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
         border-top: 1px solid var(--border);
         font-family: var(--font-mono);
         font-size: var(--text-sm);
+      }
+      @media (max-width: 640px) {
+        .site-bar-inner {
+          padding: calc(var(--baseline) * 2) calc(var(--baseline) * 2.5);
+        }
       }
     </style>
   </body>
