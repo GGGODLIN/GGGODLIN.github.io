@@ -36,3 +36,12 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 - **編輯·語氣·結構型**校稿（順序 / 冗詞 / beat 取捨 / 收尾 / 語氣）→ 記 `docs/philip/proofread-log.md`（PR-NNN，格式見該檔頭，gitignored，跨文章累積）
 - 兩類都**同步 fold 回該篇 `posts/<slug>-MATERIAL.md`**，Phase 2 voice 版只從校正後 MATERIAL 寫，**永不讀純 AI 校稿稿**
 - 純 AI 版保留當 Phase 3 對照標本，維持原樣不回溯套修正
+
+## 專案 / 套件 / 工具連結規則（固化）
+
+發佈正稿提及具體**專案 / 套件 / 工具 / repo** 時，**第一次具名出現必附完整可點擊連結**（GitHub repo 或官網），用 markdown link 形式 `[owner/repo](https://github.com/owner/repo)`。讀者看到工具名要能一鍵查證，這是讀者體驗硬要求（與全域「連結格式」規則一致，本專案落實到發佈文章內容層）。
+
+- 連結 URL 以該篇 `factcheck-log` / MATERIAL fact-authority 已查證的為準，**不臨時編**
+- 同一工具後續再提不必重複附，只在第一次具名介紹處附
+- MATERIAL fact-authority 段本就帶 repo URL，寫作 agent 直接取用；Phase 2 模板 B 寫作要求已含此條
+- **歸檔版不回溯補**（歷史快照）；只在發佈正稿與之後新文落實
