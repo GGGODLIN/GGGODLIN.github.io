@@ -3,6 +3,7 @@ import "../styles/global.css";
 import ThemeBoot from "../components/ThemeBoot.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 import Nav from "../components/Nav.astro";
+import Analytics from "../components/Analytics.astro";
 
 interface Props {
   title: string;
@@ -43,6 +44,7 @@ const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${
       </footer>
     </article>
     <ThemeSwitcher />
+    <Analytics />
     <style>
       .site-bar {
         border-bottom: 1px solid var(--border);
