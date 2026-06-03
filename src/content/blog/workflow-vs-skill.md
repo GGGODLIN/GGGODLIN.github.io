@@ -61,7 +61,7 @@ tags: ["claude-code", "workflow", "skill"]
 
 ### deep-research-paced：官方版改成限流版
 
-CC 內建了一支官方的 deep-research workflow（編在程式裡，沒有檔案、只能用名字叫出來），它一次並行開太多，會撞到 API 的限流。我把它 fork 出來改了一版：本來驗證階段是一次全部平行跑，我改成一小批一小批來，把同時的並發量壓低，但原本的品質機制（多輪投票、查核的題數）完全保留。改好之後綁回 deep-research 這支 skill，讓它預設就走我這個限流版。
+CC 內建了一支官方的 deep-research workflow（編在程式裡，沒有檔案、只能用名字叫出來），它一次並行開太多，會撞到 API 的限流（[撞限的完整過程我另外寫了一篇](https://gggodlin.github.io/blog/deep-research-rate-limit/)）。我把它 fork 出來改了一版：本來驗證階段是一次全部平行跑，我改成一小批一小批來，把同時的並發量壓低，但原本的品質機制（多輪投票、查核的題數）完全保留。改好之後綁回 deep-research 這支 skill，讓它預設就走我這個限流版。
 
 ---
 
