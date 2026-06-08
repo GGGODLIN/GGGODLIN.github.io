@@ -91,6 +91,8 @@ Verify 階段的邏輯：每個 claim 3 個 verify agent 投票，沒搜到反�
 
 時間變長了，但品質回來了。重點不是跑慢，是把峰值並發壓在限流線以下；批次大小看你連哪家 server 調整，2 不是通案。
 
+後來我固定用這支 paced 跨夜跑大型研究，結果又撞上另一道牆：5 小時額度。怎麼讓它自動暫停、跨段 resume 跑完，而且連額度不大的帳號也扛得起，寫在[另一篇](https://gggodlin.github.io/blog/unattended-workflow-resume/)。
+
 ---
 
 ## 為什麼從自寫 skill 轉向官方 workflow
