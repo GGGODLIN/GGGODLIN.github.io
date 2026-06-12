@@ -13,6 +13,10 @@ const posts = (await getCollection("blog")).sort(
 function formatDate(d: Date): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
+
+const siteDescription = "跟 Claude Code 一起踩坑，邊寫 code 邊寫心得。";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const rssURL = new URL("rss.xml", Astro.site);
 ---
 
 <!doctype html>
@@ -21,10 +25,16 @@ function formatDate(d: Date): string {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>gggodlin</title>
-    <meta
-      name="description"
-      content="跟 Claude Code 一起踩坑，邊寫 code 邊寫心得。"
-    />
+    <meta name="description" content={siteDescription} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="gggodlin" />
+    <meta property="og:description" content={siteDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="gggodlin" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="alternate" type="application/rss+xml" title="gggodlin" href={rssURL} />
     <ThemeBoot />
   </head>
   <body>
