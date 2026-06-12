@@ -28,7 +28,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 6. **內容注入（代發）**：
    1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
    2. 跑 `bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html` 把 HTML 放進系統剪貼簿（輸出應含 «class HTML»）
-   3. 點編輯器標題欄，打入 `title`；點內文區，cmd+V 貼上
+   3. 點編輯器標題欄，打入 `title`，**截圖或 JS 確認標題真的落入欄位**（空標題＋貼上＝Medium 把第一段升格成標題，2026-06-13 實撞）；確認後點內文區，cmd+V 貼上
    4. `read_page` 確認段落數與 paste.html 的 paragraphs+headings 大致相符、佔位符都出現。明顯缺段 → 重貼一次；仍失敗 → 停，回報使用者
    完成 → 接 Step 7。
 7. **佔位符重建**：每個 ⟦CODE-BLOCK-N⟧：點進該段選取整行刪除 → 打三個反引號觸發原生 code block → `cat <outDir>/code-block-N.txt | pbcopy` → cmd+V → 左上角下拉選語言（自動偵測常錯，必看）。每個 ⟦TABLE-N⟧：同法換成 Step 4 拍板的 `table-rewrites.md` 對應段落（pbcopy 純文字貼上）。全部換完 `read_page` 全文比對 `body-no-frontmatter.md`，確認無殘留佔位符、結尾段完整。接 Step 8。
@@ -49,3 +49,9 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **Import a story 會 backdate**：匯入自動把發布日期改成原文日期，Medium 端分發吃虧。這是預設不走 import 的原因（2026-06-13 查證）。
 - **Medium 編輯器不支援表格**——表格必須在 Step 4 先改寫，貼上後才發現會卡在編輯器裡很難救（2026-06-13 查證）。
 - **`medium.com/p/import` 未登入直接 403**：import 入口要從個人 Stories 頁右上角按鈕進，別給使用者直連網址（2026-06-13 curl 實測）。
+- **空白草稿直接貼內文＝第一段被升格成標題**：標題 type 可能靜默失敗，貼上前必驗標題已落欄（2026-06-13 首發實撞，Step 6.3 已加驗證）。
+- **「Something is wrong and we cannot save」紅條出現就停手重載**：之後的所有編輯都只在客戶端、存不進伺服器，增量修補是白做（2026-06-13 實撞；重載後從伺服器最後存檔狀態修起）。
+- **編輯器內選取單一區塊用 JS Range（`selectNodeContents`），不要 triple-click**：triple-click 會跨塊選取，替換時把相鄰段落黏進來（2026-06-13 實撞）。
+- **Topic 下拉點選不可靠，type + Enter 穩**：輸入完整 topic 名後按 Return 即掛上 chip；點 dropdown 項目兩次都沒反應（2026-06-13 實撞）。
+- **canonical 輸入欄有預填值**：進編輯模式後先 cmd+A 再打字，否則 URL 串接成垃圾值（2026-06-13 實撞）。
+- **發布後驗證走瀏覽器內 `fetch(location.href)` 抓 server HTML**：Medium 對 curl 一律 403，Step 10 的 curl 路徑對 Medium 無效（2026-06-13 實撞）。
