@@ -55,3 +55,6 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **Topic 下拉點選不可靠，type + Enter 穩**：輸入完整 topic 名後按 Return 即掛上 chip；點 dropdown 項目兩次都沒反應（2026-06-13 實撞）。
 - **canonical 輸入欄有預填值**：進編輯模式後先 cmd+A 再打字，否則 URL 串接成垃圾值（2026-06-13 實撞）。
 - **發布後驗證走瀏覽器內 `fetch(location.href)` 抓 server HTML**：Medium 對 curl 一律 403，Step 10 的 curl 路徑對 Medium 無效（2026-06-13 實撞）。
+- **Medium 每帳號每 24 小時最多發布/排程 2 篇**（紅條原文 maximum of two stories in the past 24 hours；2026-06-13 第 3 篇實撞）——批次轉發要按 2 篇/日排程，別嘗試繞過。草稿可先備好（內容+canonical+topics），視窗開了只差按 Publish。
+- **navigate 到編輯器後等 2 秒再打標題**：頁面初始化中打字會吞掉開頭字元（標題截斷 2 次實撞）；打完必驗，錯了用 JS Range 選取重打。
+- **topics 欄連續 type+Return 會黏成一串**：發布設定頁剛開時尤其會；第一個 topic 提交後驗證 chip 存在再繼續，黏掉就 cmd+A Delete 清掉重來（2026-06-13 實撞）。
