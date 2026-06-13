@@ -54,3 +54,6 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **vocus 每日發文上限未驗證**：Medium 是 24h 兩篇，vocus 試發一篇沒撞到限制，但**批次量產時是否有上限尚未實證**——撞到再補這行。
 - **瀏覽器 env session 級降級（沿用 medium-syndicate 實證）**：同 session 跑 ~4 篇後 CDP/輸入管道會壞，減載無法恢復，要 fresh CC session ＋ 完整重啟 Chrome 行程（cmd+Q）。**運維鐵則：每個 fresh session 只排一批 ~4 篇**，別同 session 連跑兩批。並行使用 Chrome（使用者同時操作）會搶焦點/蓋剪貼簿，代發開始前請使用者放著別動。
 - **code/table 在 vocus Lexical 編輯器的保真度尚未實測**：check-my-stack 白老鼠無 code/table。含這些的文章貼上後務必目視驗證；Medium 的「`<pre>` 直接貼」捷徑在 vocus 是否成立未知，先逐塊驗。
+- **「文章」卡片要點兩下才導航**（2026-06-13 實測）：creatordesk 的「文章」卡第一下只進 hover 態（標籤變「開始文章創作」）、第二下才跳 new-editor。這是正常 hover 機制不是降級。但若 **3 下以上都只 hover、URL 不變 new-editor，且 `find`→ref click 也不 fire ＝ session 級輸入降級**（見下條）。
+- **單分頁紀律避免前景焦點洩漏**（2026-06-13 實測）：開多個編輯器分頁後，coordinate click 會洩漏到「別的分頁」（實測點 A 分頁、結果 B 分頁導航了），症狀像降級其實是焦點混亂。對策＝**每篇做完複用同一個分頁 `navigate` 回 creatordesk，別累積編輯器分頁**；雜散分頁先 `tabs_close_mcp` 關掉。清到單分頁後輸入即恢復——這跟下條真降級不同。
+- **單分頁下仍會在 ~4 篇後 input 降級（不可逆，呼應 medium）**（2026-06-13 實測）：即使單分頁，做到第 4-5 篇時「文章」卡 click（coordinate 與 ref 兩種點法）都只 hover 不 fire navigation。這是 CDP/輸入管道 session 級降級，**減載/換點法都救不回**，要 fresh CC session ＋ 完整重啟 Chrome（cmd+Q）。**運維鐵則：一個 session 穩做 ~4 篇就主動收手**，別硬撞到降級才停。
