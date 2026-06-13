@@ -60,6 +60,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **topics 欄連續 type+Return 會黏成一串**：發布設定頁剛開時尤其會；第一個 topic 提交後驗證 chip 存在再繼續，黏掉就 cmd+A Delete 清掉重來（2026-06-13 實撞）。
 - **`type` 對混中英數標題會丟英文段**（MEMORY.md / 25KB 整段消失，比單純吞頭嚴重；2026-06-13 實撞）——標題一律走 Step 6.3 的剪貼簿貼上，不要用 `type`。
 - **長時間 unattended 瀏覽器 run 會環境降級**（2026-06-13 夜批次實撞）：症狀＝截圖 CDP timeout 30s（renderer 凍）/ 新草稿 URL 卡 `/new-story` 不前進 / 編輯器停止接收鍵盤事件。對策＝關分頁開新的；連兩個分頁都降級就停，等環境恢復或換 fresh session。**別在使用者離線時硬撞**——短 burst（一次 2-3 篇）比一夜全跑可靠得多。
+- **單一 session 跑「一批 ~4 篇」後就會降級**（2026-06-13 實測：第一批 84-87 四篇零失敗、同 session 第二批立刻三分頁連撞「首次輸入不註冊」）。**減載／關分頁無法恢復**——是 CDP/輸入管道的 session 級降級，要 fresh CC session 或 Chrome 重啟。**運維鐵則：每個 fresh session 只排一批 ~4 篇草稿，做完換 session 再下一批**，別同 session 連跑兩批。
 - **批次草稿模式**（量大時）：建草稿無 24h 限制，可一次把標題+內文都備好；**canonical 與 topics 留到發布時設**（草稿未公開不會被索引，發布前設即可，正好對齊 Step 8）。Draft 只做 Step 5-7、跳過 8-11；發布日再對每篇跑 Step 8-11。進度記在 `docs/philip/medium-publish-queue.md`。
 - **標題後按 Down 再貼內文 → 內文第一段被吸進標題塊**（2026-06-13 exit-0-illusion 草稿實撞：標題變成「正確標題＋第一段」黏一長串、內文從第二段開始）。單行標題按 Down 游標沒離開標題塊，貼上的第一段就併進去。**body 貼完必驗 `ps[0]` 是否等於預期的內文第一段**（而非標題尾巴接內文），不符即中招。
 - **修「塊被合併」用「選取整塊 → 多段 HTML 貼上取代」**：caret collapsed 處貼 `<p>` 會 inline 併進當前段（不換塊）；要產生獨立塊必須先 `selectNodeContents` 選取整段再 cmd+v 貼多段 `<p>`（2026-06-13 修 exit-0 實證）。先 `printf '<p>A</p><p>B</p>' | clipboard-html.sh` 再選取目標段貼上。
