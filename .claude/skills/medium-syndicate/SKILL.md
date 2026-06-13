@@ -28,8 +28,8 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 6. **內容注入（代發）**：
    1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
    2. 跑 `bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html` 把 HTML 放進系統剪貼簿（輸出應含 «class HTML»）
-   3. 點編輯器標題欄，打入 `title`，**截圖或 JS 確認標題真的落入欄位**（空標題＋貼上＝Medium 把第一段升格成標題，2026-06-13 實撞）；確認後點內文區，cmd+V 貼上
-   4. `read_page` 確認段落數與 paste.html 的 paragraphs+headings 大致相符、佔位符都出現。明顯缺段 → 重貼一次；仍失敗 → 停，回報使用者
+   3. **標題用剪貼簿貼上、不要用 `type`**（`type` 對混中英數標題會丟英文段，2026-06-13 實撞 MEMORY.md/25KB 被吞）：`printf '%s' '<title>' | pbcopy` → JS 取 `.graf--title` 的 `getBoundingClientRect()` 拿實際座標（別猜，視窗大小會變）→ 真實 `left_click` 該座標取得鍵盤 focus → `cmd+a` 全選 → `cmd+v` 貼上 → JS 讀 `.graf--title` 比對（NBSP 差異可接受，用 `.replace(/ /g,' ')` 正規化後比）。不符 → 重貼一次
+   4. 重新 `bash clipboard-html.sh <outDir>/paste.html` 載回內文 HTML → 游標移到標題下方（Down）→ `cmd+v` 貼內文 → JS 確認段落數與 paste.html 的 paragraphs 大致相符、無殘留 ⟦⟧ 佔位符、無「Something is wrong」存檔錯誤。明顯缺段 → 重貼一次；仍失敗 → 停，回報使用者
    完成 → 接 Step 7。
 7. **佔位符重建**：每個 ⟦CODE-BLOCK-N⟧：點進該段選取整行刪除 → 打三個反引號觸發原生 code block → `cat <outDir>/code-block-N.txt | pbcopy` → cmd+V → 左上角下拉選語言（自動偵測常錯，必看）。每個 ⟦TABLE-N⟧：同法換成 Step 4 拍板的 `table-rewrites.md` 對應段落（pbcopy 純文字貼上）。全部換完 `read_page` 全文比對 `body-no-frontmatter.md`，確認無殘留佔位符、結尾段完整。接 Step 8。
 8. **canonical 硬閘（發布前必做）**：編輯器右上三點選單 → **Customize canonical link**（舊版 UI 路徑：More settings → Advanced Settings → 勾「This story was originally published elsewhere」）→ 填 prep 輸出的 `canonicalURL` → Save。用 `read_page` 或截圖確認已儲存。設不成功 → 停在這裡排查，不進 Step 9。成功 → 接 Step 9。
@@ -58,3 +58,6 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **Medium 每帳號每 24 小時最多發布/排程 2 篇**（紅條原文 maximum of two stories in the past 24 hours；2026-06-13 第 3 篇實撞）——批次轉發要按 2 篇/日排程，別嘗試繞過。草稿可先備好（內容+canonical+topics），視窗開了只差按 Publish。
 - **navigate 到編輯器後等 2 秒再打標題**：頁面初始化中打字會吞掉開頭字元（標題截斷 2 次實撞）；打完必驗，錯了用 JS Range 選取重打。
 - **topics 欄連續 type+Return 會黏成一串**：發布設定頁剛開時尤其會；第一個 topic 提交後驗證 chip 存在再繼續，黏掉就 cmd+A Delete 清掉重來（2026-06-13 實撞）。
+- **`type` 對混中英數標題會丟英文段**（MEMORY.md / 25KB 整段消失，比單純吞頭嚴重；2026-06-13 實撞）——標題一律走 Step 6.3 的剪貼簿貼上，不要用 `type`。
+- **長時間 unattended 瀏覽器 run 會環境降級**（2026-06-13 夜批次實撞）：症狀＝截圖 CDP timeout 30s（renderer 凍）/ 新草稿 URL 卡 `/new-story` 不前進 / 編輯器停止接收鍵盤事件。對策＝關分頁開新的；連兩個分頁都降級就停，等環境恢復或換 fresh session。**別在使用者離線時硬撞**——短 burst（一次 2-3 篇）比一夜全跑可靠得多。
+- **批次草稿模式**（量大時）：建草稿無 24h 限制，可一次把標題+內文都備好；**canonical 與 topics 留到發布時設**（草稿未公開不會被索引，發布前設即可，正好對齊 Step 8）。Draft 只做 Step 5-7、跳過 8-11；發布日再對每篇跑 Step 8-11。進度記在 `docs/philip/medium-publish-queue.md`。
