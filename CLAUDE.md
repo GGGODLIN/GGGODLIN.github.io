@@ -45,3 +45,15 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 - 同一工具後續再提不必重複附，只在第一次具名介紹處附
 - MATERIAL fact-authority 段本就帶 repo URL，寫作 agent 直接取用；Phase 2 模板 B 寫作要求已含此條
 - **歸檔版不回溯補**（歷史快照）；只在發佈正稿與之後新文落實
+
+## 發布後同步轉發（固化）
+
+本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，**轉發是上線後的下一步**，main session 主動接續、不要停在 push 上線後等使用者另外發起。
+
+- **觸發點**：`git push` 觸發 GitHub Actions deploy 成功（curl 原站 URL 200 + 內容對）後，main session 主動問：「文章上線了，現在要轉發到 Medium / 方格子嗎？」
+- **預設兩平台都問、使用者拍板執行哪幾個**：Medium 24h 限發 2 篇（撞限就排隊隔天）、方格子無限制可立即走。不要自動連跑——使用者每次點頭才走
+- **轉發直接 trigger 既有 skill**，不要在 main session 自己重寫流程：
+  - Medium → `medium-syndicate` skill（trigger「轉發到 Medium」或 `/medium-syndicate <slug>`）
+  - 方格子 → `vocus-syndicate` skill（trigger「轉發到方格子」或 `/vocus-syndicate <slug>`）
+- **防重複、canonical、轉發紀錄**由兩個 skill 自己處理（已內建 grep `docs/philip/syndication-log.md` 防重發、canonical 填入、發布後 append log）；main session 不重複這些檢查
+- **使用者說「不轉」或「之後再說」**：尊重決定，把該篇 slug + 暫緩理由記到 `docs/philip/syndication-log.md` 的隊列段（或 `docs/philip/medium-publish-queue.md` 既有 Medium 排隊檔）以免遺忘，下次發新文 push 後 main session 提醒「還有 X 篇沒轉」
