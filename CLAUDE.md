@@ -37,6 +37,18 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 - 兩類都**同步 fold 回該篇 `posts/<slug>-MATERIAL.md`**，Phase 2 voice 版只從校正後 MATERIAL 寫，**永不讀純 AI 校稿稿**
 - 純 AI 版保留當 Phase 3 對照標本，維持原樣不回溯套修正
 
+## 支語檢查 gate（固化）
+
+material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語檢查——抓中國大陸用語味道。這跟上面「反晶晶體 HARD GATE」是**不同維度**的中文品質閘：反晶晶體只管「該翻沒翻的英文詞」、支語 gate 管「中國用語 vs 台灣用語」（檔次→等級、視頻→影片）。反晶晶體那道靠自律會洩漏，支語 gate 改用工具決定性檢測補這個弱點。
+
+- **時機**：對 Phase 5 拍板的那一版（單一稿）跑，不是 N 版都跑。外審修正套回後、收斂前
+- **怎麼跑**：main session 接續執行 `tools/zhtw-check.sh <該版 md>` → lint（[sysprog21/zhtw-mcp](https://github.com/sysprog21/zhtw-mcp)、教育部標準、1100+ 詞彙規則）→ render 命中報告網頁 → 開瀏覽器本地 review
+- **人在迴圈、不 auto-fix**：報告網頁分兩區。**「中國用語」區**（cross_strait / 字形 / 大小寫）是支語核心、逐筆人工確認改不改；**「翻譯腔」區**（AI 句式：定語堆疊、的的不休）是 advisory 第二維度、可改可整段忽略。命中是「候選」不是「判決」
+- **誤判直接略過**：zhtw-mcp 會誤殺台灣慣用詞（實證：「轉發」被建議成「轉寄」，但轉發台灣通用、本 blog 拿它當術語）。review 時看到誤判跳過即可；誤判累積多了再建 `tools/zhtw-overrides.json` 白名單
+- **修正併回**：user 確認要改的，比照「校稿紀錄」——用語修正 fold 回該篇 `posts/<slug>-MATERIAL.md`（永久真相源）再進 Phase 6
+- **本機工具、不進 repo**（`tools/` 已 gitignored）：binary 自 source build（`cargo build --release --no-default-features --features native`、排除連網 translate feature）裝在 PATH；script 為 `tools/zhtw-check.sh` + `tools/zhtw-report.py`。重建步驟見 `~/Desktop/projects/.claude/trials/` 內 zhtw-mcp trial 紀錄
+- **AI 八股味維度另有工具**：`tools/humanize-chinese`（既有、但未接流程）專做 AI 八股味去痕（賦能 / 全方位 / 綜上所述），跟支語不同維度。要認真治 AI 味再評估接它，本 gate 只管支語
+
 ## 專案 / 套件 / 工具連結規則（固化）
 
 發佈正稿提及具體**專案 / 套件 / 工具 / repo** 時，**第一次具名出現必附完整可點擊連結**（GitHub repo 或官網），用 markdown link 形式 `[owner/repo](https://github.com/owner/repo)`。讀者看到工具名要能一鍵查證，這是讀者體驗硬要求（與全域「連結格式」規則一致，本專案落實到發佈文章內容層）。
