@@ -44,7 +44,8 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 - **時機**：對 Phase 5 拍板的那一版（單一稿）跑，不是 N 版都跑。外審修正套回後、收斂前
 - **怎麼跑**：main session 接續執行 `tools/zhtw-check.sh <該版 md>` → lint（[sysprog21/zhtw-mcp](https://github.com/sysprog21/zhtw-mcp)、教育部標準、1100+ 詞彙規則）→ render 命中報告網頁 → 開瀏覽器本地 review
 - **人在迴圈、不 auto-fix**：報告網頁分兩區。**「中國用語」區**（cross_strait / 字形 / 大小寫）是支語核心、逐筆人工確認改不改；**「翻譯腔」區**（AI 句式：定語堆疊、的的不休）是 advisory 第二維度、可改可整段忽略。命中是「候選」不是「判決」
-- **誤判直接略過**：zhtw-mcp 會誤殺台灣慣用詞（實證：「轉發」被建議成「轉寄」，但轉發台灣通用、本 blog 拿它當術語）。review 時看到誤判跳過即可；誤判累積多了再建 `tools/zhtw-overrides.json` 白名單
+- **預設不過濾、誤判 review 時略過**：report 忠實呈現 zhtw-mcp 所有命中，**不預設任何白名單 / borrow 詞**（用套件原本設定）。誤判（如「轉發」被建議成「轉寄」，但轉發台灣通用、本 blog 拿它當術語）review 時人工略過即可
+- **之後要自訂過濾 / 借詞（user 自己慢慢加、非預設）**：建 repo root `.zhtw-mcp.toml`（lint 從 cwd 往上探測）。誤判白名單填 `ignore_terms`、借詞填 `overrides` 指向的 JSON（schema_version 3、`spelling[]`）。**坑**：zhtw CLI lint 不吃 `ignore_terms`／`suppressions`（只 MCP 模式吃），白名單要靠 `zhtw-report.py` render 層自己過濾。借詞來源可參考 [Qmo37/localization-tw](https://github.com/Qmo37/localization-tw)（但整包別裝：詞庫實際比 zhtw 少、增量多為生活詞）
 - **修正併回**：user 確認要改的，比照「校稿紀錄」——用語修正 fold 回該篇 `posts/<slug>-MATERIAL.md`（永久真相源）再進 Phase 6
 - **本機工具、不進 repo**（`tools/` 已 gitignored）：binary 自 source build（`cargo build --release --no-default-features --features native`、排除連網 translate feature）裝在 PATH；script 為 `tools/zhtw-check.sh` + `tools/zhtw-report.py`。重建步驟見 `~/Desktop/projects/.claude/trials/` 內 zhtw-mcp trial 紀錄
 - **AI 八股味維度另有工具**：`tools/humanize-chinese`（既有、但未接流程）專做 AI 八股味去痕（賦能 / 全方位 / 綜上所述），跟支語不同維度。要認真治 AI 味再評估接它，本 gate 只管支語
