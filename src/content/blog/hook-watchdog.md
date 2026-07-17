@@ -83,4 +83,4 @@ tags: ["claude-code", "hook", "automation", "methodology"]
 
 今天還在跑的，是 semble 監工的純程式碼版，和空口無憑監工的零工具閘門。
 
-零工具閘門留下的那三分之一，剛好就是最麻煩的殘餘：零工具卻喊做完。規則寫不成。這塊我後來交給了誰、判得怎麼樣，下一篇〈[聰明不算數，在場才算：本地小模型的窄職位](https://gggodlin.github.io/blog/local-llm-hook-judge/)〉再講。
+零工具閘門留下的那三分之一，剛好就是最麻煩的殘餘：零工具卻喊做完。規則寫不成。這塊我後來交給了誰、判得怎麼樣，下一篇〈[雲端太遠，hook 等不了：低延遲給了本地小模型就業機會](https://gggodlin.github.io/blog/local-llm-hook-judge/)〉再講。
