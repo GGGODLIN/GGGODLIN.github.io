@@ -49,7 +49,7 @@ codegraph 加了引導還是只到 14% 天花板，而且仔細看它用了什�
 
 到這裡，我才發現自己其實量錯了東西。
 
-主流的程式碼搜尋評測，像 CodeSearchNet、CoIR，比的是檢索品質（recall、MRR、NDCG 那些指標），看的是「找得準不準」；另一類 agent 工具呼叫的評測，像 BFCL、τ-bench，比的是「呼叫對不對、任務完不完成」。2026 年 5 月還有一篇論文叫 [Is Grep All You Need?](https://arxiv.org/abs/2605.15184)，比的也是 grep 跟向量搜尋的品質差距。
+主流的程式碼搜尋評測，像 CodeSearchNet、[CoIR](https://arxiv.org/abs/2407.02883)，比的是檢索品質（recall、MRR、NDCG 那些指標），看的是「找得準不準」；另一類 agent 工具呼叫的評測，像 BFCL、τ-bench，比的是「呼叫對不對、任務完不完成」。2026 年 5 月還有一篇論文叫 [Is Grep All You Need?](https://arxiv.org/abs/2605.15184)，比的也是 grep 跟向量搜尋的品質差距。
 
 這兩類跑分，都不把「一個可選的工具，agent 到底會不會主動拿起來用」當成被評測的維度。連 semble 自己對外的標語都是「比 grep 省 98% token」，行銷講的還是 token 數字，不是採用率。
 
