@@ -15,7 +15,12 @@ description: 把 gggodlin-blog 已在原站上線的文章「全文轉發」到 
 
 slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草稿區，與本流程無關。使用者給的名字對不上時 `ls src/content/blog/` 對照確認，不要猜。
 
-1. **防重複**：`grep "| <slug> |" docs/philip/syndication-log.md`（完整欄位格式，避免前綴重疊的 slug 誤命中；檔案不存在視為無紀錄）。已有紀錄 → 停，回報既有 Medium URL，結束。無紀錄 → 接 Step 2。
+1. **防重複（兩個檔都要查）**：
+   - `grep "| <slug> |" docs/philip/syndication-log.md`（完整欄位格式，避免前綴重疊的 slug 誤命中；檔案不存在視為無紀錄）→ 已有紀錄代表**已發布**，停，回報既有 Medium URL，結束
+   - `grep "<slug>" docs/philip/medium-publish-queue.md`（批次草稿模式的進度落點，見下方「批次草稿模式」）→ 命中代表**草稿已建、只差發布**，跳過 Step 2-7，直接從 Step 8 對既有草稿續做（草稿在 Medium 的 Drafts 列表找）
+   - 兩邊都無紀錄 → 接 Step 2
+
+   為什麼要查第二個檔：草稿模式只做 Step 5-7、不會寫 syndication-log，只查那一個檔會判成「沒轉過」而重建一份草稿，同一篇文章在 Medium 留下兩個草稿。
 2. **跑 prep script**（repo root）：`node .claude/skills/medium-syndicate/scripts/medium-prep.mjs <slug>`，讀 JSON 輸出（title / description / tags / canonicalURL / outDir / risks）。注意 outDir 在 /tmp，macOS 重開機或隔夜可能被清——Step 7 要用時若檔案不在，重跑本步即可。接 Step 3。
 3. **原站上線確認**：對 prep 輸出的 `canonicalURL` 跑 `curl -sI` 確認 200，再 `curl -s` 抓頁面 grep `rel="canonical"` 確認自我 canonical 存在。任一失敗 → 停（文章沒上線，先走發布流程），結束。通過 → 接 Step 4。
 4. **風險處理（開瀏覽器前在對話裡先做完）**：
@@ -24,7 +29,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
    - `risks.codeBlocks` 非空 → 列出區塊編號與語言，預告 Step 7 要逐塊重建，列完即續行
    - `risks.externalLinks` 僅供參考——貼渲染版會自動保留連結，不需處理
    全部處理完 → 接 Step 5。
-5. **開瀏覽器**：`tabs_context_mcp` 看現況 → 新分頁開 `https://medium.com/new-story`。出現登入頁 → 停，請使用者登入 Medium 後說「好了」再從本步重來（不代登入，這是流程唯一需要使用者操作的點）。已登入看到編輯器 → 接 Step 6。
+5. **開瀏覽器**：`tabs_context_mcp` 看現況 → 新分頁開 `https://medium.com/new-story`。出現登入頁 → 停，請使用者登入 Medium 後說「好了」再從本步重來（不代登入，這是流程唯一需要使用者操作的點）。已登入看到編輯器 → **降級偵測**：對 Medium 標題塊做 click + real `type "AB"`；先照踩過的坑「fresh `/new-story` 純 `cmd+v` 會被吞」條走 type-to-wake，若 type 一/兩字後 titleText 仍不變、URL 仍卡 `/new-story`，代表 claude-in-chrome extension 的 CDP 鍵盤管道已壞（同族現象：Chrome cmd+Q 沒真殺行程、或 extension socket 卡死）→ 切「備援：chrome-devtools MCP 通道」段（見流程尾端）。通道正常 → 接 Step 6。
 6. **內容注入（代發）**：
    1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
    2. 跑 `bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html` 把 HTML 放進系統剪貼簿（輸出應含 «class HTML»）
@@ -41,7 +46,25 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
     - YYYY-MM-DD | <slug> | <Medium URL> | canonical=<驗證結果 ok/異常>
     ```
 
-    寫完 grep 回讀確認該行存在 → 給使用者驗收回報：Medium 文章 URL、canonical 實際值與原站 URL 的比對、佔位符重建數、全文比對結果。流程結束。
+    寫完 grep 回讀確認該行存在。**該 slug 若在 `docs/philip/medium-publish-queue.md` 有條目，同時把它標成已發布（或移除）**——留在佇列裡會讓下次 Step 1 誤判成「草稿待發布」而跳過 Step 2-7。
+
+    兩個檔都處理完 → 給使用者驗收回報：Medium 文章 URL、canonical 實際值與原站 URL 的比對、佔位符重建數、全文比對結果。流程結束。
+
+## 備援：chrome-devtools MCP 通道（claude-in-chrome CDP 死時）
+
+**什麼時候切**：Step 5 降級偵測命中（real type 進 title / body / Google 搜尋框都 no-op、URL 卡 `/new-story`）。這是 claude-in-chrome extension 這條 CDP 通道的行程級死亡，換 CC session 也不會好；但 **chrome-devtools MCP 是獨立 CDP 通道**（不走 extension、直接連 Chrome DevTools Protocol），extension 死時它通常仍活。判斷法：用 `mcp__chrome-devtools__fill` 對 Google 搜尋框寫 "hello world" → 讀 `q?.value` 若正確 = 通道通、可救回代發。
+
+**通道差異**：chrome-devtools MCP 沒 `pbcopy → cmd+v` 系統剪貼簿路徑（CDP `press_key Meta+V` 只 fire keyboard event、不觸發作業系統 shortcut handler、Medium 收不到 paste），也不吃 `execCommand insertHTML`（draft-js 過濾掉所有 HTML tag 只留換行 + 觸發「Something is wrong」紅條、伺服器不存）。**唯一穩定 body 注入路徑 = `dispatchEvent(new ClipboardEvent('paste', {clipboardData: DataTransfer}))`**——draft-js 有 paste handler、不 check `event.isTrusted`、`dispatched:false` 表示 preventDefault（handler 消化了 event）成功注入。
+
+**代發配方**（走此段時 Step 6 貼上與 Step 8/9 操作全改成這裡的步驟）：
+
+1. **開分頁**：`mcp__chrome-devtools__new_page` 到 `https://medium.com/new-story` → `evaluate_script` 等 3 秒後驗 `.graf--title` 存在。
+2. **標題**：`take_snapshot` 拿 title heading uid → `click` 該 uid（selection anchor 會落 title 內 `#text`）→ `type_text` 標題（中英數混合會吞開頭段 → 打完必驗 title.textContent 完整，缺頭就 `evaluate_script` 設 selection 到 title offset 0 + 再 `type_text` 補打）。URL 從 `/new-story` 升 `/p/<id>/edit` 才算實例化成功。
+3. **body 注入**：base64 encode paste.html（`base64 -i paste.html | tr -d '\n'`）→ `evaluate_script` 的 function body 內 inline 該 base64（args 只吃 uid、不能傳 HTML）→ 內部 `atob` + `TextDecoder` 復原 HTML → `DataTransfer.setData('text/html', html) + setData('text/plain', ...)` → `dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true}))` 到 `.postArticle-content` surface。draft-js 消化後段落齊 render。
+4. **驗完整性**：`evaluate_script` 對比 Medium `.graf` 全塊 vs `paste.html` 塊清單，兩邊 Python 端 diff。**一次塞多塊時 draft-js 常把尾端 4-5 塊壓成 1 塊**（本次 46 塊實撞、tail P41-P45 被合成 M42「呼叫頻率謫」中間文字全丟）→ 提取尾段 HTML 另存 tail-N.html、選中錯合段（`Range.selectNodeContents(lastGraf)`）再 `dispatchEvent` paste 補注入、然後 `press_key Backspace` 刪錯合段（附帶會削掉末字元、`type_text` 補回）。
+5. **canonical**（Step 8 同分支邏輯、UI 操作改 chrome-devtools）：點三點 menu button（uid 通常無 description）→ `More settings` link → `evaluate_script` 找 `#advanced_settings button` 展開 collapsible → JS 找 checkbox `input[type=checkbox]` 中 parent 含「originally published elsewhere」的那個 → `.click()`（chrome-devtools `click` uid 可能 timeout、改 JS click）→ 找 `input[placeholder="Type the canonical URL..."]`：`disabled=true` 走「Edit canonical link」button click 進編輯模式 → **用 React native input setter 改 value**（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, url)` + `dispatchEvent(new Event('input',{bubbles:true}))`）觸發 React onChange → click「Save canonical link」button。
+6. **topics / Publish**（Step 9）：`click` topic combobox uid → `type_text "Claude Code"` → 等 2 秒 → `press_key Enter`（建 chip）→ 等 1 秒 → `press_key Enter`（clear input）→ 驗 chip 上 → 下一個。全部完成後 `click` Publish button uid。
+7. **canonical driver-side 驗證**（Step 10）：`navigate_page` 到 `https://medium.com/p/<id>` → `evaluate_script` 讀 `document.querySelector('link[rel=canonical]').href`（Medium fetch server HTML 沒 canonical、必須讓瀏覽器 render 後讀 driver-side）。
 
 ## 踩過的坑（撞反例就補一行）
 
@@ -71,3 +94,6 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **並行使用 Chrome 會搞砸代發**（2026-06-13 實撞：標題被洗成「design skill」、type/cmd+v 連續落空）：使用者同時開分頁／複製東西會 (a) 搶走目標分頁的前景焦點，合成鍵盤事件落到別處 (b) 蓋掉系統剪貼簿，pbcopy 的標題被使用者的複製內容取代。**代發開始前請使用者放著 Chrome 別動**；中途若標題貼出非預期字串，先 `pbpaste` 檢查剪貼簿有沒有被蓋，重 copy 後隔 1-2 秒回讀確認穩定再貼。
 - **Advanced Settings 是 collapsible、預設收合**（2026-06-29 #15 補設 + #16 首次驗證）：上篇 #15 user 在新版 UI 找 canonical 找不到、結論「UI 路徑遺失」誤判——實際是 More settings 頁底下「Advanced Settings」區段預設收合（右側 `>` 箭頭、左側 sidebar 同名 link 是錨點不是內容），**必須點標題展開才會出現 `Customize Canonical Link` 段**。Step 8 路徑沒搬、是上篇沒展開到那一層。判斷：進 More settings 後直接 `Cmd+F`「Customize Canonical Link」找不到（因 collapsible 未展開、DOM 內也沒節點）→ 拉到底找 collapsible 展開鍵。
 - **舊文補設 canonical 的 input 是 disabled、要先 click「Edit canonical link」進編輯模式**（2026-06-29 #15 補設實撞）：新文剛勾「originally published elsewhere」時 input 直接 editable + 預填 Medium-self URL（可立刻 cmd+a + type）；但已發布過、之前曾經設過 / 預設 Medium-self 的舊文，重訪 settings 時 input 是 **disabled + 顯示「Edit canonical link」button**（非 Save），type 完全沒進去。對策：用 JS `document.querySelectorAll('input[placeholder="Type the canonical URL..."]')` 看 `disabled` 屬性判斷分支——disabled=true 必先 click「Edit canonical link」button、disabled=false 直接 click input + cmd+a + type。Step 8 已收兩條分支配方。
+- **Chrome 行程級 CDP 鍵盤降級跨全域、cmd+Q 未必解**（2026-07-18 #97 local-llm-hook-judge 實撞）：症狀是 real `type` 進任何頁面（Medium editor / Google 搜尋框）都 no-op；上方「單一 session 跑一批 ~4 篇後就會降級」條記載「cmd+Q 完整重啟 Chrome」是解，本次使用者宣稱已重啟後仍降級——可能只關視窗未真殺行程（macOS `pkill -9 "Google Chrome"` 才確定），或 claude-in-chrome extension 內部 socket 死透。**驗證法**：`navigate` Google 首頁 → real type "ABCDE" → 讀 `q.value`，仍空 = 確認全域降級（不是 Medium 特殊）。此狀態別再嘗試 claude-in-chrome 路徑、切「備援：chrome-devtools MCP 通道」段。
+- **draft-js 拒 `execCommand('insertHTML')`、只吃 ClipboardEvent paste**（2026-07-18 #97 實撞）：走 chrome-devtools MCP 時試過先用 `execCommand('insertHTML', false, html)` 塞 body → return true 看似成功，但 draft-js 過濾掉所有 HTML tag 只保留 `\n` 換行、擠成一段、觸發「Something is wrong and we cannot save」紅條、伺服器不存。完整穩定配方（ClipboardEvent paste dispatch）詳見「備援：chrome-devtools MCP 通道」段步驟 3。
+- **draft-js paste 一次塞多塊時尾段會被壓縮成一塊**（2026-07-18 #97 46 塊實撞）：dispatchEvent 一次注入 40 p + 6 heading，前 41 塊完美 match paste.html 對應 index、**尾巴 P41-P45 被合成單一段 M42「呼叫頻率謫，縮到 hook 裡...」**（中間 3-4 塊的文字全丟、頭尾拼在一起、還混一個錯字）。draft-js paste 消化長 HTML 時尾段 buffer 疑似溢出。修復配方（tail 補注入 + Backspace 刪錯合段）詳見「備援」段步驟 4。
