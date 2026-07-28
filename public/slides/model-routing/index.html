@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="brand/colors_and_type.css">
+<script src="./image-slot.js"></script>
+<style>
+:root{
+  --s-bg:#17181A; --s-bg-2:#101113; --s-surface:rgba(255,255,255,0.045);
+  --s-line:rgba(255,255,255,0.10); --s-line-strong:rgba(255,255,255,0.20);
+  --s-fg:#F3F5F7; --s-fg-2:#A9B2BD; --s-fg-3:#6E7781;
+  --s-teal:#78CFB9; --s-teal-deep:#4EAFA0; --s-orange:#F6AD55; --s-red:#EA5E47;
+  --s-scale:1;
+  --type-hero:calc(96px * var(--s-scale));
+  --type-title:calc(64px * var(--s-scale));
+  --type-lead:calc(44px * var(--s-scale));
+  --type-body:calc(32px * var(--s-scale));
+  --type-cell:calc(28px * var(--s-scale));
+  --type-small:calc(26px * var(--s-scale));
+  --type-kicker:calc(24px * var(--s-scale));
+  --type-stat:calc(168px * var(--s-scale));
+  --pad-x:120px; --pad-top:88px; --pad-bottom:64px;
+}
+body{margin:0;background:#0B0C0D;}
+a{color:#78CFB9;text-decoration:none;}
+a:hover{color:#F6AD55;}
+</style>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%" data-uneditable="">
+
+<section data-label="01 標題" data-screen-label="01" data-speaker-notes="自我介紹一句，直接進主題：今天講兩件事——官方怎麼說、我怎麼做。" style="background:var(--s-bg-2);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <img src="brand/logo-akohub-horizontal.png" alt="Akohub" style="width:210px;height:auto;opacity:0.9;">
+  <div style="margin-top:auto;">
+    <div style="width:96px;height:6px;background:var(--s-orange);margin-bottom:48px;"></div>
+    <h1 style="font-family:var(--font-tc);font-size:var(--type-hero);font-weight:800;line-height:1.12;letter-spacing:-0.02em;margin:0;max-width:1680px;">模型路由：<br>官方方法論 × 我的 harness 實作</h1>
+    <p style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:400;line-height:1.4;color:var(--s-fg-2);margin:40px 0 0;max-width:1400px;">orchestrator、advisor、effort——以及它們在 Claude Code 裡怎麼落地</p>
+  </div>
+  <div style="margin-top:auto;display:flex;align-items:baseline;gap:20px;font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-teal);">
+    <span>philip</span>
+    <span style="color:var(--s-fg-3);">@</span>
+    <span>2026-07-28</span>
+    <span style="color:var(--s-fg-3);">·</span>
+    <span>ako workshop</span>
+  </div>
+</section>
+
+<section data-label="02 開場提問" data-screen-label="02" data-speaker-notes="停三秒讓大家想。多數人不知道答案——這就是今天的切入點。" style="background:var(--s-bg-2);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;">
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-hero);font-weight:800;line-height:1.24;letter-spacing:-0.02em;margin:0;max-width:1560px;text-wrap:pretty;">你上次派 subagent 出去，<br>是什麼模型在跑？</h2>
+  <div style="margin-top:72px;display:flex;flex-direction:column;gap:20px;max-width:1400px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);line-height:1.5;color:var(--s-fg-2);margin:0;">CC 預設 subagent 繼承主模型</p>
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);line-height:1.5;color:var(--s-orange);margin:0;">意思是：你可能在用最貴的模型翻譯 markdown，也可能在用最便宜的模型做架構判斷</p>
+  </div>
+</section>
+
+<section data-label="03 官方給的數字" data-screen-label="03" data-speaker-notes="這兩個數字是全場的經濟前提：搭配得好，品質幾乎不掉，價格砍掉三分之一。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">ClaudeDevs 官方 thread · 2026-07-07 · 576 萬 views</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;"><a href="https://x.com/ClaudeDevs/status/2074606058128224365">官方給的數字</a></h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:88px;">
+    <div>
+      <div style="font-family:var(--font-sans);font-size:var(--type-stat);font-weight:800;line-height:0.92;letter-spacing:-0.04em;color:var(--s-teal);font-variant-numeric:tabular-nums;">~92%</div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin-top:28px;">的分數</div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-sans);font-size:var(--type-stat);font-weight:800;line-height:0.92;letter-spacing:-0.04em;color:var(--s-orange);font-variant-numeric:tabular-nums;">~63%</div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin-top:28px;">的價格</div>
+    </div>
+  </div>
+  <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-3);margin:44px 0 0;">SWE-bench Pro：Sonnet 5 executor + 強模型 advisor　vs　強模型單跑</p>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">模型怎麼搭，紙面上就是錢跟品質的差</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">03 / 23</span>
+  </div>
+</section>
+
+<section data-label="04 本場地圖" data-screen-label="04" data-speaker-notes="先給地圖：左邊三件是官方方法論，右邊四層是我的落地。今天不談產品，只談方法與 harness。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">本場地圖</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">今天的兩條軸線</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;margin-top:64px;">
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:48px 44px;">
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:36px;">官方方法論（三件）</div>
+      <div style="display:flex;flex-direction:column;gap:26px;font-family:var(--font-mono);font-size:var(--type-lead);font-weight:500;">
+        <div>orchestrator</div>
+        <div>advisor</div>
+        <div>effort</div>
+      </div>
+    </div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:48px 44px;">
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-orange);letter-spacing:0.08em;margin-bottom:36px;">我的實作（四層）</div>
+      <div style="display:flex;flex-direction:column;gap:22px;font-family:var(--font-tc);font-size:var(--type-body);">
+        <div>三分類路由</div>
+        <div>全 stack 座標</div>
+        <div>enforce</div>
+        <div>失敗升級與第二意見</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-3);margin:0;">不講官方產品（API advisor tool / Managed Agents 雲服務）——只講方法論與 harness 落地</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">04 / 23</span>
+  </div>
+</section>
+
+<section data-label="05 Orchestrator" data-screen-label="05" data-speaker-notes="三份官方文件按時間排：定義、實戰、適用邊界。重點在 15 倍 token。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">官方方法論 一</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">Orchestrator：由上而下</h2>
+  <div style="display:grid;grid-template-columns:1000px 1fr;gap:64px;margin-top:48px;align-items:start;">
+    <image-slot id="s05-orchestrator" style="width:1000px;height:540px;" shape="rounded" radius="16" fit="contain" placeholder="官方 orchestrator 圖（ClaudeDevs thread 截圖）" src="./hmp6dwea4ae10vq-ms4axywn-ydio.jpeg"><img src="./hmp6dwea4ae10vq-ms4axmt5-wrpg.jpeg" alt="hmp6dwea4ae10vq" width="864" height="448" style="max-width: 100%; height: auto; display: block; position: absolute; left: 55px; top: 21px; z-index: 1; object-fit: cover; width: 864px; aspect-ratio: 1199 / 622"></image-slot>
+    <div>
+      <div style="padding-bottom:26px;border-bottom:1px solid var(--s-line);">
+        <div style="font-family:var(--font-sans);font-size:var(--type-cell);color:var(--s-fg);line-height:1.35;">Building effective agents</div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin-top:10px;">2024-12 · orchestrator-workers 原典定義</div>
+      </div>
+      <div style="padding:26px 0;border-bottom:1px solid var(--s-line);">
+        <div style="font-family:var(--font-sans);font-size:var(--type-cell);color:var(--s-fg);line-height:1.35;">How we built our multi-agent research system</div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin-top:10px;">2025-06 · lead agent 規劃、平行派 worker；燒 ~15 倍 token</div>
+      </div>
+      <div style="padding-top:26px;">
+        <div style="font-family:var(--font-sans);font-size:var(--type-cell);color:var(--s-fg);line-height:1.35;">Building multi-agent systems: when and how</div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin-top:10px;">什麼時候該用、什麼時候不該用</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">強模型當腦、便宜模型當手——但 <span style="color:var(--s-orange);">15 倍 token</span> 意味著不是所有任務都值得開編隊</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">05 / 23</span>
+  </div>
+</section>
+
+<section data-label="06 Advisor" data-screen-label="06" data-speaker-notes="advisor 是反過來的：便宜的那端主導，強模型只在被召喚時給一份 plan。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">官方方法論 二 · The advisor strategy（claude.com/blog）</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">Advisor：由下而上</h2>
+  <div style="display:grid;grid-template-columns:1000px 1fr;gap:64px;margin-top:48px;align-items:start;">
+    <image-slot id="s06-advisor" style="width:1000px;height:496px;" shape="rounded" radius="16" fit="contain" placeholder="官方 advisor 圖（ClaudeDevs thread 截圖）" src="./hmp3raeaaaauphe-ms4ay8yi-owqr.jpeg"></image-slot>
+    <div style="display:flex;flex-direction:column;gap:30px;">
+      <div style="display:flex;gap:22px;align-items:baseline;">
+        <span style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-teal);">01</span>
+        <span style="font-family:var(--font-tc);font-size:var(--type-cell);line-height:1.45;">便宜的 executor 做事</span>
+      </div>
+      <div style="display:flex;gap:22px;align-items:baseline;">
+        <span style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-orange);">02</span>
+        <span style="font-family:var(--font-tc);font-size:var(--type-cell);line-height:1.45;color:var(--s-orange);">卡關時召喚強模型要一份 plan</span>
+      </div>
+      <div style="display:flex;gap:22px;align-items:baseline;">
+        <span style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-teal);">03</span>
+        <span style="font-family:var(--font-tc);font-size:var(--type-cell);line-height:1.45;">拿到 plan 繼續自己跑</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:48px;display:flex;flex-direction:column;gap:18px;">
+    <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;">關鍵設計</div>
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;line-height:1.5;max-width:1560px;">advisor 只出策略、不碰工具、不產出面向使用者的內容；多數 token 燒在便宜那端</p>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">06 / 23</span>
+  </div>
+</section>
+
+<section data-label="07 effort" data-screen-label="07" data-speaker-notes="這頁是全場的軸心：路由是二維的。念一下英文原句，再給我的解讀。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">官方方法論 三 · Effort docs / Prompting Claude Opus 5</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">effort 是第三個旋鈕</h2>
+  <p style="font-family:var(--font-tc);font-size:var(--type-lead);color:var(--s-orange);margin:32px 0 0;line-height:1.35;">路由不是一維（換型號），是二維（model × effort）</p>
+  <div style="margin-top:52px;background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:44px 48px;display:flex;flex-direction:column;gap:28px;">
+    <p style="font-family:var(--font-sans);font-size:var(--type-cell);font-style:italic;color:var(--s-fg);margin:0;line-height:1.45;">“use low and medium liberally as your primary control for token cost and response time wherever your evals show quality holds”</p>
+    <p style="font-family:var(--font-sans);font-size:var(--type-cell);font-style:italic;color:var(--s-fg);margin:0;line-height:1.45;">“run a fresh effort sweep on your own evals”</p>
+  </div>
+  <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;">Opus 5：code review 在低 effort 精度不掉</p>
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;">Opus 5：多 subagent 協調能力強</p>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">07 / 23</span>
+  </div>
+</section>
+
+<section data-label="08 骨架對比" data-screen-label="08" data-speaker-notes="這張表 Slide 21 會回收。第一列是骨架的分水嶺：誰決定何時借智力。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">骨架對比</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">誰決定何時借智力</h2>
+  <div style="margin-top:56px;">
+    <div style="display:grid;grid-template-columns:420px 1fr 1fr;gap:48px;padding:24px 24px;border-bottom:1px solid var(--s-line-strong);">
+      <span></span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">Orchestrator</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">Advisor</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 1fr 1fr;gap:48px;padding:36px 24px;border-bottom:1px solid var(--s-line);background:rgba(246,173,85,0.10);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-orange);">誰決定何時借智力</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">brain 事前拆解</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">executor 做事中自己喊</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 1fr 1fr;gap:48px;padding:36px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">強模型的角色</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">規劃者 + 驗收者</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">顧問（只給 plan）</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 1fr 1fr;gap:48px;padding:36px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">適合</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">可拆解、可平行</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">長任務、plan 品質決定成敗</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">我的定位——orchestrator 為主、advisor 拆成兩層（自動 + 手動）</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">08 / 23</span>
+  </div>
+</section>
+
+<section data-label="09 三分類路由" data-screen-label="09" data-speaker-notes="分類軸是性質不是難度。實作類用 opus+medium，就是官方那句話的直接應用。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ①</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">三分類路由</h2>
+  <div style="margin-top:52px;">
+    <div style="display:grid;grid-template-columns:420px 420px 1fr;gap:48px;padding:24px 24px;border-bottom:1px solid var(--s-line-strong);">
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">分類</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">座標</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">用在哪</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 420px 1fr;gap:48px;padding:32px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">實作</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + medium</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">寫功能、多檔整合</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 420px 1fr;gap:48px;padding:32px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">機械</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-teal);">sonnet + low</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">翻譯、摘要、格式轉換</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 420px 1fr;gap:48px;padding:32px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">判斷</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + xhigh</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">架構取捨、verify、synthesis</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 420px 1fr;gap:48px;padding:32px 24px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">安全敏感（修飾符）</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg-2);">opus + high</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">防禦性安全工作</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin:0;max-width:1500px;">分類軸是任務性質、不是難度——性質穩定、難度模糊；實作類敢用 opus + medium 就是官方那句的直接應用</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">09 / 23</span>
+  </div>
+</section>
+
+<section data-label="10 直覺 vs 二維" data-screen-label="10" data-speaker-notes="主視覺之一。逐列走：每一列都是一維思維會踩的坑。第四列一維思維根本不存在。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:72px var(--pad-x) 56px;display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">主視覺</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">直覺設計 vs 二維設計</h2>
+  <div style="margin-top:40px;">
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:20px 20px;border-bottom:1px solid var(--s-line-strong);">
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.06em;color:var(--s-teal);">任務</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.06em;color:var(--s-teal);">直覺設計（按難度換型號）</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.06em;color:var(--s-teal);">我的設計（model × effort）</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.06em;color:var(--s-teal);">差在哪</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:26px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">翻譯 / 摘要大量內容</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">簡單 → 最小模型</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-teal);">sonnet + low</span>
+      <span style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);line-height:1.4;">大 input 時最小模型品質先崩；夠強的模型調低 effort 更穩</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:26px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">整合既有 code 的功能</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">一般 → 中檔模型</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + medium</span>
+      <span style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);line-height:1.4;">整合要讀既有 pattern，中檔模型常貼 spec 不比對現況</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:26px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">架構取捨 / verify</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">難 → 最強模型</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + xhigh</span>
+      <span style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);line-height:1.4;">同型號拉推理深度，比升型號便宜；「難」先問是不是「深」</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:26px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">防禦性安全工作</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:rgba(169,178,189,0.35);">（沒這行）</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + high、pre-route</span>
+      <span style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);line-height:1.4;">一維思維想不到：還要避開分類器中途拒答</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 340px 340px 1fr;gap:36px;padding:26px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">卡關</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">更難 → 直接上最強</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-orange);">先升 effort、再升 model</span>
+      <span style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);line-height:1.4;">effort 是便宜的第一階；跳級 = 燒配額</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:24px;display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">10 / 23</span>
+  </div>
+</section>
+
+<section data-label="11 Main session 三件事" data-screen-label="11" data-speaker-notes="orchestrator 的紀律在於克制。七條 don't-dispatch 只講三條。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ①</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">Main session 只做三件事</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:36px;margin-top:52px;">
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:36px 32px;">
+      <div style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-teal);margin-bottom:18px;">01</div>
+      <div style="font-family:var(--font-sans);font-size:var(--type-body);font-weight:600;margin-bottom:12px;">Routing</div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);">決定派誰</div>
+    </div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:36px 32px;">
+      <div style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-teal);margin-bottom:18px;">02</div>
+      <div style="font-family:var(--font-sans);font-size:var(--type-body);font-weight:600;margin-bottom:12px;">State read</div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);">小檔小指令</div>
+    </div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:36px 32px;">
+      <div style="font-family:var(--font-mono);font-size:var(--type-kicker);color:var(--s-teal);margin-bottom:18px;">03</div>
+      <div style="font-family:var(--font-sans);font-size:var(--type-body);font-weight:600;margin-bottom:12px;">Surgical edit</div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);">&lt; 3 行精修</div>
+    </div>
+  </div>
+  <div style="margin-top:52px;">
+    <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-orange);letter-spacing:0.08em;margin-bottom:24px;">反向 guard：7 條 don't-dispatch（列 3 條）</div>
+    <div style="display:flex;flex-direction:column;gap:16px;font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);">
+      <div>需要完整對話脈絡的不派</div>
+      <div>exploratory debugging 不派</div>
+      <div>共用 state 會互踩的不派</div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">orchestrator 不是「什麼都派」，是「知道什麼不該派」</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">11 / 23</span>
+  </div>
+</section>
+
+<section data-label="12 Demo 1" data-screen-label="12" data-speaker-notes="切 terminal。展示 subagent-routing.md SSOT、routed-* 定義檔，然後即時派一個 routed-mech。" style="background:var(--s-bg-2);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;">
+  <div style="font-family:var(--font-mono);font-size:var(--type-kicker);letter-spacing:0.14em;color:var(--s-teal);margin-bottom:44px;">DEMO 1</div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-hero);font-weight:800;line-height:1.15;letter-spacing:-0.02em;margin:0;">→ 現場：派一個 routed-mech</h2>
+  <p style="font-family:var(--font-mono);font-size:var(--type-body);color:var(--s-fg-3);margin:56px 0 0;">subagent-routing.md SSOT　+　routed-* 定義檔　+　即時派工</p>
+</section>
+
+<section data-label="13 agent 艦隊" data-screen-label="13" data-speaker-notes="16 個 agent 的座標分布。deep-explore 是反直覺格，值得多講三十秒。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ②</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">座標鋪滿 agent 艦隊</h2>
+  <div style="margin-top:52px;">
+    <div style="display:grid;grid-template-columns:420px 380px 1fr;gap:44px;padding:24px 24px;border-bottom:1px solid var(--s-line-strong);">
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">聚類</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">座標</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">為什麼</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 380px 1fr;gap:44px;padding:34px 24px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg);">reviewer 類 ×5</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + xhigh/high</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">判斷密度最高</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 380px 1fr;gap:44px;padding:34px 24px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg);">fetch/search 類 ×6</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-teal);">sonnet + low</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">機械 IO、吞吐優先</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 380px 1fr;gap:44px;padding:34px 24px;border-bottom:1px solid var(--s-line);align-items:baseline;background:rgba(246,173,85,0.10);">
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">deep-explore</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus + low</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">反直覺格：探勘要廣不要深——要見多識廣、別想太久</span>
+    </div>
+    <div style="display:grid;grid-template-columns:420px 380px 1fr;gap:44px;padding:34px 24px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg);">routed-* ×4</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">三分類 + 安全</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">即興派工預設格</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">13 / 23</span>
+  </div>
+</section>
+
+<section data-label="14 workflow 層" data-screen-label="14" data-speaker-notes="429 那次是真的踩過。教訓固化成參數，不是寫在 wiki 裡。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ②</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">座標也鋪到 workflow 層</h2>
+  <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:36px 0 0;">workflow 每個 stage 寫死 model。實掃結果：</p>
+  <div style="display:flex;gap:24px;margin-top:32px;">
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:12px;padding:22px 36px;font-family:var(--font-mono);font-size:var(--type-body);color:var(--s-orange);">opus ×7</div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:12px;padding:22px 36px;font-family:var(--font-mono);font-size:var(--type-body);color:var(--s-teal);">sonnet ×4</div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:12px;padding:22px 36px;font-family:var(--font-mono);font-size:var(--type-body);color:var(--s-fg-2);">haiku ×3</div>
+  </div>
+  <div style="margin-top:48px;display:flex;flex-direction:column;gap:22px;max-width:1560px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;line-height:1.45;">實例：deep-research workflow——Search / Fetch 釘 sonnet、verify 三票對抗投票釘 opus + xhigh</p>
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;line-height:1.45;">真實教訓：verifier 併發過高炸 <span style="font-family:var(--font-mono);color:var(--s-red);">429</span>，教訓固化成 throttle 參數寫死在 workflow 裡</p>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">座標不只選給「角色」、也選給「流程的每一站」</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">14 / 23</span>
+  </div>
+</section>
+
+<section data-label="15 Haiku 個案" data-screen-label="15" data-speaker-notes="主視覺之二。同一個模型在兩層待遇完全相反——這才是座標思維的證據。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:72px var(--pad-x) 56px;display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">主視覺</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">Haiku 個案：一個模型、兩種待遇</h2>
+  <div style="margin-top:40px;">
+    <div style="display:grid;grid-template-columns:300px 380px 1fr;gap:40px;padding:20px 20px;border-bottom:1px solid var(--s-line-strong);">
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">層</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">待遇</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">怎麼決定的</span>
+    </div>
+    <div style="display:grid;grid-template-columns:300px 380px 1fr;gap:40px;padding:32px 20px;border-bottom:1px solid var(--s-line);align-items:baseline;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">即興派工</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-red);">全域 deny</span>
+      <span style="font-family:var(--font-mono);font-size:26px;color:var(--s-fg-2);">settings 明文擋 Agent(model:haiku)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:300px 380px 1fr;gap:40px;padding:32px 20px;border-bottom:1px solid var(--s-line);align-items:center;background:rgba(246,173,85,0.10);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-orange);">Workflow 層</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-orange);">量王</span>
+      <span style="font-family:var(--font-mono);font-size:26px;color:var(--s-fg-2);">近 5 天 workflow agents：haiku <span style="font-size:56px;font-weight:700;color:var(--s-orange);">957</span>　/　sonnet 122　/　opus 22</span>
+    </div>
+  </div>
+  <p style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:700;color:var(--s-fg);margin:44px 0 0;line-height:1.3;">不是「用不用 Haiku」——是不信任它的判斷、只租它的手速</p>
+  <div style="margin-top:auto;padding-top:20px;display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">15 / 23</span>
+  </div>
+</section>
+
+<section data-label="16 座標是掃出來的" data-screen-label="16" data-speaker-notes="回收 Slide 7 的第二句 quote。三個 sweep 都是自己做的，不是抄 blog。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">回收 · Effort docs</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">座標是掃出來的、不是抄來的</h2>
+  <div style="margin-top:48px;background:var(--s-surface);border:1px solid var(--s-line);border-radius:16px;padding:40px 48px;">
+    <p style="font-family:var(--font-sans);font-size:var(--type-lead);font-style:italic;color:var(--s-teal);margin:0;line-height:1.35;">“run a fresh effort sweep on your own evals”</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:36px;margin-top:52px;">
+    <div>
+      <div style="font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-orange);margin-bottom:18px;">hook-llm-bench</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin:0;line-height:1.5;">自建 bench 掃 hook 場景甜蜜點</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-orange);margin-bottom:18px;">FAMIC2C 對照</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin:0;line-height:1.5;">code search 工具實測後才定 routing</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-orange);margin-bottom:18px;">shadow trial</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin:0;line-height:1.5;">判斷類降級用雙派影子對照驗品質</p>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">官方給的是方法，座標要自己掃</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">16 / 23</span>
+  </div>
+</section>
+
+<section data-label="17 enforce" data-screen-label="17" data-speaker-notes="數據要誠實講：攔截率低不是白做，是保險絲。團隊版不用做這麼重。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ③</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">enforce：紀律不能靠自律</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;margin-top:52px;">
+    <div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:22px;">問題</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);margin:0;line-height:1.5;">規則寫了 ≠ 會被遵守——main session 是 LLM、會忘</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:22px;">機制：派工 gate（hook）</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);margin:0;line-height:1.5;">沒帶分類標記 → 拒絕 + 提示重派<br>未指定 model → 直接攔</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:22px;">數據（12 天）</div>
+      <p style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);margin:0;line-height:1.5;">攔截率 3/64 = 4.7%<br>抽查偷懶率 ≈ 0%</p>
+      <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-2);margin:20px 0 0;line-height:1.5;">→ 轉入「保險絲模式」：平時安靜、換模型 / vendor 時接住</p>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:36px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">團隊版：不用做到 hook 這麼重——把 model 寫死在 agent 定義檔 frontmatter，就是最便宜的 enforce</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">17 / 23</span>
+  </div>
+</section>
+
+<section data-label="18 Demo 2" data-screen-label="18" data-speaker-notes="切 terminal。故意派不合規的 → 被拒 → 換 routed-* 通過 → tail audit log。" style="background:var(--s-bg-2);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;">
+  <div style="font-family:var(--font-mono);font-size:var(--type-kicker);letter-spacing:0.14em;color:var(--s-teal);margin-bottom:44px;">DEMO 2</div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-hero);font-weight:800;line-height:1.15;letter-spacing:-0.02em;margin:0;">→ 現場：看 gate 攔下一次派工</h2>
+  <p style="font-family:var(--font-mono);font-size:var(--type-body);color:var(--s-fg-3);margin:56px 0 0;">故意派一個不合規的 → 被拒 → 換 routed-* 通過；tail audit log</p>
+</section>
+
+<section data-label="19 自動失敗升級" data-screen-label="19" data-speaker-notes="階梯的重點是失敗軌跡要帶上樓，還有反向蒸餾。反例兩條要點名。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:76px var(--pad-x) 56px;display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:30px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ④ · advisor 第一層</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">自動失敗升級</h2>
+  <div style="display:grid;grid-template-columns:1fr 56px 1fr 56px 1fr;margin-top:64px;">
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:14px;padding:28px 32px;font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-teal);">sonnet 失敗</div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--s-fg-3);">→</div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:14px;padding:28px 32px;font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">opus（帶失敗軌跡）</div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--s-fg-3);">→</div>
+    <div style="background:var(--s-surface);border:1px solid var(--s-line);border-radius:14px;padding:28px 32px;font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-orange);">終級模型</div>
+  </div>
+  <p style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-fg-3);margin:24px 0 0;">同一問題最多 2 次修正；用盡走四選一：換路 / 升 effort / 外部第二意見 / 問人</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:72px;">
+    <div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:22px;">紀律一：失敗軌跡帶上樓</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;line-height:1.5;">原任務全文 + 上輪失敗輸出原樣貼 + 已排除方向</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-tc);font-size:var(--type-small);color:var(--s-teal);letter-spacing:0.08em;margin-bottom:22px;">紀律二：反向也有路</div>
+      <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;line-height:1.5;">強模型解出的重複模式蒸餾成完整 spec，降回 sonnet 批次套用</p>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:28px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:26px;color:var(--s-red);margin:0;">反例：換個措辭再派同級 = 燒額度沒升級；第一次修正就跳最強 = 燒配額跳級</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">19 / 23</span>
+  </div>
+</section>
+
+<section data-label="20 手動第二意見" data-screen-label="20" data-speaker-notes="本場重心。97 那格是重點：注意力花在哪，重心就在哪。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-orange);font-weight:600;">我的實作 ④ · advisor 第二層</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">手動第二意見</h2>
+  <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:28px 0 0;">官方 advisor 是 executor 自動喊救命；我的主力版本是人類決定何時借智力</p>
+  <div style="margin-top:40px;">
+    <div style="display:grid;grid-template-columns:340px 1fr 300px;gap:44px;padding:20px 24px;border-bottom:1px solid var(--s-line-strong);">
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">時機</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">做法</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-teal);">35 天行為稽核</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 1fr 300px;gap:44px;padding:30px 24px;border-bottom:1px solid var(--s-line);align-items:center;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">定方案前</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);"><span style="font-family:var(--font-mono);color:var(--s-fg);">/review-spec</span>　對抗式 review（之前場次講過）</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg-2);">15 sessions</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 1fr 300px;gap:44px;padding:30px 24px;border-bottom:1px solid var(--s-line);align-items:center;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);">卡關時</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);"><span style="font-family:var(--font-mono);color:var(--s-fg);">codex-rescue</span>　跨模型獨立診斷</span>
+      <span style="font-family:var(--font-mono);font-size:var(--type-cell);color:var(--s-fg-2);">15 sessions</span>
+    </div>
+    <div style="display:grid;grid-template-columns:340px 1fr 300px;gap:44px;padding:30px 24px;border-bottom:1px solid var(--s-line);align-items:center;background:rgba(246,173,85,0.10);">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-orange);">宣告完成前</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg);"><span style="font-family:var(--font-mono);color:var(--s-orange);">/pr-review</span>　多模型交叉審（上一場主角）</span>
+      <span style="font-family:var(--font-mono);font-size:60px;font-weight:700;color:var(--s-orange);line-height:1;">97</span>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:32px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:0;">自動升級備而少用、手動第二意見天天在用——注意力花在哪，重心就在哪</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">20 / 23</span>
+  </div>
+</section>
+
+<section data-label="21 第三個答案" data-screen-label="21" data-speaker-notes="回到 Slide 8 的表，補上第三欄。誠實講維護成本。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">回收骨架表</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">第三個答案</h2>
+  <div style="margin-top:48px;">
+    <div style="display:grid;grid-template-columns:400px 1fr 1fr 1fr;gap:40px;padding:22px 24px;border-bottom:1px solid var(--s-line-strong);">
+      <span></span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-fg-3);">Orchestrator</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-fg-3);">Advisor（官方）</span>
+      <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.08em;color:var(--s-orange);">我的第二意見層</span>
+    </div>
+    <div style="display:grid;grid-template-columns:400px 1fr 1fr 1fr;gap:40px;padding:40px 24px;border-bottom:1px solid var(--s-line);align-items:center;">
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-2);">誰決定何時借智力</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">brain 事前拆解</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-cell);color:var(--s-fg-3);">executor 自己喊</span>
+      <span style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:700;color:var(--s-orange);">人類</span>
+    </div>
+  </div>
+  <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg);margin:44px 0 0;">三個答案 = 三種成本結構（規劃成本 / token 成本 / 注意力成本）</p>
+  <div style="margin-top:auto;padding-top:32px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;gap:40px;">
+    <p style="font-family:var(--font-tc);font-size:26px;color:var(--s-fg-2);margin:0;">誠實說：這套維護成本不是零——95% 的時間 gate 是安靜的；偶爾派工的人，agent 定義檔釘 model 那招就夠</p>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">21 / 23</span>
+  </div>
+</section>
+
+<section data-label="22 明天就能用" data-screen-label="22" data-speaker-notes="收尾三件事，每件都是明天能做的。第二件最便宜、第三件回報最高。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">帶走</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">明天就能用的三件事</h2>
+  <div style="display:flex;flex-direction:column;gap:36px;margin-top:56px;">
+    <div style="display:grid;grid-template-columns:96px 1fr;gap:32px;align-items:baseline;padding-bottom:32px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-sans);font-size:56px;font-weight:800;color:var(--s-orange);line-height:1;">01</span>
+      <div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:700;margin-bottom:14px;">分類意識</div>
+        <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;">派工前問一句「這是實作、機械、還是判斷？」</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:96px 1fr;gap:32px;align-items:baseline;padding-bottom:32px;border-bottom:1px solid var(--s-line);">
+      <span style="font-family:var(--font-sans);font-size:56px;font-weight:800;color:var(--s-orange);line-height:1;">02</span>
+      <div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:700;margin-bottom:14px;">agent 定義檔釘 model + effort</div>
+        <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;">最便宜的 enforce；難題先升 effort，再考慮換模型</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:96px 1fr;gap:32px;align-items:baseline;">
+      <span style="font-family:var(--font-sans);font-size:56px;font-weight:800;color:var(--s-orange);line-height:1;">03</span>
+      <div>
+        <div style="font-family:var(--font-tc);font-size:var(--type-lead);font-weight:700;margin-bottom:14px;">高風險決策手動借智力</div>
+        <p style="font-family:var(--font-tc);font-size:var(--type-body);color:var(--s-fg-2);margin:0;">定方案前 / 卡關時 / 宣告完成前，花一次注意力叫第二意見，比事後修便宜</p>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding-top:28px;display:flex;justify-content:flex-end;">
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">22 / 23</span>
+  </div>
+</section>
+
+<section data-label="23 延伸閱讀" data-screen-label="23" data-speaker-notes="不逐條講，投影著讓大家拍照。" style="background:var(--s-bg);color:var(--s-fg);font-family:var(--font-tc);padding:var(--pad-top) var(--pad-x) var(--pad-bottom);display:flex;flex-direction:column;box-sizing:border-box;">
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:36px;">
+    <img src="brand/logo-akohub-round.png" alt="" style="width:40px;height:40px;border-radius:50%;display:var(--s-logo-display,block);">
+    <span style="font-family:var(--font-sans);font-size:var(--type-kicker);letter-spacing:0.12em;color:var(--s-teal);font-weight:600;">延伸閱讀</span>
+  </div>
+  <h2 style="font-family:var(--font-tc);font-size:var(--type-title);font-weight:700;line-height:1.2;margin:0;">出處清單</h2>
+  <div style="display:flex;flex-direction:column;gap:24px;margin-top:56px;font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-fg-2);">
+    <div>anthropic.com/engineering/building-effective-agents</div>
+    <div>anthropic.com/engineering/multi-agent-research-system</div>
+    <div>claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them</div>
+    <div>claude.com/blog/the-advisor-strategy</div>
+    <div>claude.com/blog/claude-model-and-effort-level-in-claude-code</div>
+    <div>platform.claude.com/docs/en/build-with-claude/effort</div>
+    <div>platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5</div>
+  </div>
+  <div style="margin-top:auto;padding-top:32px;border-top:1px solid var(--s-line);display:flex;justify-content:space-between;align-items:baseline;">
+    <span style="font-family:var(--font-mono);font-size:var(--type-small);color:var(--s-teal);">philip @ 2026-07-28 · ako workshop</span>
+    <span style="font-family:var(--font-mono);font-size:24px;color:var(--s-fg-3);display:var(--s-footer-display,inline);">23 / 23</span>
+  </div>
+</section>
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showLogo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Deck chrome&quot;},&quot;showPageNumbers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Deck chrome&quot;},&quot;textScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.85,&quot;max&quot;:1.15,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Deck chrome&quot;}}">
+class Component extends DCLogic {
+  syncTheme() {
+    const r = document.documentElement.style;
+    r.setProperty('--s-logo-display', this.props.showLogo === false ? 'none' : 'block');
+    r.setProperty('--s-footer-display', this.props.showPageNumbers === false ? 'none' : 'inline');
+    r.setProperty('--s-scale', String(this.props.textScale ?? 1));
+  }
+  componentDidMount() { this.syncTheme(); }
+  componentDidUpdate() { this.syncTheme(); }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
