@@ -27,6 +27,12 @@ let html = article
   .replace(/<footer[\s\S]*?<\/footer>/, "")
   .replace(/<h1[\s\S]*?<\/h1>/, "");
 
+// 站內相對連結轉絕對。不轉的話：Medium 貼上後變 medium.com/blog/…、vocus 的 Lexical 解析成
+// vocus.cc/blog/… 兩邊都是死連結（2026-07-29 #109 兩平台各撞一次）。負向前瞻排除
+// protocol-relative 的 href="//cdn…"。
+const relativeLinks = (html.match(/href="\/(?!\/)/g) ?? []).length;
+html = html.replace(/href="\/(?!\/)/g, `href="${site}/`);
+
 const preBlocks = [];
 html = html.replace(/<pre[\s\S]*?<\/pre>/g, (m) => {
   preBlocks.push(m);
@@ -53,6 +59,7 @@ console.log(
       bytes: html.trim().length,
       codeBlockPlaceholders: preBlocks.length,
       tablePlaceholders: tables.length,
+      relativeLinksAbsolutised: relativeLinks,
       paragraphs: (html.match(/<p[ >]/g) ?? []).length,
       headings: (html.match(/<h2[ >]/g) ?? []).length,
     },

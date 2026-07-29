@@ -1,6 +1,6 @@
 ---
 name: vocus-syndicate
-description: 把 gggodlin-blog 已在原站上線的文章「全文轉發」到方格子（vocus，vocus.cc）的 claude-in-chrome 代發流程。Trigger：「轉發到方格子」「同步到 vocus」「把這篇或某 slug 發到方格子」「cross-post to vocus」，或 /vocus-syndicate 帶 slug。Do not use for：轉發到 Medium（走 medium-syndicate）、分享層貼文（LinkedIn / Threads / FB 只貼摘要＋連結）、文章尚未在原站發布（先走正常發布流程）、修改已轉發的 vocus 文章。
+description: 把 gggodlin-blog 已在原站上線的文章「全文轉發」到方格子（vocus，vocus.cc）的瀏覽器代發流程。Trigger：「轉發到方格子」「同步到 vocus」「把這篇或某 slug 發到方格子」「cross-post to vocus」，或 /vocus-syndicate 帶 slug。Do not use for：轉發到 Medium（走 medium-syndicate）、分享層貼文（LinkedIn / Threads / FB 只貼摘要＋連結）、文章尚未在原站發布（先走正常發布流程）、修改已轉發的 vocus 文章。
 ---
 
 # 方格子（vocus）轉發標準流程
@@ -23,9 +23,10 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 5. **開瀏覽器 + 進編輯器**：`tabs_context_mcp` 看現況 → 新分頁開 `https://vocus.cc/`。
    - 未登入 → 停，請使用者登入後說「好了」再從本步重來（不代登入）。
    - 已登入 → 點右上「創作」。**若跳「請完成手機驗證」彈窗** → 停，請使用者自己完成手機簡訊驗證（帳號級一次性前置，驗證碼只進使用者手機、輸入它是使用者的帳號安全動作，不代填）；驗證後通常會落到 `vocus.cc/creatordesk`。
-   - 在 creatordesk 選「**文章**」（完整編輯功能；不要選「貼文」）→ 自動建草稿、URL 變 `vocus.cc/new-editor/{id}`、編輯器出現 → 接 Step 6。
+   - 在 creatordesk 選「**文章**」（完整編輯功能；不要選「貼文」）→ 自動建草稿、URL 變 `vocus.cc/new-editor/{id}`、編輯器出現。
+   - **降級偵測（編輯器出現後、貼內容前做這一下）**：JS focus 標題 textarea → real `type` 一兩個字元 → 讀 `textarea.value` 有沒有變。沒變 ＝ claude-in-chrome 的 CDP 鍵盤管道已壞（同族現象見「踩過的坑」的 input 降級條，且它跨 CC session 存活、換 session 沒用）→ **切流程尾端的「備援：chrome-devtools MCP 通道」段**，不要照 Step 6 的 claude-in-chrome 路徑硬走（字元輸入繞不過，硬走會發殘稿）。通道正常 → 接 Step 6。
 6. **內容注入（代發）**：
-   1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>` 產 `<outDir>/paste.html`（抓已發布頁、剝 header/footer/H1、程式碼與表格換 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符）。
+   1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>` 產 `<outDir>/paste.html`（抓已發布頁、剝 header/footer/H1、**把站內相對連結轉成絕對**〔2026-07-29 加，輸出 `relativeLinksAbsolutised` 回報轉了幾個〕、程式碼與表格換 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符）。
    2. **標題**：點標題區（placeholder「請輸入文章名稱」）→ `type` 貼上 prep 的 `title`（vocus 標題用 `type` 實測穩，不像 Medium 會吞英文段；打完看分頁標題已更新即確認）。
    3. **內文**：`bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html`（輸出含 «class HTML»）→ 點內文區（placeholder「開始創作你的精彩內容」）→ `cmd+v`。
    4. JS 驗證：`document.querySelectorAll('a').length` 對上 paste.html 外連數、標題層級在、無殘留 ⟦⟧ 佔位符。明顯缺段重貼一次。完成 → 接 Step 7。
@@ -44,6 +45,52 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 
     寫完 grep 回讀確認該行存在 → 給使用者驗收回報：vocus 文章 URL、內容保真度（外連/標題/佔位符）、canonical 現況。流程結束。
 
+## 備援：chrome-devtools MCP 通道（claude-in-chrome CDP 死時）
+
+**什麼時候切**：Step 5 降級偵測命中（標題 real `type` 後 textarea `.value` 沒變）。claude-in-chrome 那條通道是行程級死亡、跨 CC session 存活；**chrome-devtools MCP 是獨立 CDP 通道**（不走 extension、直連 DevTools Protocol），extension 死時它通常仍活。判斷法：`mcp__chrome-devtools__list_pages` 列得出分頁 ＝ 通道通。2026-07-29 #109 整篇 vocus 就是全程走這條發完的。
+
+**與 claude-in-chrome 路徑的差異**：沒有 `pbcopy → cmd+v` 系統剪貼簿路徑（CDP `press_key Meta+V` 只 fire keyboard event、不觸發作業系統 shortcut handler）。Lexical 的 paste handler 不 check `event.isTrusted`，所以**用 `dispatchEvent(new ClipboardEvent('paste', {clipboardData: DataTransfer}))` 注入**，`dispatched:false` 表示 handler 消化了事件 ＝ 成功。
+
+**代發配方**（走此段時 Step 6 的貼上與 Step 8/9 的 UI 操作全改成這裡的步驟）：
+
+1. **進編輯器**：`new_page` 到 `https://vocus.cc/creatordesk` → JS 找「文章」卡片（`textContent` 以「文章」開頭且含「完整的編輯功能」）→ `.click()`；**卡片要點兩下才導航**（第一下只進 hover 態），JS 連點兩次並驗 URL 變 `new-editor` 即可。
+2. **標題**：JS `document.querySelector('textarea[placeholder="請輸入文章名稱"]').focus()` → `type_text` 打標題 → 驗 `textarea.value` 與 `document.title`。**vocus 標題不吞頭**（與 Medium 相反，2026-07-29 一次到位）。
+3. **內文——讓瀏覽器自己 fetch 原站，不要經手 HTML 字串**。原站（GitHub Pages）回 `access-control-allow-origin: *`，可直接跨源抓。**模型唯一要打的變數是那個短網址**：
+
+   ```js
+   async () => {
+     const SRC = 'https://gggodlin.github.io/blog/<slug>/';   // 唯一要換的地方
+     const doc = new DOMParser().parseFromString(await (await fetch(SRC)).text(), 'text/html');
+     const art = doc.querySelector('article');
+     art.querySelectorAll('header, footer, h1').forEach(e => e.remove());
+     art.querySelectorAll('a[href^="/"]').forEach(a => a.setAttribute('href', new URL(a.getAttribute('href'), SRC).href));
+     const html = art.innerHTML.trim();
+
+     const root = document.querySelector('.ContentEditable__root');
+     root.focus();
+     const range = document.createRange();
+     range.selectNodeContents(root.firstElementChild || root);
+     range.collapse(true);
+     const sel = window.getSelection();
+     sel.removeAllRanges(); sel.addRange(range);
+
+     const dt = new DataTransfer();
+     dt.setData('text/html', html);
+     dt.setData('text/plain', html.replace(/<[^>]+>/g, ''));
+     const dispatched = root.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+     return { dispatched, htmlLen: html.length };
+   }
+   ```
+
+   ⚠️ **不要走「base64 encode paste.html → 貼進 function body」**（舊配方，2026-07-29 廢止）：長 base64 由模型逐字複述必然漂移，實測 Medium 與 vocus 各壞掉同一個字。詳見「踩過的坑」對應條。
+4. **逐塊比對（不可省）**：JS 取 `[...root.children]` 的 `textContent` 陣列，與原文段落逐塊 diff。注入成功（`dispatched:false`）證明不了字元級正確——2026-07-29 那個錯字就是靠這步抓到的。
+5. **發佈設定三步**（Step 8 的 UI 操作，chrome-devtools 版）：
+   - **分類 combobox**：`chrome-devtools click` 對它會 timeout（元素不進 interactive 狀態）。改 JS 對外層容器依序派 `mousedown` → `mouseup` → `click`（React select 監聽的是前兩個、不是 `click`），驗 `aria-expanded` 變 `true` → 再 JS 找選項文字節點 `.scrollIntoView({block:'center'})` + `.click()`。
+   - **縮圖**：JS 找 label 含「不使用縮圖」的 radio `.click()`（文章無圖時的常規選擇）。
+   - **整合網址**：JS 勾 label 含「啟用整合網址」的 checkbox → 找 `input[placeholder*="https://"]` → **用 React native setter 寫值**（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, url)` + `dispatchEvent(new Event('input',{bubbles:true}))`），直接設 `.value` 不會觸發 React onChange。
+   - **發佈狀態**：JS 找 label 以「公開發佈」開頭的 radio `.click()`。
+6. **發佈**：⚠️ **選了「公開發佈」之後，底部按鈕文字會從「確認」變成「確認發佈」**——用精確字串找按鈕的話要找後者，找「確認」會 miss。JS `.click()` 它，驗 body 出現「發佈成功」，公開 URL 從「前往內容頁」連結的 `href`（`/article/{id}`）取。接 Step 10。
+
 ## 踩過的坑（撞反例就補一行）
 
 - **方格子沒有可用的 agent 發文 API**（FC-064/065）：官方零 API；內部 `POST/PATCH /api/articles*` 要 Bearer JWT（localStorage `id_token`，會過期）＋ Lexical JSON 內容 ＋ 多支序列呼叫。不要再評估「打一支 API 就發布」——它是序列、且 ROI 對手動量不划算。配方在 references 供未來參考。
@@ -57,7 +104,10 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **但「剪貼簿 plain text 殘留覆蓋 HTML」會讓上條失效**（2026-06-25 第十五篇 steal-determinism-layer 實測）：`clipboard-html.sh` 走 `osascript «data HTML»` **只設 HTML flavor、不動 plain text**。若 plain text 已有殘留（前次 triple_click 觸發 vocus 寫的 node UUID、或使用者其他 chrome tab 累積的 URL），`osascript clipboard info` 看會「«class HTML», 626, «class utf8», 54」**雙 flavor 並存**、Lexical 從 plain text 抓 → 貼出殘留字串而非 table HTML（症狀＝佔位符位置變 UUID 或無關 URL，但 `clipboard-html.sh` 自己 echo 的 「«class HTML», N bytes」一切正常）。**解＝改用 swift NSPasteboard 同時設 `.html`（= `public.html`，web 標準 MIME，Lexical 認）+ 空格 plain text 雙 flavor**：寫個 `clip-html.swift` 走 `NSPasteboard.general.clearContents(); setString(html, forType: .html); setString(" ", forType: .string)`、`swift clip-html.swift /tmp/vocus-table-N.html` 跑、`osascript clipboard info` 看「«class HTML», N, ..., string, 1」即正確。三篇全過可能是當時 plain text 剛好空；新文章別賭運氣、預設改用 swift 版本（osascript 版留 fallback）。
 - **table paste 失敗的 recovery 走 cmd+z 比 triple_click+Delete 乾淨**（2026-06-25 實測）：cmd+v 貼錯（變 URL/UUID）後不要再 triple_click 那段——`triple_click` 觸發 vocus copy event 寫進 plain text 剪貼簿，會再次覆蓋掉剛剛 swift 設的雙 flavor。`cmd+z` 撤回失敗 paste **不觸發 copy event**、不動剪貼簿、游標停留在原位（空段），重設剪貼簿後立即 `cmd+v` 即成。順序：cmd+v 失敗 → cmd+z → swift 設雙 flavor → cmd+v。
 - **code block 用工具列「程式碼」鈕重建即可**（2026-06-13 第三批實測）：三連點選 ⟦CODE-BLOCK-N⟧ → Backspace 刪除 → 點工具列第 5 個圖示「程式碼」→ 空 code block 出現 → `type` 打入內容。實測 2 行 log 輸出正常。
-- **相對內部連結會被 Lexical 解析成 vocus 網域**（2026-06-13 實測）：paste.html 若含 `<a href="/blog/xxx/">` 相對連結，貼進 vocus 編輯器後 Lexical 解析成 `https://vocus.cc/blog/xxx/`（錯的）。**JS DOM 修改 `a.href` 不進 Lexical 狀態樹**（重載後還原），必須透過編輯器 UI 修：點連結 → 出現 URL 彈窗 → 點鉛筆圖示 → 三連點選 URL → type 正確完整 URL → Enter 確認。prep script 的 `externalLinks: 0` 不代表沒連結，要 `grep '<a ' paste.html` 檢查有無相對連結。
+- **相對內部連結會被 Lexical 解析成 vocus 網域**（2026-06-13 實測）：paste.html 若含 `<a href="/blog/xxx/">` 相對連結，貼進 vocus 編輯器後 Lexical 解析成 `https://vocus.cc/blog/xxx/`（錯的）。**JS DOM 修改 `a.href` 不進 Lexical 狀態樹**（重載後還原），必須透過編輯器 UI 修：點連結 → 出現 URL 彈窗 → 點鉛筆圖示 → 三連點選 URL → type 正確完整 URL → Enter 確認。
+  ✅ **2026-07-29 已在共用 script 根治**：`medium-paste-html.mjs` 加了轉絕對邏輯（負向前瞻排除 protocol-relative `//cdn…`），兩篇回歸實測 0 殘留。Medium 吃的是同一個坑（解析成 `medium.com/blog/…`），修在共用 script 等於兩平台一起解。上面的編輯器 UI 修法留作 fallback——**若 `relativeLinksAbsolutised` 回報 0 但你 `grep '<a href="/' paste.html` 仍有命中，代表 script 的轉換沒生效，才走 UI 手修**。
+- **模型逐字複述長 base64 必然漂移——所以內文注入走瀏覽器端 fetch**（2026-07-29 #109，配方在備援段步驟 3）：舊配方要模型把數千字元的 base64 貼進 `evaluate_script`，實測**同一串 base64 在 vocus（Lexical）與 Medium（draft-js）各壞掉同一個字**（小標的「就」→「面」）。追鏈：`paste.html` 原檔十六進位 `e5b0b1`=就 ✅ → bash 產的 base64 解碼回來=就 ✅ → **模型複製進 function body 的那串=面 ❌**。同輪對照組：19 段中文正文複述 0 漂移——**有語意的內容複述得住、無語意的隨機字串複述不住**。通則：要進 `evaluate_script` 的長字串一律不經模型的手，讓瀏覽器自己 fetch（原站有 `access-control-allow-origin: *`，2026-07-29 curl 帶 `Origin` 實測）。
+- **「注入成功」不等於「內容正確」——逐塊比對不可省**（同輪）：Lexical 消化事件（`dispatched:false`）只證明管道通了，證明不了字元級正確。那個錯字是靠「vocus 端 19 塊 vs 發布檔 19 塊逐塊 diff」抓到的，肉眼掃不出來。Step 6.4 的比對是硬要求。
 - **「文章」卡片要點兩下才導航**（2026-06-13 實測）：creatordesk 的「文章」卡第一下只進 hover 態（標籤變「開始文章創作」）、第二下才跳 new-editor。這是正常 hover 機制不是降級。但若 **3 下以上都只 hover、URL 不變 new-editor，且 `find`→ref click 也不 fire ＝ session 級輸入降級**（見下條）。
 - **單分頁紀律避免前景焦點洩漏**（2026-06-13 實測）：開多個編輯器分頁後，coordinate click 會洩漏到「別的分頁」（實測點 A 分頁、結果 B 分頁導航了），症狀像降級其實是焦點混亂。對策＝**每篇做完複用同一個分頁 `navigate` 回 creatordesk，別累積編輯器分頁**；雜散分頁先 `tabs_close_mcp` 關掉。清到單分頁後輸入即恢復——這跟下條真降級不同。
 - **單分頁下仍會在 ~4 篇後 input 降級（不可逆，呼應 medium）**（2026-06-13 實測）：即使單分頁，做到第 4-5 篇時「文章」卡 click（coordinate 與 ref 兩種點法）都只 hover 不 fire navigation。這是 CDP/輸入管道 session 級降級，**減載/換點法都救不回**，要 fresh CC session ＋ 完整重啟 Chrome（cmd+Q）。**運維鐵則：一個 session 穩做 ~4 篇就主動收手**，別硬撞到降級才停。

@@ -31,7 +31,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
    全部處理完 → 接 Step 5。
 5. **開瀏覽器**：`tabs_context_mcp` 看現況 → 新分頁開 `https://medium.com/new-story`。出現登入頁 → 停，請使用者登入 Medium 後說「好了」再從本步重來（不代登入，這是流程唯一需要使用者操作的點）。已登入看到編輯器 → **降級偵測**：對 Medium 標題塊做 click + real `type "AB"`；先照踩過的坑「fresh `/new-story` 純 `cmd+v` 會被吞」條走 type-to-wake，若 type 一/兩字後 titleText 仍不變、URL 仍卡 `/new-story`，代表 claude-in-chrome extension 的 CDP 鍵盤管道已壞（同族現象：Chrome cmd+Q 沒真殺行程、或 extension socket 卡死）→ 切「備援：chrome-devtools MCP 通道」段（見流程尾端）。通道正常 → 接 Step 6。
 6. **內容注入（代發）**：
-   1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
+   1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、**把站內相對連結轉成絕對**（2026-07-29 加，輸出 `relativeLinksAbsolutised` 回報轉了幾個）、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
    2. 跑 `bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html` 把 HTML 放進系統剪貼簿（輸出應含 «class HTML»）
    3. **標題用剪貼簿貼上、不要用 `type`**（`type` 對混中英數標題會丟英文段，2026-06-13 實撞 MEMORY.md/25KB 被吞）：`printf '%s' '<title>' | pbcopy` → JS 取 `.graf--title` 的 `getBoundingClientRect()` 拿實際座標（**每分頁重讀，視窗大小變時座標會變**；空標題塊要點靠左 placeholder 文字處 ≈ x=460，點中心 x=744 會落右側空白、focus 跑去內文）→ 真實 `left_click` 該座標 → **`type` 一個字元喚醒草稿**（fresh `/new-story` 未實例化時純 `cmd+v` 會被吞、URL 卡 /new-story；type 一字後 URL 變 `/p/<id>/edit` 才算醒；type 偶爾首發也被吞、重點重打一次）→ `cmd+a` 全選 → `Delete` → `cmd+v` 貼標題 → JS 讀 `.graf--title` 比對（NBSP 差異可接受，用 `.replace(/ /g,' ')` 正規化後比）。不符 → 重貼一次
    4. 重新 `bash clipboard-html.sh <outDir>/paste.html` 載回內文 HTML → 按 `Return` 在標題下建新塊（**不要用 Down**——單行標題按 Down 游標沒離開標題塊、貼上第一段會被吸進標題；Return 才建獨立新塊）→ `cmd+v` 貼內文 → JS 確認段落數與 paste.html 的 paragraphs 大致相符、無殘留 ⟦⟧ 佔位符、無「Something is wrong」存檔錯誤。明顯缺段 → 重貼一次；仍失敗 → 停，回報使用者
@@ -60,7 +60,35 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 
 1. **開分頁**：`mcp__chrome-devtools__new_page` 到 `https://medium.com/new-story` → `evaluate_script` 等 3 秒後驗 `.graf--title` 存在。
 2. **標題**：`take_snapshot` 拿 title heading uid → `click` 該 uid（selection anchor 會落 title 內 `#text`）→ `type_text` 標題（中英數混合會吞開頭段 → 打完必驗 title.textContent 完整，缺頭就 `evaluate_script` 設 selection 到 title offset 0 + 再 `type_text` 補打）。URL 從 `/new-story` 升 `/p/<id>/edit` 才算實例化成功。
-3. **body 注入**：base64 encode paste.html（`base64 -i paste.html | tr -d '\n'`）→ `evaluate_script` 的 function body 內 inline 該 base64（args 只吃 uid、不能傳 HTML）→ 內部 `atob` + `TextDecoder` 復原 HTML → `DataTransfer.setData('text/html', html) + setData('text/plain', ...)` → `dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true}))` 到 `.postArticle-content` surface。draft-js 消化後段落齊 render。
+3. **body 注入——讓瀏覽器自己去 fetch 原站，不要經手 HTML 字串**。原站（GitHub Pages）回 `access-control-allow-origin: *`（2026-07-29 curl 實測，帶 `Origin: https://medium.com` 也回 `*`），所以 `evaluate_script` 可以直接跨源抓文章頁、在瀏覽器端剝除與轉換。**模型唯一要打的變數是那個短網址**，不碰任何長字串。整段照貼：
+
+   ```js
+   async () => {
+     const SRC = 'https://gggodlin.github.io/blog/<slug>/';   // 唯一要換的地方
+     const doc = new DOMParser().parseFromString(await (await fetch(SRC)).text(), 'text/html');
+     const art = doc.querySelector('article');
+     art.querySelectorAll('header, footer, h1').forEach(e => e.remove());
+     art.querySelectorAll('a[href^="/"]').forEach(a => a.setAttribute('href', new URL(a.getAttribute('href'), SRC).href));
+     const html = art.innerHTML.trim();
+
+     const surface = document.querySelector('.postArticle-content');
+     const target = surface.querySelector('.graf--p');     // 標題下第一個空段
+     const range = document.createRange();
+     range.selectNodeContents(target);
+     const sel = window.getSelection();
+     sel.removeAllRanges(); sel.addRange(range);
+
+     const dt = new DataTransfer();
+     dt.setData('text/html', html);
+     dt.setData('text/plain', html.replace(/<[^>]+>/g, ''));
+     const dispatched = surface.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+     return { dispatched, htmlLen: html.length };   // dispatched:false = draft-js 消化了事件 = 成功
+   }
+   ```
+
+   **重貼（改錯要覆蓋整段內文）時**把 selection 換成整段內文：`const body = [...surface.querySelectorAll('.graf')].filter(g => !g.className.split(/\s+/).includes('graf--title')); range.setStartBefore(body[0]); range.setEndAfter(body.at(-1));`
+
+   ⚠️ **不要走「base64 encode paste.html → 貼進 function body」那條路**（舊配方，2026-07-29 廢止）：4,692 字元的 base64 由模型逐字複述必然漂移，實測同一串 base64 在 Medium 與 vocus 各壞掉同一個字（「就」→「面」），而 bash 端解碼回來完全正確——漂移發生在模型複述那一步。同輪對照組：19 段中文正文複述 0 漂移，**有語意的內容複述得住、無語意的隨機字串複述不住**。
 4. **驗完整性**：`evaluate_script` 對比 Medium `.graf` 全塊 vs `paste.html` 塊清單，兩邊 Python 端 diff。**一次塞多塊時 draft-js 常把尾端 4-5 塊壓成 1 塊**（本次 46 塊實撞、tail P41-P45 被合成 M42「呼叫頻率謫」中間文字全丟）→ 提取尾段 HTML 另存 tail-N.html、選中錯合段（`Range.selectNodeContents(lastGraf)`）再 `dispatchEvent` paste 補注入、然後 `press_key Backspace` 刪錯合段（附帶會削掉末字元、`type_text` 補回）。
 5. **canonical**（Step 8 同分支邏輯、UI 操作改 chrome-devtools）：點三點 menu button（uid 通常無 description）→ `More settings` link → `evaluate_script` 找 `#advanced_settings button` 展開 collapsible → JS 找 checkbox `input[type=checkbox]` 中 parent 含「originally published elsewhere」的那個 → `.click()`（chrome-devtools `click` uid 可能 timeout、改 JS click）→ 找 `input[placeholder="Type the canonical URL..."]`：`disabled=true` 走「Edit canonical link」button click 進編輯模式 → **用 React native input setter 改 value**（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, url)` + `dispatchEvent(new Event('input',{bubbles:true}))`）觸發 React onChange → click「Save canonical link」button。
 6. **topics / Publish**（Step 9）：`click` topic combobox uid → `type_text "Claude Code"` → 等 2 秒 → `press_key Enter`（建 chip）→ 等 1 秒 → `press_key Enter`（clear input）→ 驗 chip 上 → 下一個。全部完成後 `click` Publish button uid。
@@ -96,4 +124,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **舊文補設 canonical 的 input 是 disabled、要先 click「Edit canonical link」進編輯模式**（2026-06-29 #15 補設實撞）：新文剛勾「originally published elsewhere」時 input 直接 editable + 預填 Medium-self URL（可立刻 cmd+a + type）；但已發布過、之前曾經設過 / 預設 Medium-self 的舊文，重訪 settings 時 input 是 **disabled + 顯示「Edit canonical link」button**（非 Save），type 完全沒進去。對策：用 JS `document.querySelectorAll('input[placeholder="Type the canonical URL..."]')` 看 `disabled` 屬性判斷分支——disabled=true 必先 click「Edit canonical link」button、disabled=false 直接 click input + cmd+a + type。Step 8 已收兩條分支配方。
 - **Chrome 行程級 CDP 鍵盤降級跨全域、cmd+Q 未必解**（2026-07-18 #97 local-llm-hook-judge 實撞）：症狀是 real `type` 進任何頁面（Medium editor / Google 搜尋框）都 no-op；上方「單一 session 跑一批 ~4 篇後就會降級」條記載「cmd+Q 完整重啟 Chrome」是解，本次使用者宣稱已重啟後仍降級——可能只關視窗未真殺行程（macOS `pkill -9 "Google Chrome"` 才確定），或 claude-in-chrome extension 內部 socket 死透。**驗證法**：`navigate` Google 首頁 → real type "ABCDE" → 讀 `q.value`，仍空 = 確認全域降級（不是 Medium 特殊）。此狀態別再嘗試 claude-in-chrome 路徑、切「備援：chrome-devtools MCP 通道」段。
 - **draft-js 拒 `execCommand('insertHTML')`、只吃 ClipboardEvent paste**（2026-07-18 #97 實撞）：走 chrome-devtools MCP 時試過先用 `execCommand('insertHTML', false, html)` 塞 body → return true 看似成功，但 draft-js 過濾掉所有 HTML tag 只保留 `\n` 換行、擠成一段、觸發「Something is wrong and we cannot save」紅條、伺服器不存。完整穩定配方（ClipboardEvent paste dispatch）詳見「備援：chrome-devtools MCP 通道」段步驟 3。
+- **模型逐字複述長 base64 必然漂移——所以 body 注入改走瀏覽器端 fetch**（2026-07-29 #109 實證，配方已改進備援段步驟 3）：舊配方要模型把 4,692 字元的 base64 貼進 `evaluate_script` 的 function body，實測**同一串 base64 在 Medium（draft-js）與 vocus（Lexical）各壞掉同一個字**（小標的「就」→「面」）。追鏈：`paste.html` 原檔十六進位 `e5b0b1`=就 ✅ → bash 產的 base64 解碼回來=就 ✅ → **模型複製進 function body 的那串=面 ❌**。同一輪的對照組：19 段中文正文（拿來做逐塊比對用）複述 0 漂移——**有語意的內容複述得住、無語意的隨機字串複述不住**。通則：任何要進 `evaluate_script` 的長字串都不該經模型的手，改讓瀏覽器自己去 fetch（原站有 `access-control-allow-origin: *`）。
+- **「注入成功」不等於「內容正確」——逐塊比對不可省**（同輪）：`dispatched:false`（handler 消化事件）只證明注入管道通了，證明不了字元級正確。上面那個錯字是靠「Medium 端 20 塊 vs 發布檔 20 塊逐塊 diff」抓到的，肉眼掃過去不會發現。Step 7 的全文比對是硬要求、不是 sanity check。
+- **站內相對連結會變死連結（已在 script 修掉，此條留作 provenance）**（2026-07-29 #109）：`medium-paste-html.mjs` 原本原樣保留 `<a href="/blog/xxx/">`，貼進 Medium 會被解析成 `medium.com/blog/xxx/`（死連結）。已在該 script 加轉絕對邏輯（負向前瞻排除 protocol-relative `//cdn…`），兩篇回歸實測 0 殘留。**vocus 也吃同一個坑**（Lexical 解析成 `vocus.cc/blog/…`），修在共用 script 等於兩個平台一起解。
 - **draft-js paste 一次塞多塊時尾段會被壓縮成一塊**（2026-07-18 #97 46 塊實撞）：dispatchEvent 一次注入 40 p + 6 heading，前 41 塊完美 match paste.html 對應 index、**尾巴 P41-P45 被合成單一段 M42「呼叫頻率謫，縮到 hook 裡...」**（中間 3-4 塊的文字全丟、頭尾拼在一起、還混一個錯字）。draft-js paste 消化長 HTML 時尾段 buffer 疑似溢出。修復配方（tail 補注入 + Backspace 刪錯合段）詳見「備援」段步驟 4。
