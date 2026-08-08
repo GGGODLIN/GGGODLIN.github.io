@@ -47,6 +47,21 @@ body {
   padding: calc(var(--baseline) * 6) calc(var(--baseline) * 3);
 }
 
+article img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: calc(var(--baseline) * 2) auto;
+}
+
+article img + em,
+article p:has(img) + p > em:only-child {
+  display: block;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 500;
