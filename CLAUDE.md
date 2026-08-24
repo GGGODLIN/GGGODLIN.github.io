@@ -58,6 +58,13 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 - **本機工具、不進 repo**（`tools/` 已 gitignored）：binary 自 source build（`cargo build --release --no-default-features --features native`、排除連網 translate feature）裝在 PATH；script 為 `tools/zhtw-check.sh` + `tools/zhtw-report.py`。重建步驟見 `~/Desktop/projects/.claude/trials/` 內 zhtw-mcp trial 紀錄
 - **AI 八股味維度另有工具**：`tools/humanize-chinese`（既有、但未接流程）專做 AI 八股味去痕（賦能 / 全方位 / 綜上所述），跟支語不同維度。要認真治 AI 味再評估接它，本 gate 只管支語
 
+## 站台設計與部署決策（固化；2026-08-24 由 STATE.md state-archive promote）
+
+- **視覺 = Anthropic warm editorial baseline，LOCKED**——對照 5 套（含 UIUXPROMAX 3 套）後使用者拍板「還是 Anthropic warm 最好」，是經得起對照的定案、不是沒比過的預設。不要再提改版。
+- **Theme switcher 永久留站當 demo**——不是比完就砍的暫時物。
+- **部署 = GitHub Pages user-page（Option B-修正）**——沿用既有 `GGGODLIN.github.io` repo、blog 上 `main`、Pages 走 Actions、舊 2020 scaffold 留 `master` 不刪。此為過渡期權宜；**域名遷移（gggodlin.com → CF Pages + `blog.gggodlin.com`）仍未做**，ready 後回歸 hub。
+- Astro 6 publishing 三 trap 見 memory `feedback_astro6_publishing_traps_2026_05_17`。
+
 ## 專案 / 套件 / 工具連結規則（固化）
 
 發佈正稿提及具體**專案 / 套件 / 工具 / repo** 時，**第一次具名出現必附完整可點擊連結**（GitHub repo 或官網），用 markdown link 形式 `[owner/repo](https://github.com/owner/repo)`。讀者看到工具名要能一鍵查證，這是讀者體驗硬要求（與全域「連結格式」規則一致，本專案落實到發佈文章內容層）。
@@ -67,14 +74,11 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 - MATERIAL fact-authority 段本就帶 repo URL，寫作 agent 直接取用；Phase 2 模板 B 寫作要求已含此條
 - **歸檔版不回溯補**（歷史快照）；只在發佈正稿與之後新文落實
 
-## 發布後同步轉發（固化）
+## 發布後同步轉發（固化；2026-08-24 依使用者拍板改版）
 
-本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，**轉發是上線後的下一步**，main session 主動接續、不要停在 push 上線後等使用者另外發起。
+本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。
 
-- **觸發點**：`git push` 觸發 GitHub Actions deploy 成功（curl 原站 URL 200 + 內容對）後，main session 主動問：「文章上線了，現在要轉發到 Medium / 方格子嗎？」
-- **預設兩平台都問、使用者拍板執行哪幾個**：Medium 24h 限發 2 篇（撞限就排隊隔天）、方格子無限制可立即走。不要自動連跑——使用者每次點頭才走
-- **轉發直接 trigger 既有 skill**，不要在 main session 自己重寫流程：
-  - Medium → `medium-syndicate` skill（trigger「轉發到 Medium」或 `/medium-syndicate <slug>`）
-  - 方格子 → `vocus-syndicate` skill（trigger「轉發到方格子」或 `/vocus-syndicate <slug>`）
-- **防重複、canonical、轉發紀錄**由兩個 skill 自己處理（已內建 grep `docs/philip/syndication-log.md` 防重發、canonical 填入、發布後 append log）；main session 不重複這些檢查
-- **使用者說「不轉」或「之後再說」**：尊重決定，把該篇 slug + 暫緩理由記到 `docs/philip/syndication-log.md` 的隊列段（或 `docs/philip/medium-publish-queue.md` 既有 Medium 排隊檔）以免遺忘，下次發新文 push 後 main session 提醒「還有 X 篇沒轉」
+**轉發由使用者自行以 codex 處理，CC 不接手、不提醒**（使用者拍板的常設政策，取代舊版「上線後 main session 主動問要不要轉發、下次 push 提醒還有 X 篇沒轉」行為）。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，上線即止。
+
+- 使用者若明確要求 CC 轉發，才 trigger 既有 skill：Medium → `medium-syndicate`（`/medium-syndicate <slug>`）、方格子 → `vocus-syndicate`（`/vocus-syndicate <slug>`）；防重複、canonical、轉發紀錄由 skill 自理（grep `docs/philip/syndication-log.md`）
+- Medium 24h 限發 2 篇的排隊檔仍在 `docs/philip/medium-publish-queue.md`，供使用者側流程查閱
