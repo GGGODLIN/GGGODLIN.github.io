@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>同一份 diff，五道視線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Caveat:wght@600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18;
+    --mustard: #f4d35e;
+    --teal: #0b7a75;
+    --terra: #c96442;
+    --paper: #f7f3e8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    background: var(--mustard);
+  }
+  body {
+    font-family: "Nunito", "Noto Sans TC", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage { position: relative; width: 1280px; height: 720px; }
+  .head {
+    height: 88px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid var(--ink);
+  }
+  .head h1 {
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .head .hand {
+    font-family: "Caveat", "Noto Sans TC", cursive;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--terra);
+    margin-top: 8px;
+  }
+  .head-left { display: flex; flex-direction: column; }
+  .head-right { text-align: right; }
+  .tagbox {
+    display: inline-block;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    padding: 6px 16px;
+    background: var(--paper);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .head-right .sub {
+    margin-top: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0.72;
+  }
+  .scene { display: block; }
+  .kicker {
+    height: 60px;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 14px;
+  }
+  .kicker .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--terra);
+    flex: none;
+  }
+  .kicker p {
+    color: var(--mustard);
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
+  .kicker .en {
+    margin-left: auto;
+    font-family: "Caveat", cursive;
+    font-size: 21px;
+    color: var(--paper);
+    opacity: 0.75;
+  }
+  .band {
+    height: 72px;
+    background: var(--paper);
+    border-top: 4px solid var(--ink);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 18px;
+  }
+  .sw { display: flex; gap: 7px; flex: none; }
+  .sw div { width: 34px; }
+  .sw i {
+    display: block;
+    height: 32px;
+    border: 2.5px solid var(--ink);
+    border-radius: 5px;
+  }
+  .sw span {
+    display: block;
+    text-align: center;
+    font-size: 8.5px;
+    font-weight: 700;
+    margin-top: 3px;
+    letter-spacing: -0.2px;
+    opacity: 0.8;
+  }
+  .rule { width: 3px; height: 46px; background: var(--ink); flex: none; }
+  .band-txt { flex: 1; min-width: 0; }
+  .band-txt .l1 { font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+  .band-txt .l2 { font-size: 12.5px; font-weight: 700; opacity: 0.68; margin-top: 3px; }
+  .note {
+    flex: none;
+    border: 3px solid var(--terra);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--terra);
+    font-size: 13px;
+    font-weight: 900;
+    background: #fff;
+  }
+  text { font-family: "Nunito", "Noto Sans TC", sans-serif; }
+  .nm { font-size: 16.5px; font-weight: 900; }
+  .cx { font-size: 13.5px; font-weight: 700; fill: #1a1a18; fill-opacity: 0.74; }
+  .xtr { font-size: 12px; font-weight: 700; fill: #1a1a18; fill-opacity: 0.5; }
+  .pill { font-size: 13px; font-weight: 900; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 17px; }
+  .hand { font-family: "Caveat", "Noto Sans TC", cursive; font-weight: 700; }
+  .fig { fill: #0b7a75; stroke: #1a1a18; stroke-width: 4; stroke-linejoin: round; }
+  .lens { fill: #f7f3e8; fill-opacity: 0.55; stroke: #1a1a18; stroke-width: 5.5; }
+  .arm { stroke: #1a1a18; stroke-width: 8; stroke-linecap: round; fill: none; }
+  .miss { stroke: #1a1a18; stroke-width: 5; stroke-opacity: 0.34; stroke-dasharray: 13 9; stroke-linecap: round; fill: none; }
+  .missend { fill: none; stroke: #1a1a18; stroke-width: 4.5; stroke-opacity: 0.34; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="head">
+    <div class="head-left">
+      <h1>同一份 diff，五道視線</h1>
+      <div class="hand">四道擦過去，一道正中</div>
+    </div>
+    <div class="head-right">
+      <span class="tagbox">/pr-review · 五軸交叉審</span>
+      <div class="sub">同輸入 · 不同 context · 不同結果</div>
+    </div>
+  </div>
+
+  <svg class="scene" width="1280" height="500" viewBox="0 0 1280 500">
+    <g>
+      <line class="miss" x1="466" y1="55" x2="676" y2="120"/>
+      <line class="miss" x1="466" y1="145" x2="676" y2="154"/>
+      <line class="miss" x1="466" y1="235" x2="676" y2="188"/>
+      <circle class="missend" cx="686" cy="122" r="7"/>
+      <circle class="missend" cx="686" cy="155" r="7"/>
+      <circle class="missend" cx="686" cy="189" r="7"/>
+      <line class="miss" x1="466" y1="325" x2="544" y2="326"/>
+      <g stroke="#1a1a18" stroke-width="5" stroke-opacity="0.45" stroke-linecap="round">
+        <line x1="558" y1="318" x2="574" y2="334"/>
+        <line x1="574" y1="318" x2="558" y2="334"/>
+      </g>
+      <text class="hand" x="478" y="302" font-size="16" fill="#1a1a18" fill-opacity="0.55">那場沒出勤</text>
+    </g>
+
+    <polygon points="464,406 464,416 698,276 698,252" fill="#c96442"/>
+    <text class="hand" x="470" y="464" font-size="19" fill="#c96442" transform="rotate(-12 470 464)">小一號的那個，看見了</text>
+
+    <g>
+      <rect x="700" y="26" width="556" height="404" rx="12" fill="#f7f3e8" stroke="#1a1a18" stroke-width="5"/>
+      <path d="M705 26 h546 a7 7 0 0 1 7 7 v45 h-560 v-45 a7 7 0 0 1 7 -7 z" fill="#0b7a75"/>
+      <line x1="700" y1="78" x2="1256" y2="78" stroke="#1a1a18" stroke-width="5"/>
+      <text class="mono" x="722" y="59" fill="#f7f3e8" font-size="19" font-weight="700">NewPage.tsx</text>
+      <text class="nm" x="1216" y="58" fill="#f7f3e8" text-anchor="end" font-size="13.5">Shopify SaveBar</text>
+      <image href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjE5MiIgaGVpZ2h0PSIyNTAwIiB2aWV3Qm94PSIwIDAgMjU2IDI5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+CiAgICA8cGF0aCBkPSJNMjIzLjc3NCA1Ny4zNGMtLjIwMS0xLjQ2LTEuNDgtMi4yNjgtMi41MzctMi4zNTctMS4wNTUtLjA4OC0yMy4zODMtMS43NDMtMjMuMzgzLTEuNzQzcy0xNS41MDctMTUuMzk1LTE3LjIwOS0xNy4wOTljLTEuNzAzLTEuNzAzLTUuMDI5LTEuMTg1LTYuMzItLjgwNS0uMTkuMDU2LTMuMzg4IDEuMDQzLTguNjc4IDIuNjgtNS4xOC0xNC45MDYtMTQuMzIyLTI4LjYwNC0zMC40MDUtMjguNjA0LS40NDQgMC0uOTAxLjAxOC0xLjM1OC4wNDRDMTI5LjMxIDMuNDA3IDEyMy42NDQuNzc5IDExOC43NS43NzljLTM3LjQ2NSAwLTU1LjM2NCA0Ni44MzUtNjAuOTc2IDcwLjYzNS0xNC41NTggNC41MTEtMjQuOSA3LjcxOC0yNi4yMjEgOC4xMzMtOC4xMjYgMi41NDktOC4zODMgMi44MDUtOS40NSAxMC40NjJDMjEuMyA5NS44MDYuMDM4IDI2MC4yMzUuMDM4IDI2MC4yMzVsMTY1LjY3OCAzMS4wNDIgODkuNzctMTkuNDJTMjIzLjk3MyA1OC44IDIyMy43NzUgNTcuMzR6TTE1Ni40OSA0MC44NDhsLTE0LjAxOSA0LjMzOWMuMDA1LS45ODguMDEtMS45Ni4wMS0zLjAyMyAwLTkuMjY0LTEuMjg2LTE2LjcyMy0zLjM0OS0yMi42MzYgOC4yODcgMS4wNCAxMy44MDYgMTAuNDY5IDE3LjM1OCAyMS4zMnptLTI3LjYzOC0xOS40ODNjMi4zMDQgNS43NzMgMy44MDIgMTQuMDU4IDMuODAyIDI1LjIzOCAwIC41NzItLjAwNSAxLjA5NS0uMDEgMS42MjQtOS4xMTcgMi44MjQtMTkuMDI0IDUuODktMjguOTUzIDguOTY2IDUuNTc1LTIxLjUxNiAxNi4wMjUtMzEuOTA4IDI1LjE2MS0zNS44Mjh6bS0xMS4xMzEtMTAuNTM3YzEuNjE3IDAgMy4yNDYuNTQ5IDQuODA1IDEuNjIyLTEyLjAwNyA1LjY1LTI0Ljg3NyAxOS44OC0zMC4zMTIgNDguMjk3bC0yMi44ODYgNy4wODhDNzUuNjk0IDQ2LjE2IDkwLjgxIDEwLjgyOCAxMTcuNzIgMTAuODI4eiIgZmlsbD0iIzk1QkY0NiIvPgogICAgPHBhdGggZD0iTTIyMS4yMzcgNTQuOTgzYy0xLjA1NS0uMDg4LTIzLjM4My0xLjc0My0yMy4zODMtMS43NDNzLTE1LjUwNy0xNS4zOTUtMTcuMjA5LTE3LjA5OWMtLjYzNy0uNjM0LTEuNDk2LS45NTktMi4zOTQtMS4wOTlsLTEyLjUyNyAyNTYuMjMzIDg5Ljc2Mi0xOS40MThTMjIzLjk3MiA1OC44IDIyMy43NzQgNTcuMzRjLS4yMDEtMS40Ni0xLjQ4LTIuMjY4LTIuNTM3LTIuMzU3IiBmaWxsPSIjNUU4RTNFIi8+CiAgICA8cGF0aCBkPSJNMTM1LjI0MiAxMDQuNTg1bC0xMS4wNjkgMzIuOTI2cy05LjY5OC01LjE3Ni0yMS41ODYtNS4xNzZjLTE3LjQyOCAwLTE4LjMwNSAxMC45MzctMTguMzA1IDEzLjY5MyAwIDE1LjAzOCAzOS4yIDIwLjggMzkuMiA1Ni4wMjQgMCAyNy43MTMtMTcuNTc3IDQ1LjU1OC00MS4yNzcgNDUuNTU4LTI4LjQ0IDAtNDIuOTg0LTE3LjctNDIuOTg0LTE3LjdsNy42MTUtMjUuMTZzMTQuOTUgMTIuODM1IDI3LjU2NSAxMi44MzVjOC4yNDMgMCAxMS41OTYtNi40OSAxMS41OTYtMTEuMjMyIDAtMTkuNjE2LTMyLjE2LTIwLjQ5MS0zMi4xNi01Mi43MjQgMC0yNy4xMjkgMTkuNDcyLTUzLjM4MiA1OC43NzgtNTMuMzgyIDE1LjE0NSAwIDIyLjYyNyA0LjMzOCAyMi42MjcgNC4zMzgiIGZpbGw9IiNGRkYiLz4KPC9zdmc+Cg==" x="1224" y="38" width="24" height="24"/>
+
+      <text class="mono" x="724" y="120">&lt;ShopifySaveBar</text>
+      <text class="mono" x="746" y="154">isDirty</text>
+      <text class="mono" x="746" y="188">isLoading</text>
+      <text class="mono" x="746" y="222">handleDiscard={onDiscard}</text>
+
+      <rect x="716" y="240" width="464" height="48" rx="9" fill="#fff" stroke="#c96442" stroke-width="4" stroke-dasharray="11 8"/>
+      <text class="mono" x="746" y="271" fill="#c96442" fill-opacity="0.58">handleSave={handleSave}</text>
+      <text class="hand" x="1000" y="272" font-size="19" fill="#c96442">← 這一行沒被傳進去</text>
+      <circle cx="716" cy="264" r="13" fill="none" stroke="#c96442" stroke-width="5"/>
+
+      <text class="mono" x="724" y="322">/&gt;</text>
+
+      <g>
+        <rect x="722" y="338" width="112" height="36" rx="18" fill="none" stroke="#0b7a75" stroke-width="3.5"/>
+        <text class="pill" x="778" y="361" text-anchor="middle" fill="#0b7a75">build ✓</text>
+        <rect x="844" y="338" width="148" height="36" rx="18" fill="none" stroke="#0b7a75" stroke-width="3.5"/>
+        <text class="pill" x="918" y="361" text-anchor="middle" fill="#0b7a75">type-check ✓</text>
+        <rect x="1002" y="338" width="176" height="36" rx="18" fill="#1a1a18"/>
+        <text class="pill" x="1090" y="361" text-anchor="middle" fill="#f4d35e">按下去沒反應</text>
+      </g>
+
+      <g>
+        <rect x="722" y="386" width="456" height="34" rx="17" fill="#c96442"/>
+        <text class="pill" x="740" y="408" fill="#f7f3e8">Gemini Flash 抓到 → 複查屬實 → 判 Must Fix</text>
+      </g>
+    </g>
+
+    <g>
+      <image href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU3IiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNTciPjxwYXRoIGZpbGw9IiNEOTc3NTciIGQ9Im01MC4yMjggMTcwLjMyMSA1MC4zNTctMjguMjU3Ljg0My0yLjQ2My0uODQzLTEuMzYxaC0yLjQ2MmwtOC40MjYtLjUxOC0yOC43NzUtLjc3OC0yNC45NTItMS4wMzctMjQuMTc1LTEuMjk2LTYuMDkyLTEuMjk3TDAgMTI1Ljc5NmwuNTgzLTMuNzU5IDUuMTItMy40MzQgNy4zMjQuNjQ4IDE2LjIwMiAxLjEwMSAyNC4zMDQgMS42ODUgMTcuNjI5IDEuMDM3IDI2LjExOCAyLjcyMmg0LjE0OGwuNTgzLTEuNjg1LTEuNDI2LTEuMDM3LTEuMTAxLTEuMDM3LTI1LjE0Ny0xNy4wNDUtMjcuMjItMTguMDE3LTE0LjI1OC0xMC4zNy03LjcxMy01LjI1LTMuODg4LTQuOTI1LTEuNjg1LTEwLjc1OCA3LTcuNzEzIDkuMzk3LjY0OSAyLjM5OC42NDggOS41MjcgNy4zMjMgMjAuMzUgMTUuNzVMOTQuODE3IDkxLjlsMy44ODkgMy4yNCAxLjU1NS0xLjEwMi4xOTUtLjc3Ny0xLjc1LTIuOTE3LTE0LjQ1My0yNi4xMTgtMTUuNDI1LTI2LjU3Mi02Ljg3LTExLjAxOC0xLjgxNC02LjYxYy0uNjQ4LTIuNzIzLTEuMTAyLTQuOTkxLTEuMTAyLTcuNzc4bDcuOTcyLTEwLjgyM0w3MS40MiAwIDgyLjA1IDEuNDI2bDQuNDcyIDMuODg4IDYuNjEgMTUuMTAxIDEwLjY5NCAyMy43ODYgMTYuNTkxIDMyLjM0IDQuODYxIDkuNTkyIDIuNTkyIDguODc5Ljk3MyAyLjcyMmgxLjY4NXYtMS41NTZsMS4zNi0xOC4yMTEgMi41MjgtMjIuMzYgMi40NjMtMjguNzc2Ljg0My04LjEgNC4wMTgtOS43MjIgNy45NzEtNS4yNSA2LjIyMiAyLjk4MSA1LjEyIDcuMzI0LS43MTMgNC43My0zLjA0NiAxOS43NjgtNS45NjIgMzAuOTgtMy44ODkgMjAuNzM5aDIuMjY4bDIuNTkzLTIuNTkzIDEwLjQ5OS0xMy45MzQgMTcuNjI4LTIyLjAzNiA3Ljc3OC04Ljc0OSA5LjA3My05LjY1NyA1LjgzMy00LjYwMWgxMS4wMThsOC4xIDEyLjA1NS0zLjYyOCAxMi40NDMtMTEuMzQyIDE0LjM4OC05LjM5OCAxMi4xODQtMTMuNDggMTguMTQ3LTguNDI2IDE0LjUxOC43NzggMS4xNjYgMi4wMS0uMTk0IDMwLjQ2LTYuNDgxIDE2LjQ2Mi0yLjk4MiAxOS42MzctMy4zNyA4Ljg4IDQuMTQ4Ljk3MSA0LjIxMy0zLjUgOC42Mi0yMC45OTggNS4xODQtMjQuNjI4IDQuOTI2LTM2LjY4MiA4LjY4NS0uNDU0LjMyNC41MTkuNjQ4IDE2LjUyNiAxLjU1NSA3LjA2NS4zODloMTcuMzA0bDMyLjIxIDIuMzk4IDguNDI2IDUuNTc0IDUuMDU1IDYuODA1LS44NDMgNS4xODQtMTIuOTYyIDYuNjExLTE3LjQ5OC00LjE0OC00MC44My05LjcyMS0xNC0zLjVoLTEuOTQ0djEuMTY3bDExLjY2NiAxMS40MDYgMjEuMzg3IDE5LjMxNCAyNi43NjcgMjQuODg3IDEuMzYgNi4xNTctMy40MzQgNC44Ni0zLjYzLS41MTgtMjMuNTI2LTE3LjY5My05LjA3My03Ljk3Mi0yMC41NDUtMTcuMzA0aC0xLjM2djEuODE0bDQuNzMgNi45MzUgMjUuMDE3IDM3LjU5IDEuMjk2IDExLjUzNi0xLjgxNCAzLjc2LTYuNDgxIDIuMjY4LTcuMTMtMS4yOTctMTQuNjQ3LTIwLjU0NC0xNS4xLTIzLjEzOC0xMi4xODUtMjAuNzM5LTEuNDkuODQzLTcuMTk0IDc3LjQ0OC0zLjM3IDMuOTUzLTcuNzc4IDIuOTgxLTYuNDgtNC45MjUtMy40MzYtNy45NzIgMy40MzUtMTUuNzQ5IDQuMTQ4LTIwLjU0NCAzLjM3LTE2LjMzMyAzLjA0Ni0yMC4yODUgMS44MTUtNi43NC0uMTMtLjQ1NC0xLjQ5LjE5NC0xNS4yOTUgMjAuOTk5LTIzLjI2NyAzMS40MzMtMTguNDA2IDE5LjcwMi00LjQwNyAxLjc1LTcuNjQ4LTMuOTU0LjcxMy03LjA2NCA0LjI3Ny02LjI4NiAyNS40Ny0zMi40MDUgMTUuMzYtMjAuMDkyIDkuOTE3LTExLjYtLjA2NS0xLjY4NmgtLjU4M0w0NC4wNyAxOTguMTI1bC0xMi4wNTUgMS41NTUtNS4xODUtNC44Ni42NDgtNy45NzIgMi40NjMtMi41OTMgMjAuMzUtMTMuOTk5LS4wNjQuMDY1WiIvPjwvc3ZnPg==" x="24" y="27" width="28" height="28"/>
+      <text class="nm" x="60" y="48">Claude 主模型 ×2</text>
+      <rect x="268" y="26" width="72" height="26" rx="13" fill="none" stroke="#1a1a18" stroke-width="3"/>
+      <text class="pill" x="304" y="45" text-anchor="middle">沒抓到</text>
+      <text class="cx" x="24" y="72">餵滿：spec ＋ 影響面 ＋ 檢查表</text>
+      <polygon class="fig" points="374,85 410,85 404,41 380,41"/>
+      <circle class="fig" cx="392" cy="24" r="15"/>
+      <path class="arm" d="M406 48 L436 44"/>
+      <circle class="lens" cx="450" cy="51" r="20"/>
+      <path class="arm" d="M437 66 L429 76"/>
+    </g>
+
+    <g>
+      <image href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNjAiPjxwYXRoIGQ9Ik0yMzkuMTg0IDEwNi4yMDNhNjQuNzE2IDY0LjcxNiAwIDAgMC01LjU3Ni01My4xMDNDMjE5LjQ1MiAyOC40NTkgMTkxIDE1Ljc4NCAxNjMuMjEzIDIxLjc0QTY1LjU4NiA2NS41ODYgMCAwIDAgNTIuMDk2IDQ1LjIyYTY0LjcxNiA2NC43MTYgMCAwIDAtNDMuMjMgMzEuMzZjLTE0LjMxIDI0LjYwMi0xMS4wNjEgNTUuNjM0IDguMDMzIDc2Ljc0YTY0LjY2NSA2NC42NjUgMCAwIDAgNS41MjUgNTMuMTAyYzE0LjE3NCAyNC42NSA0Mi42NDQgMzcuMzI0IDcwLjQ0NiAzMS4zNmE2NC43MiA2NC43MiAwIDAgMCA0OC43NTQgMjEuNzQ0YzI4LjQ4MS4wMjUgNTMuNzE0LTE4LjM2MSA2Mi40MTQtNDUuNDgxYTY0Ljc2NyA2NC43NjcgMCAwIDAgNDMuMjI5LTMxLjM2YzE0LjEzNy0yNC41NTggMTAuODc1LTU1LjQyMy04LjA4My03Ni40ODNabS05Ny41NiAxMzYuMzM4YTQ4LjM5NyA0OC4zOTcgMCAwIDEtMzEuMTA1LTExLjI1NWwxLjUzNS0uODcgNTEuNjctMjkuODI1YTguNTk1IDguNTk1IDAgMCAwIDQuMjQ3LTcuMzY3di03Mi44NWwyMS44NDUgMTIuNjM2Yy4yMTguMTExLjM3LjMyLjQwOS41NjN2NjAuMzY3Yy0uMDU2IDI2LjgxOC0yMS43ODMgNDguNTQ1LTQ4LjYwMSA0OC42MDFabS0xMDQuNDY2LTQ0LjYxYTQ4LjM0NSA0OC4zNDUgMCAwIDEtNS43ODEtMzIuNTg5bDEuNTM0LjkyMSA1MS43MjIgMjkuODI2YTguMzM5IDguMzM5IDAgMCAwIDguNDQxIDBsNjMuMTgxLTM2LjQyNXYyNS4yMjFhLjg3Ljg3IDAgMCAxLS4zNTguNjY1bC01Mi4zMzUgMzAuMTg0Yy0yMy4yNTcgMTMuMzk4LTUyLjk3IDUuNDMxLTY2LjQwNC0xNy44MDNaTTIzLjU0OSA4NS4zOGE0OC40OTkgNDguNDk5IDAgMCAxIDI1LjU4LTIxLjMzM3Y2MS4zOWE4LjI4OCA4LjI4OCAwIDAgMCA0LjE5NSA3LjMxNmw2Mi44NzQgMzYuMjcyLTIxLjg0NSAxMi42MzZhLjgxOS44MTkgMCAwIDEtLjc2NyAwTDQxLjM1MyAxNTEuNTNjLTIzLjIxMS0xMy40NTQtMzEuMTcxLTQzLjE0NC0xNy44MDQtNjYuNDA1di4yNTZabTE3OS40NjYgNDEuNjk1LTYzLjA4LTM2LjYzTDE2MS43MyA3Ny44NmEuODE5LjgxOSAwIDAgMSAuNzY4IDBsNTIuMjMzIDMwLjE4NGE0OC42IDQ4LjYgMCAwIDEtNy4zMTYgODcuNjM1di02MS4zOTFhOC41NDQgOC41NDQgMCAwIDAtNC40LTcuMjEzWm0yMS43NDItMzIuNjktMS41MzUtLjkyMi01MS42MTktMzAuMDgxYTguMzkgOC4zOSAwIDAgMC04LjQ5MiAwTDk5Ljk4IDk5LjgwOFY3NC41ODdhLjcxNi43MTYgMCAwIDEgLjMwNy0uNjY1bDUyLjIzMy0zMC4xMzNhNDguNjUyIDQ4LjY1MiAwIDAgMSA3Mi4yMzYgNTAuMzkxdi4yMDVaTTg4LjA2MSAxMzkuMDk3bC0yMS44NDUtMTIuNTg1YS44Ny44NyAwIDAgMS0uNDEtLjYxNFY2NS42ODVhNDguNjUyIDQ4LjY1MiAwIDAgMSA3OS43NTctMzcuMzQ2bC0xLjUzNS44Ny01MS42NyAyOS44MjVhOC41OTUgOC41OTUgMCAwIDAtNC4yNDYgNy4zNjdsLS4wNTEgNzIuNjk3Wm0xMS44NjgtMjUuNTggMjguMTM4LTE2LjIxNyAyOC4xODggMTYuMjE4djMyLjQzNGwtMjguMDg2IDE2LjIxOC0yOC4xODgtMTYuMjE4LS4wNTItMzIuNDM0WiIvPjwvc3ZnPg==" x="24" y="117" width="28" height="28"/>
+      <text class="nm" x="60" y="138">Codex 中性</text>
+      <rect x="268" y="116" width="72" height="26" rx="13" fill="none" stroke="#1a1a18" stroke-width="3"/>
+      <text class="pill" x="304" y="135" text-anchor="middle">沒抓到</text>
+      <text class="cx" x="24" y="162">餓著看：只給 diff，其他一概不給</text>
+      <polygon class="fig" points="374,175 410,175 404,131 380,131"/>
+      <circle class="fig" cx="392" cy="114" r="15"/>
+      <path class="arm" d="M406 138 L436 134"/>
+      <circle class="lens" cx="450" cy="141" r="20"/>
+      <path class="arm" d="M437 156 L429 166"/>
+    </g>
+
+    <g>
+      <image href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNjAiPjxwYXRoIGQ9Ik0yMzkuMTg0IDEwNi4yMDNhNjQuNzE2IDY0LjcxNiAwIDAgMC01LjU3Ni01My4xMDNDMjE5LjQ1MiAyOC40NTkgMTkxIDE1Ljc4NCAxNjMuMjEzIDIxLjc0QTY1LjU4NiA2NS41ODYgMCAwIDAgNTIuMDk2IDQ1LjIyYTY0LjcxNiA2NC43MTYgMCAwIDAtNDMuMjMgMzEuMzZjLTE0LjMxIDI0LjYwMi0xMS4wNjEgNTUuNjM0IDguMDMzIDc2Ljc0YTY0LjY2NSA2NC42NjUgMCAwIDAgNS41MjUgNTMuMTAyYzE0LjE3NCAyNC42NSA0Mi42NDQgMzcuMzI0IDcwLjQ0NiAzMS4zNmE2NC43MiA2NC43MiAwIDAgMCA0OC43NTQgMjEuNzQ0YzI4LjQ4MS4wMjUgNTMuNzE0LTE4LjM2MSA2Mi40MTQtNDUuNDgxYTY0Ljc2NyA2NC43NjcgMCAwIDAgNDMuMjI5LTMxLjM2YzE0LjEzNy0yNC41NTggMTAuODc1LTU1LjQyMy04LjA4My03Ni40ODNabS05Ny41NiAxMzYuMzM4YTQ4LjM5NyA0OC4zOTcgMCAwIDEtMzEuMTA1LTExLjI1NWwxLjUzNS0uODcgNTEuNjctMjkuODI1YTguNTk1IDguNTk1IDAgMCAwIDQuMjQ3LTcuMzY3di03Mi44NWwyMS44NDUgMTIuNjM2Yy4yMTguMTExLjM3LjMyLjQwOS41NjN2NjAuMzY3Yy0uMDU2IDI2LjgxOC0yMS43ODMgNDguNTQ1LTQ4LjYwMSA0OC42MDFabS0xMDQuNDY2LTQ0LjYxYTQ4LjM0NSA0OC4zNDUgMCAwIDEtNS43ODEtMzIuNTg5bDEuNTM0LjkyMSA1MS43MjIgMjkuODI2YTguMzM5IDguMzM5IDAgMCAwIDguNDQxIDBsNjMuMTgxLTM2LjQyNXYyNS4yMjFhLjg3Ljg3IDAgMCAxLS4zNTguNjY1bC01Mi4zMzUgMzAuMTg0Yy0yMy4yNTcgMTMuMzk4LTUyLjk3IDUuNDMxLTY2LjQwNC0xNy44MDNaTTIzLjU0OSA4NS4zOGE0OC40OTkgNDguNDk5IDAgMCAxIDI1LjU4LTIxLjMzM3Y2MS4zOWE4LjI4OCA4LjI4OCAwIDAgMCA0LjE5NSA3LjMxNmw2Mi44NzQgMzYuMjcyLTIxLjg0NSAxMi42MzZhLjgxOS44MTkgMCAwIDEtLjc2NyAwTDQxLjM1MyAxNTEuNTNjLTIzLjIxMS0xMy40NTQtMzEuMTcxLTQzLjE0NC0xNy44MDQtNjYuNDA1di4yNTZabTE3OS40NjYgNDEuNjk1LTYzLjA4LTM2LjYzTDE2MS43MyA3Ny44NmEuODE5LjgxOSAwIDAgMSAuNzY4IDBsNTIuMjMzIDMwLjE4NGE0OC42IDQ4LjYgMCAwIDEtNy4zMTYgODcuNjM1di02MS4zOTFhOC41NDQgOC41NDQgMCAwIDAtNC40LTcuMjEzWm0yMS43NDItMzIuNjktMS41MzUtLjkyMi01MS42MTktMzAuMDgxYTguMzkgOC4zOSAwIDAgMC04LjQ5MiAwTDk5Ljk4IDk5LjgwOFY3NC41ODdhLjcxNi43MTYgMCAwIDEgLjMwNy0uNjY1bDUyLjIzMy0zMC4xMzNhNDguNjUyIDQ4LjY1MiAwIDAgMSA3Mi4yMzYgNTAuMzkxdi4yMDVaTTg4LjA2MSAxMzkuMDk3bC0yMS44NDUtMTIuNTg1YS44Ny44NyAwIDAgMS0uNDEtLjYxNFY2NS42ODVhNDguNjUyIDQ4LjY1MiAwIDAgMSA3OS43NTctMzcuMzQ2bC0xLjUzNS44Ny01MS42NyAyOS44MjVhOC41OTUgOC41OTUgMCAwIDAtNC4yNDYgNy4zNjdsLS4wNTEgNzIuNjk3Wm0xMS44NjgtMjUuNTggMjguMTM4LTE2LjIxNyAyOC4xODggMTYuMjE4djMyLjQzNGwtMjguMDg2IDE2LjIxOC0yOC4xODgtMTYuMjE4LS4wNTItMzIuNDM0WiIvPjwvc3ZnPg==" x="24" y="203" width="28" height="28"/>
+      <text class="nm" x="60" y="224">Codex 紅隊</text>
+      <rect x="268" y="202" width="72" height="26" rx="13" fill="none" stroke="#1a1a18" stroke-width="3"/>
+      <text class="pill" x="304" y="221" text-anchor="middle">沒抓到</text>
+      <text class="cx" x="24" y="248">餓著＋人格：假設它會炸，去找哪裡炸</text>
+      <text class="xtr" x="24" y="268">另外報了一條誤判</text>
+      <polygon class="fig" points="374,265 410,265 404,221 380,221"/>
+      <circle class="fig" cx="392" cy="204" r="15"/>
+      <path class="arm" d="M406 228 L436 224"/>
+      <circle class="lens" cx="450" cy="231" r="20"/>
+      <path class="arm" d="M437 246 L429 256"/>
+    </g>
+
+    <g>
+      <image href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjk2IDI5OCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjk2IiBoZWlnaHQ9IjI5OCIgZmlsbD0ibm9uZSI+PG1hc2sgaWQ9ImEiIHdpZHRoPSIyOTYiIGhlaWdodD0iMjk4IiB4PSIwIiB5PSIwIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHlsZT0ibWFzay10eXBlOmFscGhhIj48cGF0aCBmaWxsPSIjMzE4NkZGIiBkPSJNMTQxLjIwMSA0Ljg4NmMyLjI4Mi02LjE3IDExLjA0Mi02LjA3MSAxMy4xODQuMTQ4bDUuOTg1IDE3LjM3YTE4NC4wMDQgMTg0LjAwNCAwIDAgMCAxMTEuMjU3IDExMy4wNDlsMTkuMzA0IDYuOTk3YzYuMTQzIDIuMjI3IDYuMTU2IDEwLjkxLjAyIDEzLjE1NWwtMTkuMzUgNy4wODJhMTg0LjAwMSAxODQuMDAxIDAgMCAwLTEwOS40OTUgMTA5LjM4NWwtNy41NzMgMjAuNjI5Yy0yLjI0MSA2LjEwNS0xMC44NjkgNi4xMjEtMTMuMTMzLjAyNWwtNy45MDgtMjEuMjk2YTE4NCAxODQgMCAwIDAtMTA5LjAyLTEwOC42NThsLTE5LjY5OC03LjIzOWMtNi4xMDItMi4yNDMtNi4xMTgtMTAuODY3LS4wMjUtMTMuMTMybDIwLjA4My03LjQ2N0ExODMuOTk4IDE4My45OTggMCAwIDAgMTMzLjI5MSAyNi4yOGw3LjkxLTIxLjM5NFoiLz48L21hc2s+PGcgbWFzaz0idXJsKCNhKSI+PGcgZmlsdGVyPSJ1cmwoI2IpIj48ZWxsaXBzZSBjeD0iMTYzIiBjeT0iMTQ5IiBmaWxsPSIjMzY4OUZGIiByeD0iMTk2IiByeT0iMTU5Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNjKSI+PGVsbGlwc2UgY3g9IjMzLjUiIGN5PSIxNDIuNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNkKSI+PGVsbGlwc2UgY3g9IjE5LjUiIGN5PSIxNDguNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNlKSI+PHBhdGggZmlsbD0iI0ZBNDM0MCIgZD0iTTE5NCAxMC41QzE3MiA4Mi41IDY1LjUgMTM0LjMzMyAyMi41IDEzNUwxNDQtNjZsNTAgNzYuNVoiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2YpIj48cGF0aCBmaWxsPSIjRkE0MzQwIiBkPSJNMTkwLjUtMTIuNUMxNjguNSA1OS41IDYyIDExMS4zMzMgMTkgMTEyTDE0MC41LTg5bDUwIDc2LjVaIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNnKSI+PHBhdGggZmlsbD0iIzE0QkI2OSIgZD0iTTE5NC41IDI3OS41QzE3Mi41IDIwNy41IDY2IDE1NS42NjcgMjMgMTU1bDEyMS41IDIwMSA1MC03Ni41WiIvPjwvZz48ZyBmaWx0ZXI9InVybCgjaCkiPjxwYXRoIGZpbGw9IiMxNEJCNjkiIGQ9Ik0xOTYuNSAzMjAuNUMxNzQuNSAyNDguNSA2OCAxOTYuNjY3IDI1IDE5NmwxMjEuNSAyMDEgNTAtNzYuNVoiLz48L2c+PC9nPjxkZWZzPjxmaWx0ZXIgaWQ9ImIiIHdpZHRoPSI0NjQiIGhlaWdodD0iMzkwIiB4PSItNjkiIHk9Ii00NiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIxOCIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImMiIHdpZHRoPSIyNjUiIGhlaWdodD0iMjczIiB4PSItOTkiIHk9IjYiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJkIiB3aWR0aD0iMjY1IiBoZWlnaHQ9IjI3MyIgeD0iLTExMyIgeT0iMTIiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJlIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItNDEuNSIgeT0iLTEzMCIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImYiIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00NSIgeT0iLTE1MyIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImciIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00MSIgeT0iOTEiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJoIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItMzkiIHk9IjEzMiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjwvZGVmcz48L3N2Zz4=" x="24" y="297" width="28" height="28"/>
+      <text class="nm" x="60" y="318">Gemini Pro</text>
+      <rect x="268" y="296" width="72" height="26" rx="13" fill="none" stroke="#1a1a18" stroke-width="3"/>
+      <text class="pill" x="304" y="315" text-anchor="middle">未出勤</text>
+      <text class="cx" x="24" y="342">第三家模型的獨立視角</text>
+      <polygon class="fig" points="374,355 410,355 404,311 380,311" opacity="0.5"/>
+      <circle class="fig" cx="392" cy="294" r="15" opacity="0.5"/>
+      <path class="arm" d="M406 318 L436 314" opacity="0.5"/>
+      <circle class="lens" cx="450" cy="321" r="20" opacity="0.5"/>
+      <path class="arm" d="M437 336 L429 346" opacity="0.5"/>
+    </g>
+
+    <g>
+      <image href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjk2IDI5OCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjk2IiBoZWlnaHQ9IjI5OCIgZmlsbD0ibm9uZSI+PG1hc2sgaWQ9ImEiIHdpZHRoPSIyOTYiIGhlaWdodD0iMjk4IiB4PSIwIiB5PSIwIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHlsZT0ibWFzay10eXBlOmFscGhhIj48cGF0aCBmaWxsPSIjMzE4NkZGIiBkPSJNMTQxLjIwMSA0Ljg4NmMyLjI4Mi02LjE3IDExLjA0Mi02LjA3MSAxMy4xODQuMTQ4bDUuOTg1IDE3LjM3YTE4NC4wMDQgMTg0LjAwNCAwIDAgMCAxMTEuMjU3IDExMy4wNDlsMTkuMzA0IDYuOTk3YzYuMTQzIDIuMjI3IDYuMTU2IDEwLjkxLjAyIDEzLjE1NWwtMTkuMzUgNy4wODJhMTg0LjAwMSAxODQuMDAxIDAgMCAwLTEwOS40OTUgMTA5LjM4NWwtNy41NzMgMjAuNjI5Yy0yLjI0MSA2LjEwNS0xMC44NjkgNi4xMjEtMTMuMTMzLjAyNWwtNy45MDgtMjEuMjk2YTE4NCAxODQgMCAwIDAtMTA5LjAyLTEwOC42NThsLTE5LjY5OC03LjIzOWMtNi4xMDItMi4yNDMtNi4xMTgtMTAuODY3LS4wMjUtMTMuMTMybDIwLjA4My03LjQ2N0ExODMuOTk4IDE4My45OTggMCAwIDAgMTMzLjI5MSAyNi4yOGw3LjkxLTIxLjM5NFoiLz48L21hc2s+PGcgbWFzaz0idXJsKCNhKSI+PGcgZmlsdGVyPSJ1cmwoI2IpIj48ZWxsaXBzZSBjeD0iMTYzIiBjeT0iMTQ5IiBmaWxsPSIjMzY4OUZGIiByeD0iMTk2IiByeT0iMTU5Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNjKSI+PGVsbGlwc2UgY3g9IjMzLjUiIGN5PSIxNDIuNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNkKSI+PGVsbGlwc2UgY3g9IjE5LjUiIGN5PSIxNDguNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNlKSI+PHBhdGggZmlsbD0iI0ZBNDM0MCIgZD0iTTE5NCAxMC41QzE3MiA4Mi41IDY1LjUgMTM0LjMzMyAyMi41IDEzNUwxNDQtNjZsNTAgNzYuNVoiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2YpIj48cGF0aCBmaWxsPSIjRkE0MzQwIiBkPSJNMTkwLjUtMTIuNUMxNjguNSA1OS41IDYyIDExMS4zMzMgMTkgMTEyTDE0MC41LTg5bDUwIDc2LjVaIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNnKSI+PHBhdGggZmlsbD0iIzE0QkI2OSIgZD0iTTE5NC41IDI3OS41QzE3Mi41IDIwNy41IDY2IDE1NS42NjcgMjMgMTU1bDEyMS41IDIwMSA1MC03Ni41WiIvPjwvZz48ZyBmaWx0ZXI9InVybCgjaCkiPjxwYXRoIGZpbGw9IiMxNEJCNjkiIGQ9Ik0xOTYuNSAzMjAuNUMxNzQuNSAyNDguNSA2OCAxOTYuNjY3IDI1IDE5NmwxMjEuNSAyMDEgNTAtNzYuNVoiLz48L2c+PC9nPjxkZWZzPjxmaWx0ZXIgaWQ9ImIiIHdpZHRoPSI0NjQiIGhlaWdodD0iMzkwIiB4PSItNjkiIHk9Ii00NiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIxOCIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImMiIHdpZHRoPSIyNjUiIGhlaWdodD0iMjczIiB4PSItOTkiIHk9IjYiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJkIiB3aWR0aD0iMjY1IiBoZWlnaHQ9IjI3MyIgeD0iLTExMyIgeT0iMTIiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJlIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItNDEuNSIgeT0iLTEzMCIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImYiIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00NSIgeT0iLTE1MyIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImciIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00MSIgeT0iOTEiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJoIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItMzkiIHk9IjEzMiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjwvZGVmcz48L3N2Zz4=" x="24" y="387" width="28" height="28"/>
+      <text class="nm" x="60" y="408">Gemini Flash · Medium</text>
+      <rect x="268" y="386" width="72" height="26" rx="13" fill="#c96442" stroke="#1a1a18" stroke-width="3"/>
+      <text class="pill" x="304" y="405" text-anchor="middle" fill="#f7f3e8">命中</text>
+      <text class="cx" x="24" y="432">小一號的模型，橫向比對兩個相似元件</text>
+      <polygon class="fig" points="374,445 410,445 404,401 380,401" fill="#c96442"/>
+      <circle class="fig" cx="392" cy="384" r="15" fill="#c96442"/>
+      <path class="arm" d="M406 408 L436 404"/>
+      <circle cx="450" cy="411" r="20" fill="#f4d35e" stroke="#1a1a18" stroke-width="5.5"/>
+      <path class="arm" d="M437 426 L429 436"/>
+    </g>
+  </svg>
+
+  <div class="kicker">
+    <span class="dot"></span>
+    <p>要加的是視角數，不是模型強弱</p>
+    <span class="en">five angles &gt; one strong model</span>
+  </div>
+
+  <div class="band">
+    <div class="sw">
+      <div><i style="background:#f4d35e"></i><span>F4D35E</span></div>
+      <div><i style="background:#0b7a75"></i><span>0B7A75</span></div>
+      <div><i style="background:#c96442"></i><span>C96442</span></div>
+      <div><i style="background:#1a1a18"></i><span>1A1A18</span></div>
+      <div><i style="background:#f7f3e8"></i><span>F7F3E8</span></div>
+    </div>
+    <div class="rule"></div>
+    <div class="band-txt">
+      <div class="l1">氣質定位：把抽象的「視角差」畫成拿放大鏡的小人——高飽和平塗、粗黑描邊、零漸層，冷靜裡帶一點反差幽默</div>
+      <div class="l2">參照：Nigel Holmes（TIME 圖表總監 1978–1994 · Explanation Graphics）</div>
+    </div>
+    <div class="note">插畫降級為幾何色塊</div>
+  </div>
+
+</div>
+</body>
+</html>

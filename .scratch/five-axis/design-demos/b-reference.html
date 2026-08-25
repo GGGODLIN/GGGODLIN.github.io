@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>同一份 diff，五條視線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    background: #f4f3ee;
+    color: #191817;
+    font-family: "Inter", "Noto Sans TC", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { position: relative; width: 1280px; height: 720px; }
+  .layer { position: absolute; inset: 0; }
+  .lines { z-index: 1; }
+  .parts { z-index: 2; }
+  .box { position: absolute; }
+
+  .head { left: 40px; top: 14px; width: 1200px; height: 52px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .head-l { display: flex; align-items: baseline; gap: 14px; }
+  .fig-no {
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 12.5px; font-weight: 500; letter-spacing: .06em; color: #c96442;
+    border: 1px solid #e2c4b6; border-radius: 3px; padding: 3px 7px;
+  }
+  .head-title { font-family: "Noto Serif TC", Georgia, serif; font-weight: 600; font-size: 27px; letter-spacing: .01em; }
+  .head-r { font-family: "Noto Serif TC", Georgia, serif; font-size: 17px; color: #5a554e; letter-spacing: .02em; }
+  .head-r b { color: #c96442; font-weight: 600; }
+
+  .node {
+    width: 250px; height: 100px; padding: 13px 15px;
+    background: #f7f6f2; border: 1px solid #e4e0d5; border-radius: 8px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .node.hit { background: #fdf6f2; border: 1.5px solid #c96442; }
+  .n-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .n-top img { width: 17px; height: 17px; display: block; }
+  .n-name { font-family: "Noto Sans TC", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .01em; }
+  .chip {
+    margin-left: auto; font-family: "Noto Sans TC", sans-serif; font-size: 11px; font-weight: 500;
+    padding: 2px 7px; border-radius: 3px; background: #eeede6; color: #5a554e; letter-spacing: .04em; white-space: nowrap;
+  }
+  .chip.on { background: #c96442; color: #fff; font-weight: 700; }
+  .n-line {
+    font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; line-height: 17px; color: #5a554e;
+  }
+  .n-line em { font-style: normal; color: #191817; font-weight: 500; }
+  .n-line.win { color: #c96442; font-weight: 500; }
+  .mono { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 11.5px; }
+
+  .diff {
+    left: 460px; top: 250px; width: 360px; height: 200px;
+    background: #fff; border: 1px solid #d8d3c8; border-radius: 8px;
+    box-shadow: 0 1px 0 #efece3, 0 10px 26px rgba(25, 24, 23, .05);
+    overflow: hidden;
+  }
+  .diff-head {
+    height: 34px; padding: 0 13px; display: flex; align-items: center; gap: 8px;
+    background: #f7f6f2; border-bottom: 1px solid #e4e0d5;
+  }
+  .diff-head img { width: 15px; height: 15px; display: block; }
+  .diff-head .f { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 12.5px; font-weight: 500; }
+  .diff-head .t { margin-left: auto; font-family: "Noto Sans TC", sans-serif; font-size: 11px; color: #5a554e; }
+  .code { padding: 9px 13px; font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 13px; line-height: 24px; color: #3b3731; }
+  .code .tag { color: #191817; font-weight: 500; }
+  .code .ind { padding-left: 18px; display: inline-block; }
+  .slot {
+    color: #c96442; border: 1px dashed #d99b7f; border-radius: 3px;
+    padding: 1px 5px; background: #fdf1eb; margin-left: 18px;
+  }
+  .slot-note { font-family: "Noto Sans TC", sans-serif; font-size: 11.5px; color: #c96442; margin-left: 7px; }
+
+  .subcap {
+    left: 48px; top: 104px; width: 700px;
+    font-family: "Noto Sans TC", sans-serif; font-size: 13px; color: #5a554e; line-height: 20px;
+  }
+  .subcap b { color: #191817; font-weight: 700; }
+  .subcap .n { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 12px; color: #c96442; }
+
+  .cap {
+    left: 460px; top: 459px; width: 360px; text-align: center;
+    font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; color: #5a554e; letter-spacing: .02em;
+  }
+  .cap span { color: #191817; }
+
+  .band {
+    left: 0; top: 648px; width: 1280px; height: 72px;
+    background: #eeede6; border-top: 1px solid #d8d3c8;
+    display: flex; align-items: center; gap: 22px; padding: 0 40px;
+  }
+  .sw { display: flex; gap: 6px; }
+  .sw i { width: 30px; height: 30px; border-radius: 4px; display: block; border: 1px solid rgba(25, 24, 23, .1); }
+  .rule { width: 1px; height: 34px; background: #d8d3c8; }
+  .band-t { font-family: "Noto Sans TC", sans-serif; font-size: 13px; color: #5a554e; line-height: 19px; }
+  .band-t b { color: #191817; font-weight: 700; }
+  .band-r { margin-left: auto; text-align: right; }
+  .band-r .k { font-family: "Noto Sans TC", sans-serif; font-size: 12.5px; color: #5a554e; }
+  .band-r .k b { color: #191817; font-weight: 700; }
+  .band-r .u { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 11px; color: #c96442; margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <svg class="layer lines" viewBox="0 0 1280 720" width="1280" height="720">
+    <rect x="24" y="78" width="1232" height="558" rx="12" fill="#fff" stroke="#d8d3c8" stroke-width="1"/>
+    <ellipse cx="640" cy="350" rx="440" ry="205" fill="none" stroke="#ece8dd" stroke-width="1" stroke-dasharray="2 7"/>
+    <ellipse cx="640" cy="350" rx="300" ry="140" fill="none" stroke="#f2efe7" stroke-width="1" stroke-dasharray="2 7"/>
+
+    <g stroke="#b0aa9c" stroke-width="1" fill="none">
+      <path d="M405 232 L460 285" stroke-dasharray="4 4"/>
+      <path d="M401 227 L409 237"/>
+      <path d="M405 468 L460 415" stroke-dasharray="4 4"/>
+      <path d="M401 473 L409 463"/>
+      <path d="M640 505 L640 450" stroke-dasharray="4 4"/>
+      <path d="M634 505 L646 505"/>
+      <path d="M875 468 L852 447" stroke-dasharray="4 4"/>
+      <path d="M879 473 L871 463"/>
+    </g>
+    <circle cx="848" cy="443" r="3.5" fill="#fff" stroke="#b0aa9c" stroke-width="1"/>
+
+    <g stroke="#c3bdaf" stroke-width="1" fill="none">
+      <path d="M460 285 l8 -3 M460 285 l3 8"/>
+      <path d="M460 415 l8 3 M460 415 l3 -8"/>
+      <path d="M640 450 l-5 -7 M640 450 l5 -7"/>
+    </g>
+
+    <path d="M875 232 L820 401" stroke="#c96442" stroke-width="1.6" fill="none"/>
+    <path d="M879 227 L871 237" stroke="#c96442" stroke-width="1.6" fill="none"/>
+    <circle cx="820" cy="401" r="4" fill="#c96442"/>
+    <path d="M820 401 L806 401" stroke="#c96442" stroke-width="1.6"/>
+  </svg>
+
+  <div class="layer parts">
+    <div class="box head">
+      <div class="head-l">
+        <span class="fig-no">圖 3</span>
+        <span class="head-title">同一份 diff，五條視線</span>
+      </div>
+      <div class="head-r">要加的是<b>視角數</b>，不是模型強弱</div>
+    </div>
+
+    <div class="box subcap"><b>輸入只有一份，餵法有五種。</b>四條視線擦過去，只有最小的那台停在同一個位置——<span class="n">handleSave</span>。</div>
+
+    <div class="box node" style="left:155px; top:182px;">
+      <div class="n-top">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU3IiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNTciPjxwYXRoIGZpbGw9IiNEOTc3NTciIGQ9Im01MC4yMjggMTcwLjMyMSA1MC4zNTctMjguMjU3Ljg0My0yLjQ2My0uODQzLTEuMzYxaC0yLjQ2MmwtOC40MjYtLjUxOC0yOC43NzUtLjc3OC0yNC45NTItMS4wMzctMjQuMTc1LTEuMjk2LTYuMDkyLTEuMjk3TDAgMTI1Ljc5NmwuNTgzLTMuNzU5IDUuMTItMy40MzQgNy4zMjQuNjQ4IDE2LjIwMiAxLjEwMSAyNC4zMDQgMS42ODUgMTcuNjI5IDEuMDM3IDI2LjExOCAyLjcyMmg0LjE0OGwuNTgzLTEuNjg1LTEuNDI2LTEuMDM3LTEuMTAxLTEuMDM3LTI1LjE0Ny0xNy4wNDUtMjcuMjItMTguMDE3LTE0LjI1OC0xMC4zNy03LjcxMy01LjI1LTMuODg4LTQuOTI1LTEuNjg1LTEwLjc1OCA3LTcuNzEzIDkuMzk3LjY0OSAyLjM5OC42NDggOS41MjcgNy4zMjMgMjAuMzUgMTUuNzVMOTQuODE3IDkxLjlsMy44ODkgMy4yNCAxLjU1NS0xLjEwMi4xOTUtLjc3Ny0xLjc1LTIuOTE3LTE0LjQ1My0yNi4xMTgtMTUuNDI1LTI2LjU3Mi02Ljg3LTExLjAxOC0xLjgxNC02LjYxYy0uNjQ4LTIuNzIzLTEuMTAyLTQuOTkxLTEuMTAyLTcuNzc4bDcuOTcyLTEwLjgyM0w3MS40MiAwIDgyLjA1IDEuNDI2bDQuNDcyIDMuODg4IDYuNjEgMTUuMTAxIDEwLjY5NCAyMy43ODYgMTYuNTkxIDMyLjM0IDQuODYxIDkuNTkyIDIuNTkyIDguODc5Ljk3MyAyLjcyMmgxLjY4NXYtMS41NTZsMS4zNi0xOC4yMTEgMi41MjgtMjIuMzYgMi40NjMtMjguNzc2Ljg0My04LjEgNC4wMTgtOS43MjIgNy45NzEtNS4yNSA2LjIyMiAyLjk4MSA1LjEyIDcuMzI0LS43MTMgNC43My0zLjA0NiAxOS43NjgtNS45NjIgMzAuOTgtMy44ODkgMjAuNzM5aDIuMjY4bDIuNTkzLTIuNTkzIDEwLjQ5OS0xMy45MzQgMTcuNjI4LTIyLjAzNiA3Ljc3OC04Ljc0OSA5LjA3My05LjY1NyA1LjgzMy00LjYwMWgxMS4wMThsOC4xIDEyLjA1NS0zLjYyOCAxMi40NDMtMTEuMzQyIDE0LjM4OC05LjM5OCAxMi4xODQtMTMuNDggMTguMTQ3LTguNDI2IDE0LjUxOC43NzggMS4xNjYgMi4wMS0uMTk0IDMwLjQ2LTYuNDgxIDE2LjQ2Mi0yLjk4MiAxOS42MzctMy4zNyA4Ljg4IDQuMTQ4Ljk3MSA0LjIxMy0zLjUgOC42Mi0yMC45OTggNS4xODQtMjQuNjI4IDQuOTI2LTM2LjY4MiA4LjY4NS0uNDU0LjMyNC41MTkuNjQ4IDE2LjUyNiAxLjU1NSA3LjA2NS4zODloMTcuMzA0bDMyLjIxIDIuMzk4IDguNDI2IDUuNTc0IDUuMDU1IDYuODA1LS44NDMgNS4xODQtMTIuOTYyIDYuNjExLTE3LjQ5OC00LjE0OC00MC44My05LjcyMS0xNC0zLjVoLTEuOTQ0djEuMTY3bDExLjY2NiAxMS40MDYgMjEuMzg3IDE5LjMxNCAyNi43NjcgMjQuODg3IDEuMzYgNi4xNTctMy40MzQgNC44Ni0zLjYzLS41MTgtMjMuNTI2LTE3LjY5My05LjA3My03Ljk3Mi0yMC41NDUtMTcuMzA0aC0xLjM2djEuODE0bDQuNzMgNi45MzUgMjUuMDE3IDM3LjU5IDEuMjk2IDExLjUzNi0xLjgxNCAzLjc2LTYuNDgxIDIuMjY4LTcuMTMtMS4yOTctMTQuNjQ3LTIwLjU0NC0xNS4xLTIzLjEzOC0xMi4xODUtMjAuNzM5LTEuNDkuODQzLTcuMTk0IDc3LjQ0OC0zLjM3IDMuOTUzLTcuNzc4IDIuOTgxLTYuNDgtNC45MjUtMy40MzYtNy45NzIgMy40MzUtMTUuNzQ5IDQuMTQ4LTIwLjU0NCAzLjM3LTE2LjMzMyAzLjA0Ni0yMC4yODUgMS44MTUtNi43NC0uMTMtLjQ1NC0xLjQ5LjE5NC0xNS4yOTUgMjAuOTk5LTIzLjI2NyAzMS40MzMtMTguNDA2IDE5LjcwMi00LjQwNyAxLjc1LTcuNjQ4LTMuOTU0LjcxMy03LjA2NCA0LjI3Ny02LjI4NiAyNS40Ny0zMi40MDUgMTUuMzYtMjAuMDkyIDkuOTE3LTExLjYtLjA2NS0xLjY4NmgtLjU4M0w0NC4wNyAxOTguMTI1bC0xMi4wNTUgMS41NTUtNS4xODUtNC44Ni42NDgtNy45NzIgMi40NjMtMi41OTMgMjAuMzUtMTMuOTk5LS4wNjQuMDY1WiIvPjwvc3ZnPg==" alt="Claude">
+        <span class="n-name">主模型 ×2 · Claude</span>
+        <span class="chip">漏</span>
+      </div>
+      <div class="n-line">餵滿：<em>spec ＋ 影響面 ＋ 檢查表</em></div>
+      <div class="n-line">看完全過，沒提這顆按鈕</div>
+    </div>
+
+    <div class="box node" style="left:155px; top:418px;">
+      <div class="n-top">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNjAiPjxwYXRoIGQ9Ik0yMzkuMTg0IDEwNi4yMDNhNjQuNzE2IDY0LjcxNiAwIDAgMC01LjU3Ni01My4xMDNDMjE5LjQ1MiAyOC40NTkgMTkxIDE1Ljc4NCAxNjMuMjEzIDIxLjc0QTY1LjU4NiA2NS41ODYgMCAwIDAgNTIuMDk2IDQ1LjIyYTY0LjcxNiA2NC43MTYgMCAwIDAtNDMuMjMgMzEuMzZjLTE0LjMxIDI0LjYwMi0xMS4wNjEgNTUuNjM0IDguMDMzIDc2Ljc0YTY0LjY2NSA2NC42NjUgMCAwIDAgNS41MjUgNTMuMTAyYzE0LjE3NCAyNC42NSA0Mi42NDQgMzcuMzI0IDcwLjQ0NiAzMS4zNmE2NC43MiA2NC43MiAwIDAgMCA0OC43NTQgMjEuNzQ0YzI4LjQ4MS4wMjUgNTMuNzE0LTE4LjM2MSA2Mi40MTQtNDUuNDgxYTY0Ljc2NyA2NC43NjcgMCAwIDAgNDMuMjI5LTMxLjM2YzE0LjEzNy0yNC41NTggMTAuODc1LTU1LjQyMy04LjA4My03Ni40ODNabS05Ny41NiAxMzYuMzM4YTQ4LjM5NyA0OC4zOTcgMCAwIDEtMzEuMTA1LTExLjI1NWwxLjUzNS0uODcgNTEuNjctMjkuODI1YTguNTk1IDguNTk1IDAgMCAwIDQuMjQ3LTcuMzY3di03Mi44NWwyMS44NDUgMTIuNjM2Yy4yMTguMTExLjM3LjMyLjQwOS41NjN2NjAuMzY3Yy0uMDU2IDI2LjgxOC0yMS43ODMgNDguNTQ1LTQ4LjYwMSA0OC42MDFabS0xMDQuNDY2LTQ0LjYxYTQ4LjM0NSA0OC4zNDUgMCAwIDEtNS43ODEtMzIuNTg5bDEuNTM0LjkyMSA1MS43MjIgMjkuODI2YTguMzM5IDguMzM5IDAgMCAwIDguNDQxIDBsNjMuMTgxLTM2LjQyNXYyNS4yMjFhLjg3Ljg3IDAgMCAxLS4zNTguNjY1bC01Mi4zMzUgMzAuMTg0Yy0yMy4yNTcgMTMuMzk4LTUyLjk3IDUuNDMxLTY2LjQwNC0xNy44MDNaTTIzLjU0OSA4NS4zOGE0OC40OTkgNDguNDk5IDAgMCAxIDI1LjU4LTIxLjMzM3Y2MS4zOWE4LjI4OCA4LjI4OCAwIDAgMCA0LjE5NSA3LjMxNmw2Mi44NzQgMzYuMjcyLTIxLjg0NSAxMi42MzZhLjgxOS44MTkgMCAwIDEtLjc2NyAwTDQxLjM1MyAxNTEuNTNjLTIzLjIxMS0xMy40NTQtMzEuMTcxLTQzLjE0NC0xNy44MDQtNjYuNDA1di4yNTZabTE3OS40NjYgNDEuNjk1LTYzLjA4LTM2LjYzTDE2MS43MyA3Ny44NmEuODE5LjgxOSAwIDAgMSAuNzY4IDBsNTIuMjMzIDMwLjE4NGE0OC42IDQ4LjYgMCAwIDEtNy4zMTYgODcuNjM1di02MS4zOTFhOC41NDQgOC41NDQgMCAwIDAtNC40LTcuMjEzWm0yMS43NDItMzIuNjktMS41MzUtLjkyMi01MS42MTktMzAuMDgxYTguMzkgOC4zOSAwIDAgMC04LjQ5MiAwTDk5Ljk4IDk5LjgwOFY3NC41ODdhLjcxNi43MTYgMCAwIDEgLjMwNy0uNjY1bDUyLjIzMy0zMC4xMzNhNDguNjUyIDQ4LjY1MiAwIDAgMSA3Mi4yMzYgNTAuMzkxdi4yMDVaTTg4LjA2MSAxMzkuMDk3bC0yMS44NDUtMTIuNTg1YS44Ny44NyAwIDAgMS0uNDEtLjYxNFY2NS42ODVhNDguNjUyIDQ4LjY1MiAwIDAgMSA3OS43NTctMzcuMzQ2bC0xLjUzNS44Ny01MS42NyAyOS44MjVhOC41OTUgOC41OTUgMCAwIDAtNC4yNDYgNy4zNjdsLS4wNTEgNzIuNjk3Wm0xMS44NjgtMjUuNTggMjguMTM4LTE2LjIxNyAyOC4xODggMTYuMjE4djMyLjQzNGwtMjguMDg2IDE2LjIxOC0yOC4xODgtMTYuMjE4LS4wNTItMzIuNDM0WiIvPjwvc3ZnPg==" alt="OpenAI Codex">
+        <span class="n-name">Codex 中性</span>
+        <span class="chip">漏</span>
+      </div>
+      <div class="n-line">餓著：<em>只給 diff</em></div>
+      <div class="n-line">判定沒有阻斷性問題</div>
+    </div>
+
+    <div class="box node" style="left:515px; top:505px;">
+      <div class="n-top">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIgdmlld0JveD0iMCAwIDI1NiAyNjAiPjxwYXRoIGQ9Ik0yMzkuMTg0IDEwNi4yMDNhNjQuNzE2IDY0LjcxNiAwIDAgMC01LjU3Ni01My4xMDNDMjE5LjQ1MiAyOC40NTkgMTkxIDE1Ljc4NCAxNjMuMjEzIDIxLjc0QTY1LjU4NiA2NS41ODYgMCAwIDAgNTIuMDk2IDQ1LjIyYTY0LjcxNiA2NC43MTYgMCAwIDAtNDMuMjMgMzEuMzZjLTE0LjMxIDI0LjYwMi0xMS4wNjEgNTUuNjM0IDguMDMzIDc2Ljc0YTY0LjY2NSA2NC42NjUgMCAwIDAgNS41MjUgNTMuMTAyYzE0LjE3NCAyNC42NSA0Mi42NDQgMzcuMzI0IDcwLjQ0NiAzMS4zNmE2NC43MiA2NC43MiAwIDAgMCA0OC43NTQgMjEuNzQ0YzI4LjQ4MS4wMjUgNTMuNzE0LTE4LjM2MSA2Mi40MTQtNDUuNDgxYTY0Ljc2NyA2NC43NjcgMCAwIDAgNDMuMjI5LTMxLjM2YzE0LjEzNy0yNC41NTggMTAuODc1LTU1LjQyMy04LjA4My03Ni40ODNabS05Ny41NiAxMzYuMzM4YTQ4LjM5NyA0OC4zOTcgMCAwIDEtMzEuMTA1LTExLjI1NWwxLjUzNS0uODcgNTEuNjctMjkuODI1YTguNTk1IDguNTk1IDAgMCAwIDQuMjQ3LTcuMzY3di03Mi44NWwyMS44NDUgMTIuNjM2Yy4yMTguMTExLjM3LjMyLjQwOS41NjN2NjAuMzY3Yy0uMDU2IDI2LjgxOC0yMS43ODMgNDguNTQ1LTQ4LjYwMSA0OC42MDFabS0xMDQuNDY2LTQ0LjYxYTQ4LjM0NSA0OC4zNDUgMCAwIDEtNS43ODEtMzIuNTg5bDEuNTM0LjkyMSA1MS43MjIgMjkuODI2YTguMzM5IDguMzM5IDAgMCAwIDguNDQxIDBsNjMuMTgxLTM2LjQyNXYyNS4yMjFhLjg3Ljg3IDAgMCAxLS4zNTguNjY1bC01Mi4zMzUgMzAuMTg0Yy0yMy4yNTcgMTMuMzk4LTUyLjk3IDUuNDMxLTY2LjQwNC0xNy44MDNaTTIzLjU0OSA4NS4zOGE0OC40OTkgNDguNDk5IDAgMCAxIDI1LjU4LTIxLjMzM3Y2MS4zOWE4LjI4OCA4LjI4OCAwIDAgMCA0LjE5NSA3LjMxNmw2Mi44NzQgMzYuMjcyLTIxLjg0NSAxMi42MzZhLjgxOS44MTkgMCAwIDEtLjc2NyAwTDQxLjM1MyAxNTEuNTNjLTIzLjIxMS0xMy40NTQtMzEuMTcxLTQzLjE0NC0xNy44MDQtNjYuNDA1di4yNTZabTE3OS40NjYgNDEuNjk1LTYzLjA4LTM2LjYzTDE2MS43MyA3Ny44NmEuODE5LjgxOSAwIDAgMSAuNzY4IDBsNTIuMjMzIDMwLjE4NGE0OC42IDQ4LjYgMCAwIDEtNy4zMTYgODcuNjM1di02MS4zOTFhOC41NDQgOC41NDQgMCAwIDAtNC40LTcuMjEzWm0yMS43NDItMzIuNjktMS41MzUtLjkyMi01MS42MTktMzAuMDgxYTguMzkgOC4zOSAwIDAgMC04LjQ5MiAwTDk5Ljk4IDk5LjgwOFY3NC41ODdhLjcxNi43MTYgMCAwIDEgLjMwNy0uNjY1bDUyLjIzMy0zMC4xMzNhNDguNjUyIDQ4LjY1MiAwIDAgMSA3Mi4yMzYgNTAuMzkxdi4yMDVaTTg4LjA2MSAxMzkuMDk3bC0yMS44NDUtMTIuNTg1YS44Ny44NyAwIDAgMS0uNDEtLjYxNFY2NS42ODVhNDguNjUyIDQ4LjY1MiAwIDAgMSA3OS43NTctMzcuMzQ2bC0xLjUzNS44Ny01MS42NyAyOS44MjVhOC41OTUgOC41OTUgMCAwIDAtNC4yNDYgNy4zNjdsLS4wNTEgNzIuNjk3Wm0xMS44NjgtMjUuNTggMjguMTM4LTE2LjIxNyAyOC4xODggMTYuMjE4djMyLjQzNGwtMjguMDg2IDE2LjIxOC0yOC4xODgtMTYuMjE4LS4wNTItMzIuNDM0WiIvPjwvc3ZnPg==" alt="OpenAI Codex">
+        <span class="n-name">Codex 紅隊</span>
+        <span class="chip">漏</span>
+      </div>
+      <div class="n-line">餓著 ＋ 人格：<em>假設它會炸</em></div>
+      <div class="n-line">炸點找錯地方，多報一條誤報</div>
+    </div>
+
+    <div class="box node" style="left:875px; top:418px;">
+      <div class="n-top">
+        <img src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjk2IDI5OCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjk2IiBoZWlnaHQ9IjI5OCIgZmlsbD0ibm9uZSI+PG1hc2sgaWQ9ImEiIHdpZHRoPSIyOTYiIGhlaWdodD0iMjk4IiB4PSIwIiB5PSIwIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHlsZT0ibWFzay10eXBlOmFscGhhIj48cGF0aCBmaWxsPSIjMzE4NkZGIiBkPSJNMTQxLjIwMSA0Ljg4NmMyLjI4Mi02LjE3IDExLjA0Mi02LjA3MSAxMy4xODQuMTQ4bDUuOTg1IDE3LjM3YTE4NC4wMDQgMTg0LjAwNCAwIDAgMCAxMTEuMjU3IDExMy4wNDlsMTkuMzA0IDYuOTk3YzYuMTQzIDIuMjI3IDYuMTU2IDEwLjkxLjAyIDEzLjE1NWwtMTkuMzUgNy4wODJhMTg0LjAwMSAxODQuMDAxIDAgMCAwLTEwOS40OTUgMTA5LjM4NWwtNy41NzMgMjAuNjI5Yy0yLjI0MSA2LjEwNS0xMC44NjkgNi4xMjEtMTMuMTMzLjAyNWwtNy45MDgtMjEuMjk2YTE4NCAxODQgMCAwIDAtMTA5LjAyLTEwOC42NThsLTE5LjY5OC03LjIzOWMtNi4xMDItMi4yNDMtNi4xMTgtMTAuODY3LS4wMjUtMTMuMTMybDIwLjA4My03LjQ2N0ExODMuOTk4IDE4My45OTggMCAwIDAgMTMzLjI5MSAyNi4yOGw3LjkxLTIxLjM5NFoiLz48L21hc2s+PGcgbWFzaz0idXJsKCNhKSI+PGcgZmlsdGVyPSJ1cmwoI2IpIj48ZWxsaXBzZSBjeD0iMTYzIiBjeT0iMTQ5IiBmaWxsPSIjMzY4OUZGIiByeD0iMTk2IiByeT0iMTU5Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNjKSI+PGVsbGlwc2UgY3g9IjMzLjUiIGN5PSIxNDIuNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNkKSI+PGVsbGlwc2UgY3g9IjE5LjUiIGN5PSIxNDguNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNlKSI+PHBhdGggZmlsbD0iI0ZBNDM0MCIgZD0iTTE5NCAxMC41QzE3MiA4Mi41IDY1LjUgMTM0LjMzMyAyMi41IDEzNUwxNDQtNjZsNTAgNzYuNVoiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2YpIj48cGF0aCBmaWxsPSIjRkE0MzQwIiBkPSJNMTkwLjUtMTIuNUMxNjguNSA1OS41IDYyIDExMS4zMzMgMTkgMTEyTDE0MC41LTg5bDUwIDc2LjVaIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNnKSI+PHBhdGggZmlsbD0iIzE0QkI2OSIgZD0iTTE5NC41IDI3OS41QzE3Mi41IDIwNy41IDY2IDE1NS42NjcgMjMgMTU1bDEyMS41IDIwMSA1MC03Ni41WiIvPjwvZz48ZyBmaWx0ZXI9InVybCgjaCkiPjxwYXRoIGZpbGw9IiMxNEJCNjkiIGQ9Ik0xOTYuNSAzMjAuNUMxNzQuNSAyNDguNSA2OCAxOTYuNjY3IDI1IDE5NmwxMjEuNSAyMDEgNTAtNzYuNVoiLz48L2c+PC9nPjxkZWZzPjxmaWx0ZXIgaWQ9ImIiIHdpZHRoPSI0NjQiIGhlaWdodD0iMzkwIiB4PSItNjkiIHk9Ii00NiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIxOCIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImMiIHdpZHRoPSIyNjUiIGhlaWdodD0iMjczIiB4PSItOTkiIHk9IjYiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJkIiB3aWR0aD0iMjY1IiBoZWlnaHQ9IjI3MyIgeD0iLTExMyIgeT0iMTIiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJlIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItNDEuNSIgeT0iLTEzMCIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImYiIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00NSIgeT0iLTE1MyIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImciIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00MSIgeT0iOTEiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJoIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItMzkiIHk9IjEzMiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjwvZGVmcz48L3N2Zz4=" alt="Gemini">
+        <span class="n-name">Gemini Pro</span>
+        <span class="chip">未出勤</span>
+      </div>
+      <div class="n-line">第三家模型的獨立視角</div>
+      <div class="n-line">那一場沒接上，線斷在半路</div>
+    </div>
+
+    <div class="box node hit" style="left:875px; top:182px;">
+      <div class="n-top">
+        <img src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjk2IDI5OCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjk2IiBoZWlnaHQ9IjI5OCIgZmlsbD0ibm9uZSI+PG1hc2sgaWQ9ImEiIHdpZHRoPSIyOTYiIGhlaWdodD0iMjk4IiB4PSIwIiB5PSIwIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHlsZT0ibWFzay10eXBlOmFscGhhIj48cGF0aCBmaWxsPSIjMzE4NkZGIiBkPSJNMTQxLjIwMSA0Ljg4NmMyLjI4Mi02LjE3IDExLjA0Mi02LjA3MSAxMy4xODQuMTQ4bDUuOTg1IDE3LjM3YTE4NC4wMDQgMTg0LjAwNCAwIDAgMCAxMTEuMjU3IDExMy4wNDlsMTkuMzA0IDYuOTk3YzYuMTQzIDIuMjI3IDYuMTU2IDEwLjkxLjAyIDEzLjE1NWwtMTkuMzUgNy4wODJhMTg0LjAwMSAxODQuMDAxIDAgMCAwLTEwOS40OTUgMTA5LjM4NWwtNy41NzMgMjAuNjI5Yy0yLjI0MSA2LjEwNS0xMC44NjkgNi4xMjEtMTMuMTMzLjAyNWwtNy45MDgtMjEuMjk2YTE4NCAxODQgMCAwIDAtMTA5LjAyLTEwOC42NThsLTE5LjY5OC03LjIzOWMtNi4xMDItMi4yNDMtNi4xMTgtMTAuODY3LS4wMjUtMTMuMTMybDIwLjA4My03LjQ2N0ExODMuOTk4IDE4My45OTggMCAwIDAgMTMzLjI5MSAyNi4yOGw3LjkxLTIxLjM5NFoiLz48L21hc2s+PGcgbWFzaz0idXJsKCNhKSI+PGcgZmlsdGVyPSJ1cmwoI2IpIj48ZWxsaXBzZSBjeD0iMTYzIiBjeT0iMTQ5IiBmaWxsPSIjMzY4OUZGIiByeD0iMTk2IiByeT0iMTU5Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNjKSI+PGVsbGlwc2UgY3g9IjMzLjUiIGN5PSIxNDIuNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNkKSI+PGVsbGlwc2UgY3g9IjE5LjUiIGN5PSIxNDguNSIgZmlsbD0iI0Y2QzAxMyIgcng9IjY4LjUiIHJ5PSI3Mi41Ii8+PC9nPjxnIGZpbHRlcj0idXJsKCNlKSI+PHBhdGggZmlsbD0iI0ZBNDM0MCIgZD0iTTE5NCAxMC41QzE3MiA4Mi41IDY1LjUgMTM0LjMzMyAyMi41IDEzNUwxNDQtNjZsNTAgNzYuNVoiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2YpIj48cGF0aCBmaWxsPSIjRkE0MzQwIiBkPSJNMTkwLjUtMTIuNUMxNjguNSA1OS41IDYyIDExMS4zMzMgMTkgMTEyTDE0MC41LTg5bDUwIDc2LjVaIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNnKSI+PHBhdGggZmlsbD0iIzE0QkI2OSIgZD0iTTE5NC41IDI3OS41QzE3Mi41IDIwNy41IDY2IDE1NS42NjcgMjMgMTU1bDEyMS41IDIwMSA1MC03Ni41WiIvPjwvZz48ZyBmaWx0ZXI9InVybCgjaCkiPjxwYXRoIGZpbGw9IiMxNEJCNjkiIGQ9Ik0xOTYuNSAzMjAuNUMxNzQuNSAyNDguNSA2OCAxOTYuNjY3IDI1IDE5NmwxMjEuNSAyMDEgNTAtNzYuNVoiLz48L2c+PC9nPjxkZWZzPjxmaWx0ZXIgaWQ9ImIiIHdpZHRoPSI0NjQiIGhlaWdodD0iMzkwIiB4PSItNjkiIHk9Ii00NiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIxOCIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImMiIHdpZHRoPSIyNjUiIGhlaWdodD0iMjczIiB4PSItOTkiIHk9IjYiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJkIiB3aWR0aD0iMjY1IiBoZWlnaHQ9IjI3MyIgeD0iLTExMyIgeT0iMTIiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJlIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItNDEuNSIgeT0iLTEzMCIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImYiIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00NSIgeT0iLTE1MyIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImciIHdpZHRoPSIyOTkuNSIgaGVpZ2h0PSIzMjkiIHg9Ii00MSIgeT0iOTEiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPjxmZUJsZW5kIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPjxmZUdhdXNzaWFuQmx1ciByZXN1bHQ9ImVmZmVjdDFfZm9yZWdyb3VuZEJsdXJfNjlfMTc5OTgiIHN0ZERldmlhdGlvbj0iMzIiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJoIiB3aWR0aD0iMjk5LjUiIGhlaWdodD0iMzI5IiB4PSItMzkiIHk9IjEzMiIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiPjxmZUZsb29kIGZsb29kLW9wYWNpdHk9IjAiIHJlc3VsdD0iQmFja2dyb3VuZEltYWdlRml4Ii8+PGZlQmxlbmQgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iQmFja2dyb3VuZEltYWdlRml4IiByZXN1bHQ9InNoYXBlIi8+PGZlR2F1c3NpYW5CbHVyIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl82OV8xNzk5OCIgc3RkRGV2aWF0aW9uPSIzMiIvPjwvZmlsdGVyPjwvZGVmcz48L3N2Zz4=" alt="Gemini">
+        <span class="n-name">Gemini Flash</span>
+        <span class="chip on">命中</span>
+      </div>
+      <div class="n-line">同上，模型還小一號（Medium）</div>
+      <div class="n-line">橫向比對兩個長得很像的元件</div>
+      <div class="n-line win">複查屬實 → Must Fix</div>
+    </div>
+
+    <div class="box diff">
+      <div class="diff-head">
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjE5MiIgaGVpZ2h0PSIyNTAwIiB2aWV3Qm94PSIwIDAgMjU2IDI5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+CiAgICA8cGF0aCBkPSJNMjIzLjc3NCA1Ny4zNGMtLjIwMS0xLjQ2LTEuNDgtMi4yNjgtMi41MzctMi4zNTctMS4wNTUtLjA4OC0yMy4zODMtMS43NDMtMjMuMzgzLTEuNzQzcy0xNS41MDctMTUuMzk1LTE3LjIwOS0xNy4wOTljLTEuNzAzLTEuNzAzLTUuMDI5LTEuMTg1LTYuMzItLjgwNS0uMTkuMDU2LTMuMzg4IDEuMDQzLTguNjc4IDIuNjgtNS4xOC0xNC45MDYtMTQuMzIyLTI4LjYwNC0zMC40MDUtMjguNjA0LS40NDQgMC0uOTAxLjAxOC0xLjM1OC4wNDRDMTI5LjMxIDMuNDA3IDEyMy42NDQuNzc5IDExOC43NS43NzljLTM3LjQ2NSAwLTU1LjM2NCA0Ni44MzUtNjAuOTc2IDcwLjYzNS0xNC41NTggNC41MTEtMjQuOSA3LjcxOC0yNi4yMjEgOC4xMzMtOC4xMjYgMi41NDktOC4zODMgMi44MDUtOS40NSAxMC40NjJDMjEuMyA5NS44MDYuMDM4IDI2MC4yMzUuMDM4IDI2MC4yMzVsMTY1LjY3OCAzMS4wNDIgODkuNzctMTkuNDJTMjIzLjk3MyA1OC44IDIyMy43NzUgNTcuMzR6TTE1Ni40OSA0MC44NDhsLTE0LjAxOSA0LjMzOWMuMDA1LS45ODguMDEtMS45Ni4wMS0zLjAyMyAwLTkuMjY0LTEuMjg2LTE2LjcyMy0zLjM0OS0yMi42MzYgOC4yODcgMS4wNCAxMy44MDYgMTAuNDY5IDE3LjM1OCAyMS4zMnptLTI3LjYzOC0xOS40ODNjMi4zMDQgNS43NzMgMy44MDIgMTQuMDU4IDMuODAyIDI1LjIzOCAwIC41NzItLjAwNSAxLjA5NS0uMDEgMS42MjQtOS4xMTcgMi44MjQtMTkuMDI0IDUuODktMjguOTUzIDguOTY2IDUuNTc1LTIxLjUxNiAxNi4wMjUtMzEuOTA4IDI1LjE2MS0zNS44Mjh6bS0xMS4xMzEtMTAuNTM3YzEuNjE3IDAgMy4yNDYuNTQ5IDQuODA1IDEuNjIyLTEyLjAwNyA1LjY1LTI0Ljg3NyAxOS44OC0zMC4zMTIgNDguMjk3bC0yMi44ODYgNy4wODhDNzUuNjk0IDQ2LjE2IDkwLjgxIDEwLjgyOCAxMTcuNzIgMTAuODI4eiIgZmlsbD0iIzk1QkY0NiIvPgogICAgPHBhdGggZD0iTTIyMS4yMzcgNTQuOTgzYy0xLjA1NS0uMDg4LTIzLjM4My0xLjc0My0yMy4zODMtMS43NDNzLTE1LjUwNy0xNS4zOTUtMTcuMjA5LTE3LjA5OWMtLjYzNy0uNjM0LTEuNDk2LS45NTktMi4zOTQtMS4wOTlsLTEyLjUyNyAyNTYuMjMzIDg5Ljc2Mi0xOS40MThTMjIzLjk3MiA1OC44IDIyMy43NzQgNTcuMzRjLS4yMDEtMS40Ni0xLjQ4LTIuMjY4LTIuNTM3LTIuMzU3IiBmaWxsPSIjNUU4RTNFIi8+CiAgICA8cGF0aCBkPSJNMTM1LjI0MiAxMDQuNTg1bC0xMS4wNjkgMzIuOTI2cy05LjY5OC01LjE3Ni0yMS41ODYtNS4xNzZjLTE3LjQyOCAwLTE4LjMwNSAxMC45MzctMTguMzA1IDEzLjY5MyAwIDE1LjAzOCAzOS4yIDIwLjggMzkuMiA1Ni4wMjQgMCAyNy43MTMtMTcuNTc3IDQ1LjU1OC00MS4yNzcgNDUuNTU4LTI4LjQ0IDAtNDIuOTg0LTE3LjctNDIuOTg0LTE3LjdsNy42MTUtMjUuMTZzMTQuOTUgMTIuODM1IDI3LjU2NSAxMi44MzVjOC4yNDMgMCAxMS41OTYtNi40OSAxMS41OTYtMTEuMjMyIDAtMTkuNjE2LTMyLjE2LTIwLjQ5MS0zMi4xNi01Mi43MjQgMC0yNy4xMjkgMTkuNDcyLTUzLjM4MiA1OC43NzgtNTMuMzgyIDE1LjE0NSAwIDIyLjYyNyA0LjMzOCAyMi42MjcgNC4zMzgiIGZpbGw9IiNGRkYiLz4KPC9zdmc+Cg==" alt="Shopify">
+        <span class="f">NewPage.tsx</span>
+        <span class="t">五條線看的是同一份</span>
+      </div>
+      <div class="code">
+        <div><span class="tag">&lt;ShopifySaveBar</span></div>
+        <div><span class="ind">isDirty</span></div>
+        <div><span class="ind">isLoading</span></div>
+        <div><span class="ind">handleDiscard</span></div>
+        <div><span class="slot">handleSave</span><span class="slot-note">沒傳進來</span></div>
+        <div><span class="tag">/&gt;</span></div>
+      </div>
+    </div>
+
+    <div class="box cap">build <span>✓</span> · type-check <span>✓</span> · 按下去沒反應</div>
+
+    <div class="box band">
+      <div class="sw">
+        <i style="background:#f4f3ee"></i>
+        <i style="background:#eeede6"></i>
+        <i style="background:#d8d3c8"></i>
+        <i style="background:#c96442"></i>
+        <i style="background:#191817"></i>
+      </div>
+      <div class="rule"></div>
+      <div class="band-t"><b>量測感的編輯圖解</b>：白紙、細虛線、標註緊貼物件；<br>五條線只有命中那條有顏色，其餘一律灰階。</div>
+      <div class="band-r">
+        <div class="k">參照 · <b>Bartosz Ciechanowski《Mechanical Watch》</b></div>
+        <div class="u">https://ciechanow.ski/mechanical-watch/</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

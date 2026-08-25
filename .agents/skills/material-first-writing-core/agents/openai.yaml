@@ -1,0 +1,7 @@
+interface:
+  display_name: "Material-First Writing Core"
+  short_description: "Create and compare evidence-grounded draft variants"
+  default_prompt: "Use $material-first-writing-core to build a neutral MATERIAL, obtain my review, and compare isolated draft variants locally."
+
+policy:
+  allow_implicit_invocation: false

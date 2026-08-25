@@ -1,0 +1,7 @@
+interface:
+  display_name: "部落格全文分發"
+  short_description: "將已上線的部落格文章安全分發到 Medium 與方格子並完成驗證"
+  default_prompt: "使用 $syndicate-blog-post 將目前已上線文章分發到 Medium 與方格子，完成驗證與紀錄。"
+
+policy:
+  allow_implicit_invocation: true

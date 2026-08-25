@@ -67,6 +67,9 @@ per_project_lines = defaultdict(list)
 all_lines = []
 
 for jsonl_path in PROJECTS_DIR.rglob("*.jsonl"):
+    if "subagents" in jsonl_path.parts:
+        stats["skipped_subagents_jsonl"] = stats.get("skipped_subagents_jsonl", 0) + 1
+        continue
     stats["total_jsonl"] += 1
     project_slug = jsonl_path.parent.name
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f6f3ec;--ink:#1c1a17;--mute:#6b665d;--line:#d9d2c3;--hit:#b0361f;--hitbg:#fbe9e3;--code:#e9e3d6}
+  *{box-sizing:border-box;margin:0}
+  body{width:1400px;height:900px;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;padding:56px 64px;position:relative}
+  h1{font-family:'Noto Serif TC',serif;font-size:38px;font-weight:700;letter-spacing:.01em;text-wrap:pretty}
+  .sub{color:var(--mute);font-size:18px;margin-top:8px}
+  .board{display:grid;grid-template-columns:300px 1fr 300px;gap:0;margin-top:44px;align-items:center;height:560px}
+  .diff{border:1.5px solid var(--ink);background:#fff;padding:22px 24px;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;position:relative}
+  .diff .tag{position:absolute;top:-14px;left:16px;background:var(--bg);padding:0 8px;font-family:'Noto Sans TC';font-size:13px;color:var(--mute);letter-spacing:.08em}
+  .diff .add{color:#2a6b2e}.diff .miss{background:var(--hitbg);color:var(--hit);text-decoration:underline dotted}
+  .diff .cm{color:var(--mute)}
+  .lanes{position:relative;height:100%}
+  .lane{position:absolute;left:0;right:0;height:2px;background:var(--line)}
+  .lane::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left:8px solid var(--line)}
+  .lane.hit{background:var(--hit)}.lane.hit::after{border-left-color:var(--hit)}
+  .lane .feed{position:absolute;left:24px;top:-30px;font-size:13px;color:var(--mute);white-space:nowrap}
+  .lane .feed b{color:var(--ink);font-weight:500}
+  .rev{display:flex;flex-direction:column;justify-content:space-between;height:100%;padding:6px 0}
+  .r{display:flex;align-items:center;gap:14px;font-size:16px}
+  .r .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--mute);flex:none}
+  .r.hit .dot{background:var(--hit);border-color:var(--hit)}
+  .r .v{font-size:13px;color:var(--mute);margin-top:2px}
+  .r.hit .v{color:var(--hit);font-weight:500}
+  .r .n{display:flex;flex-direction:column}
+  .foot{position:absolute;left:64px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--line);padding-top:16px}
+  .foot p{font-size:17px;max-width:900px;line-height:1.55;text-wrap:pretty}
+  .foot p b{color:var(--hit)}
+  .foot small{color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+  <h1>同一份 diff，五個 reviewer，餵的 context 各不相同</h1>
+  <div class="sub">四個漏掉那顆死掉的 Save 按鈕，第五個抓到——差的不是視力，是盯的軸線</div>
+
+  <div class="board">
+    <div class="diff">
+      <span class="tag">DIFF · NewPage.tsx</span>
+      <div class="cm">// ShopifySaveBar 少傳一個 prop</div>
+      <div class="add">+ &lt;ShopifySaveBar</div>
+      <div class="add">+   isDirty={isDirty}</div>
+      <div class="add">+   isLoading={isLoading}</div>
+      <div class="add">+   handleDiscard={handleDiscard}</div>
+      <div class="miss">    handleSave={?}  ← 沒傳</div>
+      <div class="add">+ /&gt;</div>
+      <div class="cm" style="margin-top:12px">build ✓ · type-check ✓ · 按下去沒反應</div>
+    </div>
+
+    <div class="lanes">
+      <div class="lane" style="top:10%"><span class="feed">餵滿：<b>spec + sem 影響面 + 檢查表</b></span></div>
+      <div class="lane" style="top:30%"><span class="feed">餓著：<b>只給 diff</b></span></div>
+      <div class="lane" style="top:50%"><span class="feed">餓著 + 人格：<b>「假設它會炸，去找哪裡炸」</b></span></div>
+      <div class="lane" style="top:70%"><span class="feed">第三家模型：<b>獨立視角</b>（那場沒出勤）</span></div>
+      <div class="lane hit" style="top:90%"><span class="feed">同上、模型小一號：<b>橫向比對兩個相似元件</b></span></div>
+    </div>
+
+    <div class="rev">
+      <div class="r"><span class="dot"></span><span class="n">主模型 ×2 reviewer<span class="v">漏</span></span></div>
+      <div class="r"><span class="dot"></span><span class="n">Codex 中性<span class="v">漏</span></span></div>
+      <div class="r"><span class="dot"></span><span class="n">Codex 紅隊<span class="v">漏（另提一條誤報）</span></span></div>
+      <div class="r"><span class="dot"></span><span class="n">Gemini Pro<span class="v">未出勤</span></span></div>
+      <div class="r hit"><span class="dot"></span><span class="n">Gemini Flash · Medium<span class="v">抓到 → 複查屬實 → Must Fix</span></span></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>換更強的模型，同一個視角還是同一批盲點。<b>要加的是視角數</b>——視角差是用不同的 context 餵出來的，不是開兩個一樣的然後求它們想得不一樣。</p>
+    <small>/pr-review · 五軸交叉審</small>
+  </div>
+</body>
+</html>

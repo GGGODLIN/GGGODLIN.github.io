@@ -1,5 +1,7 @@
 docs/philip/
 posts/
+.claude/skills/blog-topic-scan/
+.claude/skills/material-first-writing/
 style/line-raw/*.txt
 style/cc-raw/*.txt
 style/cc-raw/*.json

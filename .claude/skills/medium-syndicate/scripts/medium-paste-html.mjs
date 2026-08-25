@@ -33,6 +33,10 @@ let html = article
 const relativeLinks = (html.match(/href="\/(?!\/)/g) ?? []).length;
 html = html.replace(/href="\/(?!\/)/g, `href="${site}/`);
 
+// 圖片 src 同理：相對路徑在 Medium / vocus 網域上解不到，圖會整張消失。
+const relativeImages = (html.match(/src="\/(?!\/)/g) ?? []).length;
+html = html.replace(/src="\/(?!\/)/g, `src="${site}/`);
+
 const preBlocks = [];
 html = html.replace(/<pre[\s\S]*?<\/pre>/g, (m) => {
   preBlocks.push(m);
@@ -60,6 +64,7 @@ console.log(
       codeBlockPlaceholders: preBlocks.length,
       tablePlaceholders: tables.length,
       relativeLinksAbsolutised: relativeLinks,
+      relativeImagesAbsolutised: relativeImages,
       paragraphs: (html.match(/<p[ >]/g) ?? []).length,
       headings: (html.match(/<h2[ >]/g) ?? []).length,
     },
