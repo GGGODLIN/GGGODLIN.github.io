@@ -60,6 +60,7 @@ const rssURL = new URL("rss.xml", Astro.site);
     <style>
       .site-bar {
         border-bottom: 1px solid var(--border);
+        animation: site-bar-reveal 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
       }
       .site-bar-inner {
         max-width: var(--content-width);
@@ -72,18 +73,25 @@ const rssURL = new URL("rss.xml", Astro.site);
         flex-wrap: wrap;
       }
       .brand {
+        display: inline-block;
         font-family: var(--font-mono);
         font-size: var(--text-sm);
         letter-spacing: 0.05em;
         color: var(--text-secondary);
         border: none;
+        transition: color 150ms ease, transform 150ms ease;
       }
       .brand:hover {
         color: var(--accent);
         border: none;
+        transform: translateX(calc(var(--baseline) * 0.25));
+      }
+      .brand:active {
+        transform: scale(0.98);
       }
       .article-body {
         padding-top: calc(var(--baseline) * 5);
+        animation: article-reveal 560ms cubic-bezier(0.2, 0.8, 0.2, 1);
       }
       .post-meta {
         font-family: var(--font-mono);
@@ -99,6 +107,38 @@ const rssURL = new URL("rss.xml", Astro.site);
         border-top: 1px solid var(--border);
         font-family: var(--font-mono);
         font-size: var(--text-sm);
+      }
+      .post-footer a {
+        display: inline-block;
+        border: none;
+        transition: transform 150ms ease;
+      }
+      .post-footer a:hover {
+        border: none;
+        transform: translateX(calc(var(--baseline) * -0.5));
+      }
+      .post-footer a:active {
+        transform: translateX(calc(var(--baseline) * -0.25)) scale(0.98);
+      }
+      @keyframes site-bar-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(calc(var(--baseline) * -1));
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes article-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(calc(var(--baseline) * 1.5));
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       @media (max-width: 640px) {
         .site-bar-inner {
