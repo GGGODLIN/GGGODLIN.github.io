@@ -10,6 +10,96 @@ const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
+const topicGroups = [
+  {
+    id: "workflow",
+    label: "工作流",
+    tags: [
+      "workflow",
+      "ai-workflow",
+      "ai-agents",
+      "subagent",
+      "subagents",
+      "resume",
+      "deep-research",
+    ],
+  },
+  {
+    id: "models",
+    label: "模型",
+    tags: [
+      "llm",
+      "gpt",
+      "model",
+      "model-routing",
+      "model-behavior",
+      "llm-behavior",
+      "vendor-swap",
+      "local-llm",
+      "multi-model",
+      "quota",
+    ],
+  },
+  {
+    id: "tools",
+    label: "工具",
+    tags: [
+      "tool-adoption",
+      "tool-evaluation",
+      "tooling",
+      "mcp",
+      "code-search",
+      "skills",
+      "skill",
+      "fff",
+      "token-optimization",
+      "prompt-caching",
+      "proxy",
+    ],
+  },
+  {
+    id: "memory",
+    label: "記憶",
+    tags: ["memory", "auto-memory", "knowledge-management", "vector-db"],
+  },
+  {
+    id: "quality",
+    label: "Review",
+    tags: [
+      "code-review",
+      "testing",
+      "mutation-testing",
+      "ai-testing",
+      "test-theater",
+      "evaluation",
+      "spec-review",
+      "verify",
+      "data-quality",
+      "fact-check",
+      "fabrication",
+      "security",
+      "supply-chain",
+    ],
+  },
+  {
+    id: "automation",
+    label: "Hook",
+    tags: ["hook", "hooks", "automation"],
+  },
+] as const;
+
+function normalizeValue(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function getTopicIds(tags: string[]): string[] {
+  const normalizedTags = new Set(tags.map(normalizeValue));
+
+  return topicGroups
+    .filter((group) => group.tags.some((tag) => normalizedTags.has(tag)))
+    .map((group) => group.id);
+}
+
 function formatDate(d: Date): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
@@ -39,37 +129,377 @@ const rssURL = new URL("rss.xml", Astro.site);
   </head>
   <body>
     <main class="container">
-      <header class="site-header">
+      <header class="site-header" data-site-header>
         <div class="header-row">
           <h1><a href="/">GGGODLIN</a></h1>
-          <Nav />
+          <div class="header-actions">
+            <Nav />
+            <button
+              class="search-trigger"
+              type="button"
+              aria-label="開啟文章搜尋"
+              aria-expanded="false"
+              aria-controls="article-discovery"
+              data-search-trigger
+              hidden
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
         </div>
         <p class="bio">
           跟 Claude Code 一起踩坑，邊寫 code 邊寫心得。
         </p>
+        <search
+          class="article-discovery"
+          id="article-discovery"
+          data-article-discovery
+          hidden
+        >
+          <div class="search-field-row">
+            <label class="visually-hidden" for="article-search">搜尋文章</label>
+            <input
+              class="search-input"
+              id="article-search"
+              name="q"
+              type="search"
+              placeholder="搜尋標題、摘要或 tag"
+              autocomplete="off"
+              aria-controls="post-list"
+            />
+            <p class="result-status" data-result-status aria-live="polite">
+              {posts.length} 篇
+            </p>
+          </div>
+          <div class="topic-filters" role="group" aria-label="文章主題">
+            <button
+              class="topic-filter"
+              type="button"
+              data-topic=""
+              aria-pressed="true"
+              aria-controls="post-list"
+            >
+              全部
+            </button>
+            {
+              topicGroups.map((group) => (
+                <button
+                  class="topic-filter"
+                  type="button"
+                  data-topic={group.id}
+                  aria-pressed="false"
+                  aria-controls="post-list"
+                >
+                  {group.label}
+                </button>
+              ))
+            }
+          </div>
+        </search>
       </header>
-      <section class="post-list">
+      <section class="post-list" id="post-list">
+        <p class="empty-state" data-empty-state hidden>
+          找不到符合條件的文章。
+        </p>
         {
-          posts.map((post) => (
-            <article class="post-item">
-              <a href={`/blog/${post.id}/`}>
-                <h2>{post.data.title}</h2>
-              </a>
-              <p class="post-desc">{post.data.description}</p>
-              <p class="post-meta">
-                {formatDate(post.data.pubDate)}
-                {post.data.tags.length > 0
-                  ? " · " + post.data.tags.join(" / ")
-                  : ""}
-              </p>
-            </article>
-          ))
+          posts.map((post) => {
+            const searchText = normalizeValue(
+              [post.data.title, post.data.description, ...post.data.tags].join(" "),
+            );
+            const topicIds = getTopicIds(post.data.tags);
+
+            return (
+              <article
+                class="post-item"
+                data-post
+                data-search={searchText}
+                data-topics={topicIds.join(" ")}
+              >
+                <a href={`/blog/${post.id}/`}>
+                  <h2>{post.data.title}</h2>
+                </a>
+                <p class="post-desc">{post.data.description}</p>
+                <p class="post-meta">
+                  {formatDate(post.data.pubDate)}
+                  {post.data.tags.length > 0 && (
+                    <>
+                      <span aria-hidden="true"> · </span>
+                      {post.data.tags.map((tag, index) => (
+                        <>
+                          {index > 0 && <span aria-hidden="true"> / </span>}
+                          <button
+                            class="tag-filter"
+                            type="button"
+                            data-search-tag={tag}
+                            disabled
+                          >
+                            {tag}
+                          </button>
+                        </>
+                      ))}
+                    </>
+                  )}
+                </p>
+              </article>
+            );
+          })
         }
       </section>
     </main>
     <ThemeSwitcher />
     <Analytics />
+    <script>
+      const discovery = document.querySelector<HTMLElement>(
+        "[data-article-discovery]",
+      );
+
+      if (discovery) {
+        const trigger = document.querySelector<HTMLButtonElement>(
+          "[data-search-trigger]",
+        );
+        const siteHeader = document.querySelector<HTMLElement>(
+          "[data-site-header]",
+        );
+        const input = discovery.querySelector<HTMLInputElement>(
+          "#article-search",
+        );
+        const buttons = Array.from(
+          discovery.querySelectorAll<HTMLButtonElement>("[data-topic]"),
+        );
+        const status = discovery.querySelector<HTMLElement>(
+          "[data-result-status]",
+        );
+        const emptyState = document.querySelector<HTMLElement>(
+          "[data-empty-state]",
+        );
+        const articles = Array.from(
+          document.querySelectorAll<HTMLElement>("[data-post]"),
+        );
+        const tagButtons = Array.from(
+          document.querySelectorAll<HTMLButtonElement>("[data-search-tag]"),
+        );
+
+        if (trigger && siteHeader && input && status && emptyState) {
+          let activeTopic = "";
+
+          const updateResults = (): void => {
+            const query = input.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            for (const article of articles) {
+              const searchText = article.dataset.search ?? "";
+              const topics = (article.dataset.topics ?? "").split(" ");
+              const matchesQuery = query === "" || searchText.includes(query);
+              const matchesTopic =
+                activeTopic === "" || topics.includes(activeTopic);
+              const isVisible = matchesQuery && matchesTopic;
+
+              article.hidden = !isVisible;
+              if (isVisible) visibleCount += 1;
+            }
+
+            const hasFilters = query !== "" || activeTopic !== "";
+            status.textContent = hasFilters
+              ? `${visibleCount} / ${articles.length} 篇`
+              : `${articles.length} 篇`;
+            emptyState.hidden = visibleCount !== 0;
+          };
+
+          const setActiveTopic = (topic: string): void => {
+            activeTopic = topic;
+            for (const button of buttons) {
+              button.setAttribute(
+                "aria-pressed",
+                String((button.dataset.topic ?? "") === topic),
+              );
+            }
+          };
+
+          const setOpen = (open: boolean): void => {
+            const shouldRestoreFocus =
+              !open && discovery.contains(document.activeElement);
+            discovery.hidden = !open;
+            trigger.setAttribute("aria-expanded", String(open));
+            trigger.setAttribute(
+              "aria-label",
+              open ? "關閉文章搜尋" : "開啟文章搜尋",
+            );
+            siteHeader.classList.toggle("search-open", open);
+
+            if (open) {
+              input.focus();
+              return;
+            }
+
+            input.value = "";
+            setActiveTopic("");
+            updateResults();
+            if (shouldRestoreFocus) trigger.focus();
+          };
+
+          input.addEventListener("input", updateResults);
+          for (const button of buttons) {
+            button.addEventListener("click", () => {
+              setActiveTopic(button.dataset.topic ?? "");
+              updateResults();
+            });
+          }
+          for (const tagButton of tagButtons) {
+            tagButton.addEventListener("click", () => {
+              const tag = tagButton.dataset.searchTag ?? "";
+              input.value = tag;
+              setActiveTopic("");
+              setOpen(true);
+              updateResults();
+              input.setSelectionRange(tag.length, tag.length);
+            });
+          }
+          trigger.addEventListener("click", () => {
+            setOpen(trigger.getAttribute("aria-expanded") !== "true");
+          });
+          document.addEventListener("keydown", (event) => {
+            if (
+              event.key === "Escape" &&
+              trigger.getAttribute("aria-expanded") === "true"
+            ) {
+              setOpen(false);
+            }
+          });
+
+          for (const tagButton of tagButtons) tagButton.disabled = false;
+          trigger.hidden = false;
+          updateResults();
+        }
+      }
+    </script>
     <style>
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--baseline) * 1);
+      }
+      .search-trigger[hidden],
+      .article-discovery[hidden] {
+        display: none;
+      }
+      .search-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: calc(var(--baseline) * 4.5);
+        height: calc(var(--baseline) * 4.5);
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .search-trigger:hover,
+      .search-trigger[aria-expanded="true"] {
+        color: var(--accent);
+      }
+      .search-trigger:focus-visible,
+      .search-input:focus-visible,
+      .topic-filter:focus-visible,
+      .tag-filter:focus-visible {
+        outline: 2px solid var(--text-primary);
+        outline-offset: 2px;
+      }
+      .site-header.search-open {
+        margin-bottom: calc(var(--baseline) * 4);
+      }
+      .article-discovery {
+        display: block;
+        margin-top: calc(var(--baseline) * 3);
+        padding-top: calc(var(--baseline) * 2.5);
+        border-top: 1px solid var(--border);
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .search-field-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: calc(var(--baseline) * 1.5);
+      }
+      .search-input {
+        width: 100%;
+        min-height: calc(var(--baseline) * 5);
+        padding: calc(var(--baseline) * 0.75) calc(var(--baseline) * 1.25);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 1rem;
+      }
+      .search-input::placeholder {
+        color: var(--text-secondary);
+      }
+      .topic-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--baseline) * 0.75);
+        margin-top: calc(var(--baseline) * 1.25);
+      }
+      .topic-filter {
+        min-height: calc(var(--baseline) * 4);
+        padding: calc(var(--baseline) * 0.5) calc(var(--baseline) * 1.25);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1;
+      }
+      .topic-filter:hover {
+        border-color: var(--text-muted);
+        color: var(--text-primary);
+      }
+      .topic-filter[aria-pressed="true"] {
+        border-color: var(--text-primary);
+        background: var(--text-primary);
+        color: var(--bg-primary);
+      }
+      .result-status {
+        margin: 0;
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        white-space: nowrap;
+      }
+      .empty-state {
+        margin-bottom: calc(var(--baseline) * 4);
+        color: var(--text-secondary);
+      }
+      .post-item[hidden] {
+        display: none;
+      }
       .site-header {
         margin-bottom: var(--section-gap);
       }
@@ -118,6 +548,35 @@ const rssURL = new URL("rss.xml", Astro.site);
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
+      }
+      .tag-filter {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+      }
+      .tag-filter:disabled {
+        cursor: default;
+      }
+      .tag-filter:not(:disabled):hover {
+        color: var(--accent);
+      }
+      @media (max-width: 360px) {
+        .header-row {
+          position: relative;
+        }
+        .header-actions {
+          width: 100%;
+        }
+        .search-trigger {
+          position: absolute;
+          top: 0;
+          right: 0;
+        }
       }
     </style>
   </body>
