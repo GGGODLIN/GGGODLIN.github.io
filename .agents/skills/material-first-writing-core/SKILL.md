@@ -41,12 +41,12 @@ MATERIAL 是後續唯一內容來源。任何新確認的事實、風險處理�
 
 ## 3. 產生互相隔離的文體版本
 
-每份文體規格先執行 `python3 .claude/skills/material-first-writing/scripts/check_writer_safe_profile.py <文體規格路徑>`。只有輸出 `PASS` 才能建立 fresh Codex subagent；檔案讀不到、frontmatter 缺少 `writer_safe: true`、值為 false 或欄位重複都停止。
+每個版本都使用使用者在 review gate 指定的完整文體規格；不要自行建立或改用摘要版、瘦身版、衍生版。文體規格只提供語氣、句型、register 與 anti-pattern，文章事實只能取自 MATERIAL。
 
 每個版本使用一個 fresh Codex subagent；不指定固定模型。只傳給它：
 
 1. 完整 MATERIAL；
-2. 已通過 writer-safe checker 的該版本唯一文體規格；
+2. 使用者指定的該版本完整文體規格；
 3. 該版本的輸出路徑。
 
 不要讓任何版本讀取已發布文章、舊稿、其他版本或先前產生的中性可讀稿。要求每版完整覆蓋 MATERIAL 的核心論證、遵守共通定調、不新增事實，並獨立回報取捨。可並行執行，輸出到不同檔案。

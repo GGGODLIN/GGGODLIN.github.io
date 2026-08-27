@@ -1,7 +1,5 @@
 ---
 status: 實驗組合 V5（V3 配方 ＋ 完整 threads 語料）— 非穩定版，不取代任何既有 voice profile
-writer_safe: false
-writer_safe_variant: style/experiments/v5-writer-safe.md
 last_updated: 2026-08-19
 corpus_fetched: 2026-08-19（threads 兩檔為官方 API 全量重抓）
 sources:
