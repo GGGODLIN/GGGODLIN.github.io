@@ -1025,6 +1025,11 @@ const rssURL = new URL("rss.xml", Astro.site);
           transform: translateY(0);
         }
       }
+      @media (min-width: 361px) and (max-width: 767px) {
+        .search-trigger--jelly {
+          transform: translateX(calc(var(--baseline) * -4));
+        }
+      }
       @media (max-width: 360px) {
         .header-row {
           position: relative;
