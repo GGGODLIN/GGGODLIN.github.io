@@ -131,7 +131,22 @@ const rssURL = new URL("rss.xml", Astro.site);
     <main class="container">
       <header class="site-header" data-site-header>
         <div class="header-row">
-          <h1><a href="/">GGGODLIN</a></h1>
+          <h1 class="brand-lockup">
+            <a href="/">GGGODLIN</a>
+            <svg
+              class="brand-mark"
+              viewBox="0 0 180 18"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              data-brand-mark
+            >
+              <path
+                class="brand-line"
+                data-brand-line
+                d="M3 10 C42 16 91 14 177 7"
+              ></path>
+            </svg>
+          </h1>
           <div class="header-actions">
             <Nav />
             <button
@@ -184,7 +199,14 @@ const rssURL = new URL("rss.xml", Astro.site);
                   autocomplete="off"
                   aria-controls="post-list"
                 />
-                <p class="result-status" data-result-status aria-live="polite">
+                <p class="result-status" data-result-status aria-hidden="true">
+                  {posts.length} 篇
+                </p>
+                <p
+                  class="visually-hidden"
+                  data-result-announcement
+                  aria-live="polite"
+                >
                   {posts.length} 篇
                 </p>
               </div>
@@ -238,8 +260,19 @@ const rssURL = new URL("rss.xml", Astro.site);
                 data-search={searchText}
                 data-topics={topicIds.join(" ")}
               >
-                <a href={`/blog/${post.id}/`}>
+                <a class="post-title-link" href={`/blog/${post.id}/`}>
                   <h2>{post.data.title}</h2>
+                  <svg
+                    class="post-title-mark"
+                    viewBox="0 0 180 18"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      class="post-title-line"
+                      d="M3 10 C42 16 91 14 177 7"
+                    ></path>
+                  </svg>
                 </a>
                 <p class="post-desc">{post.data.description}</p>
                 <p class="post-meta">
@@ -272,6 +305,82 @@ const rssURL = new URL("rss.xml", Astro.site);
     <ThemeSwitcher />
     <Analytics />
     <script>
+      import { animate, scrambleText } from "animejs";
+
+      const reduceMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+      const brandMark = document.querySelector<SVGElement>("[data-brand-mark]");
+
+      if (brandMark) {
+        const brandLine = brandMark.querySelector<SVGPathElement>(
+          "[data-brand-line]",
+        );
+        if (reduceMotionQuery.matches || !brandLine) {
+          brandMark.classList.add("brand-mark--ready");
+        } else {
+          animate(brandLine, {
+            scaleX: [0, 1],
+            opacity: [0.35, 1],
+            duration: 720,
+            delay: 220,
+            ease: "out(4)",
+          });
+          brandMark.classList.add("brand-mark--ready");
+        }
+      }
+
+      const titleLinks = Array.from(
+        document.querySelectorAll<HTMLElement>(".post-title-link"),
+      );
+      let titleLineFrame: number | undefined;
+
+      const syncTitleMarks = (): void => {
+        for (const link of titleLinks) {
+          const title = link.querySelector<HTMLElement>("h2");
+          const mark = link.querySelector<SVGElement>(".post-title-mark");
+          if (!title || !mark) continue;
+
+          const range = document.createRange();
+          range.selectNodeContents(title);
+          const rects = Array.from(range.getClientRects()).filter(
+            (rect) => rect.width > 0,
+          );
+          const lastRect = rects[rects.length - 1];
+          if (!lastRect) continue;
+
+          const linkRect = link.getBoundingClientRect();
+          mark.style.left = `${lastRect.left - linkRect.left}px`;
+          mark.style.top = `${lastRect.bottom - linkRect.top - 2}px`;
+          mark.style.width = `${lastRect.width}px`;
+          mark.classList.add("post-title-mark--ready");
+        }
+      };
+
+      const scheduleTitleMarkSync = (): void => {
+        if (titleLineFrame !== undefined) {
+          cancelAnimationFrame(titleLineFrame);
+        }
+        titleLineFrame = requestAnimationFrame(() => {
+          syncTitleMarks();
+          titleLineFrame = undefined;
+        });
+      };
+
+      const fontSet = "fonts" in document ? document.fonts : undefined;
+      if (fontSet) {
+        void fontSet.ready.then(scheduleTitleMarkSync);
+        fontSet.addEventListener("loadingdone", scheduleTitleMarkSync);
+        fontSet.addEventListener("loadingerror", scheduleTitleMarkSync);
+      } else {
+        scheduleTitleMarkSync();
+      }
+      window.addEventListener("resize", scheduleTitleMarkSync);
+      new MutationObserver(scheduleTitleMarkSync).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+
       const discovery = document.querySelector<HTMLElement>(
         "[data-article-discovery]",
       );
@@ -292,6 +401,9 @@ const rssURL = new URL("rss.xml", Astro.site);
         const status = discovery.querySelector<HTMLElement>(
           "[data-result-status]",
         );
+        const announcement = discovery.querySelector<HTMLElement>(
+          "[data-result-announcement]",
+        );
         const emptyState = document.querySelector<HTMLElement>(
           "[data-empty-state]",
         );
@@ -302,14 +414,41 @@ const rssURL = new URL("rss.xml", Astro.site);
           document.querySelectorAll<HTMLButtonElement>("[data-search-tag]"),
         );
 
-        if (trigger && siteHeader && input && status && emptyState) {
-          const reduceMotionQuery = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-          );
+        if (
+          trigger &&
+          siteHeader &&
+          input &&
+          status &&
+          announcement &&
+          emptyState
+        ) {
           let activeTopic = "";
           let closeTimer: number | undefined;
+          let statusAnimation: ReturnType<typeof animate> | undefined;
 
-          const updateResults = (): void => {
+          const setResultStatus = (
+            text: string,
+            withMotion: boolean,
+          ): void => {
+            announcement.textContent = text;
+            statusAnimation?.cancel();
+
+            if (!withMotion || reduceMotionQuery.matches) {
+              status.textContent = text;
+              return;
+            }
+
+            statusAnimation = animate(status, {
+              innerHTML: scrambleText({
+                text,
+                chars: "AI0123456789░▒▓",
+                revealRate: 58,
+                settleDuration: 320,
+              }),
+            });
+          };
+
+          const updateResults = (withMotion = false): void => {
             const query = input.value.trim().toLowerCase();
             let visibleCount = 0;
 
@@ -326,10 +465,12 @@ const rssURL = new URL("rss.xml", Astro.site);
             }
 
             const hasFilters = query !== "" || activeTopic !== "";
-            status.textContent = hasFilters
+            const nextStatus = hasFilters
               ? `${visibleCount} / ${articles.length} 篇`
               : `${articles.length} 篇`;
+            setResultStatus(nextStatus, withMotion);
             emptyState.hidden = visibleCount !== 0;
+            scheduleTitleMarkSync();
           };
 
           const setActiveTopic = (topic: string): void => {
@@ -390,11 +531,11 @@ const rssURL = new URL("rss.xml", Astro.site);
             if (shouldRestoreFocus) trigger.focus();
           };
 
-          input.addEventListener("input", updateResults);
+          input.addEventListener("input", () => updateResults());
           for (const button of buttons) {
             button.addEventListener("click", () => {
               setActiveTopic(button.dataset.topic ?? "");
-              updateResults();
+              updateResults(true);
             });
           }
           for (const tagButton of tagButtons) {
@@ -403,7 +544,7 @@ const rssURL = new URL("rss.xml", Astro.site);
               input.value = tag;
               setActiveTopic("");
               setOpen(true);
-              updateResults();
+              updateResults(true);
               input.setSelectionRange(tag.length, tag.length);
             });
           }
@@ -597,6 +738,32 @@ const rssURL = new URL("rss.xml", Astro.site);
       .header-row h1 {
         margin: 0;
       }
+      .brand-lockup {
+        position: relative;
+        display: inline-block;
+      }
+      .brand-mark {
+        position: absolute;
+        top: calc(100% - 2px);
+        left: -2%;
+        width: 104%;
+        height: 12px;
+        overflow: visible;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .brand-mark--ready {
+        opacity: 1;
+      }
+      .brand-line {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 2.25;
+        stroke-linecap: round;
+        transform-box: fill-box;
+        transform-origin: left center;
+        vector-effect: non-scaling-stroke;
+      }
       .header-row h1 a {
         color: inherit;
         border: none;
@@ -619,17 +786,65 @@ const rssURL = new URL("rss.xml", Astro.site);
       }
       .post-item h2 {
         margin: 0 0 calc(var(--baseline) * 1);
-        transform-origin: left center;
-        transition: color 150ms ease, transform 180ms ease;
+        transition: color 150ms ease;
       }
       .post-item a {
         border: none;
       }
-      .post-item a:hover h2 {
-        color: var(--accent);
+      .post-title-link {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+        transform-origin: left center;
+        transition: transform 180ms ease;
+      }
+      .post-title-mark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: none;
+        width: 0;
+        height: 12px;
+        overflow: visible;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+      }
+      .post-title-mark--ready {
+        display: block;
+      }
+      .post-title-line {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 2.25;
+        stroke-linecap: round;
+        transform: scaleX(0);
+        transform-box: fill-box;
+        transform-origin: left center;
+        transition: transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        vector-effect: non-scaling-stroke;
+      }
+      .post-title-link:hover,
+      .post-title-link:focus-visible {
         transform: translateX(calc(var(--baseline) * 0.5));
       }
-      .post-item a:active h2 {
+      .post-title-link:hover h2,
+      .post-title-link:focus-visible h2 {
+        color: var(--accent);
+      }
+      .post-title-link:hover .post-title-mark,
+      .post-title-link:focus-visible .post-title-mark {
+        opacity: 1;
+      }
+      .post-title-link:hover .post-title-line,
+      .post-title-link:focus-visible .post-title-line {
+        transform: scaleX(1);
+      }
+      .post-title-link:focus-visible {
+        outline: 2px solid var(--text-primary);
+        outline-offset: 4px;
+      }
+      .post-title-link:active {
         transform: translateX(calc(var(--baseline) * 0.25)) scale(0.995);
       }
       .post-desc {
