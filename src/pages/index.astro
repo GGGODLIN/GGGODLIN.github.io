@@ -126,6 +126,11 @@ const rssURL = new URL("rss.xml", Astro.site);
     <meta name="twitter:card" content="summary" />
     <link rel="alternate" type="application/rss+xml" title="gggodlin" href={rssURL} />
     <ThemeBoot />
+    <script
+      is:inline
+      type="module"
+      src="/vendor/jelly-ui/jelly.js"
+    ></script>
   </head>
   <body>
     <main class="container">
@@ -149,8 +154,8 @@ const rssURL = new URL("rss.xml", Astro.site);
           </h1>
           <div class="header-actions">
             <Nav />
-            <button
-              class="search-trigger"
+            <jelly-button
+              class="search-trigger search-trigger--jelly"
               type="button"
               aria-label="開啟文章搜尋"
               aria-expanded="false"
@@ -173,7 +178,7 @@ const rssURL = new URL("rss.xml", Astro.site);
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
-            </button>
+            </jelly-button>
           </div>
         </div>
         <p class="bio">
@@ -211,26 +216,26 @@ const rssURL = new URL("rss.xml", Astro.site);
                 </p>
               </div>
               <div class="topic-filters" role="group" aria-label="文章主題">
-                <button
-                  class="topic-filter"
+                <jelly-button
+                  class="topic-filter topic-filter--jelly"
                   type="button"
                   data-topic=""
                   aria-pressed="true"
                   aria-controls="post-list"
                 >
                   全部
-                </button>
+                </jelly-button>
                 {
                   topicGroups.map((group) => (
-                    <button
-                      class="topic-filter"
+                    <jelly-button
+                      class="topic-filter topic-filter--jelly"
                       type="button"
                       data-topic={group.id}
                       aria-pressed="false"
                       aria-controls="post-list"
                     >
                       {group.label}
-                    </button>
+                    </jelly-button>
                   ))
                 }
               </div>
@@ -376,17 +381,55 @@ const rssURL = new URL("rss.xml", Astro.site);
         scheduleTitleMarkSync();
       }
       window.addEventListener("resize", scheduleTitleMarkSync);
-      new MutationObserver(scheduleTitleMarkSync).observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["data-theme"],
-      });
+      const syncJellyMode = (): void => {
+        const mode = document.documentElement.getAttribute("data-mode");
+        if (mode === "light" || mode === "dark") {
+          document.documentElement.setAttribute("data-jelly-mode", mode);
+        } else {
+          document.documentElement.removeAttribute("data-jelly-mode");
+        }
+      };
+      const syncThemeSensitiveMotion = (): void => {
+        syncJellyMode();
+        scheduleTitleMarkSync();
+        window.dispatchEvent(new CustomEvent("jelly-theme-change"));
+      };
+      new MutationObserver(syncThemeSensitiveMotion).observe(
+        document.documentElement,
+        {
+          attributes: true,
+          attributeFilter: ["data-theme", "data-mode"],
+        },
+      );
+      syncThemeSensitiveMotion();
+
+      const downgradeJellyButtons = (): void => {
+        if (window.customElements?.get("jelly-button")) return;
+
+        for (const element of document.querySelectorAll<HTMLElement>(
+          "jelly-button",
+        )) {
+          const button = document.createElement("button");
+          for (const attribute of Array.from(element.attributes)) {
+            button.setAttribute(attribute.name, attribute.value);
+          }
+          button.classList.remove(
+            "search-trigger--jelly",
+            "topic-filter--jelly",
+          );
+          button.append(...Array.from(element.childNodes));
+          element.replaceWith(button);
+        }
+      };
+
+      downgradeJellyButtons();
 
       const discovery = document.querySelector<HTMLElement>(
         "[data-article-discovery]",
       );
 
       if (discovery) {
-        const trigger = document.querySelector<HTMLButtonElement>(
+        const trigger = document.querySelector<HTMLElement>(
           "[data-search-trigger]",
         );
         const siteHeader = document.querySelector<HTMLElement>(
@@ -396,7 +439,7 @@ const rssURL = new URL("rss.xml", Astro.site);
           "#article-search",
         );
         const buttons = Array.from(
-          discovery.querySelectorAll<HTMLButtonElement>("[data-topic]"),
+          discovery.querySelectorAll<HTMLElement>("[data-topic]"),
         );
         const status = discovery.querySelector<HTMLElement>(
           "[data-result-status]",
@@ -497,11 +540,12 @@ const rssURL = new URL("rss.xml", Astro.site);
 
             const shouldRestoreFocus =
               !open && discovery.contains(document.activeElement);
+            const triggerLabel = open ? "關閉文章搜尋" : "開啟文章搜尋";
             trigger.setAttribute("aria-expanded", String(open));
-            trigger.setAttribute(
-              "aria-label",
-              open ? "關閉文章搜尋" : "開啟文章搜尋",
-            );
+            trigger.setAttribute("aria-label", triggerLabel);
+            if (trigger.localName === "jelly-button") {
+              trigger.setAttribute("label", triggerLabel);
+            }
             siteHeader.classList.toggle("search-open", open);
             discovery.inert = !open;
 
@@ -561,7 +605,17 @@ const rssURL = new URL("rss.xml", Astro.site);
           });
 
           for (const tagButton of tagButtons) tagButton.disabled = false;
-          trigger.hidden = false;
+          if (trigger.localName === "jelly-button") {
+            trigger.setAttribute(
+              "label",
+              trigger.getAttribute("aria-label") ?? "開啟文章搜尋",
+            );
+            void customElements.whenDefined("jelly-button").then(() => {
+              trigger.hidden = false;
+            });
+          } else {
+            trigger.hidden = false;
+          }
           updateResults();
         }
       }
@@ -587,13 +641,40 @@ const rssURL = new URL("rss.xml", Astro.site);
         background: transparent;
         color: var(--text-secondary);
         cursor: pointer;
-        transition: color 150ms ease, transform 150ms ease;
+        transition:
+          color 150ms ease,
+          background-color 150ms ease,
+          transform 150ms ease;
+      }
+      .search-trigger--jelly {
+        width: calc(var(--baseline) * 5);
+        height: calc(var(--baseline) * 5);
+        border-radius: 999px;
+        --jelly-button-height: calc(var(--baseline) * 5);
+        --jelly-button-min-width: calc(var(--baseline) * 5);
+        --jelly-button-padding-inline: 0px;
+        --jelly-button-radius: 999px;
+        --jelly-button-font-size: 0px;
+        --jelly-fill: transparent;
+        --jelly-label: var(--text-secondary);
+        --jelly-ring: var(--accent);
       }
       .search-trigger:hover,
       .search-trigger[aria-expanded="true"] {
         color: var(--accent);
       }
-      .search-trigger:active {
+      .search-trigger--jelly:hover {
+        background: var(--bg-secondary);
+        --jelly-fill: var(--bg-secondary);
+        --jelly-label: var(--accent);
+      }
+      .search-trigger--jelly[aria-expanded="true"] {
+        background: var(--accent);
+        --jelly-fill: var(--accent);
+        --jelly-label: var(--bg-primary);
+        color: var(--bg-primary);
+      }
+      .search-trigger:not(.search-trigger--jelly):active {
         transform: scale(0.9);
       }
       .search-trigger svg {
@@ -607,10 +688,16 @@ const rssURL = new URL("rss.xml", Astro.site);
         outline: 2px solid var(--text-primary);
         outline-offset: 2px;
       }
+      .search-trigger--jelly:focus-visible {
+        outline: none;
+      }
       .search-input:focus-visible,
       .topic-filter:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
+      }
+      .topic-filter--jelly:focus-visible {
+        outline: none;
       }
       .site-header.search-open {
         margin-bottom: calc(var(--baseline) * 4);
@@ -694,6 +781,21 @@ const rssURL = new URL("rss.xml", Astro.site);
           border-color 140ms ease,
           transform 120ms ease;
       }
+      .topic-filter--jelly {
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        --jelly-button-height: calc(var(--baseline) * 4.75);
+        --jelly-button-min-width: 0px;
+        --jelly-button-padding-inline: calc(var(--baseline) * 1.5);
+        --jelly-button-font-size: 0.75rem;
+        --jelly-button-radius: 999px;
+        --jelly-font-display: var(--font-mono);
+        --jelly-fill: var(--bg-secondary);
+        --jelly-label: var(--text-secondary);
+        --jelly-ring: var(--accent);
+      }
       .topic-filter:hover {
         border-color: var(--text-muted);
         color: var(--text-primary);
@@ -705,6 +807,20 @@ const rssURL = new URL("rss.xml", Astro.site);
       }
       .topic-filter:active {
         transform: scale(0.96);
+      }
+      .topic-filter--jelly:hover {
+        border-color: transparent;
+        --jelly-label: var(--text-primary);
+      }
+      .topic-filter--jelly[aria-pressed="true"] {
+        border-color: transparent;
+        background: transparent;
+        color: var(--bg-primary);
+        --jelly-fill: var(--text-primary);
+        --jelly-label: var(--bg-primary);
+      }
+      .topic-filter--jelly:active {
+        transform: none;
       }
       .result-status {
         margin: 0;
@@ -920,6 +1036,9 @@ const rssURL = new URL("rss.xml", Astro.site);
           position: absolute;
           top: 0;
           right: 0;
+        }
+        .search-trigger--jelly {
+          right: calc(var(--baseline) * 3);
         }
       }
     </style>

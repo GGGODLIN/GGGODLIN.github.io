@@ -1,0 +1,6 @@
+repository=https://github.com/jelly-org/ui
+source_commit=8e39a8e61b5a43a562ae85e4b01191d333d5b121
+bundle_url=https://jelly-ui.com/dist/jelly.js
+bundle_sha256=68af6000710c7b8bd22d3ed8e337308fb20d767511483d1458f27288d34950ef
+retrieved=2026-08-28
+license=MIT
