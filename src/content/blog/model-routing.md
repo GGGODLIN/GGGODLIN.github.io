@@ -2,7 +2,7 @@
 title: 最強模型不是每件事都該用：配額逼我重劃 AI 分工
 description: Fable 5 只能吃掉共用週額度的一半，逼我把派工改成按「需不需要判斷力」分類：機械給 Sonnet、判斷給 Opus，規則釘進定義檔而不是寫在文件裡，帳用額度算不用 token 算。
 pubDate: 2026-08-08
-tags: ["claude-code", "model-routing", "quota", "methodology"]
+tags: ["claude-code", "model-routing", "quota", "methodology", "automation", "review-governance"]
 ---
 
 # 最強模型不是每件事都該用：配額逼我重劃 AI 分工

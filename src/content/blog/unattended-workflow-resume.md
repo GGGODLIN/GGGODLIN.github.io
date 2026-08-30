@@ -2,7 +2,7 @@
 title: "讓額度不大的帳號，也能掛機過夜跑完大型研究 workflow"
 description: "想讓一個跑上百 agent 的重型研究在我睡覺時自己跑完，連額度不大的帳號也扛得起。難點是它幾十分鐘就燒爆一段每 5 小時的額度，得靠 pause→resume 跨段續跑。而 resume 能不能省 token，卡在一個官方沒明說的前提：workflow 夠不夠確定性。"
 pubDate: 2026-06-08
-tags: ["claude-code", "workflow", "workflow-resume"]
+tags: ["claude-code", "workflow", "workflow-resume", "deep-research"]
 ---
 
 # 讓額度不大的帳號，也能掛機過夜跑完大型研究 workflow

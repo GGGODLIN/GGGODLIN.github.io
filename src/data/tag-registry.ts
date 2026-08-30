@@ -398,6 +398,14 @@ export const canonicalTagRegistry = createTagRegistry([
     boundary: "API burst rate limit 不自動算 quota。",
   },
   {
+    id: "report-vs-reality",
+    label: "report vs reality",
+    aliases: [],
+    dimension: "subject",
+    meaning: "AI、工具或流程回報的成功、沉默或來源宣稱，與外部可觀察結果之間的落差。",
+    boundary: "完成宣告核對用 verify，外部事實來源用 fact-check；本 tag 只標示跨場景的回報層與現實落差。",
+  },
+  {
     id: "retrospective",
     label: "retrospective",
     aliases: [],
@@ -412,6 +420,22 @@ export const canonicalTagRegistry = createTagRegistry([
     dimension: "article-angle",
     meaning: "用實際行為而非口頭偏好判斷需求與採用。",
     boundary: "一般 usage metric 不一定算。",
+  },
+  {
+    id: "review-governance",
+    label: "review governance",
+    aliases: [],
+    dimension: "subject",
+    meaning: "review 的視角配置、證據複查、觸發時機、影響面與人類拍板。",
+    boundary: "code diff 用 code-review，spec 用 spec-review；只談單一審查工件不自動加入。",
+  },
+  {
+    id: "scope-control",
+    label: "scope control",
+    aliases: [],
+    dimension: "subject",
+    meaning: "用原始驗收、最小修正、範圍交還與停止條件，防止 review 或推演膨脹成新需求。",
+    boundary: "一般 GPT 行為用 gpt；沒有範圍交還或停止線的 review 不算。",
   },
   {
     id: "security",
@@ -500,6 +524,14 @@ export const canonicalTagRegistry = createTagRegistry([
     dimension: "subject",
     meaning: "具名工具的接線、操作、能力與限制。",
     boundary: "只評估工具但未接線時用 tool-evaluation。",
+  },
+  {
+    id: "trial-review",
+    label: "trial review",
+    aliases: [],
+    dimension: "subject",
+    meaning: "工具或機制在觀察期結束後，依真實觸發、命中、成本與故障紀錄決定保留、移除、收窄或延長。",
+    boundary: "引入前比較用 tool-evaluation，實際採用歷程用 tool-adoption；workflow 只描述編排，沒有到期裁決不算。",
   },
   {
     id: "vector-db",

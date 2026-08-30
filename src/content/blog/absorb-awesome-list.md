@@ -2,7 +2,7 @@
 title: 抄 awesome 清單不難，難的是決定不抄什麼
 description: 面對百條規模的開源清單，真正有價值的不是把工具整包裝上去，而是讓每一條都拿到一個寫下來的判決，含「不抄」的理由。
 pubDate: 2026-08-15
-tags: ["claude-code", "tool-evaluation", "methodology", "workflow"]
+tags: ["claude-code", "tool-evaluation", "methodology", "workflow", "trial-review"]
 ---
 
 # 抄 awesome 清單不難，難的是決定不抄什麼

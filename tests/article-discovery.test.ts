@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 import {
   createArticleDiscoveryState,
@@ -8,28 +7,16 @@ import {
   transitionArticleDiscovery,
   type ArticleDiscoveryItem,
 } from "../src/data/article-discovery.ts";
+import { readBlogCorpus } from "./support/blog-corpus.ts";
 
-function readTags(source: string, fileName: string): string[] {
-  const serializedTags = source.match(/^tags:\s*(\[.*\])$/m)?.[1];
-  assert.ok(serializedTags, `Missing tags frontmatter in ${fileName}`);
-  return JSON.parse(serializedTags) as string[];
-}
-
-const corpus = readdirSync(new URL("../src/content/blog", import.meta.url))
-  .filter((fileName) => fileName.endsWith(".md"))
-  .map((fileName) => {
-    const source = readFileSync(
-      new URL(`../src/content/blog/${fileName}`, import.meta.url),
-      "utf8",
-    );
-
-    return {
-      id: fileName.replace(/\.md$/, ""),
-      searchText: "",
-      topicIds: [],
-      tagIds: readTags(source, fileName),
-    } satisfies ArticleDiscoveryItem;
-  });
+const corpus = readBlogCorpus(
+  new URL("../src/content/blog", import.meta.url),
+).map((article) => ({
+  id: article.slug,
+  searchText: "",
+  topicIds: [],
+  tagIds: article.tags,
+} satisfies ArticleDiscoveryItem));
 
 const exactTagCases = {
   hook: [

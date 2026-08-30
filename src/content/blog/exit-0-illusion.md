@@ -2,7 +2,7 @@
 title: "為什麼我不再相信 Explore Agent 說他做完了"
 description: "LLM 工具鏈裡「報告成功」和「真的完成」差得很遠——subagent 捏造、安裝靜默失敗、排程一個月零進展、測試腳本自我推翻，四種場景、二十幾個案例，Anthropic 知道但選擇不修。"
 pubDate: 2026-05-24
-tags: ["claude-code", "subagent", "fabrication", "verify"]
+tags: ["claude-code", "subagent", "fabrication", "verify", "report-vs-reality"]
 ---
 
 # 為什麼我不再相信 Explore Agent 說他做完了

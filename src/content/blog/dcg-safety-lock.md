@@ -2,7 +2,7 @@
 title: 防得了失誤，防不住意圖：給 AI 的 shell 裝一把鎖
 description: 在 AI agent 執行 shell 指令前架一道攔截器，四週實測下來的三個確定判斷：誤攔數量不是重點、關不掉不等於繞不過、它防得了失誤卻防不住意圖。
 pubDate: 2026-08-10
-tags: ["claude-code", "hook", "security", "tooling", "tool-adoption"]
+tags: ["claude-code", "hook", "security", "tooling", "tool-adoption", "trial-review"]
 ---
 
 # 防得了失誤，防不住意圖：給 AI 的 shell 裝一把鎖

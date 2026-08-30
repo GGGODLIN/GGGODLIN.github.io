@@ -2,7 +2,7 @@
 title: "ultracode workflow，別跑完就丟"
 description: "dynamic workflow 是繼 skill 之後第三種「把成功流程固化成可復用資產」的載體。ultracode 的真正價值不在現場生一支腳本跑完，而在把編排本身存下來復用。三個實際遷移案例講怎麼選。"
 pubDate: 2026-06-02
-tags: ["claude-code", "workflow", "skill"]
+tags: ["claude-code", "workflow", "skill", "deep-research"]
 ---
 
 # ultracode workflow，別跑完就丟

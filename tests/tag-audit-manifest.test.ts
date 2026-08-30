@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
-import { isDeepStrictEqual } from "node:util";
 import { canonicalTagRegistry } from "../src/data/tag-registry.ts";
 import {
   createTopicGroups,
   getTopicIds,
   topicGroups,
 } from "../src/data/topic-groups.ts";
+import { readBlogCorpus } from "./support/blog-corpus.ts";
 
-const expectedFinalTags = {
+const blogCorpus = readBlogCorpus(
+  new URL("../src/content/blog", import.meta.url),
+);
+const articleTagsBySlug = new Map(
+  blogCorpus.map((article) => [article.slug, article.tags]),
+);
+
+const expectedPreConnectorTags = {
   "absorb-awesome-list": ["claude-code", "tool-evaluation", "methodology", "workflow"],
   "agent-tool-reach": ["claude-code", "mcp", "code-search", "tool-evaluation", "FFF"],
   "ai-report-two-lies": ["ai-workflow", "data-quality", "methodology"],
@@ -52,48 +58,60 @@ const expectedFinalTags = {
   "workflow-vs-skill": ["claude-code", "workflow", "skill"],
 } as const;
 
-const approvedBeforeTags = {
-  "absorb-awesome-list": ["claude-code", "tooling", "methodology", "workflow"],
-  "agent-tool-reach": ["Claude Code", "MCP", "code-search", "tool-adoption", "FFF"],
-  "bumblebee-still-on-disk": ["security", "supply-chain", "vscode-extension", "bumblebee"],
-  "code-search-adoption": ["claude-code", "mcp", "code-search"],
-  "dcg-safety-lock": ["claude-code", "hook", "security", "tooling"],
-  "hook-watchdog": ["claude-code", "hook", "automation", "methodology"],
-  "matt-philosophy": ["claude-code", "skills", "matt-pocock", "philosophy"],
-  "measure-revealed-adoption": ["Claude Code", "tool-adoption", "subagent", "methodology", "revealed-preference"],
-  "one-model-not-enough": ["Claude Code", "code-review", "multi-model", "workflow"],
-  "prose-exams": ["claude-code", "testing", "workflow", "methodology"],
-  "protocol-model-dependency": ["Claude Code", "hook", "model", "llm-behavior"],
-  "retire-vector-memory": ["claude-code", "memory", "vector-db", "retrospective"],
-  "rule-ladder": ["claude-code", "hooks", "workflow", "AI-agents", "automation"],
-  "sem-blast-radius": ["claude-code", "hook", "code-review", "tooling"],
-  "steal-determinism-layer": ["Claude Code", "tool-adoption", "code-review", "methodology"],
-  "subagent-boot-cost": ["claude-code", "subagents", "token-optimization", "model-routing", "AI-agents"],
-  "test-theater": ["mutation-testing", "Stryker", "AI-testing", "test-theater", "Claude Code"],
-  "token-saving-tools": ["claude-code", "token", "mcp"],
-  "unattended-workflow-resume": ["claude-code", "workflow", "resume"],
-} as const;
+const approvedConnectorAdditions = {
+  "absorb-awesome-list": ["trial-review"],
+  "bumblebee-still-on-disk": ["trial-review"],
+  "checker-layoff": ["verify", "trial-review"],
+  "dcg-safety-lock": ["trial-review"],
+  "exit-0-illusion": ["report-vs-reality"],
+  "gpt-review-tunnel-vision": ["scope-control"],
+  "local-llm-hook-judge": ["verify", "trial-review"],
+  "model-routing": ["automation", "review-governance"],
+  "one-model-not-enough": ["review-governance"],
+  "prose-exams": ["trial-review"],
+  "protocol-model-dependency": ["report-vs-reality"],
+  "sem-blast-radius": ["review-governance", "trial-review"],
+  "sol-overimplementation": ["scope-control"],
+  "spec-review-round": ["review-governance"],
+  "steal-determinism-layer": ["automation"],
+  "test-theater": ["automation"],
+  "trial-review-system": ["trial-review"],
+  "unattended-workflow-resume": ["deep-research"],
+  "websearch-misses-official-docs": ["report-vs-reality"],
+  "workflow-vs-skill": ["deep-research"],
+} as const satisfies Partial<Record<keyof typeof expectedPreConnectorTags, readonly string[]>>;
 
-const expectedChangedArticles = [
+const expectedFinalTags: Record<string, readonly string[]> = Object.fromEntries(
+  Object.entries(expectedPreConnectorTags).map(([slug, tags]) => [
+    slug,
+    [
+      ...tags,
+      ...(approvedConnectorAdditions[slug as keyof typeof approvedConnectorAdditions] ?? []),
+    ],
+  ]),
+);
+
+const expectedAffectedArticles = [
   "absorb-awesome-list",
-  "agent-tool-reach",
   "bumblebee-still-on-disk",
-  "code-search-adoption",
+  "checker-layoff",
   "dcg-safety-lock",
-  "hook-watchdog",
-  "matt-philosophy",
-  "measure-revealed-adoption",
+  "exit-0-illusion",
+  "gpt-review-tunnel-vision",
+  "local-llm-hook-judge",
+  "model-routing",
   "one-model-not-enough",
   "prose-exams",
   "protocol-model-dependency",
-  "retire-vector-memory",
-  "rule-ladder",
   "sem-blast-radius",
+  "sol-overimplementation",
+  "spec-review-round",
   "steal-determinism-layer",
-  "subagent-boot-cost",
   "test-theater",
-  "token-saving-tools",
+  "trial-review-system",
   "unattended-workflow-resume",
+  "websearch-misses-official-docs",
+  "workflow-vs-skill",
 ] as const;
 
 const expectedTopicGroups = [
@@ -147,11 +165,11 @@ const expectedTopicMemberships = {
   "hook-watchdog": ["quality", "automation"],
   "inline-the-rules": ["memory", "automation"],
   "keep-the-wiki-alive": ["memory"],
-  "local-llm-hook-judge": ["models", "automation"],
+  "local-llm-hook-judge": ["models", "quality", "automation"],
   "matt-philosophy": ["tools"],
   "measure-revealed-adoption": ["workflow", "tools"],
   "memory-cap-reframe": ["memory"],
-  "model-routing": ["models"],
+  "model-routing": ["models", "automation"],
   "one-model-not-enough": ["workflow", "models", "quality"],
   "prose-exams": ["workflow", "tools", "quality", "automation"],
   "protocol-model-dependency": ["models", "automation"],
@@ -161,9 +179,9 @@ const expectedTopicMemberships = {
   "sem-blast-radius": ["tools", "quality", "automation"],
   "sol-overimplementation": ["models"],
   "spec-review-round": ["workflow", "quality"],
-  "steal-determinism-layer": ["tools", "quality"],
+  "steal-determinism-layer": ["tools", "quality", "automation"],
   "subagent-boot-cost": ["workflow", "models"],
-  "test-theater": ["quality"],
+  "test-theater": ["quality", "automation"],
   "token-saving-tools": ["tools"],
   "trial-review-system": ["workflow", "tools"],
   "unattended-workflow-resume": ["workflow"],
@@ -172,44 +190,44 @@ const expectedTopicMemberships = {
   "workflow-vs-skill": ["workflow", "tools"],
 } as const;
 
-function readTags(source: string, fileName: string): string[] {
-  const serializedTags = source.match(/^tags:\s*(\[.*\])$/m)?.[1];
-  assert.ok(serializedTags, `Missing tags frontmatter in ${fileName}`);
-  return JSON.parse(serializedTags) as string[];
+function readCurrentArticleTags(slug: string): readonly string[] {
+  const tags = articleTagsBySlug.get(slug);
+  assert.ok(tags, `Missing article in recursive blog corpus: ${slug}`);
+  return tags;
 }
 
-function readCurrentArticleTags(slug: string): string[] {
-  return readTags(
-    readFileSync(new URL(`../src/content/blog/${slug}.md`, import.meta.url), "utf8"),
-    `${slug}.md`,
-  );
-}
-
-test("approved audit manifest defines 40 final articles and the 19-article change set", () => {
-  const articleSlugs = readdirSync(new URL("../src/content/blog", import.meta.url))
-    .filter((fileName) => fileName.endsWith(".md"))
-    .map((fileName) => fileName.replace(/\.md$/, ""))
-    .sort((left, right) => left.localeCompare(right));
+test("approved connector manifest defines the 40-article final corpus", () => {
+  const articleSlugs = blogCorpus.map((article) => article.slug);
   const expectedSlugs = Object.keys(expectedFinalTags).sort((left, right) => left.localeCompare(right));
+  const affectedArticles = Object.keys(approvedConnectorAdditions)
+    .sort((left, right) => left.localeCompare(right));
+  const assignmentCount = Object.values(expectedFinalTags)
+    .reduce((total, tags) => total + tags.length, 0);
+  const approvedAdditionCount = Object.values(approvedConnectorAdditions)
+    .reduce((total, tags) => total + tags.length, 0);
+  const usedTags = new Set<string>(Object.values(expectedFinalTags).flat());
+  const registryIds = new Set(canonicalTagRegistry.entries.map((entry) => entry.id));
 
   assert.equal(articleSlugs.length, 40);
   assert.deepEqual(articleSlugs, expectedSlugs);
+  assert.equal(assignmentCount, 188);
+  assert.equal(approvedAdditionCount, 24);
+  assert.equal(affectedArticles.length, 20);
+  assert.deepEqual(affectedArticles, [...expectedAffectedArticles]);
+  assert.equal(registryIds.size, 58);
+  assert.equal(usedTags.size, 58);
+  assert.deepEqual([...usedTags].filter((tag) => !registryIds.has(tag)), []);
+  assert.deepEqual([...registryIds].filter((tag) => !usedTags.has(tag)), []);
 
   for (const slug of articleSlugs) {
     const expectedTags = expectedFinalTags[slug as keyof typeof expectedFinalTags];
     assert.deepEqual(readCurrentArticleTags(slug), expectedTags, slug);
   }
 
-  const changedArticles = Object.entries(approvedBeforeTags)
-    .filter(([slug, beforeTags]) => !isDeepStrictEqual(
-      beforeTags,
-      expectedFinalTags[slug as keyof typeof expectedFinalTags],
-    ))
-    .map(([slug]) => slug)
-    .sort((left, right) => left.localeCompare(right));
-
-  assert.equal(Object.keys(approvedBeforeTags).length, 19);
-  assert.deepEqual(changedArticles, [...expectedChangedArticles]);
+  for (const [slug, additions] of Object.entries(approvedConnectorAdditions)) {
+    const finalTags: readonly string[] = expectedFinalTags[slug as keyof typeof expectedFinalTags];
+    assert.equal(additions.every((tag) => finalTags.includes(tag)), true, slug);
+  }
 });
 
 test("approved audit manifest fixes registry IDs and aliases without a migration layer", () => {
@@ -251,8 +269,8 @@ test("six broad topics match the approved labels, memberships, counts, and 40-ar
     models: 12,
     tools: 16,
     memory: 4,
-    quality: 12,
-    automation: 9,
+    quality: 13,
+    automation: 12,
   });
   assert.equal(coveredArticles, 40);
 });

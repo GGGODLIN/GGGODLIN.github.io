@@ -2,7 +2,7 @@
 title: "我以為 Opus 沒遇到麻煩，後來發現是它根本沒在報"
 description: "換 Opus 一個多月沒看到 agent 回報摩擦點，我以為沒問題。grep 一下才發現，是它根本沒在報。"
 pubDate: "2026-06-27"
-tags: ["claude-code", "hook", "model-behavior"]
+tags: ["claude-code", "hook", "model-behavior", "report-vs-reality"]
 ---
 
 # 我以為 Opus 沒遇到麻煩，後來發現是它根本沒在報

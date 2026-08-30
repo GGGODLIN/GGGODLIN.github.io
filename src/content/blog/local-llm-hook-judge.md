@@ -2,7 +2,7 @@
 title: 雲端太遠，hook 等不了：低延遲給了本地小模型就業機會
 description: 本地 LLM 當日常主力碰到天花板，縮到 hook 裡當語意判官後，反而找到雲端免費層坐不穩的窄職位。
 pubDate: 2026-07-18
-tags: ["claude-code", "local-llm", "hook", "llm"]
+tags: ["claude-code", "local-llm", "hook", "llm", "verify", "trial-review"]
 ---
 
 # 雲端太遠，hook 等不了：低延遲給了本地小模型就業機會

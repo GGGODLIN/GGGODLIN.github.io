@@ -2,7 +2,7 @@
 title: "偷確定性層：否決整套 AI 工具後，還能帶走什麼"
 description: "三題篩掉三個 AI 工具的本體後，把它們不靠 AI 的那一層拆回家。三案顯示這層移植成本最低、永遠帶得走。"
 pubDate: "2026-06-25"
-tags: ["claude-code", "tool-adoption", "code-review", "methodology"]
+tags: ["claude-code", "tool-adoption", "code-review", "methodology", "automation"]
 ---
 
 # 偷確定性層：否決整套 AI 工具後，還能帶走什麼

@@ -2,7 +2,7 @@
 title: "裝工具很容易，結案才是工作：我的 AI 工具試用回顧制度"
 description: "裝工具前的評估只回答值不值得試，到期的結案才回答當初判斷對不對。152 筆結案裡近六成 KEEP，這個數字該怎麼讀。"
 pubDate: "2026-08-30"
-tags: ["claude-code", "methodology", "tool-adoption", "workflow"]
+tags: ["claude-code", "methodology", "tool-adoption", "workflow", "trial-review"]
 ---
 
 # 裝工具很容易，結案才是工作：我的 AI 工具試用回顧制度

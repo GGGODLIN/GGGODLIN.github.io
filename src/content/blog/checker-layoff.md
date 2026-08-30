@@ -2,7 +2,7 @@
 title: 我裁掉了兩個 AI 檢查員，留下的那個能者過勞
 description: 三個同期 AI 檢查員兩死一留。翻完帳本後，我發現精確率、出勤成本與責任位置要一起對上，判官才找得到自己的生態位。
 pubDate: 2026-08-12
-tags: ["claude-code", "hook", "llm", "evaluation"]
+tags: ["claude-code", "hook", "llm", "evaluation", "verify", "trial-review"]
 ---
 
 # 我裁掉了兩個 AI 檢查員，留下的那個能者過勞

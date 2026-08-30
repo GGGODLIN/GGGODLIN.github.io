@@ -2,7 +2,7 @@
 title: 工作能外包給 AI，決策不能
 description: AI 幫你挑出 spec 漏洞之後，你有沒有逼它認錯過一次？三段真實對話拆開這個常常被跳過的步驟。
 pubDate: 2026-07-18
-tags: ["claude-code", "spec-review", "ai-workflow", "methodology"]
+tags: ["claude-code", "spec-review", "ai-workflow", "methodology", "review-governance"]
 ---
 
 # 工作能外包給 AI，決策不能
