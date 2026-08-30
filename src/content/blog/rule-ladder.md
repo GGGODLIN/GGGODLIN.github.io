@@ -2,7 +2,7 @@
 title: "不是每條規矩都要寫成 hook：從一句話到硬攔截的四層階梯"
 description: "一條規矩該用多強的手段執行，由可數的復發紀錄決定。從一句話提醒、skill、hook 到人類放行碼，四層強度階梯與換位置、往側走的決策邏輯。"
 pubDate: "2026-08-20"
-tags: ["claude-code", "hooks", "workflow", "AI-agents", "automation"]
+tags: ["claude-code", "hook", "ai-agent", "automation", "methodology"]
 ---
 
 # 不是每條規矩都要寫成 hook：從一句話到硬攔截的四層階梯

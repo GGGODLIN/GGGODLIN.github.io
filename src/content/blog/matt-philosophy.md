@@ -2,7 +2,7 @@
 title: 半年 20 萬星的祕密是「少」：Matt Pocock 的哲學，我信六條、不信一條
 description: 拆解 Matt Pocock 的 skill 設計哲學（觸發歸人、認知負擔是主導權的價格、spec 是會過時的快取、流程主導權不外包），用我在大量吸收他之前先取樣的九軸立場當對照：六軸同構、三軸對立，而三個對立收攏成同一條分歧：稀缺的人類注意力該花在哪。那一條，就是我不信的那一條。
 pubDate: 2026-08-09
-tags: ["claude-code", "skills", "matt-pocock", "philosophy"]
+tags: ["claude-code", "skill", "matt-pocock", "philosophy"]
 ---
 
 # 半年 20 萬星的祕密是「少」：Matt Pocock 的哲學，我信六條、不信一條

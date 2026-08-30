@@ -2,7 +2,7 @@
 title: skill 也要有考卷：我給 skill 上了回歸測試
 description: skill 改壞了不會有語法錯誤，只會有語意偏差。光有考卷不夠，還要讓改檔的人看得到考卷存在、改完不跑走不掉。
 pubDate: 2026-08-17
-tags: ["claude-code", "testing", "workflow", "methodology"]
+tags: ["claude-code", "testing", "workflow", "methodology", "skill", "hook"]
 ---
 
 # skill 也要有考卷：我給 skill 上了回歸測試

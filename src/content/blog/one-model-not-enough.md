@@ -2,7 +2,7 @@
 title: "一個模型不夠：五軸交叉審的 code review 工作流"
 description: "四個 AI reviewer 全漏掉一顆死掉的 Save 按鈕，第五個抓到了。從這個案例拆我的 /pr-review command 三個設計哲學：視角是餵出來的、找的不准自己驗、模型不可信的部分用程式保證。"
 pubDate: 2026-07-08
-tags: ["Claude Code", "code-review", "multi-model", "workflow"]
+tags: ["claude-code", "code-review", "multi-model", "workflow"]
 ---
 
 # 一個模型不夠：五軸交叉審的 code review 工作流

@@ -4,6 +4,7 @@ import ThemeBoot from "../components/ThemeBoot.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 import Nav from "../components/Nav.astro";
 import Analytics from "../components/Analytics.astro";
+import { canonicalTagRegistry } from "../data/tag-registry";
 
 interface Props {
   title: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const { title, description, pubDate, tags } = Astro.props;
+const tagLabels = tags.map((tag) => canonicalTagRegistry.getLabel(tag));
 const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${pubDate.getDate()}日`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const rssURL = new URL("rss.xml", Astro.site);
@@ -47,7 +49,7 @@ const rssURL = new URL("rss.xml", Astro.site);
     <article class="container article-body">
       <header>
         <p class="post-meta">
-          {formattedDate}{tags.length > 0 ? " · " + tags.join(" / ") : ""}
+          {formattedDate}{tagLabels.length > 0 ? " · " + tagLabels.join(" / ") : ""}
         </p>
       </header>
       <slot />

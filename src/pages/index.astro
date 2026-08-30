@@ -5,99 +5,16 @@ import ThemeBoot from "../components/ThemeBoot.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 import Nav from "../components/Nav.astro";
 import Analytics from "../components/Analytics.astro";
+import { serializeArticleDiscoveryIds } from "../data/article-discovery";
+import { canonicalTagRegistry } from "../data/tag-registry";
+import { getTopicIds, topicGroups } from "../data/topic-groups";
 
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
-const topicGroups = [
-  {
-    id: "workflow",
-    label: "工作流",
-    tags: [
-      "workflow",
-      "ai-workflow",
-      "ai-agents",
-      "subagent",
-      "subagents",
-      "resume",
-      "deep-research",
-    ],
-  },
-  {
-    id: "models",
-    label: "模型",
-    tags: [
-      "llm",
-      "gpt",
-      "model",
-      "model-routing",
-      "model-behavior",
-      "llm-behavior",
-      "vendor-swap",
-      "local-llm",
-      "multi-model",
-      "quota",
-    ],
-  },
-  {
-    id: "tools",
-    label: "工具",
-    tags: [
-      "tool-adoption",
-      "tool-evaluation",
-      "tooling",
-      "mcp",
-      "code-search",
-      "skills",
-      "skill",
-      "fff",
-      "token-optimization",
-      "prompt-caching",
-      "proxy",
-    ],
-  },
-  {
-    id: "memory",
-    label: "記憶",
-    tags: ["memory", "auto-memory", "knowledge-management", "vector-db"],
-  },
-  {
-    id: "quality",
-    label: "Review",
-    tags: [
-      "code-review",
-      "testing",
-      "mutation-testing",
-      "ai-testing",
-      "test-theater",
-      "evaluation",
-      "spec-review",
-      "verify",
-      "data-quality",
-      "fact-check",
-      "fabrication",
-      "security",
-      "supply-chain",
-    ],
-  },
-  {
-    id: "automation",
-    label: "Hook",
-    tags: ["hook", "hooks", "automation"],
-  },
-] as const;
-
 function normalizeValue(value: string): string {
   return value.trim().toLowerCase();
-}
-
-function getTopicIds(tags: string[]): string[] {
-  const normalizedTags = new Set(tags.map(normalizeValue));
-
-  return topicGroups
-    .filter((group) => group.tags.some((tag) => normalizedTags.has(tag)))
-    .map((group) => group.id);
 }
 
 function formatDate(d: Date): string {
@@ -249,8 +166,11 @@ const rssURL = new URL("rss.xml", Astro.site);
         </p>
         {
           posts.map((post, index) => {
+            const tagLabels = post.data.tags.map((tag) =>
+              canonicalTagRegistry.getLabel(tag),
+            );
             const searchText = normalizeValue(
-              [post.data.title, post.data.description, ...post.data.tags].join(" "),
+              [post.data.title, post.data.description, ...tagLabels].join(" "),
             );
             const topicIds = getTopicIds(post.data.tags);
 
@@ -262,8 +182,10 @@ const rssURL = new URL("rss.xml", Astro.site);
                 ]}
                 style={`--reveal-order: ${Math.min(index, 7)}`}
                 data-post
+                data-post-id={post.id}
                 data-search={searchText}
                 data-topics={topicIds.join(" ")}
+                data-tags={serializeArticleDiscoveryIds(post.data.tags)}
               >
                 <a class="post-title-link" href={`/blog/${post.id}/`}>
                   <h2>{post.data.title}</h2>
@@ -291,10 +213,11 @@ const rssURL = new URL("rss.xml", Astro.site);
                           <button
                             class="tag-filter"
                             type="button"
-                            data-search-tag={tag}
+                            data-tag={tag}
+                            aria-pressed="false"
                             disabled
                           >
-                            {tag}
+                            {canonicalTagRegistry.getLabel(tag)}
                           </button>
                         </>
                       ))}
@@ -311,6 +234,14 @@ const rssURL = new URL("rss.xml", Astro.site);
     <Analytics />
     <script>
       import { animate, scrambleText } from "animejs";
+      import {
+        createArticleDiscoveryState,
+        filterArticleDiscovery,
+        hasArticleDiscoveryFilters,
+        parseArticleDiscoveryIds,
+        transitionArticleDiscovery,
+        type ArticleDiscoveryItem,
+      } from "../data/article-discovery";
 
       const reduceMotionQuery = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
@@ -454,7 +385,7 @@ const rssURL = new URL("rss.xml", Astro.site);
           document.querySelectorAll<HTMLElement>("[data-post]"),
         );
         const tagButtons = Array.from(
-          document.querySelectorAll<HTMLButtonElement>("[data-search-tag]"),
+          document.querySelectorAll<HTMLButtonElement>("[data-tag]"),
         );
 
         if (
@@ -465,9 +396,15 @@ const rssURL = new URL("rss.xml", Astro.site);
           announcement &&
           emptyState
         ) {
-          let activeTopic = "";
+          let discoveryState = createArticleDiscoveryState();
           let closeTimer: number | undefined;
           let statusAnimation: ReturnType<typeof animate> | undefined;
+          const discoveryItems = articles.map((article) => ({
+            id: article.dataset.postId ?? "",
+            searchText: article.dataset.search ?? "",
+            topicIds: (article.dataset.topics ?? "").split(" ").filter(Boolean),
+            tagIds: parseArticleDiscoveryIds(article.dataset.tags ?? "[]"),
+          })) satisfies ArticleDiscoveryItem[];
 
           const setResultStatus = (
             text: string,
@@ -491,23 +428,36 @@ const rssURL = new URL("rss.xml", Astro.site);
             });
           };
 
+          const syncFilterControls = (): void => {
+            for (const button of buttons) {
+              button.setAttribute(
+                "aria-pressed",
+                String(
+                  (button.dataset.topic ?? "") === discoveryState.topicId,
+                ),
+              );
+            }
+            for (const button of tagButtons) {
+              button.setAttribute(
+                "aria-pressed",
+                String((button.dataset.tag ?? "") === discoveryState.tagId),
+              );
+            }
+          };
+
           const updateResults = (withMotion = false): void => {
-            const query = input.value.trim().toLowerCase();
-            let visibleCount = 0;
+            const visibleIds = new Set(
+              filterArticleDiscovery(discoveryItems, discoveryState).map(
+                (article) => article.id,
+              ),
+            );
 
             for (const article of articles) {
-              const searchText = article.dataset.search ?? "";
-              const topics = (article.dataset.topics ?? "").split(" ");
-              const matchesQuery = query === "" || searchText.includes(query);
-              const matchesTopic =
-                activeTopic === "" || topics.includes(activeTopic);
-              const isVisible = matchesQuery && matchesTopic;
-
-              article.hidden = !isVisible;
-              if (isVisible) visibleCount += 1;
+              article.hidden = !visibleIds.has(article.dataset.postId ?? "");
             }
 
-            const hasFilters = query !== "" || activeTopic !== "";
+            const visibleCount = visibleIds.size;
+            const hasFilters = hasArticleDiscoveryFilters(discoveryState);
             const nextStatus = hasFilters
               ? `${visibleCount} / ${articles.length} 篇`
               : `${articles.length} 篇`;
@@ -516,23 +466,13 @@ const rssURL = new URL("rss.xml", Astro.site);
             scheduleTitleMarkSync();
           };
 
-          const setActiveTopic = (topic: string): void => {
-            activeTopic = topic;
-            for (const button of buttons) {
-              button.setAttribute(
-                "aria-pressed",
-                String((button.dataset.topic ?? "") === topic),
-              );
-            }
-          };
-
           const finishClosing = (): void => {
             if (trigger.getAttribute("aria-expanded") === "false") {
               discovery.hidden = true;
             }
           };
 
-          const setOpen = (open: boolean): void => {
+          const setOpen = (open: boolean, focusInput = true): void => {
             if (closeTimer !== undefined) {
               window.clearTimeout(closeTimer);
               closeTimer = undefined;
@@ -555,14 +495,17 @@ const rssURL = new URL("rss.xml", Astro.site);
               requestAnimationFrame(() => {
                 if (trigger.getAttribute("aria-expanded") !== "true") return;
                 discovery.dataset.open = "true";
-                input.focus();
+                if (focusInput) input.focus();
               });
               return;
             }
 
             discovery.dataset.open = "false";
-            input.value = "";
-            setActiveTopic("");
+            discoveryState = transitionArticleDiscovery(discoveryState, {
+              type: "close",
+            });
+            input.value = discoveryState.query;
+            syncFilterControls();
             updateResults();
             if (reduceMotionQuery.matches) {
               finishClosing();
@@ -575,21 +518,42 @@ const rssURL = new URL("rss.xml", Astro.site);
             if (shouldRestoreFocus) trigger.focus();
           };
 
-          input.addEventListener("input", () => updateResults());
+          input.addEventListener("input", () => {
+            discoveryState = transitionArticleDiscovery(discoveryState, {
+              type: "search",
+              query: input.value,
+            });
+            syncFilterControls();
+            updateResults();
+          });
           for (const button of buttons) {
             button.addEventListener("click", () => {
-              setActiveTopic(button.dataset.topic ?? "");
+              const topicId = button.dataset.topic ?? "";
+              discoveryState = transitionArticleDiscovery(
+                discoveryState,
+                topicId === ""
+                  ? { type: "reset" }
+                  : { type: "topic", topicId },
+              );
+              input.value = discoveryState.query;
+              syncFilterControls();
               updateResults(true);
             });
           }
           for (const tagButton of tagButtons) {
             tagButton.addEventListener("click", () => {
-              const tag = tagButton.dataset.searchTag ?? "";
-              input.value = tag;
-              setActiveTopic("");
-              setOpen(true);
+              discoveryState = transitionArticleDiscovery(discoveryState, {
+                type: "tag",
+                tagId: tagButton.dataset.tag ?? "",
+              });
+              input.value = discoveryState.query;
+              syncFilterControls();
+              setOpen(true, false);
               updateResults(true);
-              input.setSelectionRange(tag.length, tag.length);
+              input.setSelectionRange(
+                discoveryState.query.length,
+                discoveryState.query.length,
+              );
             });
           }
           trigger.addEventListener("click", () => {
@@ -616,6 +580,7 @@ const rssURL = new URL("rss.xml", Astro.site);
           } else {
             trigger.hidden = false;
           }
+          syncFilterControls();
           updateResults();
         }
       }
@@ -989,8 +954,14 @@ const rssURL = new URL("rss.xml", Astro.site);
       .tag-filter:disabled {
         cursor: default;
       }
-      .tag-filter:not(:disabled):hover {
+      .tag-filter:not(:disabled):hover,
+      .tag-filter[aria-pressed="true"] {
         color: var(--accent);
+      }
+      .tag-filter[aria-pressed="true"] {
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.2em;
       }
       .tag-filter:not(:disabled):active {
         transform: scale(0.94);

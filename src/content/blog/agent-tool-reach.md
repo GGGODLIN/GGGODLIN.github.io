@@ -2,7 +2,7 @@
 title: "codebase 工具數據很強，到我 agent 手上剩不到一成"
 description: "FFF 宣稱快、省 token、給 AI agent 用，但接進 Claude Code 後我的 agent 實際吃得到不到一成。一個套件值不值得接，要看它宣稱的能力到你 agent 手上實際用得到多少，四個專案的 session 統計算給你看。"
 pubDate: "2026-06-14"
-tags: ["Claude Code", "MCP", "code-search", "tool-adoption", "FFF"]
+tags: ["claude-code", "mcp", "code-search", "tool-evaluation", "FFF"]
 ---
 
 # codebase 工具數據很強，到我 agent 手上剩不到一成

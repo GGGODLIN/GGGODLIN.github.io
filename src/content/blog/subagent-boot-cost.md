@@ -2,7 +2,7 @@
 title: "派一個 agent 出去，先付一筆看不見的開機費"
 description: "拆解 subagent 啟動時的固定開機脈絡成本，透過受控實驗與專用 agent 實測，找出真正能省與不能省的能力預算邊界。"
 pubDate: "2026-08-20"
-tags: ["claude-code", "subagents", "token-optimization", "model-routing", "AI-agents"]
+tags: ["claude-code", "subagent", "token-optimization", "model-routing", "ai-agent"]
 ---
 
 # 派一個 agent 出去，先付一筆看不見的開機費

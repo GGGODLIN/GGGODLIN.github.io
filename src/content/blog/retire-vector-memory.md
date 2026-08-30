@@ -2,7 +2,7 @@
 title: "我把自己裝的向量記憶砍掉了——928 次寫入換來 3 次搜尋"
 description: "安裝 mempalace 跑了 2-3 週，hook 自動寫入 928 次，我主動查了 3 次，0.09% 的搜尋/drawer 比，6 個對照測試 grep 全勝——最後親手拔掉。"
 pubDate: 2026-05-18
-tags: ["claude-code", "memory", "vector-db", "retrospective"]
+tags: ["claude-code", "memory", "vector-db", "retrospective", "tool-adoption"]
 ---
 
 # 我把自己裝的向量記憶砍掉了——928 次寫入換來 3 次搜尋

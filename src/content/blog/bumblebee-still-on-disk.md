@@ -2,7 +2,7 @@
 title: "下架八個月的惡意 extension 還躺在我硬碟，bumblebee 抓到了"
 description: "一個下架八個月的 GlassWorm 惡意 extension 還躺在我硬碟上，被 bumblebee 掃出來。市集下架、編輯器自動更新、傳統掃描型工具都擋不住，只有掃磁碟實際安裝狀態才抓得到。"
 pubDate: 2026-06-07
-tags: ["security", "supply-chain", "vscode-extension", "bumblebee"]
+tags: ["security", "supply-chain", "vscode-extension", "bumblebee", "tool-adoption"]
 ---
 
 # 下架八個月的惡意 extension 還躺在我硬碟，bumblebee 抓到了

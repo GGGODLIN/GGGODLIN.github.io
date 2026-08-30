@@ -2,7 +2,7 @@
 title: "裝了一堆 codebase 搜尋工具，agent 幾乎都不用"
 description: "兩個月在一個 codebase 上前後評估了 8 個程式碼搜尋工具，前 7 個 agent 幾乎都不主動用。工具有沒有能力，跟它會不會被 agent 用起來，是兩件不同的事。"
 pubDate: 2026-05-31
-tags: ["claude-code", "mcp", "code-search"]
+tags: ["claude-code", "mcp", "code-search", "tool-adoption"]
 ---
 
 # 裝了一堆 codebase 搜尋工具，agent 幾乎都不用

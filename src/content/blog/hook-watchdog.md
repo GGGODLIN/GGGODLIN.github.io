@@ -2,7 +2,7 @@
 title: AI 說做完不算數：拿證據來
 description: 哪些判斷交給死規則就夠、哪些規則根本寫不成——兩條監工 hook 的實測，把邊界畫出來。
 pubDate: 2026-07-17
-tags: ["claude-code", "hook", "automation", "methodology"]
+tags: ["claude-code", "hook", "automation", "methodology", "verify"]
 ---
 
 # AI 說做完不算數：拿證據來

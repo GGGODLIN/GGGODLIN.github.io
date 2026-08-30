@@ -2,7 +2,7 @@
 title: "嘴上說想要，但 agent 根本沒在用"
 description: "量 revealed adoption 的方法：為什麼口頭意願不能當投資依據，怎麼從 session log 數出真實的自發採用率，還有量法本身踩過的坑。"
 pubDate: "2026-06-20"
-tags: ["Claude Code", "tool-adoption", "subagent", "methodology", "revealed-preference"]
+tags: ["claude-code", "tool-adoption", "subagent", "methodology", "revealed-preference"]
 ---
 
 # 嘴上說想要，但 agent 根本沒在用
