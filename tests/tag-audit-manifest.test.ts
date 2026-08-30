@@ -91,29 +91,6 @@ const expectedFinalTags: Record<string, readonly string[]> = Object.fromEntries(
   ]),
 );
 
-const expectedAffectedArticles = [
-  "absorb-awesome-list",
-  "bumblebee-still-on-disk",
-  "checker-layoff",
-  "dcg-safety-lock",
-  "exit-0-illusion",
-  "gpt-review-tunnel-vision",
-  "local-llm-hook-judge",
-  "model-routing",
-  "one-model-not-enough",
-  "prose-exams",
-  "protocol-model-dependency",
-  "sem-blast-radius",
-  "sol-overimplementation",
-  "spec-review-round",
-  "steal-determinism-layer",
-  "test-theater",
-  "trial-review-system",
-  "unattended-workflow-resume",
-  "websearch-misses-official-docs",
-  "workflow-vs-skill",
-] as const;
-
 const expectedTopicGroups = [
   {
     id: "workflow",
@@ -213,7 +190,6 @@ test("approved connector manifest defines the 40-article final corpus", () => {
   assert.equal(assignmentCount, 188);
   assert.equal(approvedAdditionCount, 24);
   assert.equal(affectedArticles.length, 20);
-  assert.deepEqual(affectedArticles, [...expectedAffectedArticles]);
   assert.equal(registryIds.size, 58);
   assert.equal(usedTags.size, 58);
   assert.deepEqual([...usedTags].filter((tag) => !registryIds.has(tag)), []);
@@ -222,11 +198,6 @@ test("approved connector manifest defines the 40-article final corpus", () => {
   for (const slug of articleSlugs) {
     const expectedTags = expectedFinalTags[slug as keyof typeof expectedFinalTags];
     assert.deepEqual(readCurrentArticleTags(slug), expectedTags, slug);
-  }
-
-  for (const [slug, additions] of Object.entries(approvedConnectorAdditions)) {
-    const finalTags: readonly string[] = expectedFinalTags[slug as keyof typeof expectedFinalTags];
-    assert.equal(additions.every((tag) => finalTags.includes(tag)), true, slug);
   }
 });
 

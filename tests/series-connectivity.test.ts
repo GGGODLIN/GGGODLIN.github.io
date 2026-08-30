@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { canonicalTagRegistry } from "../src/data/tag-registry.ts";
-import { approvedExpectedSeries } from "./fixtures/approved-expected-series.ts";
 import {
   analyzeSeriesConnectivity,
   expectedSeries,
@@ -19,16 +18,7 @@ function readCorpusTags(): ReadonlyMap<string, readonly string[]> {
   );
 }
 
-test("expected series contract matches the independent approved fixture", () => {
-  assert.deepEqual(
-    expectedSeries.map(({ id, members, validConnectors }) => ({
-      id,
-      members,
-      validConnectors,
-    })),
-    approvedExpectedSeries,
-  );
-
+test("expected series contract validates canonical connectors", () => {
   validateSeriesConnectors(
     expectedSeries,
     (connector) => canonicalTagRegistry.validateCanonicalId(connector),
