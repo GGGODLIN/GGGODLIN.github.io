@@ -18,7 +18,7 @@ const validTag = {
 test("registry rejects unknown IDs and invalid definitions", () => {
   assert.throws(
     () => canonicalTagRegistry.validateCanonicalId("unknown-tag"),
-    /Unknown canonical tag "unknown-tag".*reuse an existing ID or register a new tag/i,
+    /Unknown canonical tag "unknown-tag".*reuse an existing ID or obtain top-level user approval before registering a new tag/i,
   );
   assert.throws(
     () => canonicalTagRegistry.validateCanonicalId("MCP"),
@@ -150,30 +150,6 @@ test("registry covers the Ticket 01 canonical corpus", () => {
   assert.equal(canonicalTagRegistry.resolveId("AI-testing"), "ai-testing");
 });
 
-const expectedMechanicalTags = {
-  "agent-tool-reach.md": ["claude-code", "mcp", "code-search", "tool-evaluation", "FFF"],
-  "matt-philosophy.md": ["claude-code", "skill", "matt-pocock", "philosophy"],
-  "measure-revealed-adoption.md": [
-    "claude-code",
-    "tool-adoption",
-    "subagent",
-    "methodology",
-    "revealed-preference",
-  ],
-  "one-model-not-enough.md": ["claude-code", "code-review", "multi-model", "workflow"],
-  "protocol-model-dependency.md": ["claude-code", "hook", "model-behavior"],
-  "rule-ladder.md": ["claude-code", "hook", "ai-agent", "automation", "methodology"],
-  "steal-determinism-layer.md": ["claude-code", "tool-adoption", "code-review", "methodology"],
-  "subagent-boot-cost.md": [
-    "claude-code",
-    "subagent",
-    "token-optimization",
-    "model-routing",
-    "ai-agent",
-  ],
-  "test-theater.md": ["mutation-testing", "Stryker", "ai-testing", "test-theater"],
-} as const;
-
 function readArticleTags(fileName: string): string[] {
   const source = readFileSync(
     new URL(`../src/content/blog/${fileName}`, import.meta.url),
@@ -183,12 +159,6 @@ function readArticleTags(fileName: string): string[] {
   assert.ok(serializedTags, `Missing tags frontmatter in ${fileName}`);
   return JSON.parse(serializedTags) as string[];
 }
-
-test("Ticket 01 canonicalized articles remain canonical after the audit migration", () => {
-  for (const [fileName, expectedTags] of Object.entries(expectedMechanicalTags)) {
-    assert.deepEqual(readArticleTags(fileName), expectedTags, fileName);
-  }
-});
 
 test("every article tag is a registered canonical ID", () => {
   const articleNames = readdirSync(

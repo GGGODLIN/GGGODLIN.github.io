@@ -105,7 +105,7 @@ export function createTagRegistry(values: readonly unknown[]): TagRegistry {
   const validateCanonicalId = (id: string): string => {
     if (!ids.has(id)) {
       throw new Error(
-        `Unknown canonical tag "${id}". Reuse an existing ID or register a new tag in the canonical tag registry.`,
+        `Unknown canonical tag "${id}". Reuse an existing ID or obtain top-level user approval before registering a new tag.`,
       );
     }
     return id;

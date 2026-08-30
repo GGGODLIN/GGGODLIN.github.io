@@ -5,8 +5,6 @@ import {
   createArticleDiscoveryState,
   filterArticleDiscovery,
   hasArticleDiscoveryFilters,
-  parseArticleDiscoveryIds,
-  serializeArticleDiscoveryIds,
   transitionArticleDiscovery,
   type ArticleDiscoveryItem,
 } from "../src/data/article-discovery.ts";
@@ -122,17 +120,6 @@ test("general search keeps case-insensitive title, description, and visible-labe
       query,
     );
   }
-});
-
-test("DOM tag IDs round trip without imposing a naming format", () => {
-  const tagIds = ["future tag", "Stryker", "hook"];
-
-  assert.deepEqual(
-    parseArticleDiscoveryIds(serializeArticleDiscoveryIds(tagIds)),
-    tagIds,
-  );
-  assert.deepEqual(parseArticleDiscoveryIds("{"), []);
-  assert.deepEqual(parseArticleDiscoveryIds('{"tag":"hook"}'), []);
 });
 
 test("whitespace-only search is not an active filter", () => {

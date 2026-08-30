@@ -74,6 +74,13 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 - MATERIAL fact-authority 段本就帶 repo URL，寫作 agent 直接取用；Phase 2 模板 B 寫作要求已含此條
 - **歸檔版不回溯補**（歷史快照）；只在發佈正稿與之後新文落實
 
+## Tag 治理（固化）
+
+- 新文章只能使用 tag registry 內的 canonical ID；既有 tag 優先沿用。
+- 如果文章需要 registry 尚未存在的新 tag，**先停止發布流程，向 top-level user 說明新 tag 的 ID、label、維度、意思與邊界，取得當回合明確核准後，才可修改 registry 與文章 frontmatter**。
+- 修改 registry 本身不算使用者核准；不得在同一輪先自行登記，再用 content check 通過當成已確認。
+- 使用者核准後，新 tag 正常加入活詞彙表；這不是封閉白名單。
+
 ## 發布後同步轉發（固化；2026-08-24 依使用者拍板改版）
 
 本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。

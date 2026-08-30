@@ -5,7 +5,6 @@ import ThemeBoot from "../components/ThemeBoot.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 import Nav from "../components/Nav.astro";
 import Analytics from "../components/Analytics.astro";
-import { serializeArticleDiscoveryIds } from "../data/article-discovery";
 import { canonicalTagRegistry } from "../data/tag-registry";
 import { getTopicIds, topicGroups } from "../data/topic-groups";
 
@@ -185,7 +184,6 @@ const rssURL = new URL("rss.xml", Astro.site);
                 data-post-id={post.id}
                 data-search={searchText}
                 data-topics={topicIds.join(" ")}
-                data-tags={serializeArticleDiscoveryIds(post.data.tags)}
               >
                 <a class="post-title-link" href={`/blog/${post.id}/`}>
                   <h2>{post.data.title}</h2>
@@ -238,7 +236,6 @@ const rssURL = new URL("rss.xml", Astro.site);
         createArticleDiscoveryState,
         filterArticleDiscovery,
         hasArticleDiscoveryFilters,
-        parseArticleDiscoveryIds,
         transitionArticleDiscovery,
         type ArticleDiscoveryItem,
       } from "../data/article-discovery";
@@ -403,7 +400,9 @@ const rssURL = new URL("rss.xml", Astro.site);
             id: article.dataset.postId ?? "",
             searchText: article.dataset.search ?? "",
             topicIds: (article.dataset.topics ?? "").split(" ").filter(Boolean),
-            tagIds: parseArticleDiscoveryIds(article.dataset.tags ?? "[]"),
+            tagIds: Array.from(
+              article.querySelectorAll<HTMLElement>(".tag-filter[data-tag]"),
+            ).map((button) => button.dataset.tag ?? ""),
           })) satisfies ArticleDiscoveryItem[];
 
           const setResultStatus = (

@@ -58,24 +58,6 @@ export function transitionArticleDiscovery(
   return createArticleDiscoveryState();
 }
 
-export function serializeArticleDiscoveryIds(
-  ids: readonly string[],
-): string {
-  return JSON.stringify(ids);
-}
-
-export function parseArticleDiscoveryIds(value: string): string[] {
-  try {
-    const ids: unknown = JSON.parse(value);
-    if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) {
-      return [];
-    }
-    return ids;
-  } catch {
-    return [];
-  }
-}
-
 export function hasArticleDiscoveryFilters(
   state: ArticleDiscoveryState,
 ): boolean {
