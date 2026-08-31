@@ -180,6 +180,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "absorb-awesome-list",
       "bumblebee-still-on-disk",
       "checker-layoff",
+      "compact-guard",
       "dcg-safety-lock",
       "local-llm-hook-judge",
       "prose-exams",

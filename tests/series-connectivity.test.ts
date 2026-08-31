@@ -121,7 +121,7 @@ test("connectivity accepts a valid chain without requiring a clique", () => {
   assert.equal(result[0].edges.length, 2);
 });
 
-test("all 13 expected series are connected in the current 40-article corpus", () => {
+test("all 13 expected series are connected in the current 41-article corpus", () => {
   const corpusTags = readCorpusTags();
   const articleSlugs = [...corpusTags.keys()].sort((left, right) => left.localeCompare(right));
   const requiredMembers = new Set(expectedSeries.flatMap((series) => series.members));
@@ -129,7 +129,7 @@ test("all 13 expected series are connected in the current 40-article corpus", ()
   const results = analyzeSeriesConnectivity(expectedSeries, corpusTags);
   const failures = formatConnectivityFailures(results);
 
-  assert.equal(articleSlugs.length, 40);
+  assert.equal(articleSlugs.length, 41);
   assert.deepEqual(unassignedSlugs, [...intentionalIslandSlugs]);
   assert.equal(results.length, 13);
   assert.equal(results.filter((result) => result.connected).length, 13, failures);
