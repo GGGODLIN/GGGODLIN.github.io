@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="40 篇文章、13 個預期系列與修正前後 finding 的本地 tag 關係 audit。">
+  <link rel="icon" href="data:,">
+  <title>文章 tag 關係圖 audit — after</title>
+  <style>
+    :root {
+      --page: #f3eee4;
+      --surface: #fffaf0;
+      --surface-strong: #fffdf8;
+      --surface-soft: #eee5d6;
+      --ink: #2b2925;
+      --ink-soft: #625e56;
+      --ink-muted: #817a70;
+      --border: #d8ccbb;
+      --shadow: 0 18px 50px rgba(74, 58, 38, 0.10);
+      --valid: #2a78d6;
+      --healthy: #0ca30c;
+      --success-text: #006300;
+      --weak: #fab219;
+      --generic: #78736c;
+      --focus: #1d65bb;
+      --tooltip: #25231f;
+      --tooltip-ink: #fffaf0;
+      --table-stripe: #faf4e9;
+      --selected: #e6f0fb;
+    }
+    html[data-theme="dark"] {
+      --page: #1d1b18;
+      --surface: #292620;
+      --surface-strong: #322e27;
+      --surface-soft: #3a352d;
+      --ink: #f5eee2;
+      --ink-soft: #d5ccbd;
+      --ink-muted: #ada496;
+      --border: #50493e;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      --valid: #3987e5;
+      --healthy: #0ca30c;
+      --success-text: #0ca30c;
+      --weak: #fab219;
+      --generic: #b8b0a4;
+      --focus: #8bc2ff;
+      --tooltip: #f5eee2;
+      --tooltip-ink: #25231f;
+      --table-stripe: #2e2a24;
+      --selected: #243c55;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: ui-serif, "Iowan Old Style", "Noto Serif TC", "PingFang TC", serif;
+      line-height: 1.6;
+    }
+    button, input, select { font: inherit; }
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 0.5rem;
+      left: 0.5rem;
+      padding: 0.6rem 0.9rem;
+      transform: translateY(-160%);
+      background: var(--tooltip);
+      color: var(--tooltip-ink);
+      border-radius: 0.5rem;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .page-shell {
+      width: min(1220px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
+    }
+    .masthead {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1.5rem;
+    }
+    .eyebrow {
+      margin: 0 0 0.35rem;
+      color: var(--success-text);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
+    h1 {
+      margin: 0;
+      max-width: 17ch;
+      font-size: clamp(2.1rem, 5vw, 4.6rem);
+      letter-spacing: -0.045em;
+    }
+    .lede { max-width: 74ch; margin: 0.8rem 0 0; color: var(--ink-soft); font-size: 1.05rem; }
+    .theme-button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+    .kpi, .card, .control-panel {
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .kpi { min-height: 112px; padding: 1rem; }
+    .kpi strong {
+      display: block;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi span {
+      display: block;
+      margin-top: 0.65rem;
+      color: var(--ink-soft);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem 1.25rem;
+      align-items: end;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .control-group { display: grid; gap: 0.3rem; }
+    .control-group > label, .control-label {
+      color: var(--ink-soft);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    select {
+      min-height: 44px;
+      max-width: min(560px, 80vw);
+      padding: 0.55rem 2.2rem 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.55rem;
+      background: var(--surface-strong);
+      color: var(--ink);
+    }
+    fieldset { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0; margin: 0; border: 0; }
+    .toggle {
+      display: inline-flex;
+      gap: 0.4rem;
+      align-items: center;
+      min-height: 44px;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-strong);
+      color: var(--ink-soft);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .toggle input { inline-size: 1rem; block-size: 1rem; accent-color: var(--focus); }
+    .line-sample { width: 34px; border-top: 2px solid currentColor; }
+    .line-repaired { color: var(--healthy); border-top-width: 4px; }
+    .line-valid { color: var(--valid); }
+    .line-weak { color: var(--weak); border-top-style: dashed; }
+    .line-generic { color: var(--generic); border-top-width: 1px; }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.8fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+    .network-card { min-width: 0; overflow: hidden; }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: start;
+      padding: 1.1rem 1.2rem 0;
+    }
+    .card-header h2, .card-header h3 { margin: 0; }
+    .card-header p { margin: 0.35rem 0 0; color: var(--ink-soft); }
+    .status-badge {
+      display: inline-flex;
+      gap: 0.4rem;
+      align-items: center;
+      flex: none;
+      min-height: 32px;
+      padding: 0.25rem 0.65rem;
+      border: 1px solid var(--healthy);
+      border-radius: 999px;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+    .status-healthy::before, .status-resolved::before, .status-island::before {
+      display: inline-block;
+      width: 0.55em;
+      height: 0.55em;
+      margin-right: 0.35em;
+      border-radius: 50%;
+      content: "";
+    }
+    .status-healthy::before, .status-resolved::before { background: var(--healthy); }
+    .status-island::before { background: var(--generic); }
+    .network-scroll { overflow-x: auto; overscroll-behavior-inline: contain; }
+    #network { display: block; width: 100%; min-width: 760px; height: 560px; overflow: visible; }
+    .edge-visible, .edge-hit { fill: none; vector-effect: non-scaling-stroke; }
+    .edge-hit { stroke: transparent; stroke-width: 16; pointer-events: stroke; }
+    .edge-visible { stroke-width: 2; }
+    .edge-repaired .edge-visible { stroke: var(--healthy); stroke-width: 4; }
+    .edge-valid .edge-visible { stroke: var(--valid); }
+    .edge-weak .edge-visible { stroke: var(--weak); stroke-dasharray: 5 5; }
+    .edge-generic-only .edge-visible { stroke: var(--generic); stroke-width: 1; opacity: 0.72; }
+    .edge-group:hover .edge-visible, .edge-group:focus-visible .edge-visible { stroke-width: 5; }
+    .node-mark { fill: var(--surface-strong); stroke: var(--healthy); stroke-width: 3; vector-effect: non-scaling-stroke; }
+    .node-core { fill: var(--ink); pointer-events: none; }
+    .node-group:hover .node-mark, .node-group:focus-visible .node-mark { stroke-width: 5; }
+    .leader { stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .node-label {
+      fill: var(--ink);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+    .node-label-bg { fill: var(--surface); opacity: 0.94; stroke: var(--border); stroke-width: 0.75; pointer-events: none; }
+    .summary-panel { display: grid; gap: 1rem; align-content: start; padding: 1.2rem; }
+    .summary-panel h2, .summary-panel h3 { margin: 0; }
+    .summary-panel p { margin: 0; color: var(--ink-soft); }
+    .summary-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 0; }
+    .summary-stats div { padding: 0.7rem; border: 1px solid var(--border); border-radius: 0.7rem; background: var(--surface-strong); }
+    .summary-stats dt { color: var(--ink-soft); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.72rem; font-weight: 800; }
+    .summary-stats dd { margin: 0.2rem 0 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 800; }
+    .legend { display: grid; gap: 0.55rem; padding: 0; margin: 0; list-style: none; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.82rem; }
+    .legend li { display: grid; grid-template-columns: 48px 1fr; gap: 0.6rem; align-items: center; }
+    .tooltip {
+      position: fixed;
+      z-index: 50;
+      width: min(350px, calc(100vw - 2rem));
+      padding: 0.75rem 0.85rem;
+      border-radius: 0.65rem;
+      background: var(--tooltip);
+      color: var(--tooltip-ink);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      pointer-events: none;
+    }
+    .tooltip[hidden] { display: none; }
+    .tooltip strong, .tooltip span { display: block; }
+    .tooltip span + span { margin-top: 0.3rem; }
+    .tables { display: grid; gap: 1rem; margin-top: 1rem; }
+    .table-card { overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; }
+    caption { padding: 0.95rem 1.1rem; color: var(--ink-soft); text-align: left; }
+    th, td { padding: 0.75rem; border-top: 1px solid var(--border); text-align: left; vertical-align: top; }
+    thead th { color: var(--ink-soft); background: var(--surface-soft); font-size: 0.73rem; letter-spacing: 0.03em; text-transform: uppercase; }
+    tbody tr:nth-child(even) { background: var(--table-stripe); }
+    tbody tr.is-selected { background: var(--selected); box-shadow: inset 4px 0 0 var(--focus); }
+    .row-button {
+      min-width: 44px;
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      background: var(--surface-strong);
+      color: var(--focus);
+      font-weight: 800;
+      cursor: pointer;
+    }
+    code { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82em; overflow-wrap: anywhere; }
+    details.card { overflow: hidden; }
+    details > summary { min-height: 52px; padding: 0.9rem 1.1rem; cursor: pointer; font-family: ui-sans-serif, system-ui, sans-serif; font-weight: 800; }
+    .data-note { margin: 0.75rem 1.1rem 1rem; color: var(--ink-soft); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.78rem; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .overview-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .page-shell { width: min(100% - 1rem, 1220px); padding-top: 1rem; }
+      .masthead { grid-template-columns: 1fr; }
+      .theme-button { justify-self: start; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi:last-child { grid-column: 1 / -1; }
+      .control-panel { align-items: stretch; }
+      .control-group, .control-group select { width: 100%; max-width: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+    @media (forced-colors: active) { .edge-visible, .node-mark, .status-badge { forced-color-adjust: auto; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要內容</a>
+  <div class="page-shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">本地文章 tag 關係檢查 · 修正後</p>
+        <h1>13 個預期系列，現在都走得通</h1>
+        <p class="lede">本頁根據目前文章標籤、tag 登錄表與獨立系列契約產生。連通只計各系列核准的連接標籤；能沿路徑走遍所有文章就通過，不要求每兩篇直接相連。</p>
+      </div>
+      <button class="theme-button" id="theme-toggle" type="button" title="切換深色模式" aria-pressed="false">◐ 明暗</button>
+    </header>
+    <main id="main" tabindex="-1">
+      <section aria-labelledby="kpi-title">
+        <h2 class="sr-only" id="kpi-title">檢查摘要</h2>
+        <div class="kpi-grid" id="kpi-grid"></div>
+      </section>
+      <form class="control-panel" aria-label="關係圖篩選器">
+        <div class="control-group">
+          <label for="series-select">系列</label>
+          <select id="series-select" name="series"></select>
+        </div>
+        <div class="control-group">
+          <span class="control-label" id="edge-layer-label">連線圖層</span>
+          <fieldset aria-labelledby="edge-layer-label">
+            <label class="toggle"><input id="layer-repaired" type="checkbox" checked><span class="line-sample line-repaired" aria-hidden="true"></span>修正 connector</label>
+            <label class="toggle"><input id="layer-valid" type="checkbox" checked><span class="line-sample line-valid" aria-hidden="true"></span>既有有效連線</label>
+            <label class="toggle"><input id="layer-weak" type="checkbox"><span class="line-sample line-weak" aria-hidden="true"></span>交叉維度</label>
+            <label class="toggle"><input id="layer-generic" type="checkbox"><span class="line-sample line-generic" aria-hidden="true"></span>僅泛用 tag</label>
+          </fieldset>
+        </div>
+      </form>
+      <section class="overview-grid" aria-label="所選系列概覽">
+        <article class="card network-card">
+          <header class="card-header">
+            <div><h2 id="network-title">系列關係圖</h2><p id="network-subtitle"></p></div>
+            <span class="status-badge status-healthy" id="series-status">✓ 已連通</span>
+          </header>
+          <div class="network-scroll">
+            <svg id="network" viewBox="0 0 800 560" role="group" aria-labelledby="network-svg-title network-svg-desc">
+              <title id="network-svg-title">所選系列的文章關係圖</title>
+              <desc id="network-svg-desc">綠色粗線是本次補上的連接標籤，藍色實線是原本已有效的連線，橘色虛線是交叉維度，灰色細線只靠泛用 tag。節點與連線都可用鍵盤聚焦。</desc>
+            </svg>
+          </div>
+        </article>
+        <aside class="card summary-panel" aria-labelledby="summary-title">
+          <div><h2 id="summary-title">系列摘要</h2><p id="summary-concept"></p></div>
+          <dl class="summary-stats" id="summary-stats"></dl>
+          <div><h3>核准連接標籤</h3><p><code id="summary-connectors"></code></p></div>
+          <div>
+            <h3>固定圖例</h3>
+            <ul class="legend">
+              <li><span class="line-sample line-repaired" aria-hidden="true"></span><span>綠色粗線 — 本次補上的連接標籤</span></li>
+              <li><span class="line-sample line-valid" aria-hidden="true"></span><span>藍色實線 — 原本已有效的連線</span></li>
+              <li><span class="line-sample line-weak" aria-hidden="true"></span><span>橘色虛線 — 交叉維度</span></li>
+              <li><span class="line-sample line-generic" aria-hidden="true"></span><span>灰色細線 — 只靠泛用 tag，不計連通</span></li>
+              <li><span class="status-healthy">✓ 已連通</span><span>可沿路徑走遍全部成員</span></li>
+              <li><span class="status-island">● 合理孤島</span><span>保留獨立，不是缺陷</span></li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+      <section class="tables" aria-labelledby="tables-title">
+        <h2 id="tables-title">資料表</h2>
+        <article class="card table-card">
+          <header class="card-header"><div><h3>13 系列成績表</h3><p>每個系列都能只靠核准的連接標籤走成單一連通群。</p></div></header>
+          <div class="table-scroll">
+            <table>
+              <caption>13 個預期系列的成員、核准標籤、連線圖層與修正後判定。</caption>
+              <thead><tr><th scope="col">系列</th><th scope="col">狀態</th><th scope="col">成員</th><th scope="col">核准標籤</th><th scope="col">修正連線</th><th scope="col">既有有效</th><th scope="col">交叉維度</th><th scope="col">僅泛用 tag</th><th scope="col">連通群</th><th scope="col">動作</th></tr></thead>
+              <tbody id="series-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card table-card">
+          <header class="card-header"><div><h3>7 個原始 finding 的修正對照</h3><p>保留 F01–F07 的修正前判定與理由；修正後欄只記目前結果，不改寫前態。</p></div></header>
+          <div class="table-scroll">
+            <table>
+              <caption>原始 7 個 finding ID 的修正前後對照。</caption>
+              <thead><tr><th scope="col">ID</th><th scope="col">系列</th><th scope="col">修正前</th><th scope="col">修正後</th><th scope="col">原 finding 文章</th><th scope="col">修正驗證文章</th><th scope="col">修正前原因</th><th scope="col">修正 connector</th><th scope="col">動作</th></tr></thead>
+              <tbody id="finding-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card table-card">
+          <header class="card-header"><div><h3>6 個 tag 合併判定</h3><p>沿用修正前檢查的 do-not-merge 判定與反證，不因連通修正而改寫。</p></div></header>
+          <div class="table-scroll">
+            <table>
+              <caption>原始 tag 合併候選與未改寫的判定。</caption>
+              <thead><tr><th scope="col">ID</th><th scope="col">Tags</th><th scope="col">判定</th><th scope="col">理由</th><th scope="col">反證</th></tr></thead>
+              <tbody id="merge-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card table-card">
+          <header class="card-header"><div><h3>2 個合理孤島</h3><p>兩篇都在 40 篇文章範圍內，但不列入必須連通的系列成員。</p></div></header>
+          <div class="table-scroll">
+            <table>
+              <caption>合理孤島的保留理由與重審條件。</caption>
+              <thead><tr><th scope="col">Slug</th><th scope="col">狀態</th><th scope="col">目前判定</th><th scope="col">何時重審</th></tr></thead>
+              <tbody id="island-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+        <details class="card" open>
+          <summary>所選系列的文章與連線資料表</summary>
+          <p class="data-note">文章表列目前標籤；連線表與上方圖層開關同步。圖可用 Tab 聚焦，方向鍵移到前後一個圖形，Home／End 跳到首尾，Escape 關閉提示框。</p>
+          <div class="table-scroll">
+            <table>
+              <caption>所選系列的文章。</caption>
+              <thead><tr><th scope="col">文章</th><th scope="col">Slug</th><th scope="col">目前 tags</th><th scope="col">所屬系列</th></tr></thead>
+              <tbody id="node-table-body"></tbody>
+            </table>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption>所選系列目前顯示的連線。</caption>
+              <thead><tr><th scope="col">連線</th><th scope="col">圖層</th><th scope="col">共同 tags</th><th scope="col">核准連接標籤</th></tr></thead>
+              <tbody id="edge-table-body"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <div class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></div>
+  <script type="application/json" id="graph-data">{"schema_version":1,"audit_state":"after","nodes":[{"slug":"absorb-awesome-list","title":"抄 awesome 清單不難，難的是決定不抄什麼","tags":["claude-code","tool-evaluation","methodology","workflow","trial-review"],"tag_labels":["Claude Code","tool evaluation","methodology","workflow","trial review"],"status":"series-member","series_ids":["S01","S13"]},{"slug":"agent-tool-reach","title":"codebase 工具數據很強，到我 agent 手上剩不到一成","tags":["claude-code","mcp","code-search","tool-evaluation","FFF"],"tag_labels":["Claude Code","MCP","code search","tool evaluation","FFF"],"status":"series-member","series_ids":["S01","S02"]},{"slug":"ai-report-two-lies","title":"AI 報表會說兩次謊：查詢欄位是假的，解讀數字也可能是假的","tags":["ai-workflow","data-quality","methodology"],"tag_labels":["AI workflow","data quality","methodology"],"status":"intentional-island","series_ids":[]},{"slug":"bumblebee-still-on-disk","title":"下架八個月的惡意 extension 還躺在我硬碟，bumblebee 抓到了","tags":["security","supply-chain","vscode-extension","bumblebee","tool-adoption","trial-review"],"tag_labels":["security","supply chain","VS Code extension","bumblebee","tool adoption","trial review"],"status":"series-member","series_ids":["S13"]},{"slug":"cc-vendor-swap","title":"Claude Code 換第三方模型的踩坑指南","tags":["claude-code","vendor-swap","llm"],"tag_labels":["Claude Code","vendor swap","LLM"],"status":"series-member","series_ids":["S05"]},{"slug":"check-my-stack","title":"你已經有的越多，新工具能給的越少","tags":["claude-code","tool-evaluation","methodology"],"tag_labels":["Claude Code","tool evaluation","methodology"],"status":"series-member","series_ids":["S01"]},{"slug":"checker-layoff","title":"我裁掉了兩個 AI 檢查員，留下的那個能者過勞","tags":["claude-code","hook","llm","evaluation","verify","trial-review"],"tag_labels":["Claude Code","hook","LLM","evaluation","verify","trial review"],"status":"series-member","series_ids":["S08","S09","S13"]},{"slug":"code-search-adoption","title":"裝了一堆 codebase 搜尋工具，agent 幾乎都不用","tags":["claude-code","mcp","code-search","tool-adoption"],"tag_labels":["Claude Code","MCP","code search","tool adoption"],"status":"series-member","series_ids":["S01","S02"]},{"slug":"dcg-safety-lock","title":"防得了失誤，防不住意圖：給 AI 的 shell 裝一把鎖","tags":["claude-code","hook","security","tooling","tool-adoption","trial-review"],"tag_labels":["Claude Code","hook","security","tooling","tool adoption","trial review"],"status":"series-member","series_ids":["S09","S13"]},{"slug":"deep-research-rate-limit","title":"官方 deep-research workflow，我用 Opus 跑一次掛一次","tags":["claude-code","workflow","deep-research"],"tag_labels":["Claude Code","workflow","deep research"],"status":"series-member","series_ids":["S04"]},{"slug":"exit-0-illusion","title":"為什麼我不再相信 Explore Agent 說他做完了","tags":["claude-code","subagent","fabrication","verify","report-vs-reality"],"tag_labels":["Claude Code","subagent","fabrication","verify","report vs reality"],"status":"series-member","series_ids":["S07","S08"]},{"slug":"gpt-in-cc","title":"接得上，不代表合得來：把 GPT 接進 Claude Code 的三顆雷","tags":["claude-code","vendor-swap","gpt","llm"],"tag_labels":["Claude Code","vendor swap","GPT","LLM"],"status":"series-member","series_ids":["S05"]},{"slug":"gpt-in-cc-performance","title":"聽話，不代表懂你：GPT 接進 Claude Code 第二週的性格觀察","tags":["claude-code","vendor-swap","gpt","llm","model-behavior"],"tag_labels":["Claude Code","vendor swap","GPT","LLM","model behavior"],"status":"series-member","series_ids":["S05","S06"]},{"slug":"gpt-review-tunnel-vision","title":"GPT 不是停不下來，是看不見停止線：Review 隧道視野與停止條件治理","tags":["claude-code","gpt","code-review","methodology","scope-control"],"tag_labels":["Claude Code","GPT","code review","methodology","scope control"],"status":"series-member","series_ids":["S06","S11"]},{"slug":"hook-watchdog","title":"AI 說做完不算數：拿證據來","tags":["claude-code","hook","automation","methodology","verify"],"tag_labels":["Claude Code","hook","automation","methodology","verify"],"status":"series-member","series_ids":["S08","S09"]},{"slug":"inline-the-rules","title":"規則寫下來了，agent 真的有收到嗎","tags":["claude-code","memory","hook","methodology"],"tag_labels":["Claude Code","memory","hook","methodology"],"status":"series-member","series_ids":["S09"]},{"slug":"keep-the-wiki-alive","title":"wiki 蓋好之後，讓它繼續活著才是真正的問題","tags":["claude-code","memory","knowledge-management","retrospective"],"tag_labels":["Claude Code","memory","knowledge management","retrospective"],"status":"series-member","series_ids":["S03"]},{"slug":"local-llm-hook-judge","title":"雲端太遠，hook 等不了：低延遲給了本地小模型就業機會","tags":["claude-code","local-llm","hook","llm","verify","trial-review"],"tag_labels":["Claude Code","local LLM","hook","LLM","verify","trial review"],"status":"series-member","series_ids":["S08","S13"]},{"slug":"matt-philosophy","title":"半年 20 萬星的祕密是「少」：Matt Pocock 的哲學，我信六條、不信一條","tags":["claude-code","skill","matt-pocock","philosophy"],"tag_labels":["Claude Code","skill","Matt Pocock","philosophy"],"status":"intentional-island","series_ids":[]},{"slug":"measure-revealed-adoption","title":"嘴上說想要，但 agent 根本沒在用","tags":["claude-code","tool-adoption","subagent","methodology","revealed-preference"],"tag_labels":["Claude Code","tool adoption","subagent","methodology","revealed preference"],"status":"series-member","series_ids":["S01","S02"]},{"slug":"memory-cap-reframe","title":"MEMORY.md 只有 25KB，要當目錄用、別當倉庫塞","tags":["claude-code","memory","auto-memory"],"tag_labels":["Claude Code","memory","auto memory"],"status":"series-member","series_ids":["S03"]},{"slug":"model-routing","title":"最強模型不是每件事都該用：配額逼我重劃 AI 分工","tags":["claude-code","model-routing","quota","methodology","automation","review-governance"],"tag_labels":["Claude Code","model routing","quota","methodology","automation","review governance"],"status":"series-member","series_ids":["S09","S10","S12"]},{"slug":"one-model-not-enough","title":"一個模型不夠：五軸交叉審的 code review 工作流","tags":["claude-code","code-review","multi-model","workflow","review-governance"],"tag_labels":["Claude Code","code review","multi-model","workflow","review governance"],"status":"series-member","series_ids":["S10"]},{"slug":"prose-exams","title":"skill 也要有考卷：我給 skill 上了回歸測試","tags":["claude-code","testing","workflow","methodology","skill","hook","trial-review"],"tag_labels":["Claude Code","testing","workflow","methodology","skill","hook","trial review"],"status":"series-member","series_ids":["S09","S13"]},{"slug":"protocol-model-dependency","title":"我以為 Opus 沒遇到麻煩，後來發現是它根本沒在報","tags":["claude-code","hook","model-behavior","report-vs-reality"],"tag_labels":["Claude Code","hook","model behavior","report vs reality"],"status":"series-member","series_ids":["S07","S09"]},{"slug":"proxy-warmup-cost","title":"省 token 工具說能省多少，扣掉暖機費後才算數","tags":["claude-code","token-optimization","prompt-caching","proxy","cost-analysis"],"tag_labels":["Claude Code","token optimization","prompt caching","proxy","cost analysis"],"status":"series-member","series_ids":["S12"]},{"slug":"retire-vector-memory","title":"我把自己裝的向量記憶砍掉了——928 次寫入換來 3 次搜尋","tags":["claude-code","memory","vector-db","retrospective","tool-adoption"],"tag_labels":["Claude Code","memory","vector DB","retrospective","tool adoption"],"status":"series-member","series_ids":["S01","S03"]},{"slug":"rule-ladder","title":"不是每條規矩都要寫成 hook：從一句話到硬攔截的四層階梯","tags":["claude-code","hook","ai-agent","automation","methodology"],"tag_labels":["Claude Code","hook","AI agent","automation","methodology"],"status":"series-member","series_ids":["S09"]},{"slug":"sem-blast-radius","title":"AI 只拿得到 diff：我用 sem 補上改動影響面","tags":["claude-code","hook","code-review","tooling","tool-adoption","review-governance","trial-review"],"tag_labels":["Claude Code","hook","code review","tooling","tool adoption","review governance","trial review"],"status":"series-member","series_ids":["S10","S13"]},{"slug":"sol-overimplementation","title":"GPT-5.6 Sol 沒做錯，卻做了 7,700 行我不需要的東西","tags":["claude-code","gpt","methodology","scope-control"],"tag_labels":["Claude Code","GPT","methodology","scope control"],"status":"series-member","series_ids":["S06","S11"]},{"slug":"spec-review-round","title":"工作能外包給 AI，決策不能","tags":["claude-code","spec-review","ai-workflow","methodology","review-governance"],"tag_labels":["Claude Code","spec review","AI workflow","methodology","review governance"],"status":"series-member","series_ids":["S10"]},{"slug":"steal-determinism-layer","title":"偷確定性層：否決整套 AI 工具後，還能帶走什麼","tags":["claude-code","tool-adoption","code-review","methodology","automation"],"tag_labels":["Claude Code","tool adoption","code review","methodology","automation"],"status":"series-member","series_ids":["S01","S09"]},{"slug":"subagent-boot-cost","title":"派一個 agent 出去，先付一筆看不見的開機費","tags":["claude-code","subagent","token-optimization","model-routing","ai-agent"],"tag_labels":["Claude Code","subagent","token optimization","model routing","AI agent"],"status":"series-member","series_ids":["S12"]},{"slug":"test-theater","title":"AI 寫的測試全綠，但可能什麼都沒測","tags":["mutation-testing","Stryker","ai-testing","test-theater","automation"],"tag_labels":["mutation testing","Stryker","AI testing","test theater","automation"],"status":"series-member","series_ids":["S09"]},{"slug":"token-saving-tools","title":"省 token 工具：省不了多少，但風險不小","tags":["claude-code","token-optimization","mcp","tool-evaluation","tool-adoption"],"tag_labels":["Claude Code","token optimization","MCP","tool evaluation","tool adoption"],"status":"series-member","series_ids":["S01","S12"]},{"slug":"trial-review-system","title":"裝工具很容易，結案才是工作：我的 AI 工具試用回顧制度","tags":["claude-code","methodology","tool-adoption","workflow","trial-review"],"tag_labels":["Claude Code","methodology","tool adoption","workflow","trial review"],"status":"series-member","series_ids":["S01","S13"]},{"slug":"unattended-workflow-resume","title":"讓額度不大的帳號，也能掛機過夜跑完大型研究 workflow","tags":["claude-code","workflow","workflow-resume","deep-research"],"tag_labels":["Claude Code","workflow","workflow resume","deep research"],"status":"series-member","series_ids":["S04"]},{"slug":"vendor-benefit","title":"Claude Code 換第三方模型，換到的是有條件的韌性","tags":["claude-code","vendor-swap","llm"],"tag_labels":["Claude Code","vendor swap","LLM"],"status":"series-member","series_ids":["S05"]},{"slug":"websearch-misses-official-docs","title":"AI 說它查過官方文件，但它沒有","tags":["claude-code","websearch","fact-check","retrospective","report-vs-reality"],"tag_labels":["Claude Code","WebSearch","fact check","retrospective","report vs reality"],"status":"series-member","series_ids":["S07"]},{"slug":"workflow-vs-skill","title":"ultracode workflow，別跑完就丟","tags":["claude-code","workflow","skill","deep-research"],"tag_labels":["Claude Code","workflow","skill","deep research"],"status":"series-member","series_ids":["S04"]}],"series":[{"id":"S01","title":"工具不是看起來厲害就裝，要看它在你的環境剩多少價值","minimum_common_concept":"工具價值必須相對既有工作方式、真實採用與退出結果計算；不能只看 README、星數或口頭意願。","members":["absorb-awesome-list","agent-tool-reach","check-my-stack","code-search-adoption","measure-revealed-adoption","retire-vector-memory","steal-determinism-layer","token-saving-tools","trial-review-system"],"valid_connector_allowlist":["tool-evaluation","tool-adoption","code-search"],"components":[["absorb-awesome-list","agent-tool-reach","check-my-stack","code-search-adoption","measure-revealed-adoption","retire-vector-memory","steal-determinism-layer","token-saving-tools","trial-review-system"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S01:absorb-awesome-list--agent-tool-reach","source":"absorb-awesome-list","target":"agent-tool-reach","connectors":["tool-evaluation"]},{"id":"S01:absorb-awesome-list--check-my-stack","source":"absorb-awesome-list","target":"check-my-stack","connectors":["tool-evaluation"]},{"id":"S01:absorb-awesome-list--token-saving-tools","source":"absorb-awesome-list","target":"token-saving-tools","connectors":["tool-evaluation"]},{"id":"S01:agent-tool-reach--check-my-stack","source":"agent-tool-reach","target":"check-my-stack","connectors":["tool-evaluation"]},{"id":"S01:agent-tool-reach--code-search-adoption","source":"agent-tool-reach","target":"code-search-adoption","connectors":["code-search"]},{"id":"S01:agent-tool-reach--token-saving-tools","source":"agent-tool-reach","target":"token-saving-tools","connectors":["tool-evaluation"]},{"id":"S01:check-my-stack--token-saving-tools","source":"check-my-stack","target":"token-saving-tools","connectors":["tool-evaluation"]},{"id":"S01:code-search-adoption--measure-revealed-adoption","source":"code-search-adoption","target":"measure-revealed-adoption","connectors":["tool-adoption"]},{"id":"S01:code-search-adoption--retire-vector-memory","source":"code-search-adoption","target":"retire-vector-memory","connectors":["tool-adoption"]},{"id":"S01:code-search-adoption--steal-determinism-layer","source":"code-search-adoption","target":"steal-determinism-layer","connectors":["tool-adoption"]},{"id":"S01:code-search-adoption--token-saving-tools","source":"code-search-adoption","target":"token-saving-tools","connectors":["tool-adoption"]},{"id":"S01:code-search-adoption--trial-review-system","source":"code-search-adoption","target":"trial-review-system","connectors":["tool-adoption"]},{"id":"S01:measure-revealed-adoption--retire-vector-memory","source":"measure-revealed-adoption","target":"retire-vector-memory","connectors":["tool-adoption"]},{"id":"S01:measure-revealed-adoption--steal-determinism-layer","source":"measure-revealed-adoption","target":"steal-determinism-layer","connectors":["tool-adoption"]},{"id":"S01:measure-revealed-adoption--token-saving-tools","source":"measure-revealed-adoption","target":"token-saving-tools","connectors":["tool-adoption"]},{"id":"S01:measure-revealed-adoption--trial-review-system","source":"measure-revealed-adoption","target":"trial-review-system","connectors":["tool-adoption"]},{"id":"S01:retire-vector-memory--steal-determinism-layer","source":"retire-vector-memory","target":"steal-determinism-layer","connectors":["tool-adoption"]},{"id":"S01:retire-vector-memory--token-saving-tools","source":"retire-vector-memory","target":"token-saving-tools","connectors":["tool-adoption"]},{"id":"S01:retire-vector-memory--trial-review-system","source":"retire-vector-memory","target":"trial-review-system","connectors":["tool-adoption"]},{"id":"S01:steal-determinism-layer--token-saving-tools","source":"steal-determinism-layer","target":"token-saving-tools","connectors":["tool-adoption"]},{"id":"S01:steal-determinism-layer--trial-review-system","source":"steal-determinism-layer","target":"trial-review-system","connectors":["tool-adoption"]},{"id":"S01:token-saving-tools--trial-review-system","source":"token-saving-tools","target":"trial-review-system","connectors":["tool-adoption"]}],"edge_layers":{"repaired":0,"valid":22,"weak":1,"generic-only":13},"edges":[{"id":"S01:absorb-awesome-list--agent-tool-reach","source":"absorb-awesome-list","target":"agent-tool-reach","shared_tags":["claude-code","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:absorb-awesome-list--check-my-stack","source":"absorb-awesome-list","target":"check-my-stack","shared_tags":["claude-code","methodology","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:absorb-awesome-list--code-search-adoption","source":"absorb-awesome-list","target":"code-search-adoption","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:absorb-awesome-list--measure-revealed-adoption","source":"absorb-awesome-list","target":"measure-revealed-adoption","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:absorb-awesome-list--retire-vector-memory","source":"absorb-awesome-list","target":"retire-vector-memory","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:absorb-awesome-list--steal-determinism-layer","source":"absorb-awesome-list","target":"steal-determinism-layer","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:absorb-awesome-list--token-saving-tools","source":"absorb-awesome-list","target":"token-saving-tools","shared_tags":["claude-code","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:absorb-awesome-list--trial-review-system","source":"absorb-awesome-list","target":"trial-review-system","shared_tags":["claude-code","methodology","trial-review","workflow"],"allowed_connectors":[],"layer":"weak"},{"id":"S01:agent-tool-reach--check-my-stack","source":"agent-tool-reach","target":"check-my-stack","shared_tags":["claude-code","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:agent-tool-reach--code-search-adoption","source":"agent-tool-reach","target":"code-search-adoption","shared_tags":["claude-code","code-search","mcp"],"allowed_connectors":["code-search"],"layer":"valid"},{"id":"S01:agent-tool-reach--measure-revealed-adoption","source":"agent-tool-reach","target":"measure-revealed-adoption","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:agent-tool-reach--retire-vector-memory","source":"agent-tool-reach","target":"retire-vector-memory","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:agent-tool-reach--steal-determinism-layer","source":"agent-tool-reach","target":"steal-determinism-layer","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:agent-tool-reach--token-saving-tools","source":"agent-tool-reach","target":"token-saving-tools","shared_tags":["claude-code","mcp","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:agent-tool-reach--trial-review-system","source":"agent-tool-reach","target":"trial-review-system","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:check-my-stack--code-search-adoption","source":"check-my-stack","target":"code-search-adoption","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:check-my-stack--measure-revealed-adoption","source":"check-my-stack","target":"measure-revealed-adoption","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:check-my-stack--retire-vector-memory","source":"check-my-stack","target":"retire-vector-memory","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:check-my-stack--steal-determinism-layer","source":"check-my-stack","target":"steal-determinism-layer","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:check-my-stack--token-saving-tools","source":"check-my-stack","target":"token-saving-tools","shared_tags":["claude-code","tool-evaluation"],"allowed_connectors":["tool-evaluation"],"layer":"valid"},{"id":"S01:check-my-stack--trial-review-system","source":"check-my-stack","target":"trial-review-system","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S01:code-search-adoption--measure-revealed-adoption","source":"code-search-adoption","target":"measure-revealed-adoption","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:code-search-adoption--retire-vector-memory","source":"code-search-adoption","target":"retire-vector-memory","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:code-search-adoption--steal-determinism-layer","source":"code-search-adoption","target":"steal-determinism-layer","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:code-search-adoption--token-saving-tools","source":"code-search-adoption","target":"token-saving-tools","shared_tags":["claude-code","mcp","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:code-search-adoption--trial-review-system","source":"code-search-adoption","target":"trial-review-system","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:measure-revealed-adoption--retire-vector-memory","source":"measure-revealed-adoption","target":"retire-vector-memory","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:measure-revealed-adoption--steal-determinism-layer","source":"measure-revealed-adoption","target":"steal-determinism-layer","shared_tags":["claude-code","methodology","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:measure-revealed-adoption--token-saving-tools","source":"measure-revealed-adoption","target":"token-saving-tools","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:measure-revealed-adoption--trial-review-system","source":"measure-revealed-adoption","target":"trial-review-system","shared_tags":["claude-code","methodology","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:retire-vector-memory--steal-determinism-layer","source":"retire-vector-memory","target":"steal-determinism-layer","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:retire-vector-memory--token-saving-tools","source":"retire-vector-memory","target":"token-saving-tools","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:retire-vector-memory--trial-review-system","source":"retire-vector-memory","target":"trial-review-system","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:steal-determinism-layer--token-saving-tools","source":"steal-determinism-layer","target":"token-saving-tools","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:steal-determinism-layer--trial-review-system","source":"steal-determinism-layer","target":"trial-review-system","shared_tags":["claude-code","methodology","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"},{"id":"S01:token-saving-tools--trial-review-system","source":"token-saving-tools","target":"trial-review-system","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"}]},{"id":"S02","title":"codebase 搜尋工具的真正門檻，是 agent 會不會走那條路","minimum_common_concept":"搜尋品質只是前提；還要量 agent 是否主動選用，以及工具能介入實際搜尋路徑的比例。","members":["agent-tool-reach","code-search-adoption","measure-revealed-adoption"],"valid_connector_allowlist":["code-search","tool-adoption"],"components":[["agent-tool-reach","code-search-adoption","measure-revealed-adoption"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S02:agent-tool-reach--code-search-adoption","source":"agent-tool-reach","target":"code-search-adoption","connectors":["code-search"]},{"id":"S02:code-search-adoption--measure-revealed-adoption","source":"code-search-adoption","target":"measure-revealed-adoption","connectors":["tool-adoption"]}],"edge_layers":{"repaired":0,"valid":2,"weak":0,"generic-only":1},"edges":[{"id":"S02:agent-tool-reach--code-search-adoption","source":"agent-tool-reach","target":"code-search-adoption","shared_tags":["claude-code","code-search","mcp"],"allowed_connectors":["code-search"],"layer":"valid"},{"id":"S02:agent-tool-reach--measure-revealed-adoption","source":"agent-tool-reach","target":"measure-revealed-adoption","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S02:code-search-adoption--measure-revealed-adoption","source":"code-search-adoption","target":"measure-revealed-adoption","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":["tool-adoption"],"layer":"valid"}]},{"id":"S03","title":"個人 memory 從向量倉庫，改成能維護的索引與 wiki","minimum_common_concept":"原始對話大量自動寫入沒有用，整理後的結論、分層索引與持續健康檢查才構成可用 memory。","members":["keep-the-wiki-alive","memory-cap-reframe","retire-vector-memory"],"valid_connector_allowlist":["memory"],"components":[["keep-the-wiki-alive","memory-cap-reframe","retire-vector-memory"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S03:keep-the-wiki-alive--memory-cap-reframe","source":"keep-the-wiki-alive","target":"memory-cap-reframe","connectors":["memory"]},{"id":"S03:keep-the-wiki-alive--retire-vector-memory","source":"keep-the-wiki-alive","target":"retire-vector-memory","connectors":["memory"]},{"id":"S03:memory-cap-reframe--retire-vector-memory","source":"memory-cap-reframe","target":"retire-vector-memory","connectors":["memory"]}],"edge_layers":{"repaired":0,"valid":3,"weak":0,"generic-only":0},"edges":[{"id":"S03:keep-the-wiki-alive--memory-cap-reframe","source":"keep-the-wiki-alive","target":"memory-cap-reframe","shared_tags":["claude-code","memory"],"allowed_connectors":["memory"],"layer":"valid"},{"id":"S03:keep-the-wiki-alive--retire-vector-memory","source":"keep-the-wiki-alive","target":"retire-vector-memory","shared_tags":["claude-code","memory","retrospective"],"allowed_connectors":["memory"],"layer":"valid"},{"id":"S03:memory-cap-reframe--retire-vector-memory","source":"memory-cap-reframe","target":"retire-vector-memory","shared_tags":["claude-code","memory"],"allowed_connectors":["memory"],"layer":"valid"}]},{"id":"S04","title":"固定 workflow 要先存下來，再處理限流與中斷續跑","minimum_common_concept":"同一支 deep-research workflow 從編排可復用一路遇到 burst 限流與 resume 快取前提，三篇是同一執行鏈的連續工程問題。","members":["deep-research-rate-limit","unattended-workflow-resume","workflow-vs-skill"],"valid_connector_allowlist":["deep-research"],"components":[["deep-research-rate-limit","unattended-workflow-resume","workflow-vs-skill"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S04:deep-research-rate-limit--unattended-workflow-resume","source":"deep-research-rate-limit","target":"unattended-workflow-resume","connectors":["deep-research"]},{"id":"S04:deep-research-rate-limit--workflow-vs-skill","source":"deep-research-rate-limit","target":"workflow-vs-skill","connectors":["deep-research"]},{"id":"S04:unattended-workflow-resume--workflow-vs-skill","source":"unattended-workflow-resume","target":"workflow-vs-skill","connectors":["deep-research"]}],"edge_layers":{"repaired":3,"valid":0,"weak":0,"generic-only":0},"edges":[{"id":"S04:deep-research-rate-limit--unattended-workflow-resume","source":"deep-research-rate-limit","target":"unattended-workflow-resume","shared_tags":["claude-code","deep-research","workflow"],"allowed_connectors":["deep-research"],"layer":"repaired"},{"id":"S04:deep-research-rate-limit--workflow-vs-skill","source":"deep-research-rate-limit","target":"workflow-vs-skill","shared_tags":["claude-code","deep-research","workflow"],"allowed_connectors":["deep-research"],"layer":"repaired"},{"id":"S04:unattended-workflow-resume--workflow-vs-skill","source":"unattended-workflow-resume","target":"workflow-vs-skill","shared_tags":["claude-code","deep-research","workflow"],"allowed_connectors":["deep-research"],"layer":"repaired"}]},{"id":"S05","title":"把其他模型接進 Claude Code，代價、回報與性格都會跟著換","minimum_common_concept":"模型供應商替換不是只改 endpoint；協議、生態、額度、fallback、規則遵循與 context 行為都要重新驗。","members":["cc-vendor-swap","gpt-in-cc","gpt-in-cc-performance","vendor-benefit"],"valid_connector_allowlist":["vendor-swap"],"components":[["cc-vendor-swap","gpt-in-cc","gpt-in-cc-performance","vendor-benefit"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S05:cc-vendor-swap--gpt-in-cc","source":"cc-vendor-swap","target":"gpt-in-cc","connectors":["vendor-swap"]},{"id":"S05:cc-vendor-swap--gpt-in-cc-performance","source":"cc-vendor-swap","target":"gpt-in-cc-performance","connectors":["vendor-swap"]},{"id":"S05:cc-vendor-swap--vendor-benefit","source":"cc-vendor-swap","target":"vendor-benefit","connectors":["vendor-swap"]},{"id":"S05:gpt-in-cc--gpt-in-cc-performance","source":"gpt-in-cc","target":"gpt-in-cc-performance","connectors":["vendor-swap"]},{"id":"S05:gpt-in-cc--vendor-benefit","source":"gpt-in-cc","target":"vendor-benefit","connectors":["vendor-swap"]},{"id":"S05:gpt-in-cc-performance--vendor-benefit","source":"gpt-in-cc-performance","target":"vendor-benefit","connectors":["vendor-swap"]}],"edge_layers":{"repaired":0,"valid":6,"weak":0,"generic-only":0},"edges":[{"id":"S05:cc-vendor-swap--gpt-in-cc","source":"cc-vendor-swap","target":"gpt-in-cc","shared_tags":["claude-code","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"},{"id":"S05:cc-vendor-swap--gpt-in-cc-performance","source":"cc-vendor-swap","target":"gpt-in-cc-performance","shared_tags":["claude-code","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"},{"id":"S05:cc-vendor-swap--vendor-benefit","source":"cc-vendor-swap","target":"vendor-benefit","shared_tags":["claude-code","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"},{"id":"S05:gpt-in-cc--gpt-in-cc-performance","source":"gpt-in-cc","target":"gpt-in-cc-performance","shared_tags":["claude-code","gpt","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"},{"id":"S05:gpt-in-cc--vendor-benefit","source":"gpt-in-cc","target":"vendor-benefit","shared_tags":["claude-code","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"},{"id":"S05:gpt-in-cc-performance--vendor-benefit","source":"gpt-in-cc-performance","target":"vendor-benefit","shared_tags":["claude-code","llm","vendor-swap"],"allowed_connectors":["vendor-swap"],"layer":"valid"}]},{"id":"S06","title":"GPT 很會深挖，但要替它畫出範圍與停止線","minimum_common_concept":"同一種服從與深挖能力，在規則清楚時有利；缺少成本、範圍與停止條件時，會把推演風險變成額外需求或程式碼。","members":["gpt-in-cc-performance","gpt-review-tunnel-vision","sol-overimplementation"],"valid_connector_allowlist":["gpt"],"components":[["gpt-in-cc-performance","gpt-review-tunnel-vision","sol-overimplementation"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S06:gpt-in-cc-performance--gpt-review-tunnel-vision","source":"gpt-in-cc-performance","target":"gpt-review-tunnel-vision","connectors":["gpt"]},{"id":"S06:gpt-in-cc-performance--sol-overimplementation","source":"gpt-in-cc-performance","target":"sol-overimplementation","connectors":["gpt"]},{"id":"S06:gpt-review-tunnel-vision--sol-overimplementation","source":"gpt-review-tunnel-vision","target":"sol-overimplementation","connectors":["gpt"]}],"edge_layers":{"repaired":0,"valid":3,"weak":0,"generic-only":0},"edges":[{"id":"S06:gpt-in-cc-performance--gpt-review-tunnel-vision","source":"gpt-in-cc-performance","target":"gpt-review-tunnel-vision","shared_tags":["claude-code","gpt"],"allowed_connectors":["gpt"],"layer":"valid"},{"id":"S06:gpt-in-cc-performance--sol-overimplementation","source":"gpt-in-cc-performance","target":"sol-overimplementation","shared_tags":["claude-code","gpt"],"allowed_connectors":["gpt"],"layer":"valid"},{"id":"S06:gpt-review-tunnel-vision--sol-overimplementation","source":"gpt-review-tunnel-vision","target":"sol-overimplementation","shared_tags":["claude-code","gpt","methodology","scope-control"],"allowed_connectors":["gpt"],"layer":"valid"}]},{"id":"S07","title":"AI 說成功或沒出聲，都不能直接當成現實","minimum_common_concept":"報告層訊號必須回到外部可觀察結果；成功可能是假成功，沒有回報也可能只是不報。","members":["exit-0-illusion","protocol-model-dependency","websearch-misses-official-docs"],"valid_connector_allowlist":["report-vs-reality"],"components":[["exit-0-illusion","protocol-model-dependency","websearch-misses-official-docs"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S07:exit-0-illusion--protocol-model-dependency","source":"exit-0-illusion","target":"protocol-model-dependency","connectors":["report-vs-reality"]},{"id":"S07:exit-0-illusion--websearch-misses-official-docs","source":"exit-0-illusion","target":"websearch-misses-official-docs","connectors":["report-vs-reality"]},{"id":"S07:protocol-model-dependency--websearch-misses-official-docs","source":"protocol-model-dependency","target":"websearch-misses-official-docs","connectors":["report-vs-reality"]}],"edge_layers":{"repaired":3,"valid":0,"weak":0,"generic-only":0},"edges":[{"id":"S07:exit-0-illusion--protocol-model-dependency","source":"exit-0-illusion","target":"protocol-model-dependency","shared_tags":["claude-code","report-vs-reality"],"allowed_connectors":["report-vs-reality"],"layer":"repaired"},{"id":"S07:exit-0-illusion--websearch-misses-official-docs","source":"exit-0-illusion","target":"websearch-misses-official-docs","shared_tags":["claude-code","report-vs-reality"],"allowed_connectors":["report-vs-reality"],"layer":"repaired"},{"id":"S07:protocol-model-dependency--websearch-misses-official-docs","source":"protocol-model-dependency","target":"websearch-misses-official-docs","shared_tags":["claude-code","report-vs-reality"],"allowed_connectors":["report-vs-reality"],"layer":"repaired"}]},{"id":"S08","title":"完成宣告監工：程式先篩，模型只判剩下的語意","minimum_common_concept":"對 AI 說做完的治理，先由程式拿結構化證據縮小案件，再讓模型只處理規則無法判斷的殘餘，最後用真實誤報與命中紀錄決定去留。","members":["checker-layoff","exit-0-illusion","hook-watchdog","local-llm-hook-judge"],"valid_connector_allowlist":["verify"],"components":[["checker-layoff","exit-0-illusion","hook-watchdog","local-llm-hook-judge"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S08:checker-layoff--exit-0-illusion","source":"checker-layoff","target":"exit-0-illusion","connectors":["verify"]},{"id":"S08:checker-layoff--hook-watchdog","source":"checker-layoff","target":"hook-watchdog","connectors":["verify"]},{"id":"S08:checker-layoff--local-llm-hook-judge","source":"checker-layoff","target":"local-llm-hook-judge","connectors":["verify"]},{"id":"S08:exit-0-illusion--hook-watchdog","source":"exit-0-illusion","target":"hook-watchdog","connectors":["verify"]},{"id":"S08:exit-0-illusion--local-llm-hook-judge","source":"exit-0-illusion","target":"local-llm-hook-judge","connectors":["verify"]},{"id":"S08:hook-watchdog--local-llm-hook-judge","source":"hook-watchdog","target":"local-llm-hook-judge","connectors":["verify"]}],"edge_layers":{"repaired":5,"valid":1,"weak":0,"generic-only":0},"edges":[{"id":"S08:checker-layoff--exit-0-illusion","source":"checker-layoff","target":"exit-0-illusion","shared_tags":["claude-code","verify"],"allowed_connectors":["verify"],"layer":"repaired"},{"id":"S08:checker-layoff--hook-watchdog","source":"checker-layoff","target":"hook-watchdog","shared_tags":["claude-code","hook","verify"],"allowed_connectors":["verify"],"layer":"repaired"},{"id":"S08:checker-layoff--local-llm-hook-judge","source":"checker-layoff","target":"local-llm-hook-judge","shared_tags":["claude-code","hook","llm","trial-review","verify"],"allowed_connectors":["verify"],"layer":"repaired"},{"id":"S08:exit-0-illusion--hook-watchdog","source":"exit-0-illusion","target":"hook-watchdog","shared_tags":["claude-code","verify"],"allowed_connectors":["verify"],"layer":"valid"},{"id":"S08:exit-0-illusion--local-llm-hook-judge","source":"exit-0-illusion","target":"local-llm-hook-judge","shared_tags":["claude-code","verify"],"allowed_connectors":["verify"],"layer":"repaired"},{"id":"S08:hook-watchdog--local-llm-hook-judge","source":"hook-watchdog","target":"local-llm-hook-judge","shared_tags":["claude-code","hook","verify"],"allowed_connectors":["verify"],"layer":"repaired"}]},{"id":"S09","title":"規矩要用多硬，還要放在看得到證據的位置","minimum_common_concept":"先把可列舉證據交給程式；是否升成 hook、硬攔截或人工放行，取決於復發、誤攔成本與攔截位置，不是焦慮程度。","members":["checker-layoff","dcg-safety-lock","hook-watchdog","inline-the-rules","model-routing","prose-exams","protocol-model-dependency","rule-ladder","steal-determinism-layer","test-theater"],"valid_connector_allowlist":["hook","automation"],"components":[["checker-layoff","dcg-safety-lock","hook-watchdog","inline-the-rules","model-routing","prose-exams","protocol-model-dependency","rule-ladder","steal-determinism-layer","test-theater"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S09:checker-layoff--dcg-safety-lock","source":"checker-layoff","target":"dcg-safety-lock","connectors":["hook"]},{"id":"S09:checker-layoff--hook-watchdog","source":"checker-layoff","target":"hook-watchdog","connectors":["hook"]},{"id":"S09:checker-layoff--inline-the-rules","source":"checker-layoff","target":"inline-the-rules","connectors":["hook"]},{"id":"S09:checker-layoff--prose-exams","source":"checker-layoff","target":"prose-exams","connectors":["hook"]},{"id":"S09:checker-layoff--protocol-model-dependency","source":"checker-layoff","target":"protocol-model-dependency","connectors":["hook"]},{"id":"S09:checker-layoff--rule-ladder","source":"checker-layoff","target":"rule-ladder","connectors":["hook"]},{"id":"S09:dcg-safety-lock--hook-watchdog","source":"dcg-safety-lock","target":"hook-watchdog","connectors":["hook"]},{"id":"S09:dcg-safety-lock--inline-the-rules","source":"dcg-safety-lock","target":"inline-the-rules","connectors":["hook"]},{"id":"S09:dcg-safety-lock--prose-exams","source":"dcg-safety-lock","target":"prose-exams","connectors":["hook"]},{"id":"S09:dcg-safety-lock--protocol-model-dependency","source":"dcg-safety-lock","target":"protocol-model-dependency","connectors":["hook"]},{"id":"S09:dcg-safety-lock--rule-ladder","source":"dcg-safety-lock","target":"rule-ladder","connectors":["hook"]},{"id":"S09:hook-watchdog--inline-the-rules","source":"hook-watchdog","target":"inline-the-rules","connectors":["hook"]},{"id":"S09:hook-watchdog--model-routing","source":"hook-watchdog","target":"model-routing","connectors":["automation"]},{"id":"S09:hook-watchdog--prose-exams","source":"hook-watchdog","target":"prose-exams","connectors":["hook"]},{"id":"S09:hook-watchdog--protocol-model-dependency","source":"hook-watchdog","target":"protocol-model-dependency","connectors":["hook"]},{"id":"S09:hook-watchdog--rule-ladder","source":"hook-watchdog","target":"rule-ladder","connectors":["automation","hook"]},{"id":"S09:hook-watchdog--steal-determinism-layer","source":"hook-watchdog","target":"steal-determinism-layer","connectors":["automation"]},{"id":"S09:hook-watchdog--test-theater","source":"hook-watchdog","target":"test-theater","connectors":["automation"]},{"id":"S09:inline-the-rules--prose-exams","source":"inline-the-rules","target":"prose-exams","connectors":["hook"]},{"id":"S09:inline-the-rules--protocol-model-dependency","source":"inline-the-rules","target":"protocol-model-dependency","connectors":["hook"]},{"id":"S09:inline-the-rules--rule-ladder","source":"inline-the-rules","target":"rule-ladder","connectors":["hook"]},{"id":"S09:model-routing--rule-ladder","source":"model-routing","target":"rule-ladder","connectors":["automation"]},{"id":"S09:model-routing--steal-determinism-layer","source":"model-routing","target":"steal-determinism-layer","connectors":["automation"]},{"id":"S09:model-routing--test-theater","source":"model-routing","target":"test-theater","connectors":["automation"]},{"id":"S09:prose-exams--protocol-model-dependency","source":"prose-exams","target":"protocol-model-dependency","connectors":["hook"]},{"id":"S09:prose-exams--rule-ladder","source":"prose-exams","target":"rule-ladder","connectors":["hook"]},{"id":"S09:protocol-model-dependency--rule-ladder","source":"protocol-model-dependency","target":"rule-ladder","connectors":["hook"]},{"id":"S09:rule-ladder--steal-determinism-layer","source":"rule-ladder","target":"steal-determinism-layer","connectors":["automation"]},{"id":"S09:rule-ladder--test-theater","source":"rule-ladder","target":"test-theater","connectors":["automation"]},{"id":"S09:steal-determinism-layer--test-theater","source":"steal-determinism-layer","target":"test-theater","connectors":["automation"]}],"edge_layers":{"repaired":9,"valid":21,"weak":1,"generic-only":9},"edges":[{"id":"S09:checker-layoff--dcg-safety-lock","source":"checker-layoff","target":"dcg-safety-lock","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--hook-watchdog","source":"checker-layoff","target":"hook-watchdog","shared_tags":["claude-code","hook","verify"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--inline-the-rules","source":"checker-layoff","target":"inline-the-rules","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--model-routing","source":"checker-layoff","target":"model-routing","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:checker-layoff--prose-exams","source":"checker-layoff","target":"prose-exams","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--protocol-model-dependency","source":"checker-layoff","target":"protocol-model-dependency","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--rule-ladder","source":"checker-layoff","target":"rule-ladder","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:checker-layoff--steal-determinism-layer","source":"checker-layoff","target":"steal-determinism-layer","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:dcg-safety-lock--hook-watchdog","source":"dcg-safety-lock","target":"hook-watchdog","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:dcg-safety-lock--inline-the-rules","source":"dcg-safety-lock","target":"inline-the-rules","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:dcg-safety-lock--model-routing","source":"dcg-safety-lock","target":"model-routing","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:dcg-safety-lock--prose-exams","source":"dcg-safety-lock","target":"prose-exams","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:dcg-safety-lock--protocol-model-dependency","source":"dcg-safety-lock","target":"protocol-model-dependency","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:dcg-safety-lock--rule-ladder","source":"dcg-safety-lock","target":"rule-ladder","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:dcg-safety-lock--steal-determinism-layer","source":"dcg-safety-lock","target":"steal-determinism-layer","shared_tags":["claude-code","tool-adoption"],"allowed_connectors":[],"layer":"weak"},{"id":"S09:hook-watchdog--inline-the-rules","source":"hook-watchdog","target":"inline-the-rules","shared_tags":["claude-code","hook","methodology"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:hook-watchdog--model-routing","source":"hook-watchdog","target":"model-routing","shared_tags":["automation","claude-code","methodology"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:hook-watchdog--prose-exams","source":"hook-watchdog","target":"prose-exams","shared_tags":["claude-code","hook","methodology"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:hook-watchdog--protocol-model-dependency","source":"hook-watchdog","target":"protocol-model-dependency","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:hook-watchdog--rule-ladder","source":"hook-watchdog","target":"rule-ladder","shared_tags":["automation","claude-code","hook","methodology"],"allowed_connectors":["automation","hook"],"layer":"valid"},{"id":"S09:hook-watchdog--steal-determinism-layer","source":"hook-watchdog","target":"steal-determinism-layer","shared_tags":["automation","claude-code","methodology"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:hook-watchdog--test-theater","source":"hook-watchdog","target":"test-theater","shared_tags":["automation"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:inline-the-rules--model-routing","source":"inline-the-rules","target":"model-routing","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:inline-the-rules--prose-exams","source":"inline-the-rules","target":"prose-exams","shared_tags":["claude-code","hook","methodology"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:inline-the-rules--protocol-model-dependency","source":"inline-the-rules","target":"protocol-model-dependency","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:inline-the-rules--rule-ladder","source":"inline-the-rules","target":"rule-ladder","shared_tags":["claude-code","hook","methodology"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:inline-the-rules--steal-determinism-layer","source":"inline-the-rules","target":"steal-determinism-layer","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:model-routing--prose-exams","source":"model-routing","target":"prose-exams","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:model-routing--protocol-model-dependency","source":"model-routing","target":"protocol-model-dependency","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:model-routing--rule-ladder","source":"model-routing","target":"rule-ladder","shared_tags":["automation","claude-code","methodology"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:model-routing--steal-determinism-layer","source":"model-routing","target":"steal-determinism-layer","shared_tags":["automation","claude-code","methodology"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:model-routing--test-theater","source":"model-routing","target":"test-theater","shared_tags":["automation"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:prose-exams--protocol-model-dependency","source":"prose-exams","target":"protocol-model-dependency","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:prose-exams--rule-ladder","source":"prose-exams","target":"rule-ladder","shared_tags":["claude-code","hook","methodology"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:prose-exams--steal-determinism-layer","source":"prose-exams","target":"steal-determinism-layer","shared_tags":["claude-code","methodology"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:protocol-model-dependency--rule-ladder","source":"protocol-model-dependency","target":"rule-ladder","shared_tags":["claude-code","hook"],"allowed_connectors":["hook"],"layer":"valid"},{"id":"S09:protocol-model-dependency--steal-determinism-layer","source":"protocol-model-dependency","target":"steal-determinism-layer","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S09:rule-ladder--steal-determinism-layer","source":"rule-ladder","target":"steal-determinism-layer","shared_tags":["automation","claude-code","methodology"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:rule-ladder--test-theater","source":"rule-ladder","target":"test-theater","shared_tags":["automation"],"allowed_connectors":["automation"],"layer":"repaired"},{"id":"S09:steal-determinism-layer--test-theater","source":"steal-determinism-layer","target":"test-theater","shared_tags":["automation"],"allowed_connectors":["automation"],"layer":"repaired"}]},{"id":"S10","title":"review 要靠不同視角找，也要靠證據與影響面驗","minimum_common_concept":"review 不只要增加視角；還要讓發現接受獨立複查、讓人保留否決權，並在審查前補上 diff 本身看不到的影響面。","members":["model-routing","one-model-not-enough","sem-blast-radius","spec-review-round"],"valid_connector_allowlist":["code-review","review-governance"],"components":[["model-routing","one-model-not-enough","sem-blast-radius","spec-review-round"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S10:model-routing--one-model-not-enough","source":"model-routing","target":"one-model-not-enough","connectors":["review-governance"]},{"id":"S10:model-routing--sem-blast-radius","source":"model-routing","target":"sem-blast-radius","connectors":["review-governance"]},{"id":"S10:model-routing--spec-review-round","source":"model-routing","target":"spec-review-round","connectors":["review-governance"]},{"id":"S10:one-model-not-enough--sem-blast-radius","source":"one-model-not-enough","target":"sem-blast-radius","connectors":["code-review","review-governance"]},{"id":"S10:one-model-not-enough--spec-review-round","source":"one-model-not-enough","target":"spec-review-round","connectors":["review-governance"]},{"id":"S10:sem-blast-radius--spec-review-round","source":"sem-blast-radius","target":"spec-review-round","connectors":["review-governance"]}],"edge_layers":{"repaired":5,"valid":1,"weak":0,"generic-only":0},"edges":[{"id":"S10:model-routing--one-model-not-enough","source":"model-routing","target":"one-model-not-enough","shared_tags":["claude-code","review-governance"],"allowed_connectors":["review-governance"],"layer":"repaired"},{"id":"S10:model-routing--sem-blast-radius","source":"model-routing","target":"sem-blast-radius","shared_tags":["claude-code","review-governance"],"allowed_connectors":["review-governance"],"layer":"repaired"},{"id":"S10:model-routing--spec-review-round","source":"model-routing","target":"spec-review-round","shared_tags":["claude-code","methodology","review-governance"],"allowed_connectors":["review-governance"],"layer":"repaired"},{"id":"S10:one-model-not-enough--sem-blast-radius","source":"one-model-not-enough","target":"sem-blast-radius","shared_tags":["claude-code","code-review","review-governance"],"allowed_connectors":["code-review","review-governance"],"layer":"valid"},{"id":"S10:one-model-not-enough--spec-review-round","source":"one-model-not-enough","target":"spec-review-round","shared_tags":["claude-code","review-governance"],"allowed_connectors":["review-governance"],"layer":"repaired"},{"id":"S10:sem-blast-radius--spec-review-round","source":"sem-blast-radius","target":"spec-review-round","shared_tags":["claude-code","review-governance"],"allowed_connectors":["review-governance"],"layer":"repaired"}]},{"id":"S11","title":"review 需要停止線，不能把每條疑慮都做成新需求","minimum_common_concept":"review finding 與推演風險不是自動的實作需求；原始驗收、最小修正、範圍交還與具名不修理由共同構成停止條件。","members":["gpt-review-tunnel-vision","sol-overimplementation"],"valid_connector_allowlist":["scope-control"],"components":[["gpt-review-tunnel-vision","sol-overimplementation"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S11:gpt-review-tunnel-vision--sol-overimplementation","source":"gpt-review-tunnel-vision","target":"sol-overimplementation","connectors":["scope-control"]}],"edge_layers":{"repaired":1,"valid":0,"weak":0,"generic-only":0},"edges":[{"id":"S11:gpt-review-tunnel-vision--sol-overimplementation","source":"gpt-review-tunnel-vision","target":"sol-overimplementation","shared_tags":["claude-code","gpt","methodology","scope-control"],"allowed_connectors":["scope-control"],"layer":"repaired"}]},{"id":"S12","title":"真正的 AI 成本，要把固定開機費、快取、配額與單價一起算","minimum_common_concept":"不能只看總 token 或工具自報省幅；固定啟動成本、prompt cache、proxy 路徑、模型單價與配額權重會改變最後是否划算。","members":["model-routing","proxy-warmup-cost","subagent-boot-cost","token-saving-tools"],"valid_connector_allowlist":["token-optimization","model-routing"],"components":[["model-routing","proxy-warmup-cost","subagent-boot-cost","token-saving-tools"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S12:model-routing--subagent-boot-cost","source":"model-routing","target":"subagent-boot-cost","connectors":["model-routing"]},{"id":"S12:proxy-warmup-cost--subagent-boot-cost","source":"proxy-warmup-cost","target":"subagent-boot-cost","connectors":["token-optimization"]},{"id":"S12:proxy-warmup-cost--token-saving-tools","source":"proxy-warmup-cost","target":"token-saving-tools","connectors":["token-optimization"]},{"id":"S12:subagent-boot-cost--token-saving-tools","source":"subagent-boot-cost","target":"token-saving-tools","connectors":["token-optimization"]}],"edge_layers":{"repaired":0,"valid":4,"weak":0,"generic-only":2},"edges":[{"id":"S12:model-routing--proxy-warmup-cost","source":"model-routing","target":"proxy-warmup-cost","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S12:model-routing--subagent-boot-cost","source":"model-routing","target":"subagent-boot-cost","shared_tags":["claude-code","model-routing"],"allowed_connectors":["model-routing"],"layer":"valid"},{"id":"S12:model-routing--token-saving-tools","source":"model-routing","target":"token-saving-tools","shared_tags":["claude-code"],"allowed_connectors":[],"layer":"generic-only"},{"id":"S12:proxy-warmup-cost--subagent-boot-cost","source":"proxy-warmup-cost","target":"subagent-boot-cost","shared_tags":["claude-code","token-optimization"],"allowed_connectors":["token-optimization"],"layer":"valid"},{"id":"S12:proxy-warmup-cost--token-saving-tools","source":"proxy-warmup-cost","target":"token-saving-tools","shared_tags":["claude-code","token-optimization"],"allowed_connectors":["token-optimization"],"layer":"valid"},{"id":"S12:subagent-boot-cost--token-saving-tools","source":"subagent-boot-cost","target":"token-saving-tools","shared_tags":["claude-code","token-optimization"],"allowed_connectors":["token-optimization"],"layer":"valid"}]},{"id":"S13","title":"新工具要有觀察期，到期看真實行為決定留、砍或延後","minimum_common_concept":"新工具或機制要有觀察窗；到期以真實觸發、命中、誤報、人的介入與故障紀錄，決定保留、移除、收窄或延長。","members":["absorb-awesome-list","bumblebee-still-on-disk","checker-layoff","dcg-safety-lock","local-llm-hook-judge","prose-exams","sem-blast-radius","trial-review-system"],"valid_connector_allowlist":["tool-adoption","trial-review"],"components":[["absorb-awesome-list","bumblebee-still-on-disk","checker-layoff","dcg-safety-lock","local-llm-hook-judge","prose-exams","sem-blast-radius","trial-review-system"]],"connected":true,"status":"healthy","valid_edges":[{"id":"S13:absorb-awesome-list--bumblebee-still-on-disk","source":"absorb-awesome-list","target":"bumblebee-still-on-disk","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--checker-layoff","source":"absorb-awesome-list","target":"checker-layoff","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--dcg-safety-lock","source":"absorb-awesome-list","target":"dcg-safety-lock","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--local-llm-hook-judge","source":"absorb-awesome-list","target":"local-llm-hook-judge","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--prose-exams","source":"absorb-awesome-list","target":"prose-exams","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--sem-blast-radius","source":"absorb-awesome-list","target":"sem-blast-radius","connectors":["trial-review"]},{"id":"S13:absorb-awesome-list--trial-review-system","source":"absorb-awesome-list","target":"trial-review-system","connectors":["trial-review"]},{"id":"S13:bumblebee-still-on-disk--checker-layoff","source":"bumblebee-still-on-disk","target":"checker-layoff","connectors":["trial-review"]},{"id":"S13:bumblebee-still-on-disk--dcg-safety-lock","source":"bumblebee-still-on-disk","target":"dcg-safety-lock","connectors":["tool-adoption","trial-review"]},{"id":"S13:bumblebee-still-on-disk--local-llm-hook-judge","source":"bumblebee-still-on-disk","target":"local-llm-hook-judge","connectors":["trial-review"]},{"id":"S13:bumblebee-still-on-disk--prose-exams","source":"bumblebee-still-on-disk","target":"prose-exams","connectors":["trial-review"]},{"id":"S13:bumblebee-still-on-disk--sem-blast-radius","source":"bumblebee-still-on-disk","target":"sem-blast-radius","connectors":["tool-adoption","trial-review"]},{"id":"S13:bumblebee-still-on-disk--trial-review-system","source":"bumblebee-still-on-disk","target":"trial-review-system","connectors":["tool-adoption","trial-review"]},{"id":"S13:checker-layoff--dcg-safety-lock","source":"checker-layoff","target":"dcg-safety-lock","connectors":["trial-review"]},{"id":"S13:checker-layoff--local-llm-hook-judge","source":"checker-layoff","target":"local-llm-hook-judge","connectors":["trial-review"]},{"id":"S13:checker-layoff--prose-exams","source":"checker-layoff","target":"prose-exams","connectors":["trial-review"]},{"id":"S13:checker-layoff--sem-blast-radius","source":"checker-layoff","target":"sem-blast-radius","connectors":["trial-review"]},{"id":"S13:checker-layoff--trial-review-system","source":"checker-layoff","target":"trial-review-system","connectors":["trial-review"]},{"id":"S13:dcg-safety-lock--local-llm-hook-judge","source":"dcg-safety-lock","target":"local-llm-hook-judge","connectors":["trial-review"]},{"id":"S13:dcg-safety-lock--prose-exams","source":"dcg-safety-lock","target":"prose-exams","connectors":["trial-review"]},{"id":"S13:dcg-safety-lock--sem-blast-radius","source":"dcg-safety-lock","target":"sem-blast-radius","connectors":["tool-adoption","trial-review"]},{"id":"S13:dcg-safety-lock--trial-review-system","source":"dcg-safety-lock","target":"trial-review-system","connectors":["tool-adoption","trial-review"]},{"id":"S13:local-llm-hook-judge--prose-exams","source":"local-llm-hook-judge","target":"prose-exams","connectors":["trial-review"]},{"id":"S13:local-llm-hook-judge--sem-blast-radius","source":"local-llm-hook-judge","target":"sem-blast-radius","connectors":["trial-review"]},{"id":"S13:local-llm-hook-judge--trial-review-system","source":"local-llm-hook-judge","target":"trial-review-system","connectors":["trial-review"]},{"id":"S13:prose-exams--sem-blast-radius","source":"prose-exams","target":"sem-blast-radius","connectors":["trial-review"]},{"id":"S13:prose-exams--trial-review-system","source":"prose-exams","target":"trial-review-system","connectors":["trial-review"]},{"id":"S13:sem-blast-radius--trial-review-system","source":"sem-blast-radius","target":"trial-review-system","connectors":["tool-adoption","trial-review"]}],"edge_layers":{"repaired":22,"valid":6,"weak":0,"generic-only":0},"edges":[{"id":"S13:absorb-awesome-list--bumblebee-still-on-disk","source":"absorb-awesome-list","target":"bumblebee-still-on-disk","shared_tags":["trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--checker-layoff","source":"absorb-awesome-list","target":"checker-layoff","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--dcg-safety-lock","source":"absorb-awesome-list","target":"dcg-safety-lock","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--local-llm-hook-judge","source":"absorb-awesome-list","target":"local-llm-hook-judge","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--prose-exams","source":"absorb-awesome-list","target":"prose-exams","shared_tags":["claude-code","methodology","trial-review","workflow"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--sem-blast-radius","source":"absorb-awesome-list","target":"sem-blast-radius","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:absorb-awesome-list--trial-review-system","source":"absorb-awesome-list","target":"trial-review-system","shared_tags":["claude-code","methodology","trial-review","workflow"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:bumblebee-still-on-disk--checker-layoff","source":"bumblebee-still-on-disk","target":"checker-layoff","shared_tags":["trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:bumblebee-still-on-disk--dcg-safety-lock","source":"bumblebee-still-on-disk","target":"dcg-safety-lock","shared_tags":["security","tool-adoption","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"},{"id":"S13:bumblebee-still-on-disk--local-llm-hook-judge","source":"bumblebee-still-on-disk","target":"local-llm-hook-judge","shared_tags":["trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:bumblebee-still-on-disk--prose-exams","source":"bumblebee-still-on-disk","target":"prose-exams","shared_tags":["trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:bumblebee-still-on-disk--sem-blast-radius","source":"bumblebee-still-on-disk","target":"sem-blast-radius","shared_tags":["tool-adoption","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"},{"id":"S13:bumblebee-still-on-disk--trial-review-system","source":"bumblebee-still-on-disk","target":"trial-review-system","shared_tags":["tool-adoption","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"},{"id":"S13:checker-layoff--dcg-safety-lock","source":"checker-layoff","target":"dcg-safety-lock","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:checker-layoff--local-llm-hook-judge","source":"checker-layoff","target":"local-llm-hook-judge","shared_tags":["claude-code","hook","llm","trial-review","verify"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:checker-layoff--prose-exams","source":"checker-layoff","target":"prose-exams","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:checker-layoff--sem-blast-radius","source":"checker-layoff","target":"sem-blast-radius","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:checker-layoff--trial-review-system","source":"checker-layoff","target":"trial-review-system","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:dcg-safety-lock--local-llm-hook-judge","source":"dcg-safety-lock","target":"local-llm-hook-judge","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:dcg-safety-lock--prose-exams","source":"dcg-safety-lock","target":"prose-exams","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:dcg-safety-lock--sem-blast-radius","source":"dcg-safety-lock","target":"sem-blast-radius","shared_tags":["claude-code","hook","tool-adoption","tooling","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"},{"id":"S13:dcg-safety-lock--trial-review-system","source":"dcg-safety-lock","target":"trial-review-system","shared_tags":["claude-code","tool-adoption","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"},{"id":"S13:local-llm-hook-judge--prose-exams","source":"local-llm-hook-judge","target":"prose-exams","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:local-llm-hook-judge--sem-blast-radius","source":"local-llm-hook-judge","target":"sem-blast-radius","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:local-llm-hook-judge--trial-review-system","source":"local-llm-hook-judge","target":"trial-review-system","shared_tags":["claude-code","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:prose-exams--sem-blast-radius","source":"prose-exams","target":"sem-blast-radius","shared_tags":["claude-code","hook","trial-review"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:prose-exams--trial-review-system","source":"prose-exams","target":"trial-review-system","shared_tags":["claude-code","methodology","trial-review","workflow"],"allowed_connectors":["trial-review"],"layer":"repaired"},{"id":"S13:sem-blast-radius--trial-review-system","source":"sem-blast-radius","target":"trial-review-system","shared_tags":["claude-code","tool-adoption","trial-review"],"allowed_connectors":["tool-adoption","trial-review"],"layer":"valid"}]}],"disconnected_findings":[],"before_findings":[{"id":"F01","series_id":"S04","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["deep-research-rate-limit","unattended-workflow-resume","workflow-vs-skill"],"expected_relation":"同一支 deep-research workflow 的固化、burst 限流、resume 三段工程鏈。","before_reason":"`workflow` 只表示可重跑編排，另有五篇非本系列文章也使用；它沒有指出同一支 deep-research workflow。","before_recommendation":"保留 `workflow`，把既有 `deep-research` 補到 `workflow-vs-skill` 與 `unattended-workflow-resume`。","resolution_connectors":["deep-research"],"resolution_members":["deep-research-rate-limit","unattended-workflow-resume","workflow-vs-skill"]},{"id":"F02","series_id":"S07","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["exit-0-illusion","protocol-model-dependency","websearch-misses-official-docs"],"expected_relation":"AI 的成功、沉默或查證宣稱都要回到可觀察現實。","before_reason":"`verify`、`model-behavior`、`fact-check` 各自太窄，沒有中層 tag 表達回報層與現實層落差。","before_recommendation":"保留三個窄 tag，新增中層 connector，例如 `report-vs-reality`，補到三篇。","resolution_connectors":["report-vs-reality"],"resolution_members":["exit-0-illusion","protocol-model-dependency","websearch-misses-official-docs"]},{"id":"F03","series_id":"S08","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["checker-layoff","local-llm-hook-judge"],"expected_relation":"完成宣告監工從規則前篩、模型判殘餘，到成績單決定去留。","before_reason":"`hook` 與 `llm` 表達執行位置與模型類型，沒有表達完成宣告驗證職責。","before_recommendation":"把既有 `verify` 補到 `local-llm-hook-judge` 與 `checker-layoff`，保留 `hook`、`llm`、`evaluation`。","resolution_connectors":["verify"],"resolution_members":["checker-layoff","local-llm-hook-judge"]},{"id":"F04","series_id":"S09","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["model-routing","steal-determinism-layer","test-theater"],"expected_relation":"規矩的強度與攔截位置應按可列舉證據、復發與誤攔成本決定。","before_reason":"現有 tag 分別描述工具採用、模型路由與 mutation testing，缺少共同的自動檢查／攔截層。","before_recommendation":"優先把既有 `automation` 補到三篇；若作者認為 `automation` 太寬，再新建 `rule-enforcement`，不要把窄 tag 併掉。","resolution_connectors":["automation"],"resolution_members":["model-routing","steal-determinism-layer","test-theater"]},{"id":"F05","series_id":"S10","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["model-routing","spec-review-round"],"expected_relation":"review 要同時處理多視角、獨立驗證、影響面與人類拍板。","before_reason":"`code-review` 與 `spec-review` 刻意分層是對的，但缺少橫跨 review 治理目的的父層 connector。","before_recommendation":"保留 `code-review`、`spec-review`、`model-routing`，新增 `review-governance` 至四篇。","resolution_connectors":["review-governance"],"resolution_members":["model-routing","one-model-not-enough","sem-blast-radius","spec-review-round"]},{"id":"F06","series_id":"S11","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["gpt-review-tunnel-vision","sol-overimplementation"],"expected_relation":"推演風險與 review finding 不能自動升成新需求；需要範圍與停止條件。","before_reason":"共享模型身分是交叉維度，沒有表達兩篇共同的 YAGNI、範圍控制與停止線。","before_recommendation":"保留 `gpt`，另補 `scope-control`（或同義 connector）到兩篇。","resolution_connectors":["scope-control"],"resolution_members":["gpt-review-tunnel-vision","sol-overimplementation"]},{"id":"F07","series_id":"S13","before_verdict":"disconnected","after_verdict":"resolved","affected_articles":["absorb-awesome-list","checker-layoff","local-llm-hook-judge","prose-exams"],"expected_relation":"新工具或機制要設觀察窗，按真實命中、誤報、介入與故障決定留、砍或延後。","before_reason":"工具採用、workflow 與 hook 各描述對象或載體，沒有共同表達到期 review 與裁決。","before_recommendation":"新增 `trial-review` connector 至八篇；保留 `tool-adoption`、`workflow`、`hook` 等窄 tag。","resolution_connectors":["trial-review"],"resolution_members":["absorb-awesome-list","bumblebee-still-on-disk","checker-layoff","dcg-safety-lock","local-llm-hook-judge","prose-exams","sem-blast-radius","trial-review-system"]}],"merge_candidates":[{"id":"M01","tags":["code-search","mcp"],"decision":"do-not-merge","reason":"一個是閱讀主題與採用問題，一個是介面／server 交付型態。","counterevidence":"鄰居 Jaccard 2/3 來自兩篇 code search 文章都透過 MCP 交付；`token-saving-tools` 只有 `mcp`，證明集合不等價。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L173-L183"},{"id":"M02","tags":["llm","vendor-swap"],"decision":"do-not-merge","reason":"`llm` 是父層，`vendor-swap` 是 Claude Code 更換供應商的窄子題。","counterevidence":"`checker-layoff`、`local-llm-hook-judge` 在 `llm` 鄰居內但不屬 vendor swap。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L173-L183"},{"id":"M03","tags":["code-review","spec-review"],"decision":"do-not-merge","reason":"兩者審查的工件與裁決時點不同。","counterevidence":"S10 的缺口需要父層 `review-governance`，合併會抹掉 diff review 與 spec review 邊界。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L127-L156"},{"id":"M04","tags":["automation","hook"],"decision":"do-not-merge","reason":"automation 是目的／行為，hook 是觸發與攔截機制。","counterevidence":"`hook` 有 9 篇、`automation` 只有 2 篇；S09 應補 connector，不應把所有 hook 當同一治理目的。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L124-L136"},{"id":"M05","tags":["fact-check","verify"],"decision":"do-not-merge","reason":"fact-check 管外部來源權威，verify 管完成宣告與結果層。","counterevidence":"S07 正因兩者責任不同才需要新的中層 connector。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L133-L167"},{"id":"M06","tags":["tool-adoption","tool-evaluation"],"decision":"do-not-merge","reason":"前者要求真實試用／留下／退役，後者是引入前的 stack-fit 與紙上上限。","counterevidence":"S01 已由同時帶兩類 tag 的文章形成鏈，合併會失去 trial 前後分界。","source":"file:///Users/linhancheng/Desktop/projects/gggodlin-blog/.scratch/tag-relationship-audit/actual-tag-graph.md#L162-L163"}],"intentional_islands":[{"slug":"ai-report-two-lies","verdict":"保留為合理孤島；目前沒有其他文章處理同一套查詢、資料列與儲存格追溯鏈。","reconsider_when":"未來文章直接承接查詢登錄、事實目錄或敘事數字 gate。"},{"slug":"matt-philosophy","verdict":"保留為合理孤島；外部作者立場重建與九軸對照目前只有一篇。","reconsider_when":"未來用相同九軸方法對照另一位作者或方法論。"}],"metrics":{"nodes":40,"tag_assignments":188,"used_tags":58,"registry_tags":58,"unknown_tags":0,"unused_registry_ids":0,"series":13,"series_memberships":60,"healthy_series":13,"disconnected_series":0,"disconnected_findings":0,"before_findings":7,"resolved_before_findings":7,"merge_candidates":6,"intentional_islands":2},"coverage":{"article_slugs":["absorb-awesome-list","agent-tool-reach","ai-report-two-lies","bumblebee-still-on-disk","cc-vendor-swap","check-my-stack","checker-layoff","code-search-adoption","dcg-safety-lock","deep-research-rate-limit","exit-0-illusion","gpt-in-cc","gpt-in-cc-performance","gpt-review-tunnel-vision","hook-watchdog","inline-the-rules","keep-the-wiki-alive","local-llm-hook-judge","matt-philosophy","measure-revealed-adoption","memory-cap-reframe","model-routing","one-model-not-enough","prose-exams","protocol-model-dependency","proxy-warmup-cost","retire-vector-memory","rule-ladder","sem-blast-radius","sol-overimplementation","spec-review-round","steal-determinism-layer","subagent-boot-cost","test-theater","token-saving-tools","trial-review-system","unattended-workflow-resume","vendor-benefit","websearch-misses-official-docs","workflow-vs-skill"],"series_ids":["S01","S02","S03","S04","S05","S06","S07","S08","S09","S10","S11","S12","S13"],"intentional_island_slugs":["ai-report-two-lies","matt-philosophy"],"generic_tags_forbidden_from_allowlists":["claude-code","methodology"],"unknown_tags":[],"unused_registry_ids":[]},"source_receipts":{"corpus_sha256":"5f62559ed735ca1eb305314b02be8167709835657758959b00c9e05ffeb209c4","registry_sha256":"206e558ea7125f65c4578bfa55286be2f5e534a3164e968eb3b4c0bc82af631a","expected_series_contract_sha256":"f64eabaa6aa04679a4a2b5e0b9ff622fe1def7a28784f6e4e3426b2158898ecc","before_relationship_graph_sha256":"ef1120307000d6c3ef277ee3b3983f087c9482262f0453658ea9b7fb86d7a7f7"}}</script>
+  <script>
+    const data = JSON.parse(document.getElementById("graph-data").textContent);
+    const svgNs = "http://www.w3.org/2000/svg";
+    const seriesById = new Map(data.series.map((series) => [series.id, series]));
+    const nodeBySlug = new Map(data.nodes.map((node) => [node.slug, node]));
+    const state = {
+      seriesId: data.series[0].id,
+      layers: { repaired: true, valid: true, weak: false, "generic-only": false }
+    };
+    const layerLabels = {
+      repaired: "修正 connector",
+      valid: "既有有效連線",
+      weak: "交叉維度",
+      "generic-only": "僅泛用 tag"
+    };
+    const controls = {
+      series: document.getElementById("series-select"),
+      repaired: document.getElementById("layer-repaired"),
+      valid: document.getElementById("layer-valid"),
+      weak: document.getElementById("layer-weak"),
+      generic: document.getElementById("layer-generic")
+    };
+    const svg = document.getElementById("network");
+    const tooltip = document.getElementById("tooltip");
+    const liveRegion = document.getElementById("live-region");
+
+    const create = (tag, text, className) => {
+      const element = document.createElement(tag);
+      if (text !== undefined) element.textContent = String(text);
+      if (className) element.className = className;
+      return element;
+    };
+
+    const createSvg = (tag, attributes) => {
+      const element = document.createElementNS(svgNs, tag);
+      Object.entries(attributes ?? {}).forEach(([name, value]) => element.setAttribute(name, String(value)));
+      return element;
+    };
+
+    const appendCell = (row, value, options) => {
+      const settings = options ?? {};
+      const cell = create(settings.header ? "th" : "td");
+      if (settings.header) cell.scope = "row";
+      if (settings.code) cell.append(create("code", value));
+      else cell.textContent = String(value);
+      row.append(cell);
+      return cell;
+    };
+
+    const positionTooltip = (event) => {
+      const margin = 14;
+      const rect = tooltip.getBoundingClientRect();
+      const requestedX = event && event.clientX !== undefined ? event.clientX : window.innerWidth / 2;
+      const requestedY = event && event.clientY !== undefined ? event.clientY : window.innerHeight / 2;
+      tooltip.style.left = Math.min(window.innerWidth - rect.width - margin, Math.max(margin, requestedX + 14)) + "px";
+      tooltip.style.top = Math.min(window.innerHeight - rect.height - margin, Math.max(margin, requestedY + 14)) + "px";
+    };
+
+    const showTooltip = (lines, event) => {
+      tooltip.replaceChildren();
+      lines.forEach((line, index) => tooltip.append(create(index === 0 ? "strong" : "span", line)));
+      tooltip.hidden = false;
+      positionTooltip(event);
+      liveRegion.textContent = lines.join("。");
+    };
+
+    const hideTooltip = () => { tooltip.hidden = true; };
+
+    const bindTooltip = (element, getLines) => {
+      element.addEventListener("pointerenter", (event) => showTooltip(getLines(), event));
+      element.addEventListener("pointermove", positionTooltip);
+      element.addEventListener("pointerleave", hideTooltip);
+      element.addEventListener("focus", (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        showTooltip(getLines(), { clientX: rect.right, clientY: rect.top });
+      });
+      element.addEventListener("blur", hideTooltip);
+    };
+
+    const radialLayout = (members) => {
+      const sorted = [...members].sort();
+      const count = sorted.length;
+      const centerX = 400;
+      const centerY = 275;
+      const radiusX = count <= 4 ? 195 : 240;
+      const radiusY = count <= 4 ? 155 : 205;
+      return new Map(sorted.map((slug, index) => {
+        const angle = -Math.PI / 2 + Math.PI * 2 * index / count;
+        return [slug, {
+          x: centerX + Math.cos(angle) * radiusX,
+          y: centerY + Math.sin(angle) * radiusY,
+          angle
+        }];
+      }));
+    };
+
+    const shortSlug = (slug) => slug.length > 23 ? slug.slice(0, 21) + "…" : slug;
+    const layerEnabled = (layer) => state.layers[layer];
+
+    const drawEdge = (edge, positions) => {
+      const from = positions.get(edge.source);
+      const to = positions.get(edge.target);
+      const group = createSvg("g", {
+        class: "edge-group edge-" + edge.layer,
+        tabindex: "0",
+        role: "img",
+        "aria-label": edge.source + " 到 " + edge.target + "，" + layerLabels[edge.layer]
+      });
+      const line = { x1: from.x, y1: from.y, x2: to.x, y2: to.y };
+      group.append(
+        createSvg("line", { ...line, class: "edge-hit" }),
+        createSvg("line", { ...line, class: "edge-visible" })
+      );
+      bindTooltip(group, () => [
+        edge.source + " ↔ " + edge.target,
+        "圖層：" + layerLabels[edge.layer],
+        "共同 tags：" + edge.shared_tags.join(", "),
+        "核准連接標籤：" + (edge.allowed_connectors.length > 0 ? edge.allowed_connectors.join(", ") : "無")
+      ]);
+      return group;
+    };
+
+    const drawNode = (slug, positions) => {
+      const position = positions.get(slug);
+      const node = nodeBySlug.get(slug);
+      const group = createSvg("g", {
+        class: "node-group",
+        transform: "translate(" + position.x + " " + position.y + ")",
+        tabindex: "0",
+        role: "img",
+        "aria-label": node.title + "，slug " + slug
+      });
+      group.append(
+        createSvg("circle", { class: "node-mark", r: 10 }),
+        createSvg("circle", { class: "node-core", r: 4 })
+      );
+      const outwardX = Math.cos(position.angle);
+      const outwardY = Math.sin(position.angle);
+      const rawX = outwardX * 31;
+      const labelY = outwardY * 31;
+      const anchor = outwardX > 0.22 ? "start" : outwardX < -0.22 ? "end" : "middle";
+      const labelWidth = Math.max(72, shortSlug(slug).length * 7.1 + 12);
+      const rawBackgroundX = anchor === "start" ? rawX - 5 : anchor === "end" ? rawX - labelWidth + 5 : rawX - labelWidth / 2;
+      const backgroundX = Math.min(792 - position.x - labelWidth, Math.max(8 - position.x, rawBackgroundX));
+      const labelX = anchor === "start" ? backgroundX + 5 : anchor === "end" ? backgroundX + labelWidth - 5 : backgroundX + labelWidth / 2;
+      group.append(
+        createSvg("line", { class: "leader", x1: outwardX * 13, y1: outwardY * 13, x2: labelX, y2: labelY }),
+        createSvg("rect", { class: "node-label-bg", x: backgroundX, y: labelY - 11, width: labelWidth, height: 22, rx: 5 })
+      );
+      const label = createSvg("text", { class: "node-label", x: labelX, y: labelY + 4, "text-anchor": anchor });
+      label.textContent = shortSlug(slug);
+      group.append(label);
+      bindTooltip(group, () => [
+        node.title,
+        "Slug：" + slug,
+        "目前 tags：" + node.tags.join(", "),
+        "所屬系列：" + node.series_ids.join(", ")
+      ]);
+      return group;
+    };
+
+    const renderKpis = () => {
+      const values = [
+        ["文章數", data.metrics.nodes],
+        ["系列數", data.metrics.series],
+        ["已連通系列", data.metrics.healthy_series],
+        ["斷線 findings", data.metrics.disconnected_findings],
+        ["合理孤島", data.metrics.intentional_islands]
+      ];
+      const grid = document.getElementById("kpi-grid");
+      values.forEach(([label, value]) => {
+        const item = create("article", undefined, "kpi");
+        item.append(create("strong", value), create("span", label));
+        grid.append(item);
+      });
+    };
+
+    const renderSeriesOptions = () => {
+      data.series.forEach((series) => {
+        const option = create("option", series.id + " · " + series.title);
+        option.value = series.id;
+        controls.series.append(option);
+      });
+      controls.series.value = state.seriesId;
+    };
+
+    const renderSummary = (series) => {
+      document.getElementById("network-title").textContent = series.id + " · " + series.title;
+      document.getElementById("network-subtitle").textContent = series.members.length + " 篇文章；固定環狀排列，不隨互動漂移。";
+      document.getElementById("summary-concept").textContent = series.minimum_common_concept;
+      document.getElementById("summary-connectors").textContent = series.valid_connector_allowlist.join(", ");
+      const stats = [
+        ["成員", series.members.length],
+        ["連通群", series.components.length],
+        ["修正連線", series.edge_layers.repaired],
+        ["既有有效", series.edge_layers.valid],
+        ["交叉維度", series.edge_layers.weak],
+        ["僅泛用 tag", series.edge_layers["generic-only"]]
+      ];
+      const list = document.getElementById("summary-stats");
+      list.replaceChildren();
+      stats.forEach(([label, value]) => {
+        const group = create("div");
+        group.append(create("dt", label), create("dd", value));
+        list.append(group);
+      });
+    };
+
+    const renderNetwork = (series) => {
+      Array.from(svg.children).forEach((child) => {
+        if (child.localName !== "title" && child.localName !== "desc") child.remove();
+      });
+      const positions = radialLayout(series.members);
+      const edges = series.edges.filter((edge) => layerEnabled(edge.layer));
+      const edgeOrder = { "generic-only": 0, weak: 1, valid: 2, repaired: 3 };
+      edges.sort((left, right) => {
+        const layerOrder = edgeOrder[left.layer] - edgeOrder[right.layer];
+        return layerOrder !== 0 ? layerOrder : left.id.localeCompare(right.id);
+      });
+      const edgeLayer = createSvg("g", { "aria-label": "連線" });
+      edges.forEach((edge) => edgeLayer.append(drawEdge(edge, positions)));
+      svg.append(edgeLayer);
+      const nodeLayer = createSvg("g", { "aria-label": "文章" });
+      [...series.members].sort().forEach((slug) => nodeLayer.append(drawNode(slug, positions)));
+      svg.append(nodeLayer);
+    };
+
+    const renderSeriesTable = () => {
+      const body = document.getElementById("series-table-body");
+      body.replaceChildren();
+      data.series.forEach((series) => {
+        const row = create("tr", undefined, series.id === state.seriesId ? "is-selected" : undefined);
+        appendCell(row, series.id + " · " + series.title, { header: true });
+        const status = appendCell(row, "");
+        status.append(create("span", "✓ 已連通", "status-healthy"));
+        appendCell(row, series.members.join(", "), { code: true });
+        appendCell(row, series.valid_connector_allowlist.join(", "), { code: true });
+        appendCell(row, series.edge_layers.repaired);
+        appendCell(row, series.edge_layers.valid);
+        appendCell(row, series.edge_layers.weak);
+        appendCell(row, series.edge_layers["generic-only"]);
+        appendCell(row, series.components.length + "：[" + series.components[0].join(", ") + "]");
+        const action = appendCell(row, "");
+        const button = create("button", "查看", "row-button");
+        button.type = "button";
+        button.setAttribute("aria-label", "查看 " + series.id);
+        button.addEventListener("click", () => selectSeries(series.id, true));
+        action.append(button);
+        body.append(row);
+      });
+    };
+
+    const renderFindingTable = () => {
+      const body = document.getElementById("finding-table-body");
+      data.before_findings.forEach((finding) => {
+        const row = create("tr");
+        appendCell(row, finding.id, { header: true });
+        appendCell(row, finding.series_id);
+        appendCell(row, "✕ 未連通");
+        const after = appendCell(row, "");
+        const afterResolved = finding.after_verdict === "resolved";
+        const afterText = afterResolved ? "✓ 已修正" : "✕ 未修正";
+        after.append(create("span", afterText, afterResolved ? "status-resolved" : undefined));
+        appendCell(row, finding.affected_articles.join(", "), { code: true });
+        appendCell(row, finding.resolution_members.join(", "), { code: true });
+        appendCell(row, finding.before_reason);
+        appendCell(row, finding.resolution_connectors.join(", "), { code: true });
+        const action = appendCell(row, "");
+        const button = create("button", "查看", "row-button");
+        button.type = "button";
+        button.setAttribute("aria-label", "查看 " + finding.id + " 對應的 " + finding.series_id);
+        button.addEventListener("click", () => selectSeries(finding.series_id, true));
+        action.append(button);
+        body.append(row);
+      });
+    };
+
+    const renderMergeTable = () => {
+      const body = document.getElementById("merge-table-body");
+      data.merge_candidates.forEach((candidate) => {
+        const row = create("tr");
+        appendCell(row, candidate.id, { header: true });
+        appendCell(row, candidate.tags.join(" ↔ "), { code: true });
+        appendCell(row, candidate.decision);
+        appendCell(row, candidate.reason);
+        appendCell(row, candidate.counterevidence);
+        body.append(row);
+      });
+    };
+
+    const renderIslandTable = () => {
+      const body = document.getElementById("island-table-body");
+      data.intentional_islands.forEach((island) => {
+        const row = create("tr");
+        appendCell(row, island.slug, { header: true, code: true });
+        const status = appendCell(row, "");
+        status.append(create("span", "● 合理孤島", "status-island"));
+        appendCell(row, island.verdict);
+        appendCell(row, island.reconsider_when);
+        body.append(row);
+      });
+    };
+
+    const renderNodeTable = (series) => {
+      const body = document.getElementById("node-table-body");
+      body.replaceChildren();
+      [...series.members].sort().forEach((slug) => {
+        const node = nodeBySlug.get(slug);
+        const row = create("tr");
+        appendCell(row, node.title, { header: true });
+        appendCell(row, node.slug, { code: true });
+        appendCell(row, node.tags.join(", "), { code: true });
+        appendCell(row, node.series_ids.join(", "));
+        body.append(row);
+      });
+    };
+
+    const renderEdgeTable = (series) => {
+      const body = document.getElementById("edge-table-body");
+      body.replaceChildren();
+      series.edges.filter((edge) => layerEnabled(edge.layer)).forEach((edge) => {
+        const row = create("tr");
+        appendCell(row, edge.source + " ↔ " + edge.target, { header: true, code: true });
+        appendCell(row, layerLabels[edge.layer]);
+        appendCell(row, edge.shared_tags.join(", "), { code: true });
+        appendCell(row, edge.allowed_connectors.length > 0 ? edge.allowed_connectors.join(", ") : "無", { code: true });
+        body.append(row);
+      });
+    };
+
+    const render = () => {
+      const series = seriesById.get(state.seriesId);
+      renderSummary(series);
+      renderNetwork(series);
+      renderSeriesTable();
+      renderNodeTable(series);
+      renderEdgeTable(series);
+      liveRegion.textContent = series.id + "，已連通，" + series.members.length + " 篇文章，1 個連通群。";
+    };
+
+    const selectSeries = (seriesId, scrollToGraph) => {
+      state.seriesId = seriesId;
+      controls.series.value = seriesId;
+      render();
+      if (scrollToGraph) {
+        document.querySelector(".network-card").scrollIntoView({ behavior: "smooth", block: "start" });
+        controls.series.focus({ preventScroll: true });
+      }
+    };
+
+    controls.series.addEventListener("change", () => selectSeries(controls.series.value, false));
+    controls.repaired.addEventListener("change", () => { state.layers.repaired = controls.repaired.checked; render(); });
+    controls.valid.addEventListener("change", () => { state.layers.valid = controls.valid.checked; render(); });
+    controls.weak.addEventListener("change", () => { state.layers.weak = controls.weak.checked; render(); });
+    controls.generic.addEventListener("change", () => { state.layers["generic-only"] = controls.generic.checked; render(); });
+
+    svg.addEventListener("keydown", (event) => {
+      const targets = [...svg.querySelectorAll("[tabindex='0']")];
+      const currentIndex = targets.indexOf(document.activeElement);
+      if (currentIndex < 0) return;
+      let nextIndex = currentIndex;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % targets.length;
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + targets.length) % targets.length;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = targets.length - 1;
+      if (event.key === "Escape") hideTooltip();
+      if (nextIndex !== currentIndex) {
+        event.preventDefault();
+        targets[nextIndex].focus();
+      }
+    });
+
+    const themeButton = document.getElementById("theme-toggle");
+    themeButton.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+      document.documentElement.dataset.theme = next;
+      themeButton.setAttribute("aria-pressed", String(next === "dark"));
+      themeButton.title = next === "dark" ? "切換淺色模式" : "切換深色模式";
+      liveRegion.textContent = "已切換為" + (next === "dark" ? "深色" : "淺色") + "模式。";
+    });
+
+    renderKpis();
+    renderSeriesOptions();
+    renderFindingTable();
+    renderMergeTable();
+    renderIslandTable();
+    render();
+  </script>
+</body>
+</html>

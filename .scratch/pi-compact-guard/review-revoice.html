@@ -1,0 +1,102 @@
+<!doctype html><html lang='zh-Hant'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>最危險的不是 AI 忘了，是你不知道它忘了</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"PingFang TC","Noto Sans CJK TC",sans-serif;
+background:#f4f3ee;color:#191817;line-height:1.85}
+header{position:sticky;top:0;background:#191817;color:#f4f3ee;padding:14px 24px;z-index:20}
+header h1{margin:0 0 4px;font-size:17px;font-weight:600}
+header .note{font-size:12px;color:#c9c4ba;margin-bottom:10px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tab{border:0;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#3a3833;color:#d8d3c8}
+.tab.active{background:#c96442;color:#fff;font-weight:600}
+.tab.ref{background:#2b2a27;color:#9b958a}.tab.ref.active{background:#5a554e;color:#fff}
+.sep{color:#7c766c;font-size:11px;margin:0 4px 0 10px;letter-spacing:1px}
+.wrap{max-width:760px;margin:0 auto;padding:30px 24px 80px}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border:1px solid #e3ded2;border-radius:8px;padding:10px 16px;font-size:13px;margin-bottom:14px}
+.meta .fm{background:#272620;color:#cfcabd;padding:12px 16px;border-radius:8px;font-size:11.5px;white-space:pre-wrap;overflow:auto}
+.toc{background:#fff;border:1px solid #e3ded2;border-radius:8px;padding:10px 16px;margin:14px 0;font-size:12.5px}
+.toc b{display:block;margin-bottom:6px;color:#5a554e}
+.toc a{display:inline-block;margin:0 14px 6px 0;color:#c96442;text-decoration:none}
+.toc a:hover{text-decoration:underline}
+article{font-size:17px}
+article h1{font-size:26px;margin:10px 0 22px;line-height:1.4}
+article h2{font-size:21px;margin:40px 0 14px;padding-top:12px;border-top:2px solid #e3ded2}
+article h3{font-size:17px;margin:26px 0 8px}article h4{font-size:15px;margin:18px 0 6px;color:#5a554e}
+p{margin:16px 0}ul,ol{margin:14px 0;padding-left:24px}li{margin:6px 0}li.ind{list-style:circle;margin-left:18px}
+table{border-collapse:collapse;width:100%;margin:18px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid #ddd6c8;padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#ece8dd;font-weight:600;white-space:nowrap}
+code{background:#ece8dd;padding:1px 5px;border-radius:3px;font-size:14px;font-family:"JetBrains Mono",monospace}
+pre{background:#272620;color:#e8e3d6;padding:14px;border-radius:8px;overflow-x:auto;font-size:13px}
+pre code{background:none;color:inherit;padding:0}
+blockquote{border-left:3px solid #c96442;margin:16px 0;padding:8px 18px;background:#fff;color:#5a554e}
+.err{color:#c0392b;font-weight:600}
+</style></head><body><header><h1>最危險的不是 AI 忘了，是你不知道它忘了</h1><div class='note'>同一份最終事實：Gemini 重新套 V5 語感 vs GPT 驅動修正後的目前版</div><div class='tabs'><button class="tab primary active" data-t="revoice">Gemini 3.7 Flash × pi × V5 語感修復版</button><span class="sep">對照</span><button class="tab ref" data-t="current">目前最終版（GPT 修正後）</button></div></header><div class='wrap'><section class="panel" id="p-revoice"><div class="card"><b>Gemini 3.7 Flash × pi × V5 語感修復版</b>　中文字數 ≈ 1608　·　compact-guard-v5-pi-gemini-revoice.md</div><div class="meta"><pre class='fm'>title: &quot;最危險的不是 AI 忘了，是你不知道它忘了&quot;
+description: &quot;記錄一次 GPT 自動壓縮丟失關鍵結論的事故，以及如何透過自製跨介面存證機制在自然事件中完成驗證與保留。&quot;
+voice: v5-pi-gemini-revoice
+status: 實驗 draft（以最終版事實為準，重新套 V5 語感）
+source: src/content/blog/compact-guard.md</pre></div><nav class="toc"><b>段落</b><a href="#revoice-sec1">壓縮後最麻煩的是缺口完全隱形</a><a href="#revoice-sec2">把保存機制拆出來，不綁特定 agent</a><a href="#revoice-sec3">假測試跑過不算數，沒撞過真實流量不下結論</a><a href="#revoice-sec4">連續八次壓縮直接撞出重複注入</a><a href="#revoice-sec5">171 筆自然事件驗收，證據夠了才拍板保留</a><a href="#revoice-sec6">後記：換上 1M context 之後</a></nav><article><p>在一次用 GPT 寫程式的 session 裡，我和模型來回推敲，把舊做法推翻並確立了新規則。結果對話一觸發自動 compact，下一回合把問題丟回去，它若無其事地把剛剛才推翻的舊做法原封不動搬出來。</p>
+<p>要不是我腦子裡還記著上一段的結論，當場抓到矛盾，這條決定就直接在對話裡蒸發了。當時幸好原始對話的 JSONL 紀錄還留在本機，模型用關鍵句定向搜尋壓縮前的內容，才把完整證據撈回來。</p>
+<h2 id="revoice-sec1">壓縮後最麻煩的是缺口完全隱形</h2>
+<p>當時遇到的問題很直接：GPT 的可用 context 較小，稍微寫點東西就頻繁觸發自動 compact。但這場事故讓我意識到更深層的麻煩。</p>
+<p>模型漏掉一整段記憶的時候，回答依然流暢得像什麼都沒發生。要是工程師自己當下恍神沒記住剛剛推翻過什麼，或是任務交接給下一輪，舊做法就可能悄悄變回後續工作的前提。缺口最危險的地方在於完全沒有任何提示：你連自己該回頭找什麼都不知道 🤣</p>
+<h2 id="revoice-sec2">把保存機制拆出來，不綁特定 agent</h2>
+<p>既然不能賭運氣，那就只能在它動手壓縮前買保險。我做了一套未公開的自製機制 <code>compact-guard</code>。它不去動產品原本用來產生摘要的 compact prompt，只在外面多加一層恢復保險。</p>
+<p>在壓縮動手前，<code>PreCompact</code> hook 先讀原始對話，只保留真正的使用者與助理文字，直接排除工具執行結果、subagent 對話跟系統塞進來的內部資料。</p>
+<p>接著它會把常見的金鑰永久遮蔽掉。這些金鑰在恢復時絕不還原，因為 checkpoint 要保存的是決定與限制，憑證本來就不該留。剩下的文字會按照更正、決定、限制、待辦、證據以及最近訊息排優先順序，去掉重複字句後，寫進有長度上限的私密 checkpoint。只要空間放不下，低優先度的內容就不會進恢復包。</p>
+<p>原生 compact 接著照常執行。壓縮完成後的新 context 會觸發 <code>SessionStart(source=compact)</code>；這名稱看起來像重開 session，其實只是通知 agent「同一個 session 剛完成壓縮」。在 Codex 裡面，這個事件會排到下一個使用者回合建立 prompt 前才執行。</p>
+<p>恢復 hook 只讀同一套工具、同一個 session 的 checkpoint。確認工具名稱、session、檔案權限和內容雜湊都對得上之後，再把內容標成「先前對話的證據，不是新指令」注入新的 context。現在的版本只要成功注入就會立刻打上標記，避免同一份內容再次灌入。</p>
+<p>至於 <code>PostCompact</code> hook 則完全不參與恢復，只負責追加計數與雜湊，不留存對話文字。恢復邏輯直接讀壓縮前的 checkpoint，這樣就不會被壓縮後兩個 hook 的執行順序卡死。</p>
+<p>存證、篩選和恢復邏輯全走共用模組，各 agent 工具只接自己的轉接層。當時我驗證的四種介面是 <a href="https://code.claude.com/docs/en/overview">Claude Code</a> 的兩種模型接法，以及 <a href="https://developers.openai.com/codex/">OpenAI Codex</a> 的 CLI 與 Desktop。其他 agent 能不能接，前提是有沒有現成可用的 compact 前後 hook；這四種介面的驗證結果不能直接外推成所有 AI 工具都支援。</p>
+<h2 id="revoice-sec3">假測試跑過不算數，沒撞過真實流量不下結論</h2>
+<p>機制寫好之後，最容易犯的毛病就是自己捏幾組假對話跑跑看，測試一過就開開心心宣布大功告成。</p>
+<p>但我開案時就先把規矩定死：先丟進真實工作流跑一段觀察期。沒有累積足夠的自然 compact 樣本前，就繼續觀察，絕對不能只靠合成測試就拍板 KEEP。自己捏出來的情境永遠太乾淨，只有在真實工作流裡被自動壓縮正面撞過，才能確認它到底有沒有用。</p>
+<h2 id="revoice-sec4">連續八次壓縮直接撞出重複注入</h2>
+<p>這個原則很快就發揮了作用。在一次無人值守的 Codex Desktop 長 session 裡，系統連續 compact 了八次，八個恢復事件全部排到下一個使用者回合才執行。結果下一回合一開工，螢幕上瞬間灌入八份一模一樣的內容：舊版還不知道同一份 checkpoint 早就送過了。</p>
+<p>這要是放著不管，重複資訊一口氣就會吃掉一大塊對話空間。但我沒有因此動搖，這本來就是觀察期的目的：在它惹出大禍前把自然環境下的真問題抓出來。</p>
+<p>修復方式也很乾脆，每份 checkpoint 只要成功注入就立刻標記成已使用。後面排隊的事件如果又讀到同一份，只留下「已被前一個事件處理」的稽核紀錄，不再重複注入內容。重複注入的測試也重新跑過確認通過。</p>
+<h2 id="revoice-sec5">171 筆自然事件驗收，證據夠了才拍板保留</h2>
+<p>修好之後，結案前那段觀察期累積了 171 筆自然派送的 hook 事件列。這不是 171 次獨立壓縮；一次 compact 往往會留下存證、注入與 <code>PostCompact</code> 等多筆紀錄。</p>
+<p>稽核紀錄不存對話文字，而是靠 session 與對話紀錄的雜湊，把每次壓縮前的 checkpoint 跟後續注入配對。逐筆排除原生 compact 中止、以及延後到下一回合才注入的事件後，在所有已完成的壓縮裡，沒有出現過 checkpoint 該注入卻漏掉的案例。</p>
+<p>這裡說的「沒有真漏」只涵蓋恢復事件有沒有漏送。恢復包本身有長度上限，金鑰也會永久遮蔽，所以原始對話本來就不可能逐句完整留下來。</p>
+<p>這並不代表這套機制從此天下無敵永遠不掉球。但以當時累積的 171 筆自然 hook 事件來看，證據已經足夠支撐我拍板 KEEP，這張保單確實接住了壓縮時的缺口。</p>
+<h2 id="revoice-sec6">後記：換上 1M context 之後</h2>
+<p>後來我在日常開發裡啟用了 1M context，自動 compact 的頻率大幅降低。我也多了選擇權，可以保留長 context，或在需要時接受壓縮。畢竟 long context 的 <a href="https://developers.openai.com/api/docs/pricing">OpenAI API 費率較高</a>，壓縮在實務上依然有它的價值。</p>
+<p><code>compact-guard</code> 現在上場的頻率低了很多，但我依然留著當低頻保險。</p></article></section><section class="panel" id="p-current"><div class="card"><b>目前最終版（GPT 修正後）</b>　中文字數 ≈ 1511　·　compact-guard-v5-pi-gemini.md</div><div class="meta"><pre class='fm'>title: &quot;最危險的不是 AI 忘了，是你不知道它忘了&quot;
+description: &quot;記錄一次 GPT 自動壓縮丟失關鍵結論的事故，以及如何透過自製跨介面存證機制在自然事件中完成驗證與保留。&quot;
+voice: v5-pi-gemini
+status: 實驗 draft（從 MATERIAL 重寫，非已發布版）
+source: posts/compact-guard-MATERIAL.md</pre></div><nav class="toc"><b>段落</b><a href="#current-sec1">壓縮後最麻煩的是看不見缺口</a><a href="#current-sec2">把保存與介面拆開，不綁特定工具</a><a href="#current-sec3">實驗室跑得過不算數，沒自然樣本不下結論</a><a href="#current-sec4">真實流量一來，八份重複資料直接灌入</a><a href="#current-sec5">171 筆自然事件驗收，證據足夠才拍板保留</a><a href="#current-sec6">後記：當 context 變大之後</a></nav><article><p>在一次使用 GPT 寫程式的 session 裡，我和模型經過討論推翻了舊的判定方式，並確立了新的做法。結果對話一觸發自動 compact，下一回合丟問題過去，它又若無其事地把剛剛才推翻的舊做法搬回來用。</p>
+<p>如果不是我還記得上一段的結論，當場指出矛盾，這條結論就直接在對話裡蒸發了。當時原始對話的 JSONL 紀錄還留在本機，模型用關鍵句定向搜尋壓縮前內容，才把完整證據撿回來。</p>
+<h2 id="current-sec1">壓縮後最麻煩的是看不見缺口</h2>
+<p>當時遇到的問題很直接：GPT 的可用 context 較小，稍微做點事就頻繁觸發自動 compact。但這場事故讓我意識到更深層的問題。</p>
+<p>模型少記一段時，回答仍可能完整得像什麼事都沒發生。要是工程師自己沒記住剛剛推翻過什麼，或是任務交接給下一輪，舊做法就可能悄悄變回後續工作的前提。現在回頭看，我最在意的是缺口沒有任何提示：人甚至不知道該回頭找什麼 🤣</p>
+<h2 id="current-sec2">把保存與介面拆開，不綁特定工具</h2>
+<p>既然不能賭運氣，那就只能在它動手壓縮前買保險。我做了一套未公開的自製機制 <code>compact-guard</code>。它不改產品原本用來產生摘要的 compact prompt，只在外面多加一層恢復保險。</p>
+<p>壓縮前，<code>PreCompact</code> hook 先讀原始對話，只留下真正的使用者與助理文字。工具結果、subagent 對話與系統塞進來的內部資料都排除。</p>
+<p>接著，它會遮掉常見金鑰。這些金鑰不會在恢復時還原，因為 checkpoint 要保存的是決定與限制，不是憑證。剩下的內容會依更正、決定、限制、待辦、證據與最近訊息排序，去掉重複文字，再寫進有長度上限的私密 checkpoint，也就是壓縮前檢查點。放不下時，優先度較低的內容就不會進恢復包。</p>
+<p>原生 compact 接著照常執行。壓縮後的新 context 會觸發 <code>SessionStart(source=compact)</code>；名稱看起來像是重開 session，其實只是告訴 agent「同一個 session 剛完成壓縮」。在 Codex 裡，這個事件會排到下一個使用者回合建立 prompt 前才執行。</p>
+<p>恢復 hook 只讀同一套工具、同一個 session 的 checkpoint，確認工具名稱、session、檔案權限與內容雜湊都對得上，再把恢復內容標成「先前對話的證據，不是新指令」，注入新的 context。現在的版本成功注入後還會留下標記，避免同一份內容再次灌入。</p>
+<p><code>PostCompact</code> hook 不參與恢復，只追加計數與雜湊，不保存對話文字。恢復直接讀壓縮前的 checkpoint，因此不會依賴壓縮後兩個 hook 的執行順序。</p>
+<p>存證、篩選與恢復邏輯維持共用，各 agent 工具只接自己的轉接層。當時驗證的四種介面是 <a href="https://code.claude.com/docs/en/overview">Claude Code</a> 的兩種模型接法，以及 <a href="https://developers.openai.com/codex/">OpenAI Codex</a> 的 CLI 與 Desktop。其他 agent 能不能接，前提是它有可用的 compact 前後 hook；這四種驗證不能直接外推成所有 AI 工具都支援。</p>
+<h2 id="current-sec3">實驗室跑得過不算數，沒自然樣本不下結論</h2>
+<p>機制寫好後，最容易犯的毛病就是自己寫幾組假資料測試，跑過就開開心心宣布大功告成。</p>
+<p>但我開案時就先立了規矩：先讓機制在真實工作裡跑一段觀察期。沒有足夠的自然 compact 樣本，就繼續觀察，絕對不能只靠合成測試直接判定 KEEP，也就是保留這套機制。自己捏出來的情境永遠太乾淨，只有在真實工作流裡被自動壓縮撞過，才能確認它有沒有用。</p>
+<h2 id="current-sec4">真實流量一來，八份重複資料直接灌入</h2>
+<p>這個原則很快就發揮了作用。一次無人值守的 Codex Desktop 長 session 連續 compact 八次，八個恢復事件都排到下一個使用者回合才執行。下一回合一開始，畫面就一次灌入八份相同內容：舊版還不知道同一份 checkpoint 已經送過。</p>
+<p>這要是放著不管，重複資訊會一次占掉一大塊對話空間。但我沒有因此動搖，這本來就是觀察期的目的：在它惹出大禍前把自然環境下的真問題抓出來。</p>
+<p>修正後，每份 checkpoint 成功注入就立即標成已使用。後面排隊的事件如果又讀到同一份，只留下「已被前一個事件處理」的稽核紀錄，不再注入內容。重複注入的測試也重新通過。</p>
+<h2 id="current-sec5">171 筆自然事件驗收，證據足夠才拍板保留</h2>
+<p>修好之後，結案前那段觀察期累積了 171 筆自然派送的 hook 事件。這不是 171 次獨立壓縮；一次 compact 可能留下存證、注入與 <code>PostCompact</code> 等多筆紀錄。</p>
+<p>稽核紀錄不保存對話文字，而是用 session 與對話紀錄雜湊，把每次壓縮前的 checkpoint 跟後續注入配對。逐筆排除原生 compact 中止，以及延後到下一回合才注入的事件後，已完成的壓縮裡，沒有出現 checkpoint 應該注入卻漏掉的案例。</p>
+<p>這個零只涵蓋恢復事件有沒有真漏。恢復包本來就有長度上限，金鑰也會永久遮蔽，因此原始對話不會每一句都完整保留。</p>
+<p>這不代表這套機制永遠不會丟資料。但就當時累積的 171 筆自然 hook 事件來看，證據已經足夠支撐我做出 KEEP 的決定，這張保單確實接住了壓縮時的缺口。</p>
+<h2 id="current-sec6">後記：當 context 變大之後</h2>
+<p>後來我在日常開發裡啟用了 1M context，自動 compact 的頻率大幅降低。我也多了選擇權，可以保留較長的 context，或在需要時接受壓縮。畢竟 long context 的 <a href="https://developers.openai.com/api/docs/pricing">OpenAI API 費率較高</a>，壓縮依然有它的實務價值。</p>
+<p><code>compact-guard</code> 現在比較少上場，但我還是留著當低頻保險。</p></article></section></div><script>
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+ document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+ document.getElementById('p-'+b.dataset.t).classList.add('active');
+ window.scrollTo(0,0);});
+</script></body></html>

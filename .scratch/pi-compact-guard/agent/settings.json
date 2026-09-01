@@ -1,0 +1,5 @@
+{
+  "enableInstallTelemetry": false,
+  "defaultProvider": "cliproxy",
+  "defaultModel": "gemini-3.7-flash-high"
+}

@@ -1,0 +1,29 @@
+{
+  "providers": {
+    "cliproxy": {
+      "baseUrl": "http://127.0.0.1:8317/v1",
+      "api": "openai-completions",
+      "apiKey": "runtime-override",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "gemini-3.7-flash-high",
+          "name": "Gemini 3.7 Flash High via CLIProxy",
+          "reasoning": false,
+          "contextWindow": 1048576,
+          "maxTokens": 65536
+        },
+        {
+          "id": "ds-free",
+          "name": "DeepSeek V4 Flash via Cline Free",
+          "reasoning": false,
+          "contextWindow": 1048576,
+          "maxTokens": 65536
+        }
+      ]
+    }
+  }
+}
