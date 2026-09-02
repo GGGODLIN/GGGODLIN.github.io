@@ -85,7 +85,7 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 
 本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。
 
-**轉發由使用者自行以 codex 處理，CC 不接手、不提醒**（使用者拍板的常設政策，取代舊版「上線後 main session 主動問要不要轉發、下次 push 提醒還有 X 篇沒轉」行為）。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，上線即止。
+**轉發由使用者自行以 codex 處理，CC 不接手、不提醒**（使用者拍板的常設政策）。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，上線即止。
 
 - 使用者若明確要求 CC 轉發，才 trigger 既有 skill：Medium → `medium-syndicate`（`/medium-syndicate <slug>`）、方格子 → `vocus-syndicate`（`/vocus-syndicate <slug>`）；防重複、canonical、轉發紀錄由 skill 自理（grep `docs/philip/syndication-log.md`）
 - Medium 24h 限發 2 篇的排隊檔仍在 `docs/philip/medium-publish-queue.md`，供使用者側流程查閱
