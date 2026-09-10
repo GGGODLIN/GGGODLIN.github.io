@@ -143,6 +143,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     title: "review 要靠不同視角找，也要靠證據與影響面驗",
     minimumCommonConcept: "review 不只要增加視角；還要讓發現接受獨立複查、讓人保留否決權，並在審查前補上 diff 本身看不到的影響面。",
     members: [
+      "advisor-one-question",
       "model-routing",
       "one-model-not-enough",
       "sem-blast-radius",

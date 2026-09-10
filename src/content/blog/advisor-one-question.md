@@ -2,7 +2,7 @@
 title: "Advisor：換顆腦袋，不用換整個 session"
 description: "對 AI 這一次的判斷不滿意時，不必把整個對話換成更貴的模型；把這一題打包送給另一顆模型當顧問就好。成敗取決於三件事：你給它看什麼、它看得到什麼，以及意見回來後誰裁決。"
 pubDate: "2026-09-10"
-tags: ["claude-code", "model-routing", "multi-model", "methodology", "gpt"]
+tags: ["claude-code", "model-routing", "multi-model", "methodology", "gpt", "review-governance"]
 ---
 
 # Advisor：換顆腦袋，不用換整個 session
