@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型分工：不必每件事都用最強模型</title>
+<meta name="description" content="額度用完之後，除了換模型，還能重新安排工作。orchestrator、advisor、effort 三種做法，附一段真實案例的各模型用量與牌價。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --navy:#00122D; --black:#000; --navy-800:#041A3A; --navy-700:#0A2548;
+  --teal:#61D6D6; --orange:#F95229; --white:#FFF;
+  --w72:rgba(255,255,255,.72); --w54:rgba(255,255,255,.54); --w38:rgba(255,255,255,.38);
+  --hair:rgba(97,214,214,.22); --hair-soft:rgba(97,214,214,.12); --hair-strong:rgba(97,214,214,.45);
+  --sans:'Poppins','Noto Sans TC','PingFang TC',system-ui,sans-serif;
+  --mono:'IBM Plex Mono','Noto Sans TC',ui-monospace,monospace;
+  --nav-h:60px; --ease:cubic-bezier(.2,.6,.2,1);
+  --measure:66ch;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h);background:var(--navy)}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){html{scroll-snap-type:y proximity}}
+body{margin:0;font-family:var(--sans);font-size:17px;line-height:1.7;color:var(--white);background:var(--navy);-webkit-font-smoothing:antialiased;text-wrap:pretty}
+h1,h2,h3,h4,p,ul,ol,li,figure,blockquote,table,pre{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:var(--white);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{border-bottom-color:var(--teal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+strong{font-weight:600;color:var(--white)}
+::selection{background:var(--teal);color:var(--navy)}
+.num,td.num,th.num,.stat,.big{font-variant-numeric:tabular-nums}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);background:var(--navy);border-bottom:1px solid var(--hair);padding:0 24px}
+.nav .wrap{height:100%;display:flex;align-items:center;gap:24px}
+.nav-mark{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);white-space:nowrap;font-weight:500}
+.nav-list{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-list::-webkit-scrollbar{display:none}
+.nav-btn{appearance:none;background:none;border:0;color:var(--w54);font:inherit;font-size:13px;padding:8px 10px;white-space:nowrap;cursor:pointer;border-radius:2px;display:flex;gap:6px;align-items:baseline}
+.nav-btn .nn{font-size:11px;color:var(--w38);font-variant-numeric:tabular-nums}
+.nav-btn:hover{color:var(--white)}
+.nav-btn[aria-current="true"]{color:var(--navy);background:var(--teal)}
+.nav-btn[aria-current="true"] .nn{color:var(--navy)}
+.progress{position:fixed;top:var(--nav-h);left:0;height:2px;width:0;background:var(--teal);z-index:49;transition:width .12s linear}
+
+/* chapters */
+.ch{scroll-snap-align:start;padding:96px 24px;border-bottom:1px solid var(--hair-soft)}
+.ch.alt{background:var(--black)}
+.ch.hero{min-height:calc(100vh - var(--nav-h));display:flex;align-items:center}
+.wrap{max-width:1200px;margin:0 auto}
+.two{display:grid;gap:40px 64px}
+@media (min-width:1024px){.two{grid-template-columns:7fr 5fr}.two.wide{grid-template-columns:8fr 4fr}}
+.aside{color:var(--w72);font-size:15px;line-height:1.75}
+@media (min-width:1024px){.aside{position:sticky;top:calc(var(--nav-h) + 40px);align-self:start}}
+.aside h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:16px}
+.aside dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;border-top:1px solid var(--hair);padding-top:16px}
+.aside dt{font-family:var(--mono);font-size:14px;color:var(--white)}
+.aside dd{margin:0}
+.aside ol{counter-reset:n;border-top:1px solid var(--hair);padding-top:16px}
+.aside ol li{counter-increment:n;display:grid;grid-template-columns:24px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair-soft)}
+.aside ol li::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:12px;color:var(--teal);padding-top:4px}
+.aside .src{margin-top:24px;font-size:13px;color:var(--w54)}
+.aside .src a{color:var(--w72)}
+
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;display:flex;gap:14px;margin-bottom:20px}
+.eyebrow .idx{color:var(--w38);font-family:var(--mono);letter-spacing:0}
+h1.t1{font-size:clamp(40px,6vw,72px);line-height:1.05;letter-spacing:-.02em;font-weight:600;max-width:20ch}
+h2.t2{font-size:clamp(30px,3.6vw,44px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:22ch}
+h3.t3{font-size:22px;line-height:1.3;font-weight:600}
+.lead{font-size:clamp(19px,1.6vw,22px);line-height:1.6;color:var(--w72);max-width:var(--measure)}
+.lead strong{color:var(--white)}
+.body{max-width:var(--measure);color:var(--w72)}
+.punch{font-size:clamp(26px,3vw,36px);line-height:1.3;letter-spacing:-.01em;font-weight:500;max-width:26ch}
+.note{font-size:14px;color:var(--w54);line-height:1.65;max-width:var(--measure)}
+.note.hi{color:var(--w72);border-left:2px solid var(--teal);padding-left:12px}
+.rule{border:0;border-top:1px solid var(--hair);margin:40px 0}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt40{margin-top:40px}.mt48{margin-top:48px}.mt64{margin-top:64px}
+
+/* cards & grids */
+.card{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px}
+.ch.alt .card{background:var(--navy-800)}
+.card-h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:12px}
+.card p{color:var(--w72);font-size:16px;line-height:1.6}
+.card p strong{color:var(--white)}
+.grid3{display:grid;gap:16px}
+@media (min-width:720px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.vs{display:grid;gap:16px}
+@media (min-width:720px){.vs{grid-template-columns:1fr 1fr}}
+.stats{display:grid;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+@media (min-width:720px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stats > div{padding:28px 24px 28px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:720px){.stats > div{border-bottom:0;border-right:1px solid var(--hair-soft);padding-left:24px}.stats > div:first-child{padding-left:0}.stats > div:last-child{border-right:0}}
+.stats .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.stats .v{font-size:28px;font-weight:600;line-height:1.2;margin-top:8px;letter-spacing:-.01em}
+.stats .d{color:var(--w72);font-size:15px;margin-top:8px}
+
+/* lists */
+.list{counter-reset:n}
+.list li{counter-increment:n;display:grid;grid-template-columns:32px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--hair-soft)}
+.list li::before{content:counter(n);font-family:var(--mono);font-size:14px;color:var(--teal);padding-top:2px}
+.list li p{color:var(--w72);max-width:var(--measure)}
+.list li p strong{color:var(--white)}
+.list.plain li::before{content:''}
+.list.plain li{grid-template-columns:1fr}
+
+/* quote */
+.quote{border-left:2px solid var(--teal);padding:8px 0 8px 28px;max-width:60ch}
+.quote p{font-size:clamp(20px,2vw,26px);line-height:1.5;font-weight:500}
+.quote.sm p{font-size:19px;font-weight:400;color:var(--w72)}
+.quote cite{display:block;margin-top:16px;font-style:normal;font-size:13px;color:var(--w54);letter-spacing:.04em}
+
+/* tables */
+.tablewrap{overflow-x:auto;border-top:1px solid var(--hair)}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{padding:14px 12px;text-align:left;border-bottom:1px solid var(--hair-soft);vertical-align:top}
+thead th{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;white-space:nowrap}
+tbody th{font-weight:600;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:15px}
+td.hi{color:var(--white);font-weight:500;background:rgba(97,214,214,.06)}
+th.hi{background:rgba(97,214,214,.06)}
+td.mute,th.mute{color:var(--w38)}
+tr.total th,tr.total td{border-top:1px solid var(--hair);border-bottom:0;font-weight:600;color:var(--white)}
+tr[data-model]{transition:background .12s var(--ease)}
+tr[data-model]:hover,tr[data-model].on{background:rgba(97,214,214,.08)}
+td.pct{color:var(--w72)}
+td.bar{position:relative}
+td.bar i{position:absolute;left:0;bottom:0;height:2px;background:var(--teal);opacity:.6}
+
+/* segmented control */
+.seg{display:inline-flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+.seg button{appearance:none;background:none;border:0;color:var(--w72);font:inherit;font-size:14px;padding:8px 16px;cursor:pointer;border-right:1px solid var(--hair)}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--white)}
+.seg button[aria-pressed="true"]{background:var(--teal);color:var(--navy);font-weight:500}
+.tbl-title{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tbl-title .unit{font-size:14px;color:var(--w54)}
+
+/* code */
+pre{font-family:var(--mono);font-size:15px;line-height:1.7;background:var(--black);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;overflow-x:auto;color:var(--w72)}
+.ch.alt pre{background:var(--navy-800)}
+pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
+.annot{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:15px;color:var(--w72)}
+.annot dt{font-family:var(--mono);color:var(--teal)}
+
+/* diagram main/subagent */
+.diag{display:grid;gap:16px;align-items:stretch}
+@media (min-width:720px){.diag{grid-template-columns:1fr auto 1fr}}
+.diag .box{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:20px}
+.diag .box p{font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--w72)}
+.diag .box.full p{color:var(--w54)}
+.diag .arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--teal);font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:0 8px}
+.diag .arrow .line{width:80px;height:1px;background:var(--hair-strong);position:relative}
+.diag .arrow .line::before{content:'';position:absolute;left:-1px;top:-4px;border:4px solid transparent;border-right-color:var(--hair-strong)}
+@media (max-width:719px){.diag .arrow{flex-direction:row}.diag .arrow .line{width:1px;height:32px}.diag .arrow .line::before{display:none}}
+
+/* timeline */
+.tl{position:relative;padding-left:32px}
+.tl::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--hair-strong)}
+.tl li{position:relative;padding:0 0 32px 0}
+.tl li::before{content:'';position:absolute;left:-29px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--navy);box-shadow:inset 0 0 0 1px var(--teal)}
+.tl li.hot::before{background:var(--teal)}
+.tl .who{display:inline-flex;gap:8px;align-items:baseline;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:6px}
+.tl .who .m{font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--w54);font-size:13px}
+.tl p{color:var(--w72);max-width:var(--measure)}
+.tl .receipt{margin-top:12px;font-family:var(--mono);font-size:15px;display:inline-flex;gap:12px;align-items:center;padding:10px 14px;background:var(--black);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px}
+.ch.alt .tl .receipt{background:var(--navy-800)}
+.tl .receipt .f{color:var(--w72);text-decoration:line-through;text-decoration-color:var(--w38)}
+.tl .receipt .p{color:var(--white);font-weight:500}
+.tl .receipt .a{color:var(--teal)}
+
+/* three conclusions */
+.concl{display:grid;gap:16px}
+@media (min-width:900px){.concl{grid-template-columns:repeat(3,1fr)}}
+.concl li{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.concl .lab{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.concl .big{font-size:40px;line-height:1;font-weight:600;letter-spacing:-.02em}
+.concl li.key .big{color:var(--orange)}
+.concl p{color:var(--w72);font-size:15px;line-height:1.6}
+.concl p strong{color:var(--white)}
+
+/* self check */
+.check{border-top:1px solid var(--hair)}
+.check .q{display:grid;gap:16px;padding:24px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:900px){.check .q{grid-template-columns:1fr auto;align-items:center}}
+.check .q p{color:var(--w72);max-width:var(--measure)}
+.check .q p strong{color:var(--white)}
+.scale{display:inline-flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+.scale button{appearance:none;background:none;border:0;border-right:1px solid var(--hair);color:var(--w72);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.scale button:last-child{border-right:0}
+.scale button:hover{color:var(--white)}
+.scale button[aria-pressed="true"]{background:var(--teal);color:var(--navy);font-weight:500}
+.check .out{margin-top:24px;min-height:1.7em;color:var(--w72)}
+.check .out strong{color:var(--white)}
+
+/* footer */
+.foot{padding:48px 24px;border-top:1px solid var(--hair);color:var(--w54);font-size:13px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.progress{transition:none}}
+@media (max-width:719px){.ch{padding:64px 20px}.nav{padding:0 20px}.nav .wrap{gap:16px}}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="章節導覽">
+  <div class="wrap">
+    <div class="nav-mark">Calyx · tech workshop</div>
+    <div class="nav-list" id="navList"></div>
+  </div>
+</nav>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<main>
+<!-- 1 開場 -->
+<section class="ch hero" id="c01" data-ch="1" data-label="開場">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">01</span><span>tech workshop · 日期待定</span></div>
+      <h1 class="t1">模型分工：不必每件事都用最強模型</h1>
+      <p class="lead mt32">額度用完之後，除了換模型，還能重新安排工作。</p>
+      <p class="punch mt64">你很習慣把工作交給 Fable。某天它不能用了，其他模型還能用。<br>你會直接換一顆繼續，還是調整誰負責哪一段？</p>
+    </div>
+    <aside class="aside">
+      <h3>「用完了」不是同一件事</h3>
+      <dl>
+        <dt>狀況一</dt><dd>Fable 專屬上限到了，方案的共享用量還有剩。官方列出的處理方式之一是<strong>改用其他模型</strong>。今天講的方法對這一種有幫助。</dd>
+        <dt>狀況二</dt><dd>共享 session／週用量上限到了。切模型<strong>不能</strong>恢復額度。</dd>
+      </dl>
+      <p class="src">條件查證日 2026-09-09。不同方案的 Fable 限制不同，不要套到所有帳號。<br><a href="https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan">Fable 方案說明</a> · <a href="https://code.claude.com/docs/en/costs">Claude Code 用量文件</a></p>
+    </aside>
+  </div>
+</section>
+
+<!-- 2 帶走什麼 -->
+<section class="ch alt" id="c02" data-ch="2" data-label="帶走什麼">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">02</span><span>本場帶走什麼</span></div>
+    <h2 class="t2">三種做法，前兩種並列</h2>
+    <div class="stats mt40">
+      <div><div class="k">orchestrator</div><div class="v">把工作交出去</div><div class="d">主模型拆解與協調，subagent 承接有邊界的工作。我日常最常用的一種。</div></div>
+      <div><div class="k">advisor</div><div class="v">把判斷借進來</div><div class="d">執行中的模型繼續做事，需要另一個判斷時才請顧問。</div></div>
+      <div><div class="k">effort</div><div class="v">同一顆，不同投入</div><div class="d">同一模型也能調整推理投入，不只在模型之間切換。</div></div>
+    </div>
+    <p class="note mt24">orchestrator 與 advisor 是並列選項，不是新舊替代。「最常用」是我的使用經驗，不是統計。全場用靜態歷史案例與設定示例，不現場操作，也不承諾省幾成。</p>
+  </div>
+</section>
+
+<!-- 3 交出去還是借進來 -->
+<section class="ch" id="c03" data-ch="3" data-label="交出去 · 借進來">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">03</span><span>先分清楚</span></div>
+      <h2 class="t2">把工作交出去，還是把判斷借進來</h2>
+      <p class="lead mt24">差別在交出去的是什麼。派工交出的是<strong>一件有範圍、有驗收條件的工作</strong>，review 或檢查也算一件工作；顧問借的是<strong>對 main 自己某個判斷的第二意見</strong>，沒有交付物，只有意見。責任都還在你。</p>
+      <div class="tablewrap mt32">
+        <table>
+          <thead><tr><th scope="col">做法</th><th scope="col">主流程保留什麼</th><th scope="col">交出去什麼</th><th scope="col">這場的案例</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">orchestrator</th><td>任務脈絡、分派、整合與驗收責任</td><td>一段可界定的實作、review 或檢查</td><td>資料遷移的 subagent-driven 實作階段</td></tr>
+            <tr><th scope="row">advisor</th><td>原本工作的執行與後續決策</td><td>某一次判斷或另一個視角</td><td>顧問指出提問方式的盲點</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="aside">
+      <h3>三個詞</h3>
+      <dl>
+        <dt>main</dt><dd>目前對話中負責協調的模型。</dd>
+        <dt>subagent</dt><dd>被委派去做一段工作的 agent。不是每個 subagent 都在寫程式。</dd>
+        <dt>advisor</dt><dd>被要求提供判斷的角色，不等於自動取得後續修改權。</dd>
+      </dl>
+      <p class="src">一個常見誤解：「Fable 當主管、便宜模型當工人」。主模型可以不同，角色不等於能力排名。等一下的案例是 Fable 帶 Opus，那是那一天的配置，不是規則。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 4 派工在選什麼 -->
+<section class="ch alt" id="c04" data-ch="4" data-label="派工在選什麼">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">04</span><span>orchestrator</span></div>
+    <h2 class="t2">派工時到底在選什麼</h2>
+    <p class="lead mt24">不是按難度派，是按這件事需要什麼能力派。難度是結果，不是分類軸。</p>
+    <div class="grid3 mt40">
+      <div class="card"><div class="card-h">實作</div><p>照已定義的目標，讀既有程式、修改與驗證。</p></div>
+      <div class="card"><div class="card-h">判斷</div><p>比較方案、review、核對證據與取捨。</p></div>
+      <div class="card"><div class="card-h">機械處理</div><p>輸入與規則已完整，執行固定的轉換或整理。<br><strong>「看起來簡單」不代表不用判斷</strong>。摘要若要篩選、查證、處理矛盾，就不是格式轉換。</p></div>
+    </div>
+    <div class="two mt64">
+      <div>
+        <h3 class="t3">派工還有一個與模型無關的理由</h3>
+        <p class="body mt16">subagent 在自己的 context window 裡工作。它讀過的檔案、測試輸出、搜尋結果都留在那裡，只有結果回到 main。要翻很多東西的工作，<strong>就算用同一顆模型，派出去也能讓 main 的對話保持乾淨</strong>。</p>
+        <div class="diag mt32">
+          <div class="box"><div class="card-h">main</div><p>分派實作範圍<br>收回結果<br>跑整合檢查</p></div>
+          <div class="arrow"><span>只有結果</span><div class="line"></div></div>
+          <div class="box full"><div class="card-h">subagent</div><p>讀既有程式<br>搜尋所有引用<br>跑一輪測試<br>比對契約文件<br>試錯、改、再跑<br>整理回報</p></div>
+        </div>
+      </div>
+      <aside class="aside">
+        <h3>同一件事的另一面</h3>
+        <p>subagent 看不到 main 的對話歷史與已讀檔案。所以派工前要交代：</p>
+        <ol class="mt16">
+          <li>要完成什麼，邊界在哪。</li>
+          <li>子任務需要哪些資料與既有決策。</li>
+          <li>要回報什麼結果，主流程怎麼接回來。</li>
+        </ol>
+        <p class="mt16">這三條說不出來，就代表這段工作還在你腦子裡，不在票上。還在釐清方向、要反覆討論的工作，不要為了多模型而硬拆。</p>
+        <p class="mt16">一個例外：<strong>fork</strong> 型 subagent 會繼承主對話的全部歷史，不必重講；但它的工具呼叫仍留在自己那邊，只有結果回 main。所以「main 保持乾淨」對兩種都成立，「看不到歷史、要交代三件事」只對一般 subagent 成立。第 5 章的示例是一般 subagent。</p>
+      <p class="src">來源：<a href="https://code.claude.com/docs/en/sub-agents">官方 subagent 文件</a>「Isolate high-volume operations」「Manage subagent context」「Fork the current conversation」三節，查證日 2026-09-10。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 5 我的接法 -->
+<section class="ch" id="c05" data-ch="5" data-label="我的接法">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">05</span><span>接進 Claude Code</span></div>
+      <h2 class="t2">定義角色，再告訴主模型何時找它</h2>
+      <p class="lead mt24">不講 hook、不講攔截。一份 agent 定義加一段規則，就是我實作的全部骨架。</p>
+      <pre class="mt32"><span class="d">---</span>
+<span class="k">name:</span> <span class="v">implementer</span>
+<span class="k">description:</span> <span class="v">實作已定義的功能，遵循既有程式慣例並回報驗證結果。</span>
+<span class="k">model:</span> <span class="v">opus</span>
+<span class="k">effort:</span> <span class="v">medium</span>
+<span class="d">---</span></pre>
+      <figure class="quote sm mt40">
+        <p>目標已定義的實作交給 implementer；需要比較與驗證的工作交給判斷角色。交付時帶上範圍、材料與驗收要求，回來後由主流程核對結果。</p>
+        <cite>我的派工規則，白話示意版</cite>
+      </figure>
+      <p class="lead mt32">重點是讓主模型知道<strong>何時找誰</strong>，而不只是資料夾裡多了一份定義。</p>
+    </div>
+    <aside class="aside">
+      <h3>欄位</h3>
+      <dl class="annot">
+        <dt>name</dt><dd>角色名稱</dd>
+        <dt>description</dt><dd>何時適用。主模型靠這段決定要不要找它</dd>
+        <dt>model</dt><dd>使用模型</dd>
+        <dt>effort</dt><dd>推理投入。第 8 章獨立講</dd>
+      </dl>
+      <p class="src">上面是去識別的示意設定，不是舊公司程式碼，也不能證明歷史任務實際跑了哪顆模型。實際執行模型要看當次紀錄。定義檔格式見<a href="https://code.claude.com/docs/en/sub-agents">官方文件「自訂 subagent」</a>。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 6 真實案例 -->
+<section class="ch alt" id="c06" data-ch="6" data-label="真實案例">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">06</span><span>真實案例</span></div>
+      <h2 class="t2">Fable 帶 subagent 完成一段資料遷移實作</h2>
+      <p class="lead mt24">既有系統要換一種資料儲存與讀取方式。這段工作包含雙寫、讀取端切換，以及契約文件與檢查。</p>
+      <ol class="tl mt40">
+        <li><div class="who">Fable <span class="m">main</span></div><p>接到已拆好的功能票，依範圍分派實作。</p></li>
+        <li><div class="who">Opus <span class="m">workers</span></div><p>分別完成雙寫、讀取端切換與文件工作。</p></li>
+        <li><div class="who">Fable <span class="m">main</span></div><p>收回結果並跑整合檢查。</p></li>
+        <li class="hot"><div class="who">Opus <span class="m">reviewer</span> → Fable <span class="m">main</span></div><p>reviewer 找到實作缺陷；Fable 根據 review 修正，再跑測試。</p>
+          <div class="receipt"><span class="f">1 failed / 92 passed</span><span class="a">→</span><span class="p">93 passed</span></div></li>
+        <li><div class="who">Sonnet <span class="m">checker</span></div><p>檢查 PR 提案；不通過就修內容，再檢查到通過。這一步也有重試。</p></li>
+      </ol>
+      <figure class="quote mt40">
+        <p>主模型沒有消失，也不是完全不動手。它仍要整合、判斷與修正；subagent 承接的是有邊界的工作，而不是替 main 扛走全部責任。</p>
+      </figure>
+    </div>
+    <aside class="aside">
+      <h3>為什麼留失敗</h3>
+      <p>派出去不會全部一次過。案例保留 review 後接縫測試先失敗、修正後通過的紀錄，因為接回來修正這一段才是 orchestrator 的工作。下一章的費用表包含這次失敗、重跑與 Sonnet 檢查的重試，沒有只挑成功輪次。</p>
+      <h3 class="mt32">reviewer 是派工，不是顧問</h3>
+      <p>第四步的 Opus reviewer 拿到的是一件有範圍的檢查工作：讀指定的改動、回報缺陷清單，結果由測試驗收。顧問處理的是 main 自己想不通的一題，回來的是意見，由人逐條裁決。兩者都能出判斷，差別在交出去的是工作還是問題。</p>
+      <h3 class="mt32">已去識別</h3>
+      <p>不展示原公司、repo、票號、客戶、業務欄位、路徑與截圖。模型、數字與成功／失敗狀態未改。</p>
+    </aside>
+  </div>
+</section>
+<!-- 7 用了多少 -->
+<section class="ch" id="c07" data-ch="7" data-label="用了多少">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">07</span><span>這段工作，各模型用了多少</span></div>
+    <h2 class="t2">誰產生最多 output？單價較高的 output，也佔最多花費嗎？</h2>
+    <div class="two wide mt40">
+      <div>
+        <div class="tbl-title">
+          <div class="seg" role="group" aria-label="切換表格視角" id="seg">
+            <button type="button" data-view="tok" aria-pressed="true">token 數量</button>
+            <button type="button" data-view="usd" aria-pressed="false">牌價費用</button>
+            <button type="button" data-view="pct" aria-pressed="false">費用佔比</button>
+          </div>
+          <span class="unit" id="unit">單位：token</span>
+        </div>
+        <div class="tablewrap">
+          <table id="cost">
+            <thead><tr>
+              <th scope="col">模型</th>
+              <th scope="col" class="num">一般 input</th>
+              <th scope="col" class="num">output</th>
+              <th scope="col" class="num hi">快取讀取</th>
+              <th scope="col" class="num">快取寫入</th>
+              <th scope="col" class="num mute" id="sumHead">累計</th>
+            </tr></thead>
+            <tbody>
+              <tr data-model="fable"><th scope="row">Fable 5</th>
+                <td class="num" data-tok="270" data-usd="0.0027"></td>
+                <td class="num" data-tok="111280" data-usd="5.56"></td>
+                <td class="num hi" data-tok="42381462" data-usd="42.38"></td>
+                <td class="num" data-tok="275372" data-usd="5.51"></td>
+                <td class="num mute" data-tok="42768384" data-usd="53.46"></td></tr>
+              <tr data-model="opus"><th scope="row">Opus 5</th>
+                <td class="num" data-tok="494" data-usd="0.00247"></td>
+                <td class="num" data-tok="222751" data-usd="5.57"></td>
+                <td class="num hi" data-tok="42009588" data-usd="21.00"></td>
+                <td class="num" data-tok="850409" data-usd="5.32"></td>
+                <td class="num mute" data-tok="43083242" data-usd="31.89"></td></tr>
+              <tr data-model="sonnet"><th scope="row">Sonnet 5</th>
+                <td class="num" data-tok="16" data-usd="0.000032"></td>
+                <td class="num" data-tok="4199" data-usd="0.04"></td>
+                <td class="num hi" data-tok="144000" data-usd="0.03"></td>
+                <td class="num" data-tok="164732" data-usd="0.41"></td>
+                <td class="num mute" data-tok="312947" data-usd="0.48"></td></tr>
+              <tr class="total"><th scope="row">合計</th>
+                <td class="num" data-tok="780" data-usd="0.005202"></td>
+                <td class="num" data-tok="338230" data-usd="11.17"></td>
+                <td class="num hi" data-tok="84535050" data-usd="63.42"></td>
+                <td class="num" data-tok="1290513" data-usd="11.23"></td>
+                <td class="num mute" data-tok="86164573" data-usd="85.83"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note mt16" id="tblNote">input 是送給模型處理的內容，output 是模型產生的內容。快取寫入是儲存輸入供後續重用，不是模型寫程式。範圍只含上一章的實作、review、修正與提案檢查。</p>
+        <ul class="concl mt40">
+          <li><span class="lab">單價</span><span class="big">5×</span><p>output 單價確實較高。三個模型都是一般 input 的 5 倍：50÷10、25÷5、10÷2，美元／百萬 token。</p></li>
+          <li><span class="lab">數量</span><span class="big">65.9%</span><p><strong>Opus 產生最多 output</strong>：222,751 ÷ 338,230。該組含實作與 code review，不是純寫程式的佔比。</p></li>
+          <li class="key"><span class="lab">總花費</span><span class="big">73.9%</span><p><strong>但花費最多的是快取讀取</strong>。output 只佔 13.0%。重用輸入的累計量，超過了 output 較高單價帶來的花費。</p></li>
+        </ul>
+        <figure class="quote mt40">
+          <p>寫出來的每個 token 比較貴，但整段工作不只是在寫。這個案例裡，Opus 產生最多輸出，最大的花費卻是讀取快取脈絡。要看單價，也要看實際處理了多少。</p>
+        </figure>
+      </div>
+      <aside class="aside">
+        <h3>這張表一定一起交代</h3>
+        <ol>
+          <li>累計 token 含反覆處理的快取內容。不是寫出了八千多萬個 token 的文字，也不是等量的不重複資料。</li>
+          <li>費用是 2026-09-10 官方標準 API 牌價等值，不是我實付的錢，也不能換算成省下多少訂閱額度。</li>
+          <li>部分速度欄位缺失，採標準價假設。每格各自四捨五入，顯示值相加可能與小計差一分錢。</li>
+          <li>Fable 的協調、修正與保留脈絡本身有消耗。不能說 subagent 越多就越省。</li>
+          <li>output 含推理 token，本表未拆推理與可見輸出。</li>
+        </ol>
+        <p class="mt16">不做「如果全部換成 Fable 會花多少」的假想對照。換模型後的工具步驟、輸出與快取行為都沒有量測。</p>
+        <p class="src">計算：每格 token 數 × 每百萬 token 單價 ÷ 1,000,000。佔比視角以四捨五入後金額除以 85.83 計算。<br><a href="https://platform.claude.com/docs/en/about-claude/pricing">官方 Pricing</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">Prompt caching</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/extended-thinking#budget-rules-and-tuning">推理用量說明</a></p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 8 effort -->
+<section class="ch alt" id="c08" data-ch="8" data-label="effort">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">08</span><span>Opus 與 effort</span></div>
+      <h2 class="t2">型號之外，還有推理投入</h2>
+      <p class="lead mt24">回頭看第 5 章那行 <code style="font-family:var(--mono);font-size:.9em">effort: medium</code>。同一顆 Opus，實作跟深度判斷我給不同的投入。</p>
+      <div class="vs mt40">
+        <div class="card"><div class="card-h">model</div><p>哪個模型承接工作。</p></div>
+        <div class="card"><div class="card-h">effort</div><p>同一模型投入多少推理與回應工作。</p></div>
+      </div>
+      <ul class="list mt32">
+        <li><p>不必把 Opus 的所有任務固定在最高 effort。</p></li>
+        <li><p>官方 Opus 5 指引：自己的評估顯示品質維持時用 <strong>low／medium</strong>，困難任務可提高。</p></li>
+        <li><p>effort 不是硬 token 上限，也不是可靠的字數控制。</p></li>
+        <li><p>effort 不是 Opus 獨有。著重 Opus 是因為它在我的分工裡承接實作與判斷。</p></li>
+      </ul>
+      <figure class="quote sm mt40">
+        <p>實作與深度判斷可以使用同一模型、不同 effort。這不是說寫程式一定比較簡單，而是兩種工作需要的投入方式不同。</p>
+      </figure>
+    </div>
+    <aside class="aside">
+      <h3>界線</h3>
+      <p>剛才的費用表<strong>不是 effort 對照實驗</strong>。不能拿它證明某個 effort 設定省多少，或品質不變。這是第二個旋鈕，不是第二個省錢承諾；要證明省多少，得自己做評估。</p>
+      <p class="src">來源：<a href="https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-opus-5">官方 Effort／Opus 5 建議</a>，查證日 2026-09-10。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 9 workflow -->
+<section class="ch" id="c09" data-ch="9" data-label="Workflow">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">09</span><span>延伸一句</span></div>
+      <h2 class="t2">同一套分工也能固化成 workflow</h2>
+      <p class="lead mt24">如果流程會重複跑，可以固化成 workflow，指定每個階段的模型。臨時產生的 dynamic workflow 同樣要留意實際派了誰，<strong>別不知不覺多出一支 Fable 艦隊</strong>。</p>
+      <p class="note mt16">不說 dynamic 必然昂貴，也不說固化就自動省額度。workflow 是進階題，今天只提這一句。</p>
+      <hr class="rule">
+      <p class="punch">以上都是把工作派出去。<br>接下來換另一種做法：只借一次判斷。</p>
+    </div>
+    <aside class="aside">
+      <h3>共同點</h3>
+      <p>不管手動派還是流程派，都要知道實際跑的是誰。角色名字不等於模型，看當次紀錄。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 10 advisor -->
+<section class="ch alt" id="c10" data-ch="10" data-label="Advisor">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">10</span><span>advisor</span></div>
+      <h2 class="t2">我只需要你幫忙想這一題，不是接管整場工作</h2>
+      <figure class="quote sm mt24">
+        <p>有時我只是對這一次思考不滿意，但整個 session 換成強模型，後續工作也一起換了。能不能只把這次判斷交出去？</p>
+      </figure>
+      <ol class="list mt32">
+        <li><p>說清楚<strong>要判斷的問題</strong>，不是請顧問泛泛看一遍。</p></li>
+        <li><p>依問題選顧問，確認它能看到哪些資料。</p></li>
+        <li><p>決定提供什麼脈絡：挑現有答案的錯，或讓它不受答案影響地獨立想一遍。</p></li>
+        <li><p>收回意見，逐條<strong>採納、拒絕或標尚待查證</strong>。不是拿到建議就自動照做。</p></li>
+        <li><p>原本的執行流程繼續，不讓顧問不知不覺接管實作。</p></li>
+      </ol>
+      <h3 class="t3 mt64">真實案例：給完整思路，反而困住顧問</h3>
+      <p class="body mt16">設計自己的 advisor 用法時，我在兩個選項裡挑：給顧問摘要，或給完整對話。Web Pro 的回覆：</p>
+      <figure class="quote mt24">
+        <p>不是讀原 agent 的摘要，就是讀原 agent 的全部思考。你們沒有留下第三種模式：只給原始任務、可驗證證據、限制條件與產出，刻意拿掉原 agent 的結論與辯護。</p>
+        <cite>Web Pro，一次歷史諮詢</cite>
+      </figure>
+      <p class="lead mt24">我原本在兩個選項裡挑，顧問指出我根本沒看到第三個。結果是加入<strong>盲審方式</strong>，顧問意見逐條裁決納入流程。</p>
+    </div>
+    <aside class="aside">
+      <h3>從這次諮詢帶走</h3>
+      <ol>
+        <li>要顧問挑現有答案的錯，與要顧問獨立想一遍，是不同問題。</li>
+        <li>提供更多脈絡不等於一定拿到更獨立的判斷。</li>
+        <li>顧問意見要回到資料與使用者決策，不因來自另一個模型就自動正確。</li>
+      </ol>
+      <h3 class="mt32">邊界</h3>
+      <p>Web Pro、Codex 可以是顧問選項，不做排名或產品比較。顧問能不能自行讀資料，按實際路徑交代。這是我的用法，不與官方 API 的 advisor tool 混為同一產品。一次歷史事件，不是使用頻率統計，也不外推固定效果。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 11 收尾 -->
+<section class="ch" id="c11" data-ch="11" data-label="收尾">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">11</span><span>收尾</span></div>
+      <h2 class="t2">不用先複製我的整套環境</h2>
+      <p class="lead mt24">三個問題，明天回去就能問自己。依現況誠實選：1 是還沒這樣想過，5 是已成為習慣。這只量你對三種做法的熟悉度，不量它們適不適合你手上的工作。</p>
+      <div class="check mt32" id="check">
+        <div class="q" data-k="orchestrator"><p><strong>一段有明確邊界的工作</strong>，是否適合交給 subagent，而不是 main 從頭做到底？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <div class="q" data-k="effort"><p>使用 Opus 時，是否<strong>有意識地選 effort</strong>，而非每種任務都用同一檔？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <div class="q" data-k="advisor"><p>某次判斷卡住時，是否需要<strong>借一次顧問意見</strong>，而不是讓它接管整場？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <p class="out" id="checkOut" aria-live="polite">三題都選完後，這裡會標出你最不熟的一項，當作起點的建議。</p>
+      </div>
+      <hr class="rule">
+      <p class="punch">不是少用強模型，而是知道哪一段值得用它。<br>派出去之後，仍然要接得回來。</p>
+    </div>
+    <aside class="aside">
+      <h3>來源</h3>
+      <ol>
+        <li><a href="https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan">Fable 方案說明</a> · <a href="https://code.claude.com/docs/en/costs">Claude Code 用量文件</a></li>
+        <li><a href="https://code.claude.com/docs/en/sub-agents">自訂 subagent</a></li>
+        <li><a href="https://platform.claude.com/docs/en/build-with-claude/effort">Effort</a></li>
+        <li><a href="https://platform.claude.com/docs/en/about-claude/pricing">Pricing</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">Prompt caching</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/extended-thinking">Extended thinking</a></li>
+      </ol>
+      <p class="src">自評結果只留在你的瀏覽器畫面上，不會送到任何地方。</p>
+    </aside>
+  </div>
+</section>
+</main>
+<footer class="foot"><div class="wrap"><span>模型分工 · tech workshop · philip · 日期待定</span><span>鍵盤 ↑↓ 或 ←→ 跳章節</span></div></footer>
+<script>
+(function () {
+  'use strict';
+  var chapters = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var navList = document.getElementById('navList');
+  var progress = document.getElementById('progress');
+  var navH = 60;
+  var current = -1;
+
+  var buttons = chapters.map(function (s, i) {
+    var b = document.createElement('button');
+    b.className = 'nav-btn'; b.type = 'button';
+    b.innerHTML = '<span class="nn">' + s.getAttribute('data-ch') + '</span>' + s.getAttribute('data-label');
+    b.addEventListener('click', function () { goTo(i); });
+    navList.appendChild(b);
+    return b;
+  });
+
+  function goTo(i) {
+    if (i < 0 || i >= chapters.length) return;
+    chapters[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function setCurrent(i) {
+    if (i === current) return;
+    current = i;
+    buttons.forEach(function (b, j) {
+      var on = j === i;
+      b.setAttribute('aria-current', on ? 'true' : 'false');
+      if (on) {
+        var l = navList.scrollLeft, w = navList.clientWidth;
+        if (b.offsetLeft < l || b.offsetLeft + b.offsetWidth > l + w) navList.scrollTo({ left: b.offsetLeft - 24, behavior: 'smooth' });
+      }
+    });
+  }
+  function recompute() {
+    navH = document.querySelector('.nav').offsetHeight;
+    var best = 0;
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].getBoundingClientRect().top - navH <= 8) best = i;
+    }
+    setCurrent(best);
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+  }
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { recompute(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'ArrowDown' && e.shiftKey) { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowUp' && e.shiftKey) { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'Home') { e.preventDefault(); goTo(0); }
+    else if (k === 'End') { e.preventDefault(); goTo(chapters.length - 1); }
+  });
+
+  // cost table views
+  var TOTAL_USD = 85.83;
+  var cells = Array.prototype.slice.call(document.querySelectorAll('#cost td[data-tok]'));
+  var unit = document.getElementById('unit');
+  var sumHead = document.getElementById('sumHead');
+  var tblNote = document.getElementById('tblNote');
+  var NOTES = {
+    tok: 'input 是送給模型處理的內容，output 是模型產生的內容。快取寫入是儲存輸入供後續重用，不是模型寫程式。範圍只含上一章的實作、review、修正與提案檢查。',
+    usd: '美元，按 2026-09-10 官方標準 API 牌價換算，不是訂閱帳單。token 數 × 每百萬 token 單價 ÷ 1,000,000；每格各自四捨五入。',
+    pct: '每格占總額 85.83 美元的比例，以四捨五入後金額計算。快取讀取一欄合計 73.9%，output 一欄合計 13.0%。'
+  };
+  var UNITS = { tok: '單位：token', usd: '單位：美元（API 牌價等值）', pct: '單位：占總費用 %' };
+  function fmtTok(n) { return Number(n).toLocaleString('en-US'); }
+  function fmtUsd(n) { n = Number(n); return n < 0.01 ? '<0.01' : n.toFixed(2); }
+  function fmtPct(n) { n = Number(n); var p = n / TOTAL_USD * 100; return p < 0.05 ? '<0.1%' : p.toFixed(1) + '%'; }
+  function setView(v) {
+    cells.forEach(function (td) {
+      var tok = td.getAttribute('data-tok'), usd = td.getAttribute('data-usd');
+      td.textContent = v === 'tok' ? fmtTok(tok) : v === 'usd' ? fmtUsd(usd) : fmtPct(usd);
+    });
+    unit.textContent = UNITS[v];
+    sumHead.textContent = v === 'tok' ? '累計' : '合計';
+    tblNote.textContent = NOTES[v];
+    segBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-view') === v ? 'true' : 'false'); });
+  }
+  var segBtns = Array.prototype.slice.call(document.querySelectorAll('#seg button'));
+  segBtns.forEach(function (b) { b.addEventListener('click', function () { setView(b.getAttribute('data-view')); }); });
+  setView('tok');
+
+  // self check
+  var LABEL = { orchestrator: '把一段有邊界的工作交給 subagent', effort: '用 Opus 時有意識地選 effort', advisor: '卡住時借一次顧問意見，而不是換掉整場' };
+  var score = {};
+  var qs = Array.prototype.slice.call(document.querySelectorAll('#check .q'));
+  var out = document.getElementById('checkOut');
+  qs.forEach(function (q) {
+    var k = q.getAttribute('data-k'), scale = q.querySelector('.scale');
+    for (var i = 1; i <= 5; i++) {
+      (function (n) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () {
+          score[k] = n;
+          Array.prototype.forEach.call(scale.children, function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+          render();
+        });
+        scale.appendChild(b);
+      })(i);
+    }
+  });
+  function render() {
+    var keys = Object.keys(score);
+    if (keys.length < 3) { out.textContent = '還有 ' + (3 - keys.length) + ' 題。'; return; }
+    var min = Math.min.apply(null, keys.map(function (k) { return score[k]; }));
+    var low = keys.filter(function (k) { return score[k] === min; });
+    if (min >= 4) { out.innerHTML = '三項都已經是習慣。那就回頭看<strong>帳</strong>：下一段工作結束後，看一眼各模型的用量分布。'; return; }
+    out.innerHTML = '你最不熟的是：<strong>' + low.map(function (k) { return LABEL[k]; }).join('；') + '</strong>。這只是起點建議；適不適合，看下一段工作有沒有明確邊界、或有沒有卡住的判斷。';
+  }
+
+  recompute();
+})();
+</script>
+</body>
+</html>
