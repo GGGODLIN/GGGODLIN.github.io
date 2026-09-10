@@ -81,6 +81,18 @@ material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語�
 - 修改 registry 本身不算使用者核准；不得在同一輪先自行登記，再用 content check 通過當成已確認。
 - 使用者核准後，新 tag 正常加入活詞彙表；這不是封閉白名單。
 
+## 發布 checklist：corpus 契約測試（固化）
+
+GitHub Pages 部署前會跑 `npm test`，其中四份測試把文章總數與每篇 tag 寫死成契約。**新文章放進 `src/content/blog/` 後、push 前，必須同一個 commit 一起改，否則部署紅燈**：
+
+- `tests/tag-registry.test.ts`：文章總數 +1
+- `tests/series-connectivity.test.ts`：測試名與斷言的文章總數 +1
+- `tests/support/series-connectivity-contract.ts`：把新 slug 加進一個系列的 `members`，且文章 tag 要含該系列 `validConnectors` 之一，否則會被判成未歸屬孤島
+- `tests/tag-audit-manifest.test.ts`：`expectedPreConnectorTags` 加新篇完整 tag、`expectedTopicMemberships` 加新篇所屬 topic（依 `src/data/topic-groups.ts` 對照）、`assignmentCount` 加上新篇 tag 數、對應 topic 計數 +1、兩處文章總數 +1
+- `tests/article-discovery.test.ts`：只在新篇帶 hook／skill／subagent／workflow 任一 tag 時，加進對應清單
+
+做法：改完本地跑 `npm test` 全綠再 push。這段在 material-first-writing 的 localhost gate 之後、commit 之前執行。
+
 ## 發布後同步轉發（固化；2026-08-24 依使用者拍板改版）
 
 本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。
