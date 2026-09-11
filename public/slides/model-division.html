@@ -288,7 +288,11 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
     <div class="two mt64">
       <div>
         <h3 class="t3">派工還有一個與模型無關的理由</h3>
-        <p class="body mt16">subagent 在自己的 context window 裡工作。它讀過的檔案、測試輸出、搜尋結果都留在那裡，只有結果回到 main。要翻很多東西的工作，<strong>就算用同一顆模型，派出去也能讓 main 的對話保持乾淨</strong>。</p>
+        <p class="body mt16"><strong>context 不是免費的倉庫，是模型的注意力預算。</strong>放太多東西進去，先壞的是判斷，再壞的是記憶，最後才是錢。</p>
+        <p class="body mt16"><strong>第一層，模型表現。</strong>context 越長，模型從裡面準確撈出資訊的能力越弱。這不是快滿了才變差，而是一路下滑，簡單任務也會。Anthropic 的工程文章把這叫 context rot：注意力要處理 n 個 token 之間 n² 組關係，預算有限。Chroma 測了 18 個模型，結論是「模型並不均勻地使用 context，輸入越長表現越不可靠」。幾千行測試輸出留在 main，就是拿雜訊稀釋後面每一個判斷。</p>
+        <p class="body mt16"><strong>第二層，壓縮失真。</strong>context 逼近上限時 Claude Code 會自動壓縮，把前面的對話摘要成一段。留什麼丟什麼由模型猜。官方文件寫得直接：過度壓縮會丟掉「當時看起來不重要、後來才發現關鍵」的細節。你前面拍板的決策、看過的行號，可能就在這一步變模糊，之後的推理建在殘缺的記憶上。</p>
+        <p class="body mt16"><strong>第三層才是錢。</strong>Claude Code 每一輪都重送整段對話，context 越胖，之後每一輪都跟著胖。第 6 章費用表裡那幾百萬個 cache read 就是這樣長出來的。</p>
+        <p class="body mt16">所以 subagent 在自己的 context window 裡工作這件事很重要。它讀過的檔案、測試輸出、搜尋結果都留在那裡，只有結果回到 main。要翻很多東西的工作，<strong>就算用同一顆模型，派出去也能讓 main 的對話保持乾淨</strong>。保護的是 main 的判斷品質，其次才是省錢。</p>
         <div class="diag mt32">
           <div class="box"><div class="card-h">main</div><p>分派實作範圍<br>收回結果<br>跑整合檢查</p></div>
           <div class="arrow"><span>只有結果</span><div class="line"></div></div>
@@ -305,7 +309,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
         </ol>
         <p class="mt16">這三條說不出來，就代表這段工作還在你腦子裡，不在票上。還在釐清方向、要反覆討論的工作，不要為了多模型而硬拆。</p>
         <p class="mt16">一個例外：<strong>fork</strong> 型 subagent 會繼承主對話的全部歷史，不必重講；但它的工具呼叫仍留在自己那邊，只有結果回 main。所以「main 保持乾淨」對兩種都成立，「看不到歷史、要交代三件事」只對一般 subagent 成立。第 5 章的示例是一般 subagent。</p>
-      <p class="src">來源：<a href="https://code.claude.com/docs/en/sub-agents">官方 subagent 文件</a>「Isolate high-volume operations」「Manage subagent context」「Fork the current conversation」三節，查證日 2026-09-10。</p>
+      <p class="src">來源：<a href="https://code.claude.com/docs/en/sub-agents">官方 subagent 文件</a>「Isolate high-volume operations」「Manage subagent context」「Fork the current conversation」三節，查證日 2026-09-10。<br>context rot：Anthropic <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a>（2025-09-29）；Chroma <a href="https://www.trychroma.com/research/context-rot">Context Rot</a>（2025-07-14，18 個模型）。壓縮：同篇 Anthropic 文章 Compaction 段；<a href="https://code.claude.com/docs/en/context-window">官方 context window 文件</a>「What survives compaction」。每輪重送：<a href="https://code.claude.com/docs/en/costs">官方用量文件</a>「Why usage climbs in a long session」。查證日 2026-09-11。</p>
       </aside>
     </div>
   </div>
