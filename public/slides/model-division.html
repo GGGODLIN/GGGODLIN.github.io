@@ -111,6 +111,15 @@ h3.t3{font-size:22px;line-height:1.3;font-weight:600}
 .quote.sm p{font-size:19px;font-weight:400;color:var(--w72)}
 .quote cite{display:block;margin-top:16px;font-style:normal;font-size:13px;color:var(--w54);letter-spacing:.04em}
 
+/* diagrams */
+.figs{display:grid;gap:24px}
+@media (min-width:900px){.figs{grid-template-columns:1fr 1fr;gap:32px;grid-template-rows:auto auto}.fig{display:grid;grid-template-rows:subgrid;grid-row:span 2;align-content:start}.fig img{align-self:center}}
+.fig{margin:0}
+.fig img{display:block;width:100%;height:auto;border-radius:2px;background:#efece6}
+.fig figcaption{margin-top:14px;font-size:14px;line-height:1.65;color:var(--w72);max-width:44ch}
+.fig figcaption strong{color:var(--white)}
+.fig .cap-k{display:block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:8px}
+
 /* tables */
 .tablewrap{overflow-x:auto;border-top:1px solid var(--hair)}
 table{width:100%;border-collapse:collapse;font-size:16px}
@@ -271,6 +280,20 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       </dl>
       <p class="src">一個常見誤解：「Fable 當主管、便宜模型當工人」。主模型可以不同，角色不等於能力排名。等一下的案例是 Fable 帶 Opus，那是那一天的配置，不是規則。</p>
     </aside>
+  </div>
+  <div class="wrap mt64">
+    <div class="figs">
+      <figure class="fig">
+        <img src="./model-division/orchestrator.jpeg" alt="Orchestrator 示意圖：一個 orchestrator 節點自帶 main loop，向右 fan out 給三個 worker，每個 worker 各自有自己的 worker loop。" width="1199" height="622" loading="lazy">
+        <figcaption><span class="cap-k">Orchestrator</span><strong>由上而下</strong>：主流程先有一份 plan，再把工作分給各自獨立跑的 worker。每個 worker 有自己的迴圈，做完才回來。</figcaption>
+      </figure>
+      <figure class="fig">
+        <img src="./model-division/advisor.jpeg" alt="Advisor 示意圖：左側 executor 自帶 main loop 每輪執行，向右以 tool call 呼叫 advisor，advisor 只回傳建議。" width="1199" height="525" loading="lazy">
+        <figcaption><span class="cap-k">Advisor</span><strong>由下而上</strong>：執行的那端一直在跑，需要判斷時才呼叫顧問一次，顧問只回意見、不碰工具也不接管。</figcaption>
+      </figure>
+    </div>
+    <hr class="rule">
+    <p class="note">兩張圖出自 Anthropic 官方說明（ClaudeDevs thread），圖中的 Fable 5 與 Sonnet 5 是官方示例配置，不是規則——哪個角色配哪個型號由你決定。</p>
   </div>
 </section>
 
