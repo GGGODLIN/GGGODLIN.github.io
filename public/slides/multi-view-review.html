@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一個模型不夠：從 PR 到 spec 的多視角 review</title>
+<meta name="description" content="review 的盲點來自視角；只換更強的模型不保證補齊。多視角、交叉驗證、人拍板，先用在 PR，再往前搬到 spec。附四份 PR review 與三份 YAGNI review 的去敏數據。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --navy:#00122D; --black:#000; --navy-800:#041A3A; --navy-700:#0A2548;
+  --teal:#61D6D6; --orange:#F95229; --white:#FFF;
+  --w72:rgba(255,255,255,.72); --w54:rgba(255,255,255,.54); --w38:rgba(255,255,255,.38);
+  --hair:rgba(97,214,214,.22); --hair-soft:rgba(97,214,214,.12); --hair-strong:rgba(97,214,214,.45);
+  --sans:'Poppins','Noto Sans TC','PingFang TC',system-ui,sans-serif;
+  --mono:'IBM Plex Mono','Noto Sans TC',ui-monospace,monospace;
+  --nav-h:60px; --ease:cubic-bezier(.2,.6,.2,1);
+  --measure:66ch;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h);background:var(--navy)}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){html{scroll-snap-type:y proximity}}
+body{margin:0;font-family:var(--sans);font-size:17px;line-height:1.7;color:var(--white);background:var(--navy);-webkit-font-smoothing:antialiased;text-wrap:pretty}
+h1,h2,h3,h4,p,ul,ol,li,figure,blockquote,table,pre{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:var(--white);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{border-bottom-color:var(--teal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+strong{font-weight:600;color:var(--white)}
+::selection{background:var(--teal);color:var(--navy)}
+.num,td.num,th.num,.stat,.big{font-variant-numeric:tabular-nums}
+code{font-family:var(--mono);font-size:.92em;color:var(--white)}
+
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);background:var(--navy);border-bottom:1px solid var(--hair);padding:0 24px}
+.nav .wrap{height:100%;display:flex;align-items:center;gap:24px}
+.nav-mark{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);white-space:nowrap;font-weight:500}
+.nav-list{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-list::-webkit-scrollbar{display:none}
+.nav-btn{appearance:none;background:none;border:0;color:var(--w54);font:inherit;font-size:13px;padding:8px 10px;white-space:nowrap;cursor:pointer;border-radius:2px;display:flex;gap:6px;align-items:baseline}
+.nav-btn .nn{font-size:11px;color:var(--w38);font-variant-numeric:tabular-nums}
+.nav-btn:hover{color:var(--white)}
+.nav-btn[aria-current="true"]{color:var(--navy);background:var(--teal)}
+.nav-btn[aria-current="true"] .nn{color:var(--navy)}
+.progress{position:fixed;top:var(--nav-h);left:0;height:2px;width:0;background:var(--teal);z-index:49;transition:width .12s linear}
+
+.ch{scroll-snap-align:start;padding:96px 24px;border-bottom:1px solid var(--hair-soft)}
+.ch.alt{background:var(--black)}
+.ch.hero{min-height:calc(100vh - var(--nav-h));display:flex;align-items:center}
+.wrap{max-width:1200px;margin:0 auto}
+.two{display:grid;gap:40px 64px}
+@media (min-width:1024px){.two{grid-template-columns:7fr 5fr}.two.wide{grid-template-columns:8fr 4fr}}
+.aside{color:var(--w72);font-size:15px;line-height:1.75}
+@media (min-width:1024px){.aside{position:sticky;top:calc(var(--nav-h) + 40px);align-self:start}}
+.aside h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:16px}
+.aside dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;border-top:1px solid var(--hair);padding-top:16px}
+.aside dt{font-family:var(--mono);font-size:14px;color:var(--white)}
+.aside dd{margin:0}
+.aside ol{counter-reset:n;border-top:1px solid var(--hair);padding-top:16px}
+.aside ol li{counter-increment:n;display:grid;grid-template-columns:24px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair-soft)}
+.aside ol li::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:12px;color:var(--teal);padding-top:4px}
+.aside .src{margin-top:24px;font-size:13px;color:var(--w54)}
+.aside p + p{margin-top:12px}
+
+.part{padding:56px 24px 0;text-align:left}
+.part .wrap{border-top:1px solid var(--hair-strong);padding-top:16px;display:flex;gap:16px;align-items:baseline}
+.part .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.part .t{font-size:15px;color:var(--w54)}
+
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;display:flex;gap:14px;margin-bottom:20px}
+.eyebrow .idx{color:var(--w38);font-family:var(--mono);letter-spacing:0}
+h1.t1{font-size:clamp(40px,6vw,72px);line-height:1.05;letter-spacing:-.02em;font-weight:600;max-width:20ch}
+h2.t2{font-size:clamp(30px,3.6vw,44px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:22ch}
+h3.t3{font-size:22px;line-height:1.3;font-weight:600}
+.lead{font-size:clamp(19px,1.6vw,22px);line-height:1.6;color:var(--w72);max-width:var(--measure)}
+.lead strong{color:var(--white)}
+.body{max-width:var(--measure);color:var(--w72)}
+.body + .body{margin-top:16px}
+.punch{font-size:clamp(26px,3vw,36px);line-height:1.3;letter-spacing:-.01em;font-weight:500;max-width:26ch}
+.note{font-size:14px;color:var(--w54);line-height:1.65;max-width:var(--measure)}
+.note.hi{color:var(--w72);border-left:2px solid var(--teal);padding-left:12px}
+.rule{border:0;border-top:1px solid var(--hair);margin:40px 0}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt40{margin-top:40px}.mt48{margin-top:48px}.mt64{margin-top:64px}
+
+.card{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px}
+.card-h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:12px}
+.card p{color:var(--w72);font-size:16px;line-height:1.6}
+.card p + p{margin-top:10px}
+.card p strong{color:var(--white)}
+.card.dash{box-shadow:inset 0 0 0 1px var(--hair);background:transparent;border:1px dashed var(--hair-strong)}
+.card.hot{box-shadow:inset 0 0 0 1px var(--orange)}
+.card.hot .card-h{color:var(--orange)}
+.grid2{display:grid;gap:16px}
+@media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}}
+.grid3{display:grid;gap:16px}
+@media (min-width:720px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.grid5{display:grid;gap:16px}
+@media (min-width:720px){.grid5{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1024px){.grid5{grid-template-columns:repeat(5,1fr)}}
+.vs{display:grid;gap:16px}
+@media (min-width:720px){.vs{grid-template-columns:1fr 1fr}}
+.stats{display:grid;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+@media (min-width:720px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stats > div{padding:28px 24px 28px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:720px){.stats > div{border-bottom:0;border-right:1px solid var(--hair-soft);padding-left:24px}.stats > div:first-child{padding-left:0}.stats > div:last-child{border-right:0}}
+.stats .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.stats .v{font-size:28px;font-weight:600;line-height:1.2;margin-top:8px;letter-spacing:-.01em}
+.stats .d{color:var(--w72);font-size:15px;margin-top:8px}
+
+.list{counter-reset:n}
+.list li{counter-increment:n;display:grid;grid-template-columns:32px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--hair-soft)}
+.list li::before{content:counter(n);font-family:var(--mono);font-size:14px;color:var(--teal);padding-top:2px}
+.list.zero{counter-reset:n -1}
+.list li p{grid-column:2;color:var(--w72);max-width:var(--measure)}
+.list li p strong{color:var(--white)}
+.list li p + p{margin-top:6px}
+.list.plain li::before{content:''}
+.list.plain li{grid-template-columns:1fr}
+.list.plain li p{grid-column:1}
+
+.quote{border-left:2px solid var(--teal);padding:8px 0 8px 28px;max-width:60ch}
+.quote p{font-size:clamp(20px,2vw,26px);line-height:1.5;font-weight:500}
+.quote.sm p{font-size:19px;font-weight:400;color:var(--w72)}
+.quote cite{display:block;margin-top:16px;font-style:normal;font-size:13px;color:var(--w54);letter-spacing:.04em}
+
+.tablewrap{overflow-x:auto;border-top:1px solid var(--hair)}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{padding:14px 12px;text-align:left;border-bottom:1px solid var(--hair-soft);vertical-align:top}
+thead th{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;white-space:nowrap}
+tbody th{font-weight:600;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:15px}
+td.hi{color:var(--white);font-weight:500;background:rgba(97,214,214,.06)}
+th.hi{background:rgba(97,214,214,.06)}
+td.mute,th.mute{color:var(--w38)}
+td.warn{color:var(--orange)}
+tr.total th,tr.total td{border-top:1px solid var(--hair);border-bottom:0;font-weight:600;color:var(--white)}
+.tbl-title{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tbl-title .unit{font-size:14px;color:var(--w54)}
+
+pre{font-family:var(--mono);font-size:14px;line-height:1.75;background:var(--black);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;overflow-x:auto;color:var(--w72)}
+.ch.alt pre{background:var(--navy-800)}
+pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}pre .o{color:var(--orange)}
+pre.big{font-size:16px}
+
+.flow{display:grid;gap:12px}
+@media (min-width:720px){.flow{grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch}}
+.flow .st{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:18px 20px}
+.flow .st .who{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:6px}
+.flow .st p{font-size:15px;color:var(--w72);line-height:1.6}
+.flow .st .verdict{font-family:var(--mono);font-size:14px;margin-top:10px;color:var(--white)}
+.flow .st .verdict.bad{color:var(--orange)}
+.flow .ar{display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:20px;padding:0 4px}
+@media (max-width:719px){.flow .ar{transform:rotate(90deg)}}
+
+.tier{display:grid;gap:0;border-top:1px solid var(--hair)}
+.tier li{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:720px){.tier li{grid-template-columns:64px 1.1fr 1.4fr}}
+.tier .n{font-family:var(--mono);font-size:22px;color:var(--teal);font-weight:500;line-height:1.2}
+.tier .m{color:var(--white);font-weight:500}
+.tier .w{color:var(--w72);font-size:15px}
+@media (max-width:719px){.tier .w{grid-column:2}}
+
+.concl{display:grid;gap:16px}
+@media (min-width:900px){.concl{grid-template-columns:repeat(3,1fr)}}
+.concl li{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.concl .lab{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.concl .big{font-size:40px;line-height:1;font-weight:600;letter-spacing:-.02em}
+.concl li.key .big{color:var(--orange)}
+.concl p{color:var(--w72);font-size:15px;line-height:1.6}
+.concl p strong{color:var(--white)}
+
+.check{border-top:1px solid var(--hair)}
+.check .q{display:grid;gap:16px;padding:24px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:900px){.check .q{grid-template-columns:1fr auto;align-items:center}}
+.check .q p{color:var(--w72);max-width:var(--measure)}
+.check .q p strong{color:var(--white)}
+.scale{display:inline-flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden;flex-wrap:wrap}
+.scale button{appearance:none;background:none;border:0;border-right:1px solid var(--hair);color:var(--w72);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.scale button:last-child{border-right:0}
+.scale button:hover{color:var(--white)}
+.scale button[aria-pressed="true"]{background:var(--teal);color:var(--navy);font-weight:500}
+.check .out{margin-top:24px;min-height:1.7em;color:var(--w72)}
+.check .out strong{color:var(--white)}
+
+.foot{padding:48px 24px;border-top:1px solid var(--hair);color:var(--w54);font-size:13px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.progress{transition:none}}
+@media (max-width:719px){.ch{padding:64px 20px}.nav{padding:0 20px}.nav .wrap{gap:16px}}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="章節導覽">
+  <div class="wrap">
+    <div class="nav-mark">Calyx · tech workshop</div>
+    <div class="nav-list" id="navList"></div>
+  </div>
+</nav>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<main>
+
+<section class="ch hero" id="c01" data-ch="1" data-label="開場">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">01</span><span>tech workshop · 日期待定</span></div>
+      <h1 class="t1">一個模型不夠</h1>
+      <p class="lead mt32">從 PR 到 spec 的多視角 review。</p>
+      <p class="punch mt64">review 的盲點來自視角。<br>換更強的模型不保證補齊；要改的是餵給 reviewer 的材料與立場。</p>
+      <p class="note mt24">今天講的是流程，不現場操作。例子來自近一個月自己團隊的 review 紀錄，已去敏：不出現 repo、PR 號、作者與業務名詞。</p>
+    </div>
+    <aside class="aside">
+      <h3>三句話，兩個階段</h3>
+      <ol>
+        <li><p><strong>多視角</strong>：不是多幾個一樣的 reviewer，是餵不同的材料、給不同的立場。</p></li>
+        <li><p><strong>交叉驗證</strong>：找到問題的人不准自己驗；初審與複查都會被驗。</p></li>
+        <li><p><strong>人拍板</strong>：報告不刪任何一條，雙方證據並陳，人是最終法官。</p></li>
+      </ol>
+      <p class="src">前半場用在 PR，後半場搬到 spec。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch alt" id="c02" data-ch="2" data-label="兩條 finding">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">02</span><span>開場</span></div>
+    <h2 class="t2">同一份報告裡的兩條 finding</h2>
+    <p class="lead mt24">一份大 PR 的 review 報告，幾十條 finding。挑兩條。</p>
+    <div class="vs mt40">
+      <div class="card">
+        <div class="card-h">第一條 · 四席同題 · Must Fix</div>
+        <p>登入後的落點少了一道權限判斷，<strong>某類使用者登入直接看到 404。</strong></p>
+        <p>四個視角都抓到。交叉驗證時去 repo 裡找同型的判斷，別處都有、只有這裡缺，所以成立。</p>
+      </div>
+      <div class="card hot">
+        <div class="card-h">第二條 · 初審 → 複查推翻 → 重驗翻回 · Nice to Have</div>
+        <p>事件本身很小：一條測試是綠的，但它走的不是名字說要測的那條路，等於沒測到東西。</p>
+        <p>重點在過程：<strong>初審提出 → 複查判 REFUTED（被反證推翻） → 重驗翻回 CONFIRMED（成立）</strong>。複查者拿的環境跟被測程式不同，結論就反了。</p>
+      </div>
+    </div>
+    <div class="flow mt40">
+      <div class="st"><div class="who">1 · 初審</div><p>這條測試實際走的是另一個分支，測不到它想測的東西</p><div class="verdict">MEDIUM</div></div>
+      <div class="ar">→</div>
+      <div class="st"><div class="who">2 · 複查</div><p>在一般環境試，判斷式成立，說測試沒錯</p><div class="verdict bad">REFUTED</div></div>
+      <div class="ar">→</div>
+      <div class="st"><div class="who">3 · 重驗</div><p>用測試實際跑的環境重跑一次，log 證明走錯分支。複查者的環境跟被測程式不同</p><div class="verdict">CONFIRMED · 降 LOW</div></div>
+    </div>
+    <hr class="rule">
+    <p class="punch">哪條更能說明 review 該怎麼設計？</p>
+    <p class="lead mt24">第二條。<strong>驗證者也會錯。</strong>今天講的流程，一半在防 reviewer 錯，另一半在防「驗 reviewer 的人」錯。</p>
+  </div>
+</section>
+
+<div class="part"><div class="wrap"><span class="k">Part A</span><span class="t">PR review</span></div></div>
+
+<section class="ch" id="c03" data-ch="3" data-label="視角設計">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">03</span><span>視角差是設計出來的</span></div>
+      <h2 class="t2">一席餵滿，一席刻意餓著</h2>
+      <p class="lead mt24">想要不同視角，就餵不同的材料、給不同的立場。換更強的模型不保證做到。</p>
+      <div class="vs mt40">
+        <div class="card">
+          <div class="card-h">CC 席 · 餵滿</div>
+          <p>主動塞給它：spec 全文、這次改動會影響到誰（用依賴關係算出來）、repo 的慣例文件、共同 checklist。有關聯的後端 PR 時，連那份 diff 也一起給。</p>
+        </div>
+        <div class="card">
+          <div class="card-h">Codex 席 · 刻意餓著</div>
+          <p>不給 spec、不給慣例、不給 checklist，只給 diff 和它原生的 review 規則。流程明文禁止多塞一句提示。</p>
+          <p>它仍然可以讀程式、跑測試。差別在沒人告訴它什麼是「本次不管」，所以它會問出我們習以為常而沒想到的事。</p>
+        </div>
+      </div>
+      <hr class="rule">
+      <h3 class="t3">兩件事會發生</h3>
+      <ol class="list mt16">
+        <li><p><strong>多給的材料會帶來獨有發現。</strong>前端這次接的是一個還沒合併的後端改動，前端先上線整欄會空白。只看 diff 的席看不到後端狀態，抓不到；拿到後端 diff 的席抓到了。報告會標這是 lone finding（只有一席抓到），並寫清楚「另一席材料上看不到，合理」。</p></li>
+        <li><p><strong>不同材料下各自命中，才叫共識。</strong>兩席材料不同、立場不同，卻指到同一段程式、同一個根因，這條的可信度就高。誠實講：在我們的紀錄裡，餓著的那席很少獨自抓到別人沒抓到的，它的貢獻是獨立命中、形成共識。</p></li>
+      </ol>
+    </div>
+    <aside class="aside">
+      <h3>反直覺的一句</h3>
+      <p>平常我們想的是給 reviewer 更多材料。這裡<strong>刻意不給材料</strong>也是一種設計。</p>
+      <p>一席漏了，不一定是它弱。報告會分開標：「它材料上看不到」和「它該看到卻漏了」是兩件事。</p>
+      <p class="src">兩邊都對，並列才看到全貌。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch alt" id="c04" data-ch="4" data-label="選席">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">04</span><span>選席</span></div>
+    <h2 class="t2">三個常設視角、兩個條件視角，每次選</h2>
+    <p class="lead mt24">不是每個 PR 都全開。流程先列出席位和推薦，你當次選。<strong>推薦不等於必跑，沒回覆不等於接受推薦。</strong></p>
+    <div class="grid5 mt40">
+      <div class="card"><div class="card-h">常設 · CC 主審</div><p>拿到全部材料。依語言選 reviewer。PR 大就切塊，一塊一個 reviewer。</p></div>
+      <div class="card"><div class="card-h">常設 · Codex 中性</div><p>只看 diff，用它原生的 review 規則。新鮮的眼睛。</p></div>
+      <div class="card"><div class="card-h">常設 · Codex 對抗</div><p>同一個 Codex、換成紅隊立場：「假設這個 PR 會炸，去找哪裡炸。」</p></div>
+      <div class="card dash"><div class="card-h">條件 · security</div><p>PR 碰到登入授權、請求參數、新的外部 API 時才開。</p></div>
+      <div class="card dash"><div class="card-h">條件 · spec 對照</div><p>repo 有寫成 MUST／SHALL 的正式條款，而且對得上這次改的流程才開。口語規格對不上，這席會 SKIPPED。</p></div>
+    </div>
+    <div class="two mt40">
+      <div>
+        <h3 class="t3">實際上怎麼選</h3>
+        <p class="body mt16">小 hotfix 三個常設席就夠。大 PR 主審切塊、加 security、兩個 Codex 都開。純後端 PR 可以不開對抗席。看的是這次改動碰到什麼，不是固定套餐。</p>
+        <p class="body"><strong>沒完成的席留 FAILED，不冒充完成、不偷換成別的模型。</strong>重試成功就記成功，首次失敗也留著。沒選的席不算未完成，也不算完成。</p>
+        <p class="body">前後端配對的 PR 可以一起審：各自 worktree、一次選席、一份報告。分開審時 reviewer 看不到對面的 diff，契約對不上判不出來。</p>
+      </div>
+      <aside class="aside">
+        <h3>有這席，但本場不推薦</h3>
+        <p>Gemini 席和網頁版 GPT Pro 席都在選單裡。Gemini 近期不穩、誤報偏多，已從預設拿掉。</p>
+        <h3 class="mt32">要的模型與實際跑的模型分開記</h3>
+        <p>每席記兩欄：我要的模型、收據上實際跑的模型。拿不到收據就寫 UNAVAILABLE，不用預設值猜。誠實講：CC 席這欄目前多半填不出來。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="c05" data-ch="5" data-label="交叉驗證">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">05</span><span>找的不准自己驗</span></div>
+      <h2 class="t2">初審會錯，複查也會錯</h2>
+      <p class="lead mt24">CC 驗 Codex 的 finding，Codex 反過來驗 CC 的。兩邊都被驗。多席都抓到的條目走輕量查證；只有一席抓到的，要多答一題「另一席為什麼漏」。</p>
+      <h3 class="t3 mt40">複查者依序問四個問題</h3>
+      <ol class="list mt16">
+        <li><p><strong>真的觸發得出來嗎？</strong>順著程式路徑走，能不能構造一個實際輸入讓它發生？構造不出來就只是「理論上可能」，不算成立。</p></li>
+        <li><p><strong>發生了會怎樣？</strong>「多印一個錯誤」「只有開發環境會遇到」算 LOW；能跑任意程式、資料外洩、權限提升、資料寫壞才算 HIGH 以上。初審常把 LOW 抓成 HIGH，這題壓回來。</p></li>
+        <li><p><strong>同樣寫法別處早就有，為什麼只有這條會炸？</strong>去整個 codebase 找同一種寫法。已經存在多處、跑很久沒事，就要答出這條的實質差別：多了使用者可控的輸入、跨了信任邊界、範圍變了。答不出就 REFUTED。</p><p>這題最會殺誤報，也最容易被濫用：它分得出「新增的回歸」和「早就在的風險」，分不出「沒問題」。既有程式也可能一起錯，REFUTED 時要註明這點。</p></li>
+        <li><p><strong>別的地方擋掉了嗎？</strong>中介層、資料庫約束、framework 預設、上游守衛。有就降級，並附上擋掉它的檔案與行號。</p></li>
+      </ol>
+      <p class="note hi mt24">任何一題不過，複查者要附反證，不能只寫「我不同意」。REFUTED 不是刪除，是多了一份反證。</p>
+      <hr class="rule">
+      <h3 class="t3">兩種錯法</h3>
+      <div class="vs mt16">
+        <div class="card hot">
+          <div class="card-h">複查錯</div>
+          <p>開場第二條。複查者在一般環境驗，被測程式跑在另一種環境，同一個判斷式在兩邊結果相反。<strong>驗證環境跟被測程式不同，結論就反了。</strong></p>
+        </div>
+        <div class="card hot">
+          <div class="card-h">初審錯</div>
+          <p>初審說「這段設定要到某個時間點才載入，所以這個檢查永遠跳過」。複查判它前提錯。最後用一小段探針程式實測，證明設定在 import 當下就載好了。<strong>初審的前提沒查證，整條就不成立。</strong></p>
+        </div>
+      </div>
+    </div>
+    <aside class="aside">
+      <h3>REFUTED 不等於錯</h3>
+      <p>被推翻的條目全部留在報告的「參考用」區，一條不刪。作者看得到雙方證據。</p>
+      <p>看到 REFUTED，先看複查者拿什麼環境、什麼前提驗。第三題「別處早就有」最會抓誤報，也最容易被拿來替既有錯誤辯護。</p>
+      <p class="src">降級不是刪除。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch alt" id="c06" data-ch="6" data-label="降級閘">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">06</span><span>拍板不是模型說了算</span></div>
+    <h2 class="t2">三道降級閘</h2>
+    <p class="lead mt24">報告按最終建議排序：Must Fix、Should Fix、Nice to Have、參考用。不按 severity（模型給的嚴重度）排。CRITICAL 被推翻一樣沉底。三道閘把「聽起來嚴重」壓回「查證過的嚴重」。</p>
+    <ol class="list mt40">
+      <li><p><strong>Must Fix 要兩個條件同時成立。</strong>一，寫得出使用者看得到的重現步驟。二，不修就會壞掉會出貨的東西。死測試、死設定、文件不符通常不單獨構成 Must Fix，依影響列 Should 或 Nice。多席共識也不豁免。</p></li>
+      <li><p><strong>假設性措辭最高只到 Should Fix。</strong>「若有人繞過」「假設 API 回 X」這類句子撐不起 Must。例外是不必舉證就該報的類型：硬編的密鑰、SQL 字串拼接、eval 使用者輸入。</p></li>
+      <li><p><strong>嚴重度不能建立在沒查證的前提上。</strong>把沒查證過的論據拿掉，等級會不會降？會降就用拿掉後的等級。</p><p>為什麼獨立成一條：沒查證的那段往往正是把嚴重度撐高的那段，而嚴重度決定哪幾條會貼給作者。不擋在這裡，最沒根據的 finding 會被系統性選出來送出去。</p></li>
+    </ol>
+    <div class="two mt40">
+      <div>
+        <p class="body"><strong>閘的結果長什麼樣</strong>：四份報告合計 138 條 finding，會擋 merge 的 Must Fix 只有 4 條。作者打開報告先看那 4 條。其餘多數是已確認但不擋發布的測試缺口、文件過期，各自保留驗證狀態。最終建議是處理優先序，不是真偽。</p>
+        <p class="body">第三道閘的來由：某一輪貼給作者的前兩條，都是靠沒查證的論據升上去的。拿掉那段，一條降 Nice to Have、一條不成立。同一輪完整驗證過的幾條全對、全落 Nice to Have，有一條根本沒貼。沒有這道閘，送出去的剛好是最沒根據的。</p>
+        <h3 class="t3 mt40">等級之外還有一欄：處置</h3>
+        <p class="body mt16">每條 finding 除了等級和最終建議，還標一個處置，三選一。<strong>auto-fix</strong>：修法明確又局部，可以直接修。<strong>ask-user</strong>：要人決定怎麼修，或不確定該誰負責；拿不準時預設這個。<strong>no-op</strong>：純觀察，不用動。</p>
+        <p class="body">auto-fix 是標籤，不是動作。流程明文寫：沒有使用者另外下令，不改 code、不 commit、不 push、不動 PR。標了 auto-fix 的條目會附一段可以直接貼到 PR 的留言，但貼不貼也是人決定，預設不貼。</p>
+        <p class="body">第二輪對帳只追 auto-fix 和 ask-user 的條目。no-op 不算未結案。</p>
+      </div>
+      <aside class="aside">
+        <h3>三個容易漏的閘</h3>
+        <p><strong>這些改動到底是不是這位作者寫的？</strong>hotfix 從開發主幹切出、打向 production，diff 會把「主幹有、production 還沒有」的別人功能一起帶進來。那些在各自的 PR 早就審過了，卻出現在這位作者的 diff 裡。不分開，reviewer 會把別人的帳算到他頭上。</p>
+        <p>做法是逐檔比對：跟主幹內容一樣的標 inherited（繼承來的），輕掃、找到問題也只列參考用；不一樣的才是 authored（作者寫的），正常審。報告有跑就寫「N authored／M inherited」，不寫 N-A，讀者才分得出「沒檢查」和「檢查了、沒有繼承檔」。</p>
+        <p><strong>說「少了 X」之前，先去找 X 是不是真的沒有。</strong>reviewer 最常見的幻覺是「你沒處理 null」「缺了權限檢查」，而那個處理常在別的檔、別的層。規則是：要 flag「缺 X」，先 grep 整個 codebase，把搜了什麼、沒找到附進 finding 當證據。搜到了就不能講。</p>
+        <p>唯一例外是不必舉證的類型：硬編密鑰、SQL 字串拼接、eval 使用者輸入。</p>
+        <p class="src">前兩條不需要整套流程，今天在自己的 review prompt 加一句就有：「base 不是主幹時先分出繼承檔」「flag 缺東西前先 grep 附證據」。</p>
+        <p class="mt24"><strong>這位作者的慣例，reviewer 知道嗎？</strong>有些寫法是某位作者的固定風格，每次都被誤報成問題。可以替這位作者建一份校準檔，寫明哪類 finding 對他要降級或改措辭。校準只准往下調、不准往上調，避免它變成偏袒或針對。</p>
+        <p>報告固定寫一行校準結果，三種狀態都要寫：套用了哪幾條、有檔但這輪沒命中、這位作者沒有檔。少了這行，讀者分不出「跑了沒命中」和「這步跳過了」。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="c07" data-ch="7" data-label="程式保證">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">07</span><span>LLM 不可信的部分</span></div>
+    <h2 class="t2">能用程式檢查的，就不留給模型自述</h2>
+    <p class="lead mt24">不信 agent 說「都看了」。每一件能機械核對的事，都由程式算、程式寫進報告。</p>
+    <div class="two mt40">
+      <div>
+        <ol class="list plain">
+          <li><p><strong>審的是哪一版。</strong>程式核對 review 副本的 commit 跟 PR 最新 commit 一樣，才准寫「已審 SHA」。不一樣就標 unverified。</p></li>
+          <li><p><strong>每個檔都有交代。</strong>改動檔清單由程式建。每個檔只能是四種狀態之一：有 finding、看過沒問題、刻意跳過、漏掉。四個數字加起來要等於總檔數，漏掉那格要是 0。刻意跳過的檔（例如自動生成檔）要有跳過的理由。</p></li>
+          <li><p><strong>行號重新對位。</strong>finding 附一段逐字程式碼，由程式重新找出它在哪一行。模型報的行號常會偏。</p></li>
+          <li><p><strong>兩層報告。</strong>完整證據是正本，給人看的主報告由程式從正本投影出來。模型不准重寫或摘要主報告。</p></li>
+          <li><p><strong>發布前有人再看一次。</strong>派一個沒參與審查的唯讀 agent，照固定清單挑報告的缺口。它是提醒性質：失敗只註記、不擋發布。</p></li>
+          <li><p><strong>第二輪不是重來。</strong>前一輪每條 finding 有固定編號，這輪對帳：修了、還開著、已過時。前一輪內容不餵給新 reviewer，避免先入為主。誠實揭露：我們目前都是首輪，這機制還沒實際用到。</p></li>
+        </ol>
+      </div>
+      <aside class="aside">
+        <h3>報告開頭 ＝ 流程儀表板</h3>
+        <p>報告第一段每行都是一句狀態。哪行沒跑、哪行跳過、哪行失敗，一眼看出這輪少做了什麼。</p>
+        <p>右邊是它的形狀。重點不是每一行的值，是<strong>每一步都有一行、值是程式算的</strong>。</p>
+      </aside>
+    </div>
+    <pre class="mt40"><span class="d"># Code Review 報告 · 已審 SHA ●●●●●●●</span>
+<span class="k">變更</span>: N 檔 <span class="d">（源碼／測試／文件／生成檔各幾個）</span>
+<span class="k">輸入綁定</span>: <span class="v">verified</span> <span class="d">（副本 commit == PR 最新 commit）</span>
+<span class="k">前輪對帳</span>: <span class="d">N-A（沒有前一輪）</span>
+<span class="k">選了哪幾席</span>: CC 主審 × N 塊；security；Codex 中性
+<span class="k">作者／繼承</span>: <span class="v">N authored / M inherited</span>
+<span class="k">覆蓋</span>: 有 finding a / 沒問題 b / 刻意跳過 c / <span class="v">漏掉 0</span>
+<span class="k">行號對位</span>: 精確 x / 模糊 y / <span class="v">失敗 0</span>
+<span class="k">影響範圍</span>: 已算；共用元件有 N 個使用端；已餵給每個 reviewer
+<span class="k">spec 對照</span>: <span class="o">SKIPPED（沒有正式條款）</span>
+<span class="k">各席狀態</span>: 每席一個 PASS／FAILED
+<span class="k">發布前稽查</span>: 幾條 PASS；<span class="o">哪幾條 FAIL</span> <span class="d">→ 修了沒重跑就寫「修正後未重派」</span></pre>
+    <hr class="rule">
+    <h3 class="t3">前半場收：PR 階段的三句</h3>
+    <div class="grid3 mt16">
+      <div class="card"><div class="card-h">視角</div><p>視角要設計：一席餵滿、一席餓著。</p></div>
+      <div class="card"><div class="card-h">驗證</div><p>找的不准自己驗；初審與複查都會被驗。</p></div>
+      <div class="card"><div class="card-h">拍板</div><p>拍板靠閘，不靠模型的語氣。</p></div>
+    </div>
+    <p class="lead mt32">這三句搬到 spec 階段一樣成立，而且更便宜。</p>
+  </div>
+</section>
+
+<div class="part"><div class="wrap"><span class="k">Part B</span><span class="t">spec review</span></div></div>
+
+<section class="ch alt" id="c08" data-ch="8" data-label="Spec 階段">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">08</span><span>為什麼往前搬</span></div>
+      <h2 class="t2">spec 階段抓到的，在寫 code 前就能改</h2>
+      <p class="lead mt24">PR 階段抓到缺陷，修法是改 code。spec 階段能更早核對兩件事：<strong>做的是不是使用者要的</strong>、<strong>值不值得做</strong>。PR 階段也能判範圍，但那時 code 已經寫了。</p>
+      <h3 class="t3 mt40">分五級，賭多大開多重</h3>
+      <ol class="tier mt16">
+        <li><span class="n">1</span><span class="m">唱反調自審<br><span class="w">在原對話裡問自己，不派 agent</span></span><span class="w">改動小、已經很懂這塊</span></li>
+        <li><span class="n">2</span><span class="m">一個 critic<br><span class="w">沒看過對話的新 agent</span></span><span class="w">跨多檔、新模組、架構沒把握</span></li>
+        <li><span class="n">3</span><span class="m">多個角度平行審，再彙整</span><span class="w">動核心架構、碰生產資料</span></li>
+        <li><span class="n">4</span><span class="m">找外部模型</span><span class="w">賭很大的關鍵決策才手動升</span></li>
+        <li><span class="n">Y</span><span class="m">YAGNI 定價<br><span class="w">獨立跑，不與 1 到 4 疊加</span></span><span class="w">spec 是模型代寫、要審「值不值得」</span></li>
+      </ol>
+    </div>
+    <aside class="aside">
+      <h3>選單自帶的一句</h3>
+      <p><strong>預設別逼高等級。</strong>重的 review 跑久了會懶得等、退回橡皮圖章。那時候被蓋章的是 review 本身。</p>
+      <p>第 1 級不派 agent；第 3 級按選的角度派，席數不固定。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch" id="c09" data-ch="9" data-label="Tier 1">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">09</span><span>第 1 級</span></div>
+      <h2 class="t2">三個問題，不派 agent 的地板</h2>
+      <p class="lead mt24">直接在原對話自問。只要問對三個問題。</p>
+      <ol class="list mt40">
+        <li><p>這份 spec 我做了哪 <strong>3 個你可能不同意的決策</strong>？各附「我選它的理由」和「反方理由」。</p></li>
+        <li><p>我對關鍵變數、範圍、依賴<strong>假設了什麼</strong>？哪些沒跟你確認過？</p></li>
+        <li><p>哪裡<strong>偷工、含糊帶過、留了沒解的問題</strong>？</p></li>
+      </ol>
+      <p class="note hi mt32">紀律：自己能答的先答完、一次列完，只把真要使用者裁的留下來問。不軟化、不先幫自己辯護。</p>
+    </div>
+    <aside class="aside">
+      <h3>它是最常被用的一級</h3>
+      <p>翻 session 紀錄，第 1 級自審出現的次數約是正式派 critic 的三倍多。差別在第 1 級由 hook 自動推，其他幾級要記得跑。</p>
+      <p><strong>我的解讀是自動化決定採用率</strong>。這是解讀，不是量測結論；兩者適用的情境本來也不同。</p>
+      <p class="src">計算方式：session 紀錄裡含對應標記的檔數，排除 subagent 紀錄。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch alt" id="c10" data-ch="10" data-label="派 critic">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">10</span><span>派 critic 的守則</span></div>
+      <h2 class="t2">新 agent 的價值，在它沒被作者的結論污染</h2>
+      <p class="lead mt24">派出去的 critic 沒看過我們的對話。這是它的價值，四條守則都在保護這件事。</p>
+      <ol class="list zero mt40">
+        <li><p><strong>不夾帶自己的判斷。</strong>只給 spec 全文和需求約束，不給自己的評估。prompt 裡一句「我認為這段沒問題」，critic 就會傾向同意。</p></li>
+        <li><p><strong>意圖自己審、架構才外派。</strong>「這份 spec 有沒有偏離使用者真正要的」要靠整段對話才判得出來，新 agent 看不到。這題留在原對話做。</p></li>
+        <li><p><strong>finding 對回使用者的理解。</strong>使用者說「這個假設不對」，就整批重評。標「因理解修正而撤銷」是合法結果，不是忽略。不硬推原本的解法。</p></li>
+        <li><p><strong>每輪至少一路交兩張表。</strong>自洽表和引證表，寫進既有 critic 的輸出格式，不另派 agent。</p></li>
+      </ol>
+    </div>
+    <aside class="aside">
+      <h3>兩張附錄表</h3>
+      <p><strong>自洽表</strong>：把 spec 裡相關的條文兩兩拿出來，說明它們能同時成立。來由：曾有十路 review 全漏掉一個矛盾。三條要求各自合理，合起來第三條永遠做不到。每個 critic 只看自己的角度，沒人拿 A 條對 B 條。</p>
+      <p><strong>引證表</strong>：spec 裡任何一句「現在的 code 是這樣」都附檔案與行號；附不出來就改寫成「未驗證的假設」。來由：曾有 critic 明明有讀檔工具卻沒翻實作，漏了一個語義問題。所以不靠它自己決定何時去查。</p>
+      <p class="src">這兩張表就是第 06 章第三道閘「嚴重度不能建立在沒查證的前提上」的 spec 版。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch" id="c11" data-ch="11" data-label="Tier 3">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">11</span><span>第 3 級</span></div>
+    <h2 class="t2">讓兩個 critic 故意對立</h2>
+    <p class="lead mt24">多個角度不是多幾個同樣的人。價值在兩個對立角度的對撞處。</p>
+    <div class="flow mt40">
+      <div class="st"><div class="who">簡化派</div><p>預設懷疑。找過度設計、漏掉的需求、更簡單的替代。抓「該砍什麼」。</p></div>
+      <div class="ar">⇄</div>
+      <div class="st" style="box-shadow:inset 0 0 0 1px var(--orange)"><div class="who" style="color:var(--orange)">對撞</div><p>簡化派說 X 可以刪，強度派把 X 列為防禦。這種條目標 contested（有爭議）、單獨一段呈現、<strong>由人決策</strong>，流程不替它判。</p></div>
+      <div class="ar">⇄</div>
+      <div class="st"><div class="who">強度派</div><p>假設這份 spec 在某些情境會裂。找邊界情況、隱含假設、回滾、並發、部分失敗。明文「不找過度設計，那是另一支的活」。</p></div>
+    </div>
+    <div class="two mt48">
+      <div>
+        <h3 class="t3">另兩個角度</h3>
+        <ol class="list plain mt16">
+          <li><p><strong>跟 repo 既有決策一致嗎</strong>：讀決策紀錄、術語表，看用詞與已決定的事有沒有衝突。</p></li>
+          <li><p><strong>改了之後舊的還能用嗎</strong>：已上線的介面改前改後、每個使用端怎麼遷移、哪些要分兩步切換而不是一次換。</p></li>
+        </ol>
+        <h3 class="t3 mt40">要跳過某個角度，要有機械證據</h3>
+        <p class="body mt16">跳過相容性角度的唯一合法理由：grep spec 找不到任何對外介面的字樣，<strong>而且</strong> spec 自己說是純內部重構。兩個都要。要跳過的清單先亮給使用者拍板，報告第一段固定寫「本輪跳過了哪些角度、為什麼」，沒跳過就寫「無」。</p>
+      </div>
+      <aside class="aside">
+        <h3>收斂成兩行交付</h3>
+        <pre class="big">承重問題：這份 spec 最關鍵的那一個問題
+第一個驗證：用最便宜的方法驗它</pre>
+        <p class="mt16"><strong>承重問題</strong>：所有 finding 裡唯一一個「它若不成立，其他條都沒理由存在」的問題。就像一棟房子的承重牆。</p>
+        <p><strong>第一個驗證</strong>：針對承重問題，最便宜、能證偽的檢查。寫清楚輸入什麼、做什麼、看到什麼算過、看到什麼算不過、最多花多少時間。</p>
+        <p>如果是多個獨立問題，就誠實寫「沒有單一承重問題」，不硬湊。</p>
+        <p class="src">十條 finding 倒給人沒人會讀。先告訴他哪一條是承重牆、怎麼用十分鐘驗它。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ch alt" id="c12" data-ch="12" data-label="YAGNI">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">12</span><span>YAGNI 軸</span></div>
+    <h2 class="t2">審「值不值得」，不是「對不對」</h2>
+    <p class="lead mt24">YAGNI 是 You Aren't Gonna Need It，你不會需要它。找洞型的 review 對過度設計的 spec 是火上加油：每補一個洞就多一段 code。這一軸方向相反，<strong>reviewer 的預設答案是「不做」</strong>。</p>
+    <div class="two mt40">
+      <div>
+        <h3 class="t3">三個檢查</h3>
+        <ol class="list mt16">
+          <li><p><strong>每條需求從哪來。</strong>分三類：使用者原話、量測證據、模型自己推導的。前兩類受保護不砍。第三類逐條要答「砍掉會發生什麼具體損失」，答不出就降級或砍。</p></li>
+          <li><p><strong>這問題真的發生過嗎。</strong>過去實際發生幾次、每次損失多少？沒有數字就標「未定價」。未定價的問題，解法以最簡版為上限。</p></li>
+          <li><p><strong>先寫最簡版。</strong>reviewer 先寫一頁「最少要做什麼才能滿足使用者那句話」，再逐條列 spec 超出最簡版的部分。舉證責任在 spec 這邊，不在砍的那邊。</p></li>
+        </ol>
+        <p class="note hi mt32"><strong>反方下限</strong>：一席如果一條都沒砍，必須逐條證明每條模型推導的需求砍掉會有損失。做不到就當輸出不合格、重跑。這是防 reviewer 蓋章。</p>
+      </div>
+      <aside class="aside">
+        <h3>誕生脈絡</h3>
+        <p>模型代寫的 spec 把使用者一句「怎麼知道真的有東西散落在外」，翻成一套證明級的機械加防篡改治理。上線幾千行後，複雜的那層一次都沒用到。</p>
+        <p class="src">它跟前面四級正交：那些審「想得對不對」，這裡審「值不值得」。另外跑。</p>
+      </aside>
+    </div>
+    <hr class="rule">
+    <h3 class="t3">spec 階段的「驗證者也會錯」</h3>
+    <p class="body mt16">實際跑起來常見的形狀：一席主張砍某段，理由是「這是模型推導的」。另一席翻出使用者原話，證明那段是使用者自己要的。砍的那席把使用者原話誤分類成模型推導，就是 spec 階段的複查錯。</p>
+    <p class="body">這種爭議不歸流程判。兩邊證據並陳，上呈給人拍板。要做到這件事，派工時就得把使用者的原話和被選的選項成對附上，否則 critic 沒東西可對。</p>
+  </div>
+</section>
+
+<section class="ch" id="c13" data-ch="13" data-label="呈現紀律">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">13</span><span>呈現紀律</span></div>
+      <h2 class="t2">先分類完才開口</h2>
+      <p class="lead mt24">critic 的原始報告不能直接倒給人。先把每條分進四類，遇到第一個符合的就停。</p>
+      <ol class="list mt40">
+        <li><p><strong>題目誤讀</strong>：critic 誤解了 spec 某段。補 spec 說明、該條重審。不直接丟掉，也不照單全收。</p></li>
+        <li><p><strong>直接能改</strong>：不動範圍、行為、風險。直接改 spec，記下依據哪條既有決策。</p></li>
+        <li><p><strong>取捨</strong>：兩個合理的標準對撞。留給人裁。</p></li>
+        <li><p><strong>雜訊</strong>：反問「餵什麼材料能防這個誤報」，答得出就補進派工材料，下輪不再誤報。</p></li>
+      </ol>
+      <p class="body mt32">剩下的取捨彙總成<strong>一張拍板表</strong>：一列一題、每列 a／b／c、推薦放第一、選了會怎樣先講。不逐條停下來問「要不要理它」。</p>
+      <p class="body">結論強度不變：critic 的嚴重度與措辭原樣傳達，不軟化、不在旁邊加自己判對錯。</p>
+    </div>
+    <aside class="aside">
+      <h3>橡皮圖章訊號：靠紀錄算，不靠記得</h3>
+      <p>每輪 review 落檔時，最後寫一行處置結果：這輪幾條有實質內容、幾條真的改了 spec。</p>
+      <p>派 critic 前先讀回前幾輪的這一行。<strong>連續兩輪有實質內容但零條改了 spec，是警訊：可能在幫 spec 背書，而不是在懷疑它。</strong>停下來查：是合理的取捨、使用者已經裁決，還是真的在蓋章。必要時升級。</p>
+      <p>每次 review 都是新 session、記不得上一輪，所以這訊號只能從落檔算。沒有那一行，這訊號結構性抓不到。落檔是收尾動作，不是可選項。</p>
+      <p class="src">review 最怕的不是被跳過，是被蓋章。蓋章從外面看不出來，只有紀錄算得出來。</p>
+    </aside>
+  </div>
+</section>
+
+<section class="ch alt" id="c14" data-ch="14" data-label="收尾">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">14</span><span>帶走的三件事</span></div>
+    <ol class="concl">
+      <li><span class="lab">視角要設計</span><span class="big">材料</span><p>想要不同視角就餵不同材料、給不同立場；換更強的模型不保證補齊。PR 階段是<strong>餵滿 vs 餓著</strong>；spec 階段是<strong>簡化 vs 強度</strong>。</p></li>
+      <li class="key"><span class="lab">驗證者也要被驗</span><span class="big">REFUTED ≠ 錯</span><p>先看它拿什麼環境、什麼前提驗。報告保留雙方證據，<strong>人拍板</strong>。</p></li>
+      <li><span class="lab">最便宜的 review 在最前面</span><span class="big">3 問</span><p>spec 階段三個問題不派 agent；YAGNI 砍掉的每一條，都是<strong>不用寫的 code</strong>。</p></li>
+    </ol>
+    <hr class="rule">
+    <h3 class="t3">自評三題</h3>
+    <p class="note mt8">只量熟悉度，不排名、不收集。</p>
+    <div class="check mt24" id="check">
+      <div class="q" data-k="view"><p>你上一個 PR 的 review 有<strong>幾個視角</strong>？餵給它們的材料一樣嗎？</p><div class="scale" role="group" aria-label="第一題"></div></div>
+      <div class="q" data-k="verify"><p>你收到 finding 時，會問「<strong>這條的前提有查證過嗎</strong>」嗎？</p><div class="scale" role="group" aria-label="第二題"></div></div>
+      <div class="q" data-k="yagni"><p>你上一份 spec 裡，<strong>哪幾條是模型推導的</strong>？砍掉會損失什麼？</p><div class="scale" role="group" aria-label="第三題"></div></div>
+      <p class="out" id="checkOut">選完三題，下面會出現一句建議。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="foot"><div class="wrap"><span>一個模型不夠 · tech workshop · philip · 日期待定</span><span>鍵盤 ←→ 或 PageUp／PageDown 跳章節</span></div></footer>
+<script>
+(function () {
+  'use strict';
+  var chapters = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var navList = document.getElementById('navList');
+  var progress = document.getElementById('progress');
+  var navH = 60;
+  var current = -1;
+
+  var buttons = chapters.map(function (s, i) {
+    var b = document.createElement('button');
+    b.className = 'nav-btn'; b.type = 'button';
+    b.innerHTML = '<span class="nn">' + s.getAttribute('data-ch') + '</span>' + s.getAttribute('data-label');
+    b.addEventListener('click', function () { goTo(i); });
+    navList.appendChild(b);
+    return b;
+  });
+
+  function goTo(i) {
+    if (i < 0 || i >= chapters.length) return;
+    chapters[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function setCurrent(i) {
+    if (i === current) return;
+    current = i;
+    buttons.forEach(function (b, j) {
+      var on = j === i;
+      b.setAttribute('aria-current', on ? 'true' : 'false');
+      if (on) {
+        var l = navList.scrollLeft, w = navList.clientWidth;
+        if (b.offsetLeft < l || b.offsetLeft + b.offsetWidth > l + w) navList.scrollTo({ left: b.offsetLeft - 24, behavior: 'smooth' });
+      }
+    });
+  }
+  function recompute() {
+    navH = document.querySelector('.nav').offsetHeight;
+    var best = 0;
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].getBoundingClientRect().top - navH <= 8) best = i;
+    }
+    setCurrent(best);
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+  }
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { recompute(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  recompute();
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'ArrowDown' && e.shiftKey) { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowUp' && e.shiftKey) { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'Home') { e.preventDefault(); goTo(0); }
+    else if (k === 'End') { e.preventDefault(); goTo(chapters.length - 1); }
+  });
+
+  var LABELS = ['沒想過', '想過沒做', '有時做', '常做'];
+  var ADVICE = {
+    view: '下一個 PR 多開一個只看 diff 的 reviewer，把它跟你原本那個的 finding 並排，看「只有一邊抓到」的那幾條。',
+    verify: '下次收到 finding，先把它的論據裡沒查證過的那段拿掉，看等級會不會降。會降就用降後的等級。',
+    yagni: '打開你最近一份 spec，把每條需求標成使用者原話、量測證據、模型推導三類。第三類逐條問：砍掉會損失什麼？'
+  };
+  var score = {};
+  var qs = Array.prototype.slice.call(document.querySelectorAll('#check .q'));
+  var out = document.getElementById('checkOut');
+  qs.forEach(function (q) {
+    var k = q.getAttribute('data-k'), scale = q.querySelector('.scale');
+    LABELS.forEach(function (label, idx) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        score[k] = idx;
+        Array.prototype.forEach.call(scale.children, function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+        render();
+      });
+      scale.appendChild(b);
+    });
+  });
+  function render() {
+    var keys = Object.keys(score);
+    if (keys.length < 3) { out.textContent = '還有 ' + (3 - keys.length) + ' 題。'; return; }
+    var min = Math.min.apply(null, keys.map(function (k) { return score[k]; }));
+    if (min >= 3) { out.innerHTML = '三項都已經是習慣。那就回頭看<strong>紀錄</strong>：你的 review 落檔裡，連續兩輪有 finding 但 0 條 actionable 的情況出現過嗎？'; return; }
+    var low = ['view', 'verify', 'yagni'].filter(function (k) { return score[k] === min; })[0];
+    out.innerHTML = '最不熟的一項，下週可以先試這個：<strong>' + ADVICE[low] + '</strong>';
+  }
+})();
+</script>
+</body>
+</html>
