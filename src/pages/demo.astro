@@ -7,10 +7,19 @@ import Analytics from "../components/Analytics.astro";
 
 const demos = [
   {
+    title: "Little Chaos · 小小文明災難箱",
+    description: "一座會自己生活的小島。用五十種干預改變天氣、地形與居民，看小事怎麼引發連鎖反應。",
+    href: "/play/little-chaos/",
+    image: "/images/demos/little-chaos.jpg",
+    alt: "小小文明災難箱的島嶼、分類工具箱與事件紀錄",
+    kind: "沙盒模擬遊戲",
+  },
+  {
     title: "Orbitarium · 星軌音室",
     description: "點亮星星，讓四條軌道奏出旋律。可以換音階、調速度，也能收藏自己的星圖。",
     href: "/play/orbitarium/",
     image: "/images/demos/orbitarium.png",
+    alt: "星軌音室的四圈星圖與播放控制",
     kind: "音樂玩具",
   },
 ];
@@ -40,7 +49,7 @@ const demos = [
           demos.map((demo) => (
             <article class="demo-item">
               <a href={demo.href} class="demo-link">
-                <img src={demo.image} alt="星軌音室的四圈星圖與播放控制" width="1280" height="720" />
+                <img src={demo.image} alt={demo.alt} width="1280" height="720" />
                 <span class="demo-kind">{demo.kind}</span>
                 <h3>{demo.title}</h3>
                 <p>{demo.description}</p>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f1e7" />
+    <meta name="description" content="一座會自己生活的小島。灑一點食物、降一場雨，看看世界會怎麼變。" />
+    <title>Little Chaos · 小小文明災難箱</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="module" crossorigin src="./assets/index-BglyBCbf.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-K7CA0emn.css">
+  </head>
+  <body>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="sprout" viewBox="0 0 24 24"><path d="M12 21V11M12 16C3 17 3 9 3 9s9-1 9 7Zm0-5c0-8 9-8 9-8s1 8-9 8Z"/></symbol>
+      <symbol id="rain" viewBox="0 0 24 24"><path d="M6 14a4 4 0 1 1 1-8 6 6 0 0 1 11 1 3.5 3.5 0 1 1 0 7M7 18l-1 3m6-3-1 3m6-3-1 3"/></symbol>
+      <symbol id="wall" viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 12h18M10 5v7m5 0v7"/></symbol>
+      <symbol id="erase" viewBox="0 0 24 24"><path d="m4 13 9-10 8 8-9 10H7l-3-3zm4-4 9 8M12 21h10"/></symbol>
+      <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/></symbol>
+      <symbol id="reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 3v7h7"/></symbol>
+      <symbol id="leaf" viewBox="0 0 24 24"><path d="M5 19C-2 6 12 3 21 3c0 12-4 20-16 16Zm0 0 9-9M3 22l2-3"/></symbol>
+      <symbol id="book" viewBox="0 0 24 24"><path d="M12 6C7 2 2 4 2 4v15s5-2 10 1c5-3 10-1 10-1V4s-5-2-10 2Zm0 0v14"/></symbol>
+      <symbol id="people" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-4a6 6 0 0 1 12 0v4m2-17a3 3 0 0 1 0 6m1 4a5 5 0 0 1 4 5v2"/></symbol>
+      <symbol id="spark" viewBox="0 0 24 24"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3ZM21 2v4m-2-2h4"/></symbol>
+    </svg>
+    <div class="app-shell">
+      <header class="masthead">
+        <a class="brand" href="./" aria-label="Little Chaos 首頁"><span class="brand-mark"><svg><use href="#sprout"/></svg></span><span>little chaos<span class="brand-dot">.</span><small>小小文明災難箱</small></span></a>
+        <div class="edition">A SMALL WORLD, LEFT ALONE.<span>島嶼觀察計畫 ／ 001</span></div>
+        <button id="help-open" class="quiet-button"><span class="question-mark">?</span> 怎麼玩</button>
+      </header>
+      <main class="workbench">
+        <aside class="tools-panel" aria-label="干預工具">
+          <div class="intro"><p class="eyebrow">THE BUTTERFLY IS YOU</p><h1>小小干預，<br/>大大意外<span>。</span></h1><p>他們有自己的生活。<br/>你只需要，改變一點點。</p></div>
+          <div class="section-label">干預工具箱 <span>50 種可能</span></div>
+          <button class="tool observe-tool active" data-tool="observe" aria-pressed="true"><svg><use href="#eye"/></svg><span>靜靜觀察</span><kbd>1</kbd></button>
+          <label class="sr-only" for="action-search">搜尋互動</label><input id="action-search" class="action-search" type="search" placeholder="搜尋：火、居民、食物…" autocomplete="off" />
+          <div id="categories" class="categories" role="group" aria-label="互動分類"></div>
+          <p id="catalog-count" class="catalog-count" aria-live="polite"></p>
+          <div id="action-list" class="tool-list action-list" aria-label="可用互動"></div>
+          <section class="selected-action" aria-label="目前工具"><div><strong id="action-name">靜靜觀察</strong><span id="action-target">觀察</span></div><p id="action-description">點一位居民，跟著他的今天走。</p><button id="apply-global" hidden>對全島施放</button></section>
+          <form id="seed-form" class="seed-form"><label for="seed">這座島的開局代碼</label><div><input id="seed" name="seed" maxlength="40" value="moss-42" spellcheck="false" autocomplete="off"/><button type="submit" title="依代碼重建小島" aria-label="依代碼重建小島">↵</button></div><button type="button" id="restart" class="restart"><svg><use href="#reset"/></svg> 同一座島，再來一次</button></form>
+        </aside>
+        <section class="island-panel" aria-label="島嶼沙盒">
+          <div class="map-topline"><div class="live-state"><i></i><span id="world-status">島上的生活，正在發生</span></div><button id="overlay" class="map-toggle" aria-pressed="false"><svg><use href="#leaf"/></svg> 食物分布</button></div>
+          <div class="map-stage">
+            <canvas id="island" tabindex="0" aria-label="可互動的小島地圖。方向鍵移動位置，Enter 使用工具；數字一至六切換工具。">你的瀏覽器需支援 Canvas 才能顯示小島。居民及事件仍可在右側查看。</canvas>
+            <div class="map-coordinate"><span>FIELD NO. 001</span><span id="coordinate">22° N · 17° E</span></div>
+            <div class="compass" aria-hidden="true"><span>N</span><svg viewBox="0 0 40 40"><path d="M20 4 27 32 20 25 13 32Z" fill="#617568"/><path d="M20 4v21l-7 7Z" fill="#f2f3e5"/></svg></div>
+            <div class="zoom-controls"><button id="zoom-out" aria-label="縮小地圖">−</button><button id="zoom-reset" aria-label="重設地圖縮放">⌖</button><button id="zoom-in" aria-label="放大地圖">＋</button></div>
+            <div id="map-hint" class="map-hint"><svg><use href="#eye"/></svg><span>點一位居民，跟著他的今天走。</span></div>
+            <div id="toast" class="toast" role="status" aria-live="polite"></div>
+          </div>
+          <div class="timebar"><div class="date"><span class="eyebrow">ISLAND TIME</span><strong>第 <span id="day">0</span> 天</strong><span id="weather">和煦晴天</span></div><div class="playback"><button id="pause" class="pause-button" aria-label="暫停時間">Ⅱ</button><button data-speed="1" class="speed active" aria-pressed="true">1×</button><button data-speed="3" class="speed" aria-pressed="false">3×</button><button data-speed="8" class="speed" aria-pressed="false">8×</button><button id="step" class="step-button" aria-label="前進一天" title="暫停並前進一天">+1 天</button></div></div>
+          <div class="island-stats" aria-label="島嶼狀態"><div><span>島上居民</span><strong id="population">36<small>人</small></strong><svg viewBox="0 0 100 20" class="sparkline" aria-hidden="true"><path id="population-spark" d="M0 14H100"/></svg></div><div><span>生活餘裕</span><strong id="wellbeing">—<small>%</small></strong><div class="mini-meter"><i id="wellbeing-meter"></i></div></div><div><span>正在挨餓</span><strong id="hungry">0<small>人</small></strong><p id="hunger-caption">今天，大家都有吃飽。</p></div><div><span>搬家的故事</span><strong id="migrations">0<small>次</small></strong><p id="settlements">3 個聚落，各自生活。</p></div></div>
+        </section>
+        <aside class="notebook" aria-label="島嶼記事簿">
+          <div class="notebook-title"><svg><use href="#book"/></svg><h2>島嶼記事簿</h2><span>LIVE</span></div>
+          <p class="notebook-subtitle">沒有劇本，只有剛剛發生的事。</p>
+          <div id="inspector" class="inspector"><div class="inspector-top"><span class="eyebrow">MEET A LITTLE LIFE</span><span id="person-dot" class="person-dot"></span></div><label class="sr-only" for="resident-select">觀察居民</label><select id="resident-select"><option value="">選一位居民…</option></select><p id="person-action">也可以直接點地圖上的小人。</p><div class="resident-details" id="resident-details" hidden><span id="person-home"></span><span id="person-energy"></span></div></div>
+          <div class="journal-heading"><h3>最近發生</h3><span id="event-count">1 則</span></div>
+          <label class="sr-only" for="event-filter">事件分類</label><select id="event-filter" class="event-filter" aria-label="事件分類"><option value="all">全部事件</option><option value="life">居民故事</option></select>
+          <ol id="events" class="events"></ol>
+          <div class="comparison"><span class="eyebrow">THE ROAD NOT TAKEN</span><h3>如果，再來一次？</h3><p id="compare-note">重開同一座島，就能比較兩輪<br/>在同一天，走到了哪裡。</p><div id="compare-result" hidden></div></div>
+          <p class="notebook-footer">小島不需要完美。<br/>你也不需要。</p>
+        </aside>
+      </main>
+      <footer class="page-footer"><span>✳ &nbsp; LITTLE CHAOS LAB</span><span>這裡沒有輸贏，只有「然後呢？」</span><span>一座小島 · 無限個如果</span></footer>
+    </div>
+    <dialog id="help-dialog"><button id="help-close" class="dialog-close" aria-label="關閉玩法說明">×</button><p class="eyebrow">50 WAYS TO CHANGE A LITTLE WORLD</p><h2>你不是島長。<br/>你是那個「如果」。</h2><p>居民會自己找食物、分享、搬家。工具箱裡有五類、五十種改變，任你搭配。</p><ol><li><strong>挑一種可能。</strong>按分類或搜尋找工具。選取後，下方會顯示效果與施放目標。</li><li><strong>動手試試。</strong>局部效果點地圖，人物效果點小人；全島效果再按「對全島施放」。瞬移須先在記事簿選居民，再點目的地。</li><li><strong>看連鎖反應。</strong>野火後降雨、饑荒前蓋糧倉、木橋接出新路。右側能依事件分類篩選。</li><li><strong>試另一種選擇。</strong>重開相同代碼，右下角會比較同一天的兩種結果。</li></ol><p class="help-note">1 觀察 · 2 食物 · 3 雨水 · 4 石牆 · 5 拆除 · 6 乾旱（再按施放） · 空白鍵暫停。地圖聚焦後用方向鍵與 Enter 操作。重新整理頁面會重新開始。</p><button id="help-start" class="primary-button">好，去看看我的小島 →</button></dialog>
+  </body>
+</html>
