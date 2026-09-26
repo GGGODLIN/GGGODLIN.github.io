@@ -1,0 +1,77 @@
+---
+import "../styles/global.css";
+import ThemeBoot from "../components/ThemeBoot.astro";
+import ThemeSwitcher from "../components/ThemeSwitcher.astro";
+import Nav from "../components/Nav.astro";
+import Analytics from "../components/Analytics.astro";
+
+const demos = [
+  {
+    title: "Orbitarium · 星軌音室",
+    description: "點亮星星，讓四條軌道奏出旋律。可以換音階、調速度，也能收藏自己的星圖。",
+    href: "/play/orbitarium/",
+    image: "/images/demos/orbitarium.png",
+    kind: "音樂玩具",
+  },
+];
+---
+
+<!doctype html>
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demo — gggodlin</title>
+    <meta name="description" content="一些可以直接打開來玩的作品與小實驗。" />
+    <ThemeBoot />
+  </head>
+  <body>
+    <main class="container">
+      <header class="site-header">
+        <div class="header-row">
+          <h1><a href="/">GGGODLIN</a></h1>
+          <Nav />
+        </div>
+      </header>
+      <section aria-labelledby="demo-heading">
+        <h2 id="demo-heading">Demo</h2>
+        <p class="intro">一些可以直接打開來玩的作品與小實驗。</p>
+        {
+          demos.map((demo) => (
+            <article class="demo-item">
+              <a href={demo.href} class="demo-link">
+                <img src={demo.image} alt="星軌音室的四圈星圖與播放控制" width="1280" height="720" />
+                <span class="demo-kind">{demo.kind}</span>
+                <h3>{demo.title}</h3>
+                <p>{demo.description}</p>
+                <span class="demo-action">打開來玩 <span aria-hidden="true">↗</span></span>
+              </a>
+            </article>
+          ))
+        }
+      </section>
+    </main>
+    <ThemeSwitcher />
+    <Analytics />
+    <style>
+      .site-header { margin-bottom: var(--section-gap); }
+      .header-row { display: flex; align-items: baseline; justify-content: space-between; gap: calc(var(--baseline) * 2); flex-wrap: wrap; }
+      .header-row h1 { margin: 0; }
+      .header-row h1 a { color: inherit; border: none; }
+      .header-row h1 a:hover { color: var(--accent); }
+      .intro { color: var(--text-secondary); margin-bottom: calc(var(--baseline) * 5); }
+      .demo-item { margin-bottom: calc(var(--baseline) * 6); }
+      .demo-link { display: block; color: inherit; border: none; }
+      .demo-link:hover { border: none; }
+      .demo-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; border-radius: 4px; }
+      .demo-link img { width: 100%; margin: 0 0 calc(var(--baseline) * 3); border: 1px solid var(--border); border-radius: 8px; }
+      .demo-kind { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); }
+      .demo-link h3 { margin: var(--baseline) 0 calc(var(--baseline) * 1.5); }
+      .demo-link p { color: var(--text-secondary); margin-bottom: calc(var(--baseline) * 2); }
+      .demo-action { color: var(--accent); font-size: var(--text-sm); }
+      .demo-action span { display: inline-block; margin-left: 4px; transition: transform 150ms ease; }
+      .demo-link:hover h3 { color: var(--accent); }
+      .demo-link:hover .demo-action span { transform: translate(2px, -2px); }
+    </style>
+  </body>
+</html>

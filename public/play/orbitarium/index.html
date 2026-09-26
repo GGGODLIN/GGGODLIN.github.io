@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101218">
+  <meta name="description" content="點亮星星，讓軌道奏出旋律。一座屬於你的微型音樂宇宙。">
+  <title>Orbitarium — 星軌音室</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3Z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 4-3 5-6m2-3c2-3 3-3 5-3h3m-4-4 4 4-4 4"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 10h10a6 6 0 0 1 0 12M4 10l5-5M4 10l5 5" transform="translate(0 -3)"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-5-5 5 5-5 5"/></symbol>
+  </svg>
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Orbitarium 星軌音室首頁">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="5" fill="currentColor"/><ellipse cx="24" cy="24" rx="22" ry="11" transform="rotate(-36 24 24)"/><circle cx="38" cy="11" r="3" fill="currentColor" stroke="var(--bg)" stroke-width="3"/></svg>
+        <span>ORBITARIUM<small>星 軌 音 室</small></span>
+      </a>
+      <p class="header-note"><span class="tiny-star">✧</span> A SMALL UNIVERSE, COMPOSED BY YOU.</p>
+      <nav class="header-actions" aria-label="作品與說明">
+        <button id="import" class="icon-button" title="開啟作品" aria-label="開啟作品"><svg><use href="#i-upload"/></svg></button>
+        <button id="save" class="save-button" aria-label="收藏星圖"><svg><use href="#i-download"/></svg><span>收藏星圖</span></button>
+        <button id="help" class="help-button" aria-label="玩法說明">?</button>
+        <input id="file-input" type="file" accept=".json,application/json" hidden>
+      </nav>
+    </header>
+
+    <main>
+      <aside class="intro-panel">
+        <div class="eyebrow"><span></span> AN ORBITAL MUSIC PLAYGROUND</div>
+        <h1>讓宇宙，<br>慢慢<span class="serif-accent">發聲。</span></h1>
+        <p class="intro-copy">種下幾顆星。<br>讓它們轉動，讓旋律自己發生。</p>
+        <div class="scene-section">
+          <h2 class="section-label">選一片天空 <span>SCENES</span></h2>
+          <div id="scenes" class="scenes" role="group" aria-label="音樂場景"></div>
+        </div>
+        <div class="field-note">
+          <span class="field-note-star">✳</span>
+          <p id="scene-description">不急著抵達，只聽星星經過。</p>
+          <span class="field-note-rule"></span>
+          <p class="note-caption">沒有錯的音符。<br>只有還沒發現的星座。</p>
+        </div>
+      </aside>
+
+      <section class="universe-panel" aria-label="互動星圖">
+        <div class="universe-topline"><span><i id="live-dot"></i><span id="universe-status">靜候第一道聲音</span></span><span id="star-count">00 STARS ALIGNED</span></div>
+        <div id="universe" class="universe">
+          <canvas id="orbits" aria-hidden="true"></canvas>
+          <div class="compass north" aria-hidden="true">00</div><div class="compass east" aria-hidden="true">90</div><div class="compass south" aria-hidden="true">180</div><div class="compass west" aria-hidden="true">270</div>
+          <div id="star-buttons" class="star-buttons"></div>
+          <button id="sun" class="sun-button" aria-label="開始演奏"><span class="sun-corona"></span><span class="sun-core"></span></button>
+          <div class="center-caption" aria-hidden="true"><span id="center-label">YOUR LITTLE UNIVERSE</span><span id="center-subtitle">點亮星星，寫下旋律</span></div>
+          <div id="note-tooltip" class="note-tooltip" role="status"></div>
+        </div>
+        <div class="universe-caption"><span class="caption-dash"></span> 點星星添一個音，再點一次讓它安靜 <span class="caption-dash"></span></div>
+      </section>
+
+      <aside class="sound-panel">
+        <h2 class="section-label">星軌聲部 <span>ORBITS</span></h2>
+        <p class="sound-hint">每一圈，都有自己的步調。</p>
+        <div id="tracks" class="tracks" role="group" aria-label="聲部開關"></div>
+        <div class="atmosphere">
+          <div class="section-label"><label for="ambience">空間感</label><span id="ambience-value">50%</span></div>
+          <input id="ambience" type="range" min="0" max="100" value="50" aria-label="空間感">
+          <div class="range-endpoints"><span>貼近</span><span>遙遠</span></div>
+        </div>
+        <div class="orbit-legend"><span class="legend-planet"></span><p>光點繞行時，<br>喚醒沿途的每一顆星。</p></div>
+      </aside>
+    </main>
+
+    <footer class="console">
+      <div class="transport">
+        <button id="play" class="play-button" aria-label="開始演奏" aria-pressed="false"><svg><use href="#i-play"/></svg></button>
+        <div><span id="play-label" class="play-label">開始演奏</span><span class="keyboard-hint"><kbd>SPACE</kbd> 輕觸，啟程</span></div>
+      </div>
+      <div class="tempo-control">
+        <div class="control-heading"><label for="tempo">航行速度</label><span><output id="tempo-value">72</output> <small>BPM</small></span></div>
+        <input id="tempo" type="range" min="40" max="140" step="1" value="72">
+      </div>
+      <div class="scale-control">
+        <label id="scale-label" for="scale">宇宙的心情</label>
+        <div id="scale-picker" class="scale-picker">
+          <button id="scale" class="scale-trigger" type="button" role="combobox" aria-labelledby="scale-label scale-value" aria-haspopup="listbox" aria-expanded="false" aria-controls="scale-menu" value="dream">
+            <span class="mood-dot" aria-hidden="true"></span><span id="scale-value">夢境 · Dream</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+          </button>
+          <div id="scale-menu" class="scale-menu" role="listbox" aria-labelledby="scale-label" hidden>
+            <button type="button" role="option" aria-selected="true" tabindex="-1" data-scale="dream" style="--mood-color:#e7b982">
+              <span class="mood-dot" aria-hidden="true"></span><span><span class="scale-option-name">夢境 · Dream</span><small>明亮而溫柔 · D 大調五聲</small></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>
+            </button>
+            <button type="button" role="option" aria-selected="false" tabindex="-1" data-scale="dusk" style="--mood-color:#cbb6ed">
+              <span class="mood-dot" aria-hidden="true"></span><span><span class="scale-option-name">暮色 · Dusk</span><small>安靜而深邃 · A 小調五聲</small></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>
+            </button>
+            <button type="button" role="option" aria-selected="false" tabindex="-1" data-scale="float" style="--mood-color:#99cbc0">
+              <span class="mood-dot" aria-hidden="true"></span><span><span class="scale-option-name">漂浮 · Float</span><small>輕盈而迷離 · C 全音音階</small></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="volume-control"><label for="volume"><svg><use href="#i-volume"/></svg><span class="sr-only">音量</span></label><input id="volume" type="range" min="0" max="100" value="60" aria-label="音量"></div>
+      <div class="creative-actions"><button id="randomize" class="randomize-button"><svg><use href="#i-shuffle"/></svg>另一個宇宙</button><div><button id="undo" class="text-button" disabled><svg><use href="#i-undo"/></svg>復原</button><span>·</span><button id="clear" class="text-button">清空星星</button></div></div>
+    </footer>
+    <div class="bottom-line"><span>MADE FOR WANDERING, NOT ARRIVING.</span><span id="save-status">作品會自動保存在這個瀏覽器</span><span>EST. 2026 <span class="tiny-star">✧</span> EARTH</span></div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="help-dialog" class="help-dialog">
+    <button id="close-help" class="icon-button close-help" aria-label="關閉說明"><svg><use href="#i-close"/></svg></button>
+    <div class="eyebrow">A FIELD GUIDE TO YOUR UNIVERSE</div>
+    <h2>你就是這片星空的作曲家。</h2>
+    <p>不需要懂樂理。從一片現成的天空開始，或清空星星，留白給自己。</p>
+    <ol><li><strong>啟程</strong><span>按下播放或空白鍵，光點就會開始航行。</span></li><li><strong>種星星</strong><span>點擊軌道上的小點，開啟或關閉音符。亮著的星被經過時就會發聲。</span></li><li><strong>換個風景</strong><span>調整速度、心情與空間感。點聲部右邊的開關，可以讓某一圈安靜。</span></li><li><strong>留住這一刻</strong><span>「收藏星圖」會下載作品 JSON 檔。用右上方的開啟按鈕，就能再次演奏。</span></li></ol>
+    <div class="help-shortcuts"><span><kbd>SPACE</kbd> 播放／暫停</span><span><kbd>R</kbd> 隨機星圖</span><span><kbd>1–4</kbd> 聲部開關</span><span><kbd>⌘ Z</kbd> 復原</span></div>
+    <p class="help-footnote">鍵盤也能種星星：Tab 進入星軌，方向鍵移動，Enter 切換音符。切換到別的分頁時會自動暫停。建議戴上耳機，從小音量開始。</p>
+    <button id="start-exploring" class="dialog-action">回到我的宇宙 <svg><use href="#i-arrow"/></svg></button>
+  </dialog>
+  <noscript>星軌音室需要 JavaScript，才能讓星星轉動與發聲。請在瀏覽器開啟 JavaScript。</noscript>
+</body>
+</html>
