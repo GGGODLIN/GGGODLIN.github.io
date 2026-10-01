@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>模型分工：不必每件事都用最強模型</title>
-<meta name="description" content="額度用完之後，除了換模型，還能重新安排工作。orchestrator、advisor、effort 三種做法，附一段真實案例的各模型用量與牌價。">
+<meta name="description" content="額度用完之後，除了換模型，還能重新安排工作。orchestrator、advisor、effort 三種做法，附一段真實案例的各模型用量與牌價，以及 effort 不是越高越好的跑分證據。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -51,6 +51,7 @@ strong{font-weight:600;color:var(--white)}
 .ch.hero{min-height:calc(100vh - var(--nav-h));display:flex;align-items:center}
 .wrap{max-width:1200px;margin:0 auto}
 .two{display:grid;gap:40px 64px}
+.two > *{min-width:0}
 @media (min-width:1024px){.two{grid-template-columns:7fr 5fr}.two.wide{grid-template-columns:8fr 4fr}}
 .aside{color:var(--w72);font-size:15px;line-height:1.75}
 @media (min-width:1024px){.aside{position:sticky;top:calc(var(--nav-h) + 40px);align-self:start}}
@@ -203,6 +204,29 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
 .check .out{margin-top:24px;min-height:1.7em;color:var(--w72)}
 .check .out strong{color:var(--white)}
 
+/* effort charts */
+.charts{display:grid;gap:48px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+.chart{display:block;width:100%;height:auto;margin-top:12px}
+.chart .grid{stroke:var(--hair-soft);stroke-width:1}
+.chart .tick{fill:var(--w54);font-size:12px;font-family:var(--mono)}
+.chart .ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{stroke-width:2}
+.chart .hit{fill:transparent}
+.chart .pt{cursor:default;outline:none}
+.chart .pt:hover .dot,.chart .pt:focus-visible .dot{r:8}
+.chart .vlab{fill:var(--w72);font-size:13px;font-family:var(--mono)}
+.chart .vlab.pk{fill:var(--white);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--w72);margin-top:8px}
+.legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:8px}
+.cfig{margin:0}
+.cfig figcaption{margin-top:16px;font-size:14px;line-height:1.65;color:var(--w72)}
+.cfig figcaption strong{color:var(--white)}
+.cfig .cap-k{display:block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:8px}
+details.data{margin-top:12px}
+details.data summary{cursor:pointer;color:var(--teal);font-size:13px}
+details.data table{font-size:14px;margin-top:8px}
+
 /* footer */
 .foot{padding:48px 24px;border-top:1px solid var(--hair);color:var(--w54);font-size:13px}
 .foot .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
@@ -247,8 +271,8 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
     <h2 class="t2">三種做法，前兩種並列</h2>
     <div class="stats mt40">
       <div><div class="k">orchestrator</div><div class="v">把工作交出去</div><div class="d">主模型拆解與協調，subagent 承接有邊界的工作。我日常最常用的一種。</div></div>
-      <div><div class="k">advisor</div><div class="v">把判斷借進來</div><div class="d">執行中的模型繼續做事，需要另一個判斷時才請顧問。</div></div>
-      <div><div class="k">effort</div><div class="v">同一顆，不同投入</div><div class="d">同一模型也能調整推理投入，不只在模型之間切換。</div></div>
+      <div><div class="k">advisor</div><div class="v">把判斷借進來</div><div class="d">執行中的模型繼續做事，需要另一個判斷時才請顧問。這頁只講分界，方法另有<a href="./advisor-method.html">專篇</a>。</div></div>
+      <div><div class="k">effort</div><div class="v">同一顆，不同投入</div><div class="d">同一模型也能調整推理投入，不只在模型之間切換；而且不是越高越好。</div></div>
     </div>
     <p class="note mt24">orchestrator 與 advisor 是並列選項，不是新舊替代。「最常用」是我的使用經驗，不是統計。全場用靜態歷史案例與設定示例，不現場操作，也不承諾省幾成。</p>
   </div>
@@ -266,7 +290,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
           <thead><tr><th scope="col">做法</th><th scope="col">主流程保留什麼</th><th scope="col">交出去什麼</th><th scope="col">這場的案例</th></tr></thead>
           <tbody>
             <tr><th scope="row">orchestrator</th><td>任務脈絡、分派、整合與驗收責任</td><td>一段可界定的實作、review 或檢查</td><td>資料遷移的 subagent-driven 實作階段</td></tr>
-            <tr><th scope="row">advisor</th><td>原本工作的執行與後續決策</td><td>某一次判斷或另一個視角</td><td>顧問指出提問方式的盲點</td></tr>
+            <tr><th scope="row">advisor</th><td>原本工作的執行與後續決策</td><td>某一次判斷或另一個視角</td><td>顧問指出提問方式的盲點（在<a href="./advisor-method.html">專篇</a>）</td></tr>
           </tbody>
         </table>
       </div>
@@ -311,10 +335,10 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
     <div class="two mt64">
       <div>
         <h3 class="t3">派工還有一個與模型無關的理由</h3>
-        <p class="body mt16"><strong>context 不是免費的倉庫，是模型的注意力預算。</strong>放太多東西進去，先壞的是判斷，再壞的是記憶，最後才是錢。</p>
+        <p class="body mt16"><strong>context 不是免費的倉庫，是模型的注意力預算。</strong>放太多東西進去，判斷、記憶與成本三方面都有風險；按重要性排，我最在意判斷，其次是記憶，最後才是錢。</p>
         <p class="body mt16"><strong>第一層，模型表現。</strong>context 越長，模型從裡面準確撈出資訊的能力越弱。這不是快滿了才變差，而是一路下滑，簡單任務也會。Anthropic 的工程文章把這叫 context rot：注意力要處理 n 個 token 之間 n² 組關係，預算有限。Chroma 測了 18 個模型，結論是「模型並不均勻地使用 context，輸入越長表現越不可靠」。幾千行測試輸出留在 main，就是拿雜訊稀釋後面每一個判斷。</p>
         <p class="body mt16"><strong>第二層，壓縮失真。</strong>context 逼近上限時 Claude Code 會自動壓縮，把前面的對話摘要成一段。留什麼丟什麼由模型猜。官方文件寫得直接：過度壓縮會丟掉「當時看起來不重要、後來才發現關鍵」的細節。你前面拍板的決策、看過的行號，可能就在這一步變模糊，之後的推理建在殘缺的記憶上。</p>
-        <p class="body mt16"><strong>第三層才是錢。</strong>Claude Code 每一輪都重送整段對話，context 越胖，之後每一輪都跟著胖。第 6 章費用表裡那幾百萬個 cache read 就是這樣長出來的。</p>
+        <p class="body mt16"><strong>第三層是錢。</strong>Claude Code 每一輪都重送整段對話，context 越胖，之後每一輪都跟著胖。第 7 章費用表裡累計約 8,454 萬個快取讀取 token，就是這樣長出來的。</p>
         <p class="body mt16">所以 subagent 在自己的 context window 裡工作這件事很重要。它讀過的檔案、測試輸出、搜尋結果都留在那裡，只有結果回到 main。要翻很多東西的工作，<strong>就算用同一顆模型，派出去也能讓 main 的對話保持乾淨</strong>。保護的是 main 的判斷品質，其次才是省錢。</p>
         <div class="diag mt32">
           <div class="box"><div class="card-h">main</div><p>分派實作範圍<br>收回結果<br>跑整合檢查</p></div>
@@ -331,7 +355,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
           <li>要回報什麼結果，主流程怎麼接回來。</li>
         </ol>
         <p class="mt16">這三條說不出來，就代表這段工作還在你腦子裡，不在票上。還在釐清方向、要反覆討論的工作，不要為了多模型而硬拆。</p>
-        <p class="mt16">一個例外：<strong>fork</strong> 型 subagent 會繼承主對話的全部歷史，不必重講；但它的工具呼叫仍留在自己那邊，只有結果回 main。所以「main 保持乾淨」對兩種都成立，「看不到歷史、要交代三件事」只對一般 subagent 成立。第 5 章的示例是一般 subagent。</p>
+        <p class="mt16">一個例外：<strong>fork</strong> 型 subagent 會繼承主對話的全部歷史，不必重講背景；但它的工具呼叫仍留在自己那邊，只有結果回 main。所以「main 保持乾淨」對兩種都成立。fork 省掉的是第二條的材料搬運，第一條（任務與邊界）和第三條（回報與驗收）仍然要交代。第 5 章的示例是一般 subagent。我現在的做法是平常用一般 subagent，真的要 fork 時每次先問，同意只算那一次。</p>
       <p class="src">來源：<a href="https://code.claude.com/docs/en/sub-agents">官方 subagent 文件</a>「Isolate high-volume operations」「Manage subagent context」「Fork the current conversation」三節，查證日 2026-09-10。<br>context rot：Anthropic <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a>（2025-09-29）；Chroma <a href="https://www.trychroma.com/research/context-rot">Context Rot</a>（2025-07-14，18 個模型）。壓縮：同篇 Anthropic 文章 Compaction 段；<a href="https://code.claude.com/docs/en/context-window">官方 context window 文件</a>「What survives compaction」。每輪重送：<a href="https://code.claude.com/docs/en/costs">官方用量文件</a>「Why usage climbs in a long session」。查證日 2026-09-11。</p>
       </aside>
     </div>
@@ -348,8 +372,8 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       <pre class="mt32"><span class="d">---</span>
 <span class="k">name:</span> <span class="v">implementer</span>
 <span class="k">description:</span> <span class="v">實作已定義的功能，遵循既有程式慣例並回報驗證結果。</span>
-<span class="k">model:</span> <span class="v">opus</span>
-<span class="k">effort:</span> <span class="v">medium</span>
+<span class="k">model:</span> <span class="v">sonnet</span>
+<span class="k">effort:</span> <span class="v">high</span>
 <span class="d">---</span></pre>
       <figure class="quote sm mt40">
         <p>目標已定義的實作交給 implementer；需要比較與驗證的工作交給判斷角色。交付時帶上範圍、材料與驗收要求，回來後由主流程核對結果。</p>
@@ -365,7 +389,9 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
         <dt>model</dt><dd>使用模型</dd>
         <dt>effort</dt><dd>推理投入。第 8 章獨立講</dd>
       </dl>
-      <p class="src">上面是去識別的示意設定，不是舊公司程式碼，也不能證明歷史任務實際跑了哪顆模型。實際執行模型要看當次紀錄。定義檔格式見<a href="https://code.claude.com/docs/en/sub-agents">官方文件「自訂 subagent」</a>。</p>
+      <p class="mt16">示例值是我 2026-09-29 起的設定：實作從 Opus + medium 改成 Sonnet + high，因為 Sonnet 比較便宜，回歸由 main 與 reviewer 驗收把關。</p>
+      <p class="mt16">派出去之後，要看當次紀錄確認<strong>實際跑了哪顆</strong>。別名或代理設定可能把指定的模型換成別的。</p>
+      <p class="src">上面是去識別的示意設定，不是舊公司程式碼，也不能證明歷史任務實際跑了哪顆模型。定義檔格式見<a href="https://code.claude.com/docs/en/sub-agents">官方文件「自訂 subagent」</a>。</p>
     </aside>
   </div>
 </section>
@@ -394,6 +420,8 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       <p>派出去不會全部一次過。案例保留 review 後接縫測試先失敗、修正後通過的紀錄，因為接回來修正這一段才是 orchestrator 的工作。下一章的費用表包含這次失敗、重跑與 Sonnet 檢查的重試，沒有只挑成功輪次。</p>
       <h3 class="mt32">reviewer 是派工，不是顧問</h3>
       <p>第四步的 Opus reviewer 拿到的是一件有範圍的檢查工作：讀指定的改動、回報缺陷清單，結果由測試驗收。顧問處理的是 main 自己想不通的一題，回來的是意見，由人逐條裁決。兩者都能出判斷，差別在交出去的是工作還是問題。</p>
+      <h3 class="mt32">那時和現在</h3>
+      <p>案例當時實作由 Opus 承接；我現在的設定已把實作改給 Sonnet。案例照歷史講，不改寫成現行配置。</p>
       <h3 class="mt32">已去識別</h3>
       <p>不展示原公司、repo、票號、客戶、業務欄位、路徑與截圖。模型、數字與成功／失敗狀態未改。</p>
     </aside>
@@ -480,30 +508,114 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
 
 <!-- 8 effort -->
 <section class="ch alt" id="c08" data-ch="8" data-label="effort">
-  <div class="wrap two">
-    <div>
-      <div class="eyebrow"><span class="idx">08</span><span>Opus 與 effort</span></div>
-      <h2 class="t2">型號之外，還有推理投入</h2>
-      <p class="lead mt24">回頭看第 5 章那行 <code style="font-family:var(--mono);font-size:.9em">effort: medium</code>。同一顆 Opus，實作跟深度判斷我給不同的投入。</p>
-      <div class="vs mt40">
-        <div class="card"><div class="card-h">model</div><p>哪個模型承接工作。</p></div>
-        <div class="card"><div class="card-h">effort</div><p>同一模型投入多少推理與回應工作。</p></div>
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">08</span><span>effort</span></div>
+    <h2 class="t2">型號之外，還有推理投入，而且不是越高越好</h2>
+    <div class="two mt40">
+      <div>
+        <p class="lead">回頭看第 5 章那行 <code style="font-family:var(--mono);font-size:.9em">effort: high</code>。選完模型，還要選它想多深。</p>
+        <div class="vs mt32">
+          <div class="card"><div class="card-h">model</div><p>哪個模型承接工作。</p></div>
+          <div class="card"><div class="card-h">effort</div><p>同一模型投入多少推理與回應工作。</p></div>
+        </div>
+        <ul class="list mt32">
+          <li><p>不必把所有任務固定在最高 effort。官方 Opus 5 指引：自己的評估顯示品質維持時用 <strong>low／medium</strong>，困難任務可提高。</p></li>
+          <li><p>effort 不是硬 token 上限，也不是可靠的字數控制。</p></li>
+          <li><p>effort 不是 Opus 獨有，Sonnet、Fable，甚至 GPT 也有對應的推理強度。</p></li>
+        </ul>
       </div>
-      <ul class="list mt32">
-        <li><p>不必把 Opus 的所有任務固定在最高 effort。</p></li>
-        <li><p>官方 Opus 5 指引：自己的評估顯示品質維持時用 <strong>low／medium</strong>，困難任務可提高。</p></li>
-        <li><p>effort 不是硬 token 上限，也不是可靠的字數控制。</p></li>
-        <li><p>effort 不是 Opus 獨有。著重 Opus 是因為它在我的分工裡承接實作與判斷。</p></li>
-      </ul>
-      <figure class="quote sm mt40">
-        <p>實作與深度判斷可以使用同一模型、不同 effort。這不是說寫程式一定比較簡單，而是兩種工作需要的投入方式不同。</p>
+      <aside class="aside">
+        <h3>界線</h3>
+        <p>第 7 章的費用表<strong>不是 effort 對照實驗</strong>，下面的跑分也不是我自己任務的量測。不能拿它們證明某個設定省多少或品質不變；要證明，得自己做評估。</p>
+        <p class="src">來源：<a href="https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-opus-5">官方 Effort／Opus 5 建議</a>，查證日 2026-09-10。</p>
+      </aside>
+    </div>
+
+    <h3 class="t3 mt64">兩家的新模型，最高點都不在 max</h3>
+    <div class="charts mt32">
+      <figure class="cfig">
+        <span class="cap-k">Claude · Terminal-Bench 4.0</span>
+        <svg class="chart" viewBox="0 0 640 300" role="img" aria-labelledby="ch-tb-t"><title id="ch-tb-t">Terminal-Bench 4.0，Claude Opus 5.5 各 effort 得分：high 64.2%、xhigh 66.4%、max 64.8%</title>
+<line class="grid" x1="56" x2="616" y1="252.0" y2="252.0"/><text class="tick" x="46" y="256.0" text-anchor="end">60%</text>
+<line class="grid" x1="56" x2="616" y1="207.2" y2="207.2"/><text class="tick" x="46" y="211.2" text-anchor="end">62%</text>
+<line class="grid" x1="56" x2="616" y1="162.4" y2="162.4"/><text class="tick" x="46" y="166.4" text-anchor="end">64%</text>
+<line class="grid" x1="56" x2="616" y1="117.6" y2="117.6"/><text class="tick" x="46" y="121.6" text-anchor="end">66%</text>
+<line class="grid" x1="56" x2="616" y1="72.8" y2="72.8"/><text class="tick" x="46" y="76.8" text-anchor="end">68%</text>
+<line class="grid" x1="56" x2="616" y1="28.0" y2="28.0"/><text class="tick" x="46" y="32.0" text-anchor="end">70%</text>
+<text class="tick" x="56.0" y="276" text-anchor="middle">high</text>
+<text class="tick" x="336.0" y="276" text-anchor="middle">xhigh</text>
+<text class="tick" x="616.0" y="276" text-anchor="middle">max</text>
+<polyline class="ln" style="stroke:#26A3A5" points="56.0,157.9 336.0,108.6 616.0,144.5"/>
+<g class="pt" tabindex="0"><title>Opus 5.5 · high：64.2%，每項任務 $3.88</title><circle class="hit" cx="56.0" cy="157.9" r="14"/><circle class="dot" cx="56.0" cy="157.9" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<text class="vlab" x="50.0" y="143.9" text-anchor="start">64.2%</text>
+<g class="pt peak" tabindex="0"><title>Opus 5.5 · xhigh：66.4%，每項任務 $7.35</title><circle class="hit" cx="336.0" cy="108.6" r="14"/><circle class="dot" cx="336.0" cy="108.6" r="6" style="fill:#26A3A5;stroke:#26A3A5"/></g>
+<text class="vlab pk" x="336.0" y="94.6" text-anchor="middle">66.4% 最高</text>
+<g class="pt" tabindex="0"><title>Opus 5.5 · max：64.8%，每項任務 $11.24</title><circle class="hit" cx="616.0" cy="144.5" r="14"/><circle class="dot" cx="616.0" cy="144.5" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<text class="vlab" x="622.0" y="130.5" text-anchor="end">64.8%</text>
+</svg>
+        <figcaption><strong>Opus 5.5 在 xhigh 最高</strong>（66.4%）。max 64.8%，每項任務成本 $11.24，比 xhigh 的 $7.35 多 53%，分數沒有更高。官方只給單一得分的標準誤（±2.6 分），沒給兩檔差值的誤差，所以只能說「max 的分數沒有比較高」，不足以判斷兩檔是否真有差異。
+          <details class="data"><summary>看數字</summary><table><thead><tr><th>effort</th><th class="num">得分</th><th class="num">每項任務成本</th></tr></thead><tbody><tr><td>high</td><td class="num">64.2%</td><td class="num">$3.88</td></tr><tr><td>xhigh</td><td class="num">66.4%</td><td class="num">$7.35</td></tr><tr><td>max</td><td class="num">64.8%</td><td class="num">$11.24</td></tr></tbody></table></details>
+        </figcaption>
+      </figure>
+      <figure class="cfig">
+        <span class="cap-k">OpenAI · DeepSWE v1.1</span>
+        <div class="legend"><span><i style="background:#26A3A5"></i>GPT-6.1 Sol（新）</span><span><i style="background:#F95229"></i>GPT-6 Sol（舊）</span></div>
+        <svg class="chart" viewBox="0 0 640 300" role="img" aria-labelledby="ch-ds-t"><title id="ch-ds-t">DeepSWE v1.1，GPT-6.1 Sol 與 GPT-6 Sol 各 effort 得分</title>
+<line class="grid" x1="56" x2="616" y1="252.0" y2="252.0"/><text class="tick" x="46" y="256.0" text-anchor="end">30%</text>
+<line class="grid" x1="56" x2="616" y1="207.2" y2="207.2"/><text class="tick" x="46" y="211.2" text-anchor="end">40%</text>
+<line class="grid" x1="56" x2="616" y1="162.4" y2="162.4"/><text class="tick" x="46" y="166.4" text-anchor="end">50%</text>
+<line class="grid" x1="56" x2="616" y1="117.6" y2="117.6"/><text class="tick" x="46" y="121.6" text-anchor="end">60%</text>
+<line class="grid" x1="56" x2="616" y1="72.8" y2="72.8"/><text class="tick" x="46" y="76.8" text-anchor="end">70%</text>
+<line class="grid" x1="56" x2="616" y1="28.0" y2="28.0"/><text class="tick" x="46" y="32.0" text-anchor="end">80%</text>
+<text class="tick" x="56.0" y="276" text-anchor="middle">低</text>
+<text class="tick" x="196.0" y="276" text-anchor="middle">中</text>
+<text class="tick" x="336.0" y="276" text-anchor="middle">高</text>
+<text class="tick" x="476.0" y="276" text-anchor="middle">xhigh</text>
+<text class="tick" x="616.0" y="276" text-anchor="middle">max</text>
+<polyline class="ln" style="stroke:#26A3A5" points="56.0,97.9 196.0,59.4 336.0,49.5 476.0,64.3 616.0,64.3"/>
+<g class="pt" tabindex="0"><title>GPT-6.1 Sol（新） · 低：64.4%，每項任務 $0.17</title><circle class="hit" cx="56.0" cy="97.9" r="14"/><circle class="dot" cx="56.0" cy="97.9" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<g class="pt" tabindex="0"><title>GPT-6.1 Sol（新） · 中：73.0%，每項任務 $0.42</title><circle class="hit" cx="196.0" cy="59.4" r="14"/><circle class="dot" cx="196.0" cy="59.4" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<g class="pt peak" tabindex="0"><title>GPT-6.1 Sol（新） · 高：75.2%，每項任務 $0.65</title><circle class="hit" cx="336.0" cy="49.5" r="14"/><circle class="dot" cx="336.0" cy="49.5" r="6" style="fill:#26A3A5;stroke:#26A3A5"/></g>
+<text class="vlab pk" x="336.0" y="35.5" text-anchor="middle">75.2% 最高</text>
+<g class="pt" tabindex="0"><title>GPT-6.1 Sol（新） · xhigh：71.9%，每項任務 $0.79</title><circle class="hit" cx="476.0" cy="64.3" r="14"/><circle class="dot" cx="476.0" cy="64.3" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<g class="pt" tabindex="0"><title>GPT-6.1 Sol（新） · max：71.9%，每項任務 $1.57</title><circle class="hit" cx="616.0" cy="64.3" r="14"/><circle class="dot" cx="616.0" cy="64.3" r="4.5" style="fill:var(--navy);stroke:#26A3A5"/></g>
+<text class="vlab" x="622.0" y="50.3" text-anchor="end">71.9%</text>
+<polyline class="ln" style="stroke:#F95229" points="56.0,219.7 196.0,132.8 336.0,93.9 476.0,88.0 616.0,78.2"/>
+<g class="pt" tabindex="0"><title>GPT-6 Sol（舊） · 低：37.2%，每項任務 $0.16</title><circle class="hit" cx="56.0" cy="219.7" r="14"/><circle class="dot" cx="56.0" cy="219.7" r="4.5" style="fill:var(--navy);stroke:#F95229"/></g>
+<g class="pt" tabindex="0"><title>GPT-6 Sol（舊） · 中：56.6%，每項任務 $0.38</title><circle class="hit" cx="196.0" cy="132.8" r="14"/><circle class="dot" cx="196.0" cy="132.8" r="4.5" style="fill:var(--navy);stroke:#F95229"/></g>
+<g class="pt" tabindex="0"><title>GPT-6 Sol（舊） · 高：65.3%，每項任務 $0.64</title><circle class="hit" cx="336.0" cy="93.9" r="14"/><circle class="dot" cx="336.0" cy="93.9" r="4.5" style="fill:var(--navy);stroke:#F95229"/></g>
+<g class="pt" tabindex="0"><title>GPT-6 Sol（舊） · xhigh：66.6%，每項任務 $1.00</title><circle class="hit" cx="476.0" cy="88.0" r="14"/><circle class="dot" cx="476.0" cy="88.0" r="4.5" style="fill:var(--navy);stroke:#F95229"/></g>
+<g class="pt peak" tabindex="0"><title>GPT-6 Sol（舊） · max：68.8%，每項任務 $2.74</title><circle class="hit" cx="616.0" cy="78.2" r="14"/><circle class="dot" cx="616.0" cy="78.2" r="6" style="fill:#F95229;stroke:#F95229"/></g>
+<text class="vlab pk" x="622.0" y="102.2" text-anchor="end">68.8% 最高</text>
+</svg>
+        <figcaption><strong>新版在「高」就到頂</strong>（75.2%），xhigh 與 max 都掉到 71.9%，max 成本是高的 2.4 倍。舊版則一路升到 max（68.8%）。OpenAI 自己寫：6.1 Sol「at a lower reasoning effort」就比 6 Sol 的最好成績高 6.4 分。圖上未見誤差範圍，不說顯著下降。
+          <details class="data"><summary>看數字</summary><table><thead><tr><th>模型</th><th class="num">低</th><th class="num">中</th><th class="num">高</th><th class="num">xhigh</th><th class="num">max</th></tr></thead><tbody><tr><td>GPT-6.1 Sol</td><td class="num">64.4%</td><td class="num">73.0%</td><td class="num">75.2%</td><td class="num">71.9%</td><td class="num">71.9%</td></tr><tr><td>GPT-6 Sol</td><td class="num">37.2%</td><td class="num">56.6%</td><td class="num">65.3%</td><td class="num">66.6%</td><td class="num">68.8%</td></tr></tbody></table></details>
+        </figcaption>
       </figure>
     </div>
-    <aside class="aside">
-      <h3>界線</h3>
-      <p>剛才的費用表<strong>不是 effort 對照實驗</strong>。不能拿它證明某個 effort 設定省多少，或品質不變。這是第二個旋鈕，不是第二個省錢承諾；要證明省多少，得自己做評估。</p>
-      <p class="src">來源：<a href="https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-opus-5">官方 Effort／Opus 5 建議</a>，查證日 2026-09-10。</p>
-    </aside>
+    <p class="note mt24">兩張圖依官方頁面的圖表數據重畫，只留需要的線。來源：<a href="https://www.anthropic.com/claude-opus-5-5">Claude Opus 5.5 發布頁</a>、<a href="https://openai.com/index/introducing-gpt-6-1-sol/">Introducing GPT-6.1 Sol</a>，讀取日 2026-10-01。</p>
+
+    <div class="two mt64">
+      <div>
+        <figure class="quote">
+          <p>新模型不一定越想越好。這兩張圖上，最高點都不在 max；max 多花的錢，沒有換到更好的分數。</p>
+        </figure>
+        <h3 class="t3 mt48">為什麼會這樣：想更多，也代表做更多</h3>
+        <p class="body mt16">Anthropic 在 Sonnet 5.5 發布頁自己寫了一個例子：在 FrontierCode 上，max 反而比 xhigh 低。官方說 max 時模型更常自己跑 code-review skill、拆成許多 subagent；在 Cognition 檢查的<strong>兩個案例</strong>裡，這導致<strong>逾時，或改到任務範圍外</strong>而被扣分。這是一種觀察到的失敗方式：想更多，也可能做過頭。</p>
+        <p class="note mt16">這只是 Sonnet 那個評測裡查到的原因，不是前面兩張圖的已證實原因。</p>
+        <h3 class="t3 mt48">但不是所有題目都這樣</h3>
+        <p class="body mt16">同兩個發布頁的其他 benchmark，max 多半仍是最高分；同樣在 Terminal-Bench 4.0，Sonnet 5.5 就是一路升到 max。所以結論只到：<strong>最高檔不保證最好，要看任務</strong>。</p>
+      </div>
+      <aside class="aside">
+        <h3>我自己怎麼調</h3>
+        <ol>
+          <li>2026-09-26：Opus 做判斷與 review，從 xhigh 降到 <strong>high</strong>；只有架構審查留 xhigh。</li>
+          <li>2026-09-29：實作從 Opus + medium 改成 <strong>Sonnet + high</strong>，因為 Sonnet 比較便宜；機械處理從 low 升到 medium。</li>
+        </ol>
+        <p class="mt16">effort 會往下調，也會往上調。模型換代時重新選一次，不是設定一次就不管。</p>
+        <p class="src">Sonnet 例子：<a href="https://www.anthropic.com/claude-sonnet-5-5">Claude Sonnet 5.5 發布頁</a>腳註 2。</p>
+      </aside>
+    </div>
   </div>
 </section>
 
@@ -514,6 +626,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       <div class="eyebrow"><span class="idx">09</span><span>延伸一句</span></div>
       <h2 class="t2">同一套分工也能固化成 workflow</h2>
       <p class="lead mt24">如果流程會重複跑，可以固化成 workflow，指定每個階段的模型。臨時產生的 dynamic workflow 同樣要留意實際派了誰，<strong>別不知不覺多出一支 Fable 艦隊</strong>。</p>
+      <p class="body mt16">我現在的做法：workflow 每個階段指定交給哪個角色，模型與 effort 跟著角色定義走；沒指定角色的派工會被擋下。</p>
       <p class="note mt16">不說 dynamic 必然昂貴，也不說固化就自動省額度。workflow 是進階題，今天只提這一句。</p>
       <hr class="rule">
       <p class="punch">以上都是把工作派出去。<br>接下來換另一種做法：只借一次判斷。</p>
@@ -535,29 +648,16 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
         <p>有時我只是對這一次思考不滿意，但整個 session 換成強模型，後續工作也一起換了。能不能只把這次判斷交出去？</p>
       </figure>
       <ol class="list mt32">
-        <li><p>說清楚<strong>要判斷的問題</strong>，不是請顧問泛泛看一遍。</p></li>
-        <li><p>依問題選顧問，確認它能看到哪些資料。</p></li>
-        <li><p>決定提供什麼脈絡：挑現有答案的錯，或讓它不受答案影響地獨立想一遍。</p></li>
-        <li><p>收回意見，逐條<strong>採納、拒絕或標尚待查證</strong>。不是拿到建議就自動照做。</p></li>
-        <li><p>原本的執行流程繼續，不讓顧問不知不覺接管實作。</p></li>
+        <li><p>顧問借的是<strong>一次判斷</strong>，不接管工作；意見回來後逐條決定採不採納。</p></li>
+        <li><p>選顧問先看它<strong>能不能自己補證據</strong>，再看它擅不擅長這類判斷。</p></li>
+        <li><p>給什麼材料，決定拿到的是<strong>挑錯式</strong>還是<strong>獨立式</strong>的意見。</p></li>
       </ol>
-      <h3 class="t3 mt64">真實案例：給完整思路，反而困住顧問</h3>
-      <p class="body mt16">設計自己的 advisor 用法時，我在兩個選項裡挑：給顧問摘要，或給完整對話。Web Pro 的回覆：</p>
-      <figure class="quote mt24">
-        <p>不是讀原 agent 的摘要，就是讀原 agent 的全部思考。你們沒有留下第三種模式：只給原始任務、可驗證證據、限制條件與產出，刻意拿掉原 agent 的結論與辯護。</p>
-        <cite>Web Pro，一次歷史諮詢</cite>
-      </figure>
-      <p class="lead mt24">我原本在兩個選項裡挑，顧問指出我根本沒看到第三個。結果是加入<strong>盲審方式</strong>，顧問意見逐條裁決納入流程。</p>
+      <p class="punch mt48">怎麼問、問誰、給什麼、回來怎麼處理，<br>另外一篇講。</p>
+      <p class="lead mt24"><a href="./advisor-method.html">→ 借一次判斷：Advisor 的方法論</a></p>
     </div>
     <aside class="aside">
-      <h3>從這次諮詢帶走</h3>
-      <ol>
-        <li>要顧問挑現有答案的錯，與要顧問獨立想一遍，是不同問題。</li>
-        <li>提供更多脈絡不等於一定拿到更獨立的判斷。</li>
-        <li>顧問意見要回到資料與使用者決策，不因來自另一個模型就自動正確。</li>
-      </ol>
-      <h3 class="mt32">邊界</h3>
-      <p>Web Pro、Codex 可以是顧問選項，不做排名或產品比較。顧問能不能自行讀資料，按實際路徑交代。這是我的用法，不與官方 API 的 advisor tool 混為同一產品。一次歷史事件，不是使用頻率統計，也不外推固定效果。</p>
+      <h3>為什麼拆出去</h3>
+      <p>這陣子 advisor 是我用得越來越重的一塊，方法也長出不少細節：官方內建 advisor 和我的做法差在哪、盲審怎麼做、意見回來怎麼裁決。塞在這頁會蓋過派工與 effort，所以獨立成一篇。</p>
     </aside>
   </div>
 </section>
@@ -571,7 +671,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       <p class="lead mt24">三個問題，明天回去就能問自己。依現況誠實選：1 是還沒這樣想過，5 是已成為習慣。這只量你對三種做法的熟悉度，不量它們適不適合你手上的工作。</p>
       <div class="check mt32" id="check">
         <div class="q" data-k="orchestrator"><p><strong>一段有明確邊界的工作</strong>，是否適合交給 subagent，而不是 main 從頭做到底？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
-        <div class="q" data-k="effort"><p>使用 Opus 時，是否<strong>有意識地選 effort</strong>，而非每種任務都用同一檔？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <div class="q" data-k="effort"><p>選 effort 時，是否<strong>有意識地選檔位</strong>，而非每種任務都開最高？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
         <div class="q" data-k="advisor"><p>某次判斷卡住時，是否需要<strong>借一次顧問意見</strong>，而不是讓它接管整場？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
         <p class="out" id="checkOut" aria-live="polite">三題都選完後，這裡會標出你最不熟的一項，當作起點的建議。</p>
       </div>
@@ -583,7 +683,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
       <ol>
         <li><a href="https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan">Fable 方案說明</a> · <a href="https://code.claude.com/docs/en/costs">Claude Code 用量文件</a></li>
         <li><a href="https://code.claude.com/docs/en/sub-agents">自訂 subagent</a></li>
-        <li><a href="https://platform.claude.com/docs/en/build-with-claude/effort">Effort</a></li>
+        <li><a href="https://platform.claude.com/docs/en/build-with-claude/effort">Effort</a> · <a href="https://www.anthropic.com/claude-opus-5-5">Opus 5.5</a> · <a href="https://www.anthropic.com/claude-sonnet-5-5">Sonnet 5.5</a> · <a href="https://openai.com/index/introducing-gpt-6-1-sol/">GPT-6.1 Sol</a></li>
         <li><a href="https://platform.claude.com/docs/en/about-claude/pricing">Pricing</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">Prompt caching</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/extended-thinking">Extended thinking</a></li>
       </ol>
       <p class="src">自評結果只留在你的瀏覽器畫面上，不會送到任何地方。</p>
@@ -688,7 +788,7 @@ pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
   setView('tok');
 
   // self check
-  var LABEL = { orchestrator: '把一段有邊界的工作交給 subagent', effort: '用 Opus 時有意識地選 effort', advisor: '卡住時借一次顧問意見，而不是換掉整場' };
+  var LABEL = { orchestrator: '把一段有邊界的工作交給 subagent', effort: '有意識地選 effort 檔位', advisor: '卡住時借一次顧問意見，而不是換掉整場' };
   var score = {};
   var qs = Array.prototype.slice.call(document.querySelectorAll('#check .q'));
   var out = document.getElementById('checkOut');

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>借一次判斷：Advisor 的方法論</title>
+<meta name="description" content="不換掉整個 session，只把一次判斷交給顧問。官方 advisor 與自訂做法的差別、怎麼選顧問、給什麼材料、盲審陷阱與逐條裁決。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --navy:#00122D; --black:#000; --navy-800:#041A3A; --navy-700:#0A2548;
+  --teal:#61D6D6; --orange:#F95229; --white:#FFF;
+  --w72:rgba(255,255,255,.72); --w54:rgba(255,255,255,.54); --w38:rgba(255,255,255,.38);
+  --hair:rgba(97,214,214,.22); --hair-soft:rgba(97,214,214,.12); --hair-strong:rgba(97,214,214,.45);
+  --sans:'Poppins','Noto Sans TC','PingFang TC',system-ui,sans-serif;
+  --mono:'IBM Plex Mono','Noto Sans TC',ui-monospace,monospace;
+  --nav-h:60px; --ease:cubic-bezier(.2,.6,.2,1);
+  --measure:66ch;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h);background:var(--navy)}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){html{scroll-snap-type:y proximity}}
+body{margin:0;font-family:var(--sans);font-size:17px;line-height:1.7;color:var(--white);background:var(--navy);-webkit-font-smoothing:antialiased;text-wrap:pretty}
+h1,h2,h3,h4,p,ul,ol,li,figure,blockquote,table,pre{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:var(--white);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{border-bottom-color:var(--teal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+strong{font-weight:600;color:var(--white)}
+::selection{background:var(--teal);color:var(--navy)}
+.num,td.num,th.num,.stat,.big{font-variant-numeric:tabular-nums}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);background:var(--navy);border-bottom:1px solid var(--hair);padding:0 24px}
+.nav .wrap{height:100%;display:flex;align-items:center;gap:24px}
+.nav-mark{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);white-space:nowrap;font-weight:500}
+.nav-list{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-list::-webkit-scrollbar{display:none}
+.nav-btn{appearance:none;background:none;border:0;color:var(--w54);font:inherit;font-size:13px;padding:8px 10px;white-space:nowrap;cursor:pointer;border-radius:2px;display:flex;gap:6px;align-items:baseline}
+.nav-btn .nn{font-size:11px;color:var(--w38);font-variant-numeric:tabular-nums}
+.nav-btn:hover{color:var(--white)}
+.nav-btn[aria-current="true"]{color:var(--navy);background:var(--teal)}
+.nav-btn[aria-current="true"] .nn{color:var(--navy)}
+.progress{position:fixed;top:var(--nav-h);left:0;height:2px;width:0;background:var(--teal);z-index:49;transition:width .12s linear}
+
+/* chapters */
+.ch{scroll-snap-align:start;padding:96px 24px;border-bottom:1px solid var(--hair-soft)}
+.ch.alt{background:var(--black)}
+.ch.hero{min-height:calc(100vh - var(--nav-h));display:flex;align-items:center}
+.wrap{max-width:1200px;margin:0 auto}
+.two{display:grid;gap:40px 64px}
+.two > *{min-width:0}
+@media (min-width:1024px){.two{grid-template-columns:7fr 5fr}.two.wide{grid-template-columns:8fr 4fr}}
+.aside{color:var(--w72);font-size:15px;line-height:1.75}
+@media (min-width:1024px){.aside{position:sticky;top:calc(var(--nav-h) + 40px);align-self:start}}
+.aside h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:16px}
+.aside dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;border-top:1px solid var(--hair);padding-top:16px}
+.aside dt{font-family:var(--mono);font-size:14px;color:var(--white)}
+.aside dd{margin:0}
+.aside ol{counter-reset:n;border-top:1px solid var(--hair);padding-top:16px}
+.aside ol li{counter-increment:n;display:grid;grid-template-columns:24px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair-soft)}
+.aside ol li::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:12px;color:var(--teal);padding-top:4px}
+.aside .src{margin-top:24px;font-size:13px;color:var(--w54)}
+.aside .src a{color:var(--w72)}
+
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;display:flex;gap:14px;margin-bottom:20px}
+.eyebrow .idx{color:var(--w38);font-family:var(--mono);letter-spacing:0}
+h1.t1{font-size:clamp(40px,6vw,72px);line-height:1.05;letter-spacing:-.02em;font-weight:600;max-width:20ch}
+h2.t2{font-size:clamp(30px,3.6vw,44px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:22ch}
+h3.t3{font-size:22px;line-height:1.3;font-weight:600}
+.lead{font-size:clamp(19px,1.6vw,22px);line-height:1.6;color:var(--w72);max-width:var(--measure)}
+.lead strong{color:var(--white)}
+.body{max-width:var(--measure);color:var(--w72)}
+.punch{font-size:clamp(26px,3vw,36px);line-height:1.3;letter-spacing:-.01em;font-weight:500;max-width:26ch}
+.note{font-size:14px;color:var(--w54);line-height:1.65;max-width:var(--measure)}
+.note.hi{color:var(--w72);border-left:2px solid var(--teal);padding-left:12px}
+.rule{border:0;border-top:1px solid var(--hair);margin:40px 0}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt40{margin-top:40px}.mt48{margin-top:48px}.mt64{margin-top:64px}
+
+/* cards & grids */
+.card{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px}
+.ch.alt .card{background:var(--navy-800)}
+.card-h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:12px}
+.card p{color:var(--w72);font-size:16px;line-height:1.6}
+.card p strong{color:var(--white)}
+.grid3{display:grid;gap:16px}
+@media (min-width:720px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.vs{display:grid;gap:16px}
+@media (min-width:720px){.vs{grid-template-columns:1fr 1fr}}
+.stats{display:grid;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+@media (min-width:720px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stats > div{padding:28px 24px 28px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:720px){.stats > div{border-bottom:0;border-right:1px solid var(--hair-soft);padding-left:24px}.stats > div:first-child{padding-left:0}.stats > div:last-child{border-right:0}}
+.stats .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.stats .v{font-size:28px;font-weight:600;line-height:1.2;margin-top:8px;letter-spacing:-.01em}
+.stats .d{color:var(--w72);font-size:15px;margin-top:8px}
+
+/* lists */
+.list{counter-reset:n}
+.list li{counter-increment:n;display:grid;grid-template-columns:32px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--hair-soft)}
+.list li::before{content:counter(n);font-family:var(--mono);font-size:14px;color:var(--teal);padding-top:2px}
+.list li p{color:var(--w72);max-width:var(--measure)}
+.list li p strong{color:var(--white)}
+.list.plain li::before{content:''}
+.list.plain li{grid-template-columns:1fr}
+
+/* quote */
+.quote{border-left:2px solid var(--teal);padding:8px 0 8px 28px;max-width:60ch}
+.quote p{font-size:clamp(20px,2vw,26px);line-height:1.5;font-weight:500}
+.quote.sm p{font-size:19px;font-weight:400;color:var(--w72)}
+.quote cite{display:block;margin-top:16px;font-style:normal;font-size:13px;color:var(--w54);letter-spacing:.04em}
+
+/* diagrams */
+.figs{display:grid;gap:24px}
+@media (min-width:900px){.figs{grid-template-columns:1fr 1fr;gap:32px;grid-template-rows:auto auto}.fig{display:grid;grid-template-rows:subgrid;grid-row:span 2;align-content:start}.fig img{align-self:center}}
+.fig{margin:0}
+.fig img{display:block;width:100%;height:auto;border-radius:2px;background:#efece6}
+.fig figcaption{margin-top:14px;font-size:14px;line-height:1.65;color:var(--w72);max-width:44ch}
+.fig figcaption strong{color:var(--white)}
+.fig .cap-k{display:block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:8px}
+
+/* tables */
+.tablewrap{overflow-x:auto;border-top:1px solid var(--hair)}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{padding:14px 12px;text-align:left;border-bottom:1px solid var(--hair-soft);vertical-align:top}
+thead th{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;white-space:nowrap}
+tbody th{font-weight:600;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:15px}
+td.hi{color:var(--white);font-weight:500;background:rgba(97,214,214,.06)}
+th.hi{background:rgba(97,214,214,.06)}
+td.mute,th.mute{color:var(--w38)}
+tr.total th,tr.total td{border-top:1px solid var(--hair);border-bottom:0;font-weight:600;color:var(--white)}
+tr[data-model]{transition:background .12s var(--ease)}
+tr[data-model]:hover,tr[data-model].on{background:rgba(97,214,214,.08)}
+td.pct{color:var(--w72)}
+td.bar{position:relative}
+td.bar i{position:absolute;left:0;bottom:0;height:2px;background:var(--teal);opacity:.6}
+
+/* segmented control */
+.seg{display:inline-flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+.seg button{appearance:none;background:none;border:0;color:var(--w72);font:inherit;font-size:14px;padding:8px 16px;cursor:pointer;border-right:1px solid var(--hair)}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--white)}
+.seg button[aria-pressed="true"]{background:var(--teal);color:var(--navy);font-weight:500}
+.tbl-title{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tbl-title .unit{font-size:14px;color:var(--w54)}
+
+/* code */
+pre{font-family:var(--mono);font-size:15px;line-height:1.7;background:var(--black);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;overflow-x:auto;color:var(--w72)}
+.ch.alt pre{background:var(--navy-800)}
+pre .k{color:var(--teal)}pre .d{color:var(--w38)}pre .v{color:var(--white)}
+.annot{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:15px;color:var(--w72)}
+.annot dt{font-family:var(--mono);color:var(--teal)}
+
+/* diagram main/subagent */
+.diag{display:grid;gap:16px;align-items:stretch}
+@media (min-width:720px){.diag{grid-template-columns:1fr auto 1fr}}
+.diag .box{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:20px}
+.diag .box p{font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--w72)}
+.diag .box.full p{color:var(--w54)}
+.diag .arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--teal);font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:0 8px}
+.diag .arrow .line{width:80px;height:1px;background:var(--hair-strong);position:relative}
+.diag .arrow .line::before{content:'';position:absolute;left:-1px;top:-4px;border:4px solid transparent;border-right-color:var(--hair-strong)}
+@media (max-width:719px){.diag .arrow{flex-direction:row}.diag .arrow .line{width:1px;height:32px}.diag .arrow .line::before{display:none}}
+
+/* timeline */
+.tl{position:relative;padding-left:32px}
+.tl::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--hair-strong)}
+.tl li{position:relative;padding:0 0 32px 0}
+.tl li::before{content:'';position:absolute;left:-29px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--navy);box-shadow:inset 0 0 0 1px var(--teal)}
+.tl li.hot::before{background:var(--teal)}
+.tl .who{display:inline-flex;gap:8px;align-items:baseline;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:6px}
+.tl .who .m{font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--w54);font-size:13px}
+.tl p{color:var(--w72);max-width:var(--measure)}
+.tl .receipt{margin-top:12px;font-family:var(--mono);font-size:15px;display:inline-flex;gap:12px;align-items:center;padding:10px 14px;background:var(--black);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px}
+.ch.alt .tl .receipt{background:var(--navy-800)}
+.tl .receipt .f{color:var(--w72);text-decoration:line-through;text-decoration-color:var(--w38)}
+.tl .receipt .p{color:var(--white);font-weight:500}
+.tl .receipt .a{color:var(--teal)}
+
+/* three conclusions */
+.concl{display:grid;gap:16px}
+@media (min-width:900px){.concl{grid-template-columns:repeat(3,1fr)}}
+.concl li{background:var(--navy-800);box-shadow:inset 0 0 0 1px var(--hair);border-radius:2px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.concl .lab{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.concl .big{font-size:40px;line-height:1;font-weight:600;letter-spacing:-.02em}
+.concl li.key .big{color:var(--orange)}
+.concl p{color:var(--w72);font-size:15px;line-height:1.6}
+.concl p strong{color:var(--white)}
+
+/* self check */
+.check{border-top:1px solid var(--hair)}
+.check .q{display:grid;gap:16px;padding:24px 0;border-bottom:1px solid var(--hair-soft)}
+@media (min-width:900px){.check .q{grid-template-columns:1fr auto;align-items:center}}
+.check .q p{color:var(--w72);max-width:var(--measure)}
+.check .q p strong{color:var(--white)}
+.scale{display:inline-flex;border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+.scale button{appearance:none;background:none;border:0;border-right:1px solid var(--hair);color:var(--w72);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.scale button:last-child{border-right:0}
+.scale button:hover{color:var(--white)}
+.scale button[aria-pressed="true"]{background:var(--teal);color:var(--navy);font-weight:500}
+.check .out{margin-top:24px;min-height:1.7em;color:var(--w72)}
+.check .out strong{color:var(--white)}
+
+/* effort charts */
+.charts{display:grid;gap:48px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+.chart{display:block;width:100%;height:auto;margin-top:12px}
+.chart .grid{stroke:var(--hair-soft);stroke-width:1}
+.chart .tick{fill:var(--w54);font-size:12px;font-family:var(--mono)}
+.chart .ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{stroke-width:2}
+.chart .hit{fill:transparent}
+.chart .pt{cursor:default;outline:none}
+.chart .pt:hover .dot,.chart .pt:focus-visible .dot{r:8}
+.chart .vlab{fill:var(--w72);font-size:13px;font-family:var(--mono)}
+.chart .vlab.pk{fill:var(--white);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--w72);margin-top:8px}
+.legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:8px}
+details.data{margin-top:12px}
+details.data summary{cursor:pointer;color:var(--teal);font-size:13px}
+details.data table{font-size:14px;margin-top:8px}
+
+/* footer */
+.foot{padding:48px 24px;border-top:1px solid var(--hair);color:var(--w54);font-size:13px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.progress{transition:none}}
+@media (max-width:719px){.ch{padding:64px 20px}.nav{padding:0 20px}.nav .wrap{gap:16px}}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="章節導覽">
+  <div class="wrap">
+    <div class="nav-mark">Calyx · tech workshop</div>
+    <div class="nav-list" id="navList"></div>
+  </div>
+</nav>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<main>
+<!-- 1 開場 -->
+<section class="ch hero" id="c01" data-ch="1" data-label="開場">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">01</span><span>tech workshop · 專篇</span></div>
+      <h1 class="t1">借一次判斷：Advisor 的方法論</h1>
+      <p class="lead mt32">不換掉整個 session，只把這一題交給另一顆腦袋。</p>
+      <p class="punch mt64">有時我只是對這一次思考不滿意。<br>但整個 session 換成強模型，後續工作也一起換了。<br>能不能只把這次判斷交出去？</p>
+    </div>
+    <aside class="aside">
+      <h3>接續主篇</h3>
+      <p>這篇從<a href="./model-division.html">模型分工</a>拆出來。主篇的分界一句話：</p>
+      <dl class="mt16">
+        <dt>派工</dt><dd>交出<strong>一件有範圍、有驗收條件的工作</strong>。</dd>
+        <dt>顧問</dt><dd>借<strong>對 main 某個判斷的第二意見</strong>。沒有交付物，只有意見。</dd>
+      </dl>
+      <p class="src">這篇只講方法，不講我怎麼把它接起來的實作細節。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 2 官方 advisor -->
+<section class="ch alt" id="c02" data-ch="2" data-label="官方 advisor">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">02</span><span>官方也有</span></div>
+      <h2 class="t2">Claude Code 內建了 advisor，差別不只是誰按下去</h2>
+      <p class="lead mt24">先公平講官方版。它讓 Claude 在關鍵時刻諮詢另一顆、通常更強的模型。</p>
+      <ul class="list mt32">
+        <li><p><strong>Claude 決定何時問</strong>，常見時機是選定做法前、同一個錯誤反覆出現時、宣告完成前。你也可以在 prompt 裡叫它問。</p></li>
+        <li><p>顧問<strong>一律收到完整對話</strong>，包含每次 tool 呼叫與結果。</p></li>
+        <li><p>顧問是 Claude 自家模型，由你選哪一顆。</p></li>
+        <li><p>目前是 experimental，要走 Anthropic 官方後端，訂閱與 API 計費帳號都能用；Bedrock、Google Cloud 等雲端平台不支援。</p></li>
+      </ul>
+      <h3 class="t3 mt64">我的做法差在三件事</h3>
+      <div class="grid3 mt24">
+        <div class="card"><div class="card-h">材料能不能挑</div><p>官方固定送完整對話。我可以只送任務與事實，<strong>拿掉自己的結論</strong>（第 4 章）。</p></div>
+        <div class="card"><div class="card-h">能不能跨廠商</div><p>官方顧問是 Claude 模型。我也找其他廠商的模型，換一個<strong>訓練背景不同</strong>的視角。</p></div>
+        <div class="card"><div class="card-h">回來怎麼處理</div><p>我要求<strong>逐條裁決</strong>（第 6 章）。官方文件沒描述這一步，這不代表官方沒有。</p></div>
+      </div>
+      <p class="note mt24">不說誰比較好。官方版省事、時機自動；我的版本多了控制，也多了手續。</p>
+    </div>
+    <aside class="aside">
+      <h3>觸發時機：我試過自動提醒</h3>
+      <p>我曾經加過「該找顧問了」的自動提醒。結果是<strong>每次都看到，也每次都略過</strong>，最後停用。</p>
+      <p class="mt16">所以我目前實際會用的時機，是自己覺得「這次不對勁」的那一刻。另一個顧慮是：讓正在做事的模型自己評估「我需不需要求救」，本身也是一題不穩的判斷。</p>
+      <p class="mt16">這只說明提醒沒被我採用，不證明人的直覺比較準，也不是對官方自動觸發的評測。人往往在不知道自己判錯時，最需要第二意見。</p>
+      <p class="src">官方說明：<a href="https://code.claude.com/docs/en/advisor">Claude Code advisor 文件</a>，查證日 2026-10-01。官方標 experimental，行為與可用性可能變動。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 3 選顧問 -->
+<section class="ch" id="c03" data-ch="3" data-label="選顧問">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">03</span><span>選顧問</span></div>
+      <h2 class="t2">先看它能不能自己查證，再看它擅不擅長</h2>
+      <p class="lead mt24">「哪顆比較聰明」很難證明。「它能不能自己去讀檔、跑指令核對」是確定的事實，決定它能<strong>自己補哪些證據</strong>。你把證據送齊，只讀文字的顧問也能審實作；有工具，也不代表它判斷得對。</p>
+      <div class="tablewrap mt32">
+        <table>
+          <thead><tr><th scope="col">顧問能做的事</th><th scope="col">比較適合</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">能自己讀檔、跑唯讀指令</th><td>實作層：指令對不對、程式碼和宣稱是否一致、實驗設計成不成立</td></tr>
+            <tr><th scope="row">只能讀你送的文字</th><td>思路與框架：論證有沒有跳步、問題設定對不對</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="quote mt40">
+        <p>需要核對證據，就找能查證的；只需要想清楚，就找擅長思考的。</p>
+      </figure>
+    </div>
+    <aside class="aside">
+      <h3>同一顆也算第二意見，但盲區可能相同</h3>
+      <p>官方文件就把同型號搭配列為選項，例如 Sonnet 配 Sonnet 是「lower-cost second opinion」。我偏好換一顆模型，增加視角差異；用同一顆時，不要假定它的盲區和 main 不同。換廠商也不保證錯誤互相獨立。</p>
+      <h3 class="mt32">不做排名</h3>
+      <p>這頁不比較模型或產品。顧問是互補，不是更強：價值來自換一個視角，不是換一顆更好的腦袋。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 4 材料 -->
+<section class="ch alt" id="c04" data-ch="4" data-label="給什麼材料">
+  <div class="wrap">
+    <div class="eyebrow"><span class="idx">04</span><span>材料</span></div>
+    <h2 class="t2">給什麼材料，決定你拿到哪種意見</h2>
+    <p class="lead mt24">把整段對話丟給顧問，看起來最完整。但完整不等於獨立。</p>
+    <div class="tablewrap mt40">
+      <table>
+        <thead><tr><th scope="col">你要的</th><th scope="col">給顧問什麼</th><th scope="col">刻意不給什麼</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">挑我的錯</th><td>原始問題、我的結論、我排除過的選項，三樣分開標</td><td class="mute">—</td></tr>
+          <tr><th scope="row">獨立想一遍（盲審）</th><td>原始任務、查得到的事實、硬限制</td><td>我的結論、排除項與理由，連暗示都不留</td></tr>
+          <tr><th scope="row">問題卡在前後脈絡</th><td>對話原文，機械抽取</td><td>我寫的摘要</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note hi mt24">為什麼不讓 main 自己寫摘要：摘要會帶著 main 的視角，顧問讀到的等於再看一次原本的思路。</p>
+    <div class="two mt64">
+      <div>
+        <h3 class="t3">案例：盲審是被顧問點出來的</h3>
+        <p class="body mt16">設計自己的 advisor 用法時，我只想到兩個選項：給顧問摘要，或給完整對話。顧問的回覆：</p>
+        <figure class="quote mt24">
+          <p>不是讀原 agent 的摘要，就是讀原 agent 的全部思考。你們沒有留下第三種模式：只給原始任務、可驗證證據、限制條件與產出，刻意拿掉原 agent 的結論與辯護。</p>
+          <cite>一次歷史諮詢</cite>
+        </figure>
+        <p class="lead mt24">我在兩個選項裡挑，顧問指出我根本沒看到第三個。後來加入<strong>盲審</strong>，也把顧問意見逐條裁決納入流程。</p>
+      </div>
+      <aside class="aside">
+        <h3>從這次帶走</h3>
+        <ol>
+          <li>要顧問挑錯，和要顧問獨立想一遍，是不同問題。</li>
+          <li>給更多脈絡，不等於拿到更獨立的判斷。</li>
+        </ol>
+        <p class="src">一次歷史事件，不是使用頻率統計，也不外推成固定效果。</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- 5 盲審破功 -->
+<section class="ch" id="c05" data-ch="5" data-label="盲審破功">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">05</span><span>陷阱</span></div>
+      <h2 class="t2">prompt 裡沒寫結論，顧問就真的沒看到嗎</h2>
+      <p class="lead mt24">一次刻意的盲審，我逐字檢查過 prompt，沒有任何結論。但那條傳送路徑會<strong>自動讓顧問讀到整段對話紀錄</strong>。顧問的回答，直接引用了我先前說過的話。</p>
+      <p class="body mt24">意見還是有用：它照樣反駁了我的核心推論。但那是<strong>讀過我論證之後</strong>的意見，不是獨立的第二意見，採信時的分量不同。</p>
+      <figure class="quote mt40">
+        <p>要確認顧問實際看到了什麼，不是看你以為送了什麼。</p>
+      </figure>
+    </div>
+    <aside class="aside">
+      <h3>怎麼防</h3>
+      <ol>
+        <li>先弄清楚每條管道會自動附上什麼。</li>
+        <li>真的要盲審，就選只送 prompt 內容的管道。</li>
+        <li>事後回頭確認顧問讀到什麼；讀過對話就照實標明。</li>
+      </ol>
+      <p class="src">2026-09-17 一次實際諮詢。只講現象與教訓，不點名工具。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 6 裁決 -->
+<section class="ch alt" id="c06" data-ch="6" data-label="逐條裁決">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">06</span><span>意見回來之後</span></div>
+      <h2 class="t2">顧問給幾條，就裁決幾條</h2>
+      <div class="tablewrap mt32">
+        <table>
+          <thead><tr><th scope="col">顧問的意見</th><th scope="col">裁決</th><th scope="col">依據</th></tr></thead>
+          <tbody>
+            <tr><td>一句話濃縮，不改原意</td><td>接受</td><td>具體要做什麼</td></tr>
+            <tr><td></td><td>認為意見錯</td><td><strong>反證</strong></td></tr>
+            <tr><td></td><td>可能對，但這次不採納</td><td><strong>取捨理由</strong>：超出範圍、成本不值得、目前不優先</td></tr>
+            <tr><td></td><td>事實還不確定</td><td>標「待確認」，寫下怎麼驗；驗不了就照實留著，不硬裁成對或錯</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="list mt32">
+        <li><p><strong>說它錯，要附反證。</strong>「不適用」「我不同意」不算，那是換句話說的忽略。</p></li>
+        <li><p><strong>不採納，要講出取捨。</strong>「這次不改」是合法決定，但理由要寫得出來，而且不等於它錯了。</p></li>
+        <li><p><strong>不要只挑好改的接受。</strong>質疑整體方向的那幾條最貴，也最容易被跳過。</p></li>
+        <li><p><strong>未知就留未知。</strong>不要為了收尾，把查不清楚的事裁成對或錯。</p></li>
+      </ul>
+    </div>
+    <aside class="aside">
+      <h3>為什麼不能省</h3>
+      <p>少了這一步，顧問就成了<strong>「昂貴但不具約束力的評論產生器」</strong>。這句是一次顧問審查我的流程時講的。</p>
+      <p class="mt16">意見不具強制力，但不代表可以不回應。每一條都要有明講過的去向：做、說它錯、這次不做，或待確認。</p>
+      <h3 class="mt32">衝突時</h3>
+      <p>不預設誰對。顧問可能看到盲區，也可能因為缺脈絡而誤判。把分歧點講清楚，交給人判斷。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- 7 收尾 -->
+<section class="ch" id="c07" data-ch="7" data-label="收尾">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow"><span class="idx">07</span><span>收尾</span></div>
+      <h2 class="t2">下次卡住時，先問自己三題</h2>
+      <p class="lead mt24">依現況誠實選：1 是還沒這樣想過，5 是已成為習慣。這只量熟悉度，不量適不適合你手上的工作。</p>
+      <div class="check mt32" id="check">
+        <div class="q" data-k="borrow"><p>卡住時，我是換整個 session 的模型，還是<strong>只借一次判斷</strong>？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <div class="q" data-k="material"><p>找顧問前，我想清楚了要它<strong>挑錯</strong>，還是要它<strong>獨立想一遍</strong>嗎？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <div class="q" data-k="verdict"><p>顧問意見回來，我有<strong>逐條決定</strong>，還是讀完就算了？</p><div class="scale" role="group" aria-label="1 到 5"></div></div>
+        <p class="out" id="checkOut" aria-live="polite">三題都選完後，這裡會標出你最不熟的一項，當作起點的建議。</p>
+      </div>
+      <hr class="rule">
+      <p class="punch">顧問的價值是換一個視角，不是換一顆更強的腦袋。<br>而那個視角，取決於你讓它看到什麼。</p>
+    </div>
+    <aside class="aside">
+      <h3>來源</h3>
+      <ol>
+        <li><a href="https://code.claude.com/docs/en/advisor">Claude Code advisor</a> · <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/advisor-tool">Advisor tool（API）</a></li>
+        <li><a href="./model-division.html">主篇：模型分工</a></li>
+      </ol>
+      <p class="src">自評結果只留在你的瀏覽器畫面上，不會送到任何地方。</p>
+    </aside>
+  </div>
+</section>
+</main>
+<footer class="foot"><div class="wrap"><span>借一次判斷 · tech workshop · philip · 日期待定</span><span>鍵盤 ↑↓ 或 ←→ 跳章節</span></div></footer>
+<script>
+(function () {
+  'use strict';
+  var chapters = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var navList = document.getElementById('navList');
+  var progress = document.getElementById('progress');
+  var navH = 60;
+  var current = -1;
+
+  var buttons = chapters.map(function (s, i) {
+    var b = document.createElement('button');
+    b.className = 'nav-btn'; b.type = 'button';
+    b.innerHTML = '<span class="nn">' + s.getAttribute('data-ch') + '</span>' + s.getAttribute('data-label');
+    b.addEventListener('click', function () { goTo(i); });
+    navList.appendChild(b);
+    return b;
+  });
+
+  function goTo(i) {
+    if (i < 0 || i >= chapters.length) return;
+    chapters[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function setCurrent(i) {
+    if (i === current) return;
+    current = i;
+    buttons.forEach(function (b, j) {
+      var on = j === i;
+      b.setAttribute('aria-current', on ? 'true' : 'false');
+      if (on) {
+        var l = navList.scrollLeft, w = navList.clientWidth;
+        if (b.offsetLeft < l || b.offsetLeft + b.offsetWidth > l + w) navList.scrollTo({ left: b.offsetLeft - 24, behavior: 'smooth' });
+      }
+    });
+  }
+  function recompute() {
+    navH = document.querySelector('.nav').offsetHeight;
+    var best = 0;
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].getBoundingClientRect().top - navH <= 8) best = i;
+    }
+    setCurrent(best);
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+  }
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { recompute(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'ArrowDown' && e.shiftKey) { e.preventDefault(); goTo(current + 1); }
+    else if (k === 'ArrowUp' && e.shiftKey) { e.preventDefault(); goTo(current - 1); }
+    else if (k === 'Home') { e.preventDefault(); goTo(0); }
+    else if (k === 'End') { e.preventDefault(); goTo(chapters.length - 1); }
+  });
+
+  // self check
+  var LABEL = { borrow: '只借一次判斷，而不是換掉整場', material: '先想清楚要顧問挑錯還是獨立想', verdict: '顧問意見逐條裁決' };
+  var score = {};
+  var qs = Array.prototype.slice.call(document.querySelectorAll('#check .q'));
+  var out = document.getElementById('checkOut');
+  qs.forEach(function (q) {
+    var k = q.getAttribute('data-k'), scale = q.querySelector('.scale');
+    for (var i = 1; i <= 5; i++) {
+      (function (n) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () {
+          score[k] = n;
+          Array.prototype.forEach.call(scale.children, function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+          render();
+        });
+        scale.appendChild(b);
+      })(i);
+    }
+  });
+  function render() {
+    var keys = Object.keys(score);
+    if (keys.length < 3) { out.textContent = '還有 ' + (3 - keys.length) + ' 題。'; return; }
+    var min = Math.min.apply(null, keys.map(function (k) { return score[k]; }));
+    var low = keys.filter(function (k) { return score[k] === min; });
+    if (min >= 4) { out.innerHTML = '三項都已經是習慣。下一次諮詢後，回頭確認顧問<strong>實際看到了什麼</strong>。'; return; }
+    out.innerHTML = '你最不熟的是：<strong>' + low.map(function (k) { return LABEL[k]; }).join('；') + '</strong>。這只是起點建議；適不適合，看你下一次有沒有卡住的判斷。';
+  }
+
+  recompute();
+})();
+</script>
+</body>
+</html>
