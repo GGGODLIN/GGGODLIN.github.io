@@ -1,7 +1,7 @@
 {
-  "version": "0.10.2",
-  "sha256": "c6e2fac5661baa626e8737481f33e707d7d6f466ba4b54b08489afbd71e790a1",
-  "buildSha256": "1e15c1289ffe35088a3ba11afc8bd4535848a1c09d6791ba0d000df04560e3cd",
+  "version": "0.10.3",
+  "sha256": "85eca8ec6b74c1789efc63cf0da544f22feb41c58b6e7744d3c7195c6655a0de",
+  "buildSha256": "f88c7a6353a1d1e721ee97f7f4891e9fbd8d443f3fa02b7844de8b94270fbaeb",
   "assets": {
     "battlefield.webp": "87b8422bbc8564c3843b9b2e00c28d39b8b3b702c734ffba92e51b367d9c55bd",
     "citadel.webp": "d53ff289454dfaada6223b1dd700203d011c964968bc4e2ef0cc234ac16cee44",

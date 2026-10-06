@@ -52,6 +52,10 @@ body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-
 body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;width:172px;height:54px}body[data-phase="battle"] .ram-control .primary.ram{position:static;width:100%;height:100%;padding:9px 12px;min-height:0;min-width:0}.ram-label{display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:none}.ram-control.has-windup .ram-label{transform:translateY(-8px)}.heavy-countdown{position:absolute;left:0;right:0;bottom:5px;display:block;text-align:center;font-size:12px;font-weight:650;line-height:16px;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#ffe4af;text-shadow:0 1px 4px #000;pointer-events:none;opacity:1}.heavy-countdown[hidden]{display:none}
 @media(max-width:900px) and (min-width:601px){body[data-phase="battle"] .ram-control{right:18px;width:160px}.heavy-countdown{font-size:11px}}
 @media(max-width:600px){body[data-phase="battle"] .ram-control{position:relative;right:auto;top:auto;width:100%;height:43px}.ram-control.has-windup .ram-label{transform:translateY(-7px)}.heavy-countdown{font-size:10px;line-height:13px;bottom:3px}}
+
+/* Replacement keeps one shared gain line and a compact per-building sacrifice. */
+.incoming-capability{display:block;color:#e2d2aa;font-size:12px;line-height:1.6;margin-bottom:3px}.slot.choose,.slots[data-capacity="4"] .slot.choose{display:grid;grid-template-columns:29px minmax(0,1fr);column-gap:7px;row-gap:3px;align-content:start;align-items:center;min-height:84px;padding:7px 9px}.slot.choose>span{display:contents}.slot.choose img,.slots[data-capacity="4"] .slot.choose img{grid-column:1;grid-row:1;width:27px;height:29px;margin:0}.slot.choose strong{grid-column:2;grid-row:1;font-size:11px}.slot.choose .slot-capability,.slot.choose .slot-synergy{grid-column:1/-1;font-size:10.5px;line-height:1.45;margin:0;white-space:normal;overflow-wrap:anywhere}.slot.choose .slot-capability{color:#e4c39e}.slot.choose .slot-synergy{color:#bdcdb8}
+@media(max-width:600px){.incoming-capability{font-size:10px;line-height:1.55}.slot.choose,.slots[data-capacity="4"] .slot.choose{grid-template-columns:23px minmax(0,1fr);column-gap:5px;row-gap:3px;padding:6px;min-height:89px;text-align:left}.slot.choose img,.slots[data-capacity="4"] .slot.choose img{width:22px;height:26px}.slot.choose strong{font-size:10px;letter-spacing:0}.slot.choose .slot-capability,.slot.choose .slot-synergy{font-size:9px;line-height:1.4}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -68,7 +72,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.3</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -87,12 +91,21 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
 (function(root){
 'use strict';
+// Installed capabilities are independent of BUILDINGS' hostile atk/rate stats.
+// Interception is the existing one-shot reservation/consumption rule, not armor.
+const OWNED_BUILDINGS=Object.freeze({
+ arrow:Object.freeze({damage:10,interval:1.05}),
+ cannon:Object.freeze({damage:35,interval:3.3}),
+ grove:Object.freeze({heal:10,interval:3}),
+ nest:Object.freeze({interval:3.5,unitDamage:4,unitInterval:1,ordinaryIntercepts:1}),
+ forge:Object.freeze({damage:18})
+});
 const BUILDINGS={
- forge:{name:'反擊熔爐',short:'熔爐',tag:'反擊',color:'#f37d53',desc:'接上後用城體換火力：中彈且存活就反擊18傷害；石偶擋住不觸發。',stat:'受擊反擊18 · 無定時射擊',hp:195,atk:12,rate:1.9},
- arrow:{name:'疾風箭塔',short:'箭塔',tag:'連射',color:'#d9c897',desc:'每秒射出弩箭。兩座箭塔一起裝，射速再快 40%。',stat:'10 傷害 / 1.05 秒',hp:118,atk:8,rate:1.6},
- cannon:{name:'熔爐重砲',short:'重砲',tag:'爆破',color:'#f39e53',desc:'重砲轟開城牆。緊鄰修復樹時，裝填加快 30%。',stat:'35 傷害 / 3.3 秒',hp:210,atk:20,rate:2.5},
- grove:{name:'修復古樹',short:'古樹',tag:'修復',color:'#87dab1',desc:'每 3 秒修復 10 城體。放在重砲旁，還能幫它冷卻。',stat:'修復 10 / 3 秒',hp:180,atk:9,rate:1.8},
- nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:'每 3.5 秒召喚石偶，每隻基礎攻擊 4 傷害／秒；可擋 1 發普通射擊，重擊無法擋。',stat:'召喚 / 3.5 秒 · 格擋 1 發',hp:195,atk:12,rate:1.9}
+ forge:{name:'反擊熔爐',short:'熔爐',tag:'反擊',color:'#f37d53',desc:`接上後用城體換火力：中彈且存活就反擊${OWNED_BUILDINGS.forge.damage}傷害；石偶擋住不觸發。`,stat:`受擊反擊${OWNED_BUILDINGS.forge.damage} · 無定時射擊`,hp:195,atk:12,rate:1.9},
+ arrow:{name:'疾風箭塔',short:'箭塔',tag:'連射',color:'#d9c897',desc:'每秒射出弩箭。兩座箭塔一起裝，射速再快 40%。',stat:`${OWNED_BUILDINGS.arrow.damage} 傷害 / ${OWNED_BUILDINGS.arrow.interval} 秒`,hp:118,atk:8,rate:1.6},
+ cannon:{name:'熔爐重砲',short:'重砲',tag:'爆破',color:'#f39e53',desc:'重砲轟開城牆。緊鄰修復樹時，裝填加快 30%。',stat:`${OWNED_BUILDINGS.cannon.damage} 傷害 / ${OWNED_BUILDINGS.cannon.interval} 秒`,hp:210,atk:20,rate:2.5},
+ grove:{name:'修復古樹',short:'古樹',tag:'修復',color:'#87dab1',desc:`每 ${OWNED_BUILDINGS.grove.interval} 秒修復 ${OWNED_BUILDINGS.grove.heal} 城體。放在重砲旁，還能幫它冷卻。`,stat:`修復 ${OWNED_BUILDINGS.grove.heal} / ${OWNED_BUILDINGS.grove.interval} 秒`,hp:180,atk:9,rate:1.8},
+ nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:`每 ${OWNED_BUILDINGS.nest.interval} 秒召喚石偶，每隻基礎攻擊 ${OWNED_BUILDINGS.nest.unitDamage/OWNED_BUILDINGS.nest.unitInterval} 傷害／秒；可擋 ${OWNED_BUILDINGS.nest.ordinaryIntercepts} 發普通射擊，重擊無法擋。`,stat:`召喚 / ${OWNED_BUILDINGS.nest.interval} 秒 · 格擋 ${OWNED_BUILDINGS.nest.ordinaryIntercepts} 發`,hp:195,atk:12,rate:1.9}
 };
 // Contact timing is shared with presentation; ram deliberately keeps its legacy path.
 const PROJECTILE_DURATIONS=Object.freeze({forge:.43,core:.43,arrow:.43,minion:.43,cannon:.64,normal:.45,heavy:.58});
@@ -222,7 +235,7 @@ function checkpointState(value,keys=CHECKPOINT_STATE_KEYS,legacy=false){
  if(state.kills!==(state.phase==='won'||state.phase==='loot'?state.stage+1:state.stage))checkpointError();
  for(const key of ['totalDamage','guardBlocks','guardPrevented','forgeHits','forgeDamage'])state[key]=checkpointNumber(value[key],1e9,true);
  state.forgeInstalled=value.forgeInstalled;
- if(!state.forgeInstalled&&(state.forgeHits||state.forgeDamage)||state.forgeHits===0&&state.forgeDamage!==0||state.forgeHits>0&&state.forgeDamage===0||state.forgeDamage>state.forgeHits*18||state.forgeDamage>state.totalDamage||state.guardBlocks===0&&state.guardPrevented!==0||state.guardPrevented<state.guardBlocks)checkpointError();
+ if(!state.forgeInstalled&&(state.forgeHits||state.forgeDamage)||state.forgeHits===0&&state.forgeDamage!==0||state.forgeHits>0&&state.forgeDamage===0||state.forgeDamage>state.forgeHits*OWNED_BUILDINGS.forge.damage||state.forgeDamage>state.totalDamage||state.guardBlocks===0&&state.guardPrevented!==0||state.guardPrevented<state.guardBlocks)checkpointError();
  if(state.phase==='ready'&&(state.hp!==300||state.lastBattleRepair||state.runCombatTime||state.kills||state.totalDamage||state.guardBlocks||state.guardPrevented||state.forgeHits||state.forgeDamage))checkpointError();
  if(state.stage===0&&state.phase==='lost'&&state.lastBattleRepair!==0)checkpointError();
  if(state.phase==='loot'&&(state.hp<=state.lastBattleRepair||state.lastBattleRepair<34&&state.hp!==300))checkpointError();
@@ -435,7 +448,7 @@ class Game{
    // hull or enemy killed by another epsilon-simultaneous contact.
    if(this.phase==='battle'&&Number.isFinite(this.hp)&&this.hp>0&&this.enemy&&Number.isFinite(this.enemy.hp)&&this.enemy.hp>0){
     for(const {shot,actual} of hullHits)for(let slot=0;slot<this.slots.length;slot++)if(this.slots[slot]==='forge'){
-     this.#launch({side:'friendly',source:'forge',slot,damage:18,target:'enemy',triggerId:shot.id,triggerEpoch:shot.epoch,triggerActual:actual},PROJECTILE_DURATIONS.forge,this.enemy);
+     this.#launch({side:'friendly',source:'forge',slot,damage:OWNED_BUILDINGS.forge.damage,target:'enemy',triggerId:shot.id,triggerEpoch:shot.epoch,triggerActual:actual},PROJECTILE_DURATIONS.forge,this.enemy);
     }
    }
   }
@@ -477,13 +490,13 @@ class Game{
  this.stun=Math.max(0,this.stun-dt);
  this.coreTimer-=dt;if(this.coreTimer<=0){this.coreTimer+=1.2;this.damage(7,'core');}if(this.phase!=='battle')return;
  for(let i=0;i<this.slots.length;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
- if(b==='arrow'){this.slotTimers[i]+=1.05/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(10,'arrow',i)}
- else if(b==='cannon'){const cooled=this.slots[i-1]==='grove'||this.slots[i+1]==='grove';this.slotTimers[i]+=3.3/(cooled?1.3:1);this.damage(35,'cannon',i)}
- else if(b==='grove'){this.slotTimers[i]+=3;this.heal(10);this.event('repair',{slot:i})}
- else if(b==='nest'){this.slotTimers[i]+=3.5;if(this.minions.length<3){this.minions.push({id:this.nextMinionId++,life:12,timer:.5});this.event('summon',{slot:i})}}
+ if(b==='arrow'){this.slotTimers[i]+=OWNED_BUILDINGS.arrow.interval/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(OWNED_BUILDINGS.arrow.damage,'arrow',i)}
+ else if(b==='cannon'){const cooled=this.slots[i-1]==='grove'||this.slots[i+1]==='grove';this.slotTimers[i]+=OWNED_BUILDINGS.cannon.interval/(cooled?1.3:1);this.damage(OWNED_BUILDINGS.cannon.damage,'cannon',i)}
+ else if(b==='grove'){this.slotTimers[i]+=OWNED_BUILDINGS.grove.interval;this.heal(OWNED_BUILDINGS.grove.heal);this.event('repair',{slot:i})}
+ else if(b==='nest'){this.slotTimers[i]+=OWNED_BUILDINGS.nest.interval;if(this.minions.length<3){this.minions.push({id:this.nextMinionId++,life:12,timer:.5});this.event('summon',{slot:i})}}
  if(this.phase!=='battle')return;
  }
- for(const m of this.minions){m.life-=dt;m.timer-=dt;if(m.timer<=0){m.timer+=1;this.damage(this.slots.includes('arrow')?5:4,'minion');}if(this.phase!=='battle')return;}
+ for(const m of this.minions){m.life-=dt;m.timer-=dt;if(m.timer<=0){m.timer+=OWNED_BUILDINGS.nest.unitInterval;this.damage(OWNED_BUILDINGS.nest.unitDamage*(this.slots.includes('arrow')?1.25:1),'minion');}if(this.phase!=='battle')return;}
  this.minions=this.minions.filter(m=>m.life>0);
  if(this.stun>0||!this.enemy)return;
  if(this.windup>0){this.windup-=dt;if(this.windup<=0){this.takeDamage(this.enemy.special,true);this.specialTimer=8;}return;}
@@ -491,7 +504,7 @@ class Game{
  this.enemyTimer-=dt;if(this.enemyTimer<=0){this.enemyTimer+=this.enemy.rate;this.takeDamage(this.enemy.atk);}
  }
 }
-const API={Game,BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor,CHECKPOINT_RULES_VERSION,CHECKPOINT_COMPATIBLE_RULES_VERSIONS,validateCheckpoint,migrateCheckpoint};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
+const API={Game,BUILDINGS,OWNED_BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor,CHECKPOINT_RULES_VERSION,CHECKPOINT_COMPATIBLE_RULES_VERSIONS,validateCheckpoint,migrateCheckpoint};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>/* Presentation-only protection against clicks landing on a newly replaced panel. */
 (function(root){
@@ -594,6 +607,30 @@ function replacementSummary(beforeSynergyStrings,afterSynergyStrings){
  return parts.length?parts.join('；'):'協同效果不變';
 }
 
+// Base capabilities deliberately exclude synergy modifiers. The caller supplies
+// owned stats; enemy threat records and ambient engine globals are never read.
+function capabilityText(type,ownedBuildings){
+ if(!ownedBuildings||!Object.hasOwn(ownedBuildings,type))throw new TypeError('Expected an owned building');
+ const b=ownedBuildings[type];
+ if(type==='arrow'||type==='cannon')return `每 ${amount(b.interval)} 秒射擊 ${amount(b.damage)} 傷害`;
+ if(type==='grove')return `每 ${amount(b.interval)} 秒修復 ${amount(b.heal)} 城體`;
+ if(type==='nest')return `每 ${amount(b.interval)} 秒召喚石偶；每隻 ${amount(b.unitDamage)} 傷害／${amount(b.unitInterval)} 秒，擋 ${amount(b.ordinaryIntercepts)} 發普通射擊後碎裂（重擊無法擋）`;
+ if(type==='forge')return `城體實際中彈且雙方存活時反擊 ${amount(b.damage)} 傷害；石偶擋住不觸發`;
+ throw new TypeError('Expected an owned building');
+}
+function incomingCapability(type,ownedBuildings){
+ return capabilityText(type,ownedBuildings);
+}
+function removedCapability(oldType,incomingType,ownedBuildings){
+ // Validate both types even when the comparison needs no numbers.
+ capabilityText(incomingType,ownedBuildings);
+ if(oldType===null)return '原插槽為空 · 無能力移除';
+ const removed=capabilityText(oldType,ownedBuildings);
+ if(oldType===incomingType)return '基礎能力不變';
+ if(oldType==='nest')return `移除本座（基礎）：石偶攻擊與擋 ${amount(ownedBuildings.nest.ordinaryIntercepts)} 發普通射擊`;
+ return `移除本座（基礎）：${removed}`;
+}
+
 function synergyChangeNotice(before,after){
  const {lost,gained}=changes(before,after),parts=[];
  const names=effects=>effects.map(effect=>effect.split(' · ')[0]).join('、');
@@ -602,7 +639,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
+const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,incomingCapability,removedCapability,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -1499,7 +1536,7 @@ function updateUI(force=false){
   else if(game.phase==='loot'){
    const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=expansionLoot?'重砲連同地基，整座接上城首':`整座${b.short}，現在是你的`;tag=expansionLoot?'攻城成功 · 擴建魔城':'攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+(expansionLoot?' · 原有三座建築完整保留':' · 建築完整保留');
    if(expansionLoot){a.innerHTML=actionRow('這座重砲與地基會一起移植，在城首新增第 4 插槽。原本三座建築全部保留。',button('帶走重砲與地基 · 擴出第 4 插槽','take'));$('take').onclick=onAction(()=>install(3));}
-   else{a.innerHTML=actionRow(`${fork&&game.stage===1?`<span class="support-outcome">${CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)}</span>`:''}${b.desc}${free===-1?(second?' 四個插槽已滿，可替換下面任一座建築，或保留原組合。':' 城頂滿了，選下面一座建築替換。'):''}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
+   else{a.innerHTML=actionRow(`${fork&&game.stage===1?`<span class="support-outcome">${CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)}</span>`:''}${free===-1?`<span class="incoming-capability">接上後（基礎）：${CastleFeedback.incomingCapability(game.pendingLoot,CastleEngine.OWNED_BUILDINGS)}</span>選一座換下，或保留原組合。`:b.desc}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
   }
   else if(game.phase==='grafting'){const expanding=Boolean(game.graft?.expansion);k=expanding?'擴建中 · 第 4 插槽':'接合中';title=expanding?'重砲與地基，正在接上城首':'戰利品正在接合';tag=expanding?'魔城擴建':'建築移植';caption=expanding?'<span>＋</span> 抬起整座地基 · 原有三座建築完整保留':'<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow(expanding?'牽引地基，鎖上城首支架……接合完成後啟用第 4 插槽。':'接上牽引索，抬起地基……',`<button class="primary" disabled>${expanding?'正在擴建':'正在接合'}</button>`)}
   else if(game.phase==='route'){
@@ -1520,7 +1557,7 @@ function updateUI(force=false){
  const slotKey=game.chapter+'|'+game.slots.join(',')+'|'+game.phase+'|'+game.pendingLoot;
  if(uiSlots!==slotKey){
   uiSlots=slotKey;const choose=game.phase==='loot'&&!expansionLoot&&game.slots.every(Boolean);$('slots').setAttribute('data-capacity',String(game.slots.length));
-  $('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong><small>${choose?effect:BUILDINGS[b].tag}</small></span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');
+  $('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';const capability=choose?CastleFeedback.removedCapability(b,game.pendingLoot,CastleEngine.OWNED_BUILDINGS):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+capability+'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong>${choose?`<small class="slot-capability">${capability}</small>${effect==='協同效果不變'?'':`<small class="slot-synergy">${effect}</small>`}`:`<small>${BUILDINGS[b].tag}</small>`}</span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');
   if(choose)$('slots').querySelectorAll('button').forEach(b=>b.onclick=onAction(()=>install(Number(b.dataset.slot))));
   $('slot-hint').textContent=choose?'點選要替換的建築':expansionLoot?'帶走地基，即可擴出第 4 插槽':game.graft?.expansion?'第 4 插槽正在接合':second&&game.slots.length===4?'第 4 插槽已接上城首':'搶來的建築，接在這裡';
   const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):(game.slots.length===4?'四個插槽，一座繼續長大的魔城':'三個插槽，一座屬於你的魔城');$('synergy').className=synergy.length?'active':'';
