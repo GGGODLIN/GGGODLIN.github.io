@@ -58,6 +58,58 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 @media(max-width:600px){.incoming-capability{font-size:10px;line-height:1.55}.slot.choose,.slots[data-capacity="4"] .slot.choose{grid-template-columns:23px minmax(0,1fr);column-gap:5px;row-gap:3px;padding:6px;min-height:89px;text-align:left}.slot.choose img,.slots[data-capacity="4"] .slot.choose img{width:22px;height:26px}.slot.choose strong{font-size:10px;letter-spacing:0}.slot.choose .slot-capability,.slot.choose .slot-synergy{font-size:9px;line-height:1.4}}
 
 .slot.choose.dependency-locked:disabled{opacity:1;border-color:#7f76624d;background:#172127d9;cursor:not-allowed}.slot.dependency-locked strong{color:#beb99e}.slot.dependency-locked .slot-capability{color:#b9c4ba}
+
+/* The completed machine is the reward. Keep its silhouette clear of the receipt.
+   This activates only after terminal contact; all battle/graft sizing is unchanged. */
+body[data-ending="showcase"] .field-caption{display:none}
+body[data-ending="showcase"] .command-deck{overflow-wrap:anywhere}
+body[data-ending="showcase"] .action-row{flex-direction:column;align-items:stretch;gap:13px}
+body[data-ending="showcase"] .action-description{max-width:none}
+body[data-ending="showcase"] .ending-actions,
+body[data-ending="showcase"] .action-row>.primary{order:-1}
+body[data-ending="showcase"] .ending-actions{flex-direction:row;gap:8px}
+body[data-ending="showcase"] .ending-actions .primary{flex:1;min-width:0;white-space:normal;line-height:1.5;padding:10px 12px}
+body[data-ending="showcase"] .build-strip{display:block}
+body[data-ending="showcase"] .build-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px}
+body[data-ending="showcase"] #slot-hint{max-width:none;margin:0}
+body[data-ending="showcase"] .slots{max-width:none}
+body[data-ending="showcase"] .slots[data-capacity="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+body[data-ending="showcase"] .deck-footer{flex-wrap:wrap;align-items:flex-start;gap:8px}
+body[data-ending="showcase"] #synergy{flex-basis:100%;min-width:0}
+body[data-ending="showcase"] .deck-actions{flex-wrap:wrap;white-space:normal}
+@media(min-width:1100px) and (min-height:730px){
+ body[data-ending="showcase"] .command-deck{left:56%;right:30px;top:184px;bottom:29px;max-width:650px;padding:20px 20px 14px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#89724c #142128;clip-path:none;border-radius:3px}
+ body[data-ending="showcase"] .status-line{align-items:flex-start;gap:8px}
+ body[data-ending="showcase"] .status-line h2{font-size:21px;line-height:1.45}
+ body[data-ending="showcase"] #round-label{font-size:10px;white-space:normal;text-align:right;max-width:80px;flex-shrink:0;line-height:1.6}
+ body[data-ending="showcase"] .slot{padding-left:8px;padding-right:8px;gap:6px}
+ body[data-ending="showcase"] .slot img{width:33px}
+ body[data-ending="showcase"] .slot strong{font-size:11px}
+ body[data-ending="showcase"] .run-metrics{font-size:14px}
+}
+@media(max-width:1099px),(max-height:729px){
+ body[data-ending="showcase"] .game-shell{height:auto;min-height:100svh;max-height:none;overflow:visible;padding-bottom:30px}
+ body[data-ending="showcase"] .battlefield{position:relative;inset:auto;height:max(432px,48vw)}
+ body[data-ending="showcase"] .battlefield canvas{width:max(100%,900px);height:auto;max-width:none}
+ body[data-ending="showcase"] .battlefield:after{box-shadow:inset 0 0 110px #06101855,inset 0 -50px 45px -28px #060c10da}
+ body[data-ending="showcase"] .command-deck{position:relative;inset:auto;margin:0 24px;max-width:none;overflow:visible;clip-path:none;border-radius:3px}
+ body[data-ending="showcase"] .status-line h2{line-height:1.45}
+ body[data-ending="showcase"] .page-footer{bottom:7px}
+ body[data-ending="showcase"] .action-row>.primary{align-self:flex-start;min-width:190px}
+}
+@media(max-width:600px){
+ body[data-ending="showcase"] .battlefield{height:min(128vw,660px)}
+ body[data-ending="showcase"] .battlefield canvas{width:min(135%,720px);height:auto;margin-top:34px}
+ body[data-ending="showcase"] .command-deck{margin:0 14px;padding:17px 15px 13px}
+ body[data-ending="showcase"] .action-description{font-size:12px;line-height:1.75}
+ body[data-ending="showcase"] .run-context{font-size:11px;line-height:1.65}
+ body[data-ending="showcase"] .run-clock-note,body[data-ending="showcase"] .run-route-note{font-size:10px}
+ body[data-ending="showcase"] .continuation-note,body[data-ending="showcase"] .chapter-retry-note{font-size:11px;line-height:1.7}
+ body[data-ending="showcase"] .ending-actions{flex-direction:column}
+ body[data-ending="showcase"] .ending-actions .primary,body[data-ending="showcase"] .action-row>.primary{min-height:44px;width:100%}
+ body[data-ending="showcase"] .build-title{display:flex}
+ body[data-ending="showcase"] .page-footer{font-size:8px}
+}
 </style></head>
 <body>
 <main class="game-shell">
@@ -74,7 +126,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.12.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -1675,9 +1727,25 @@ function syncRamReadout(){
  if(rb.innerHTML!==label)rb.innerHTML=label;
  rb.setAttribute('aria-label',game.ramUsed?'衝撞已用完':warn?'衝撞，打斷蓄力中的重擊':'衝撞，每場可用一次');
 }
+// Reframe only after terminal contact has finished; combat coordinates never change.
+let endingReceipt=null;
+function syncEndingComposition(){
+ const ready=game.phase==='won'&&!game.paused&&!dyingBossVisible()&&visualImpacts.length===0&&hitStop<=0;
+ const prior=document.body.dataset.ending,next=ready?'showcase':'';
+ const deck=document.querySelector?.('.command-deck');
+ if(prior!==next){
+  document.body.dataset.ending=next;
+  if(deck){if(ready)deck.setAttribute('tabindex','0');else deck.removeAttribute('tabindex');deck.setAttribute('aria-label',ready?'通關結果，可捲動查看':'遊戲操作');}
+ }
+ if((ready&&endingReceipt!==game.completedRun)||(prior==='showcase'&&!ready&&game.phase!=='won')){
+  window.scrollTo?.(0,0);
+  if(deck)deck.scrollTop=0;
+ }
+ endingReceipt=ready?game.completedRun:null;
+}
 function updateUI(force=false){
  const second=game.chapter===2,fork=second&&['support-fork','workshop-fork'].includes(game.expeditionPlan),total=game.stageCount(),finalBattle=game.isFinalBattle(),expansionLoot=second&&game.stage===0&&game.phase==='loot';
- document.body.dataset.chapter=String(game.chapter);document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);
+ document.body.dataset.chapter=String(game.chapter);document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);syncEndingComposition();
  $('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;
  $('round-label').textContent=game.phase==='ready'?(second?'赤砂關 · 3 場戰鬥':'約 3 分鐘 · 5 場戰鬥'):`${second?'赤砂關 · ':''}第 ${Math.min(game.stage+1,total)} 站 / ${total}`;
  $('restart').textContent=second?'重走本章':'重走此路線';$('restart').setAttribute('aria-label',second?'重走赤砂關，還原入章三座建築與 300 城體':'重走此路線');$('retreat').hidden=!second;
@@ -1738,7 +1806,7 @@ function continueExpedition(){if(game.continueExpedition())resetPresentation()}
 function retreatChapter(){if(game.retreat())resetPresentation()}
 function pause(){if(checkpointClient?.blocked||!['battle','grafting'].includes(game.phase))return;game.paused=!game.paused;updateUI();}
 $('pause').onclick=pause;$('resume').onclick=pause;$('restart').onclick=onAction(restart);$('retreat').onclick=onAction(retreatChapter);$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'音效 開':'音效 關';$('sound').setAttribute('aria-pressed',sound);$('sound').setAttribute('aria-label',sound?'關閉音效':'開啟音效');if(sound)play(440,.1,'sine',.03)};
-addEventListener('keydown',e=>{if(checkpointClient?.handleKey(e))return;if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
+addEventListener('keydown',e=>{if(checkpointClient?.handleKey(e))return;if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON'||game.phase==='won')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.paused&&['battle','grafting'].includes(game.phase)){game.paused=true;updateUI()}});
 function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0||checkpointClient?.blocked;if(!game.paused&&!checkpointClient?.blocked)hitStop=Math.max(0,hitStop-dt);const activeDt=game.paused||frozen?0:dt;if(activeDt){visualTime+=activeDt;ramAnim=Math.max(0,ramAnim-activeDt);}game.tick(activeDt);events();updateUI();checkpointClient?.observe();if(activeDt>0||sceneNeedsRender){render(activeDt);sceneNeedsRender=false;}requestAnimationFrame(frame)}
 function initializeCheckpointResume(){
