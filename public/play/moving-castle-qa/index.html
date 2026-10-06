@@ -47,6 +47,11 @@ body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-
 /* A conquered support line changes the final gate, without another control. */
 .support-choices .choice{grid-template-columns:49px minmax(0,1fr);align-items:start;padding:12px;gap:10px}.support-choices .mini-art{width:47px;height:81px;margin-top:16px}.support-choices .take{display:none}.support-choices .choice h3{font-size:15px}.choice .support-preview{display:block;color:#d8dab6;font-size:12px;line-height:1.6;font-weight:600;margin:5px 0 7px;padding-left:8px;border-left:2px solid #82ae9b}.support-choices [data-route="nest"] .support-preview{border-left-color:#ca9b78;color:#e0c9ad}.support-choices .choice p{font-size:10px;line-height:1.6}.support-choices .choice .route-guard{color:#caaf98;font-size:10px;line-height:1.6}.support-outcome{display:block;color:#c9d7b9;font-size:12px;line-height:1.6;margin:4px 0 7px}.legacy-itinerary{display:block;color:#a4b3ab;font-size:10px;line-height:1.6;margin-top:5px}
 @media(max-width:600px){.support-choices{grid-template-columns:1fr;gap:7px}.support-choices .choice{grid-template-columns:39px minmax(0,1fr);padding:8px 10px;gap:8px}.support-choices .mini-art{width:38px;height:59px;margin-top:5px}.support-choices .choice h3{font-size:13px;margin-bottom:2px}.choice .support-preview{font-size:10px;line-height:1.5;margin:3px 0 4px}.support-choices .choice p,.support-choices .choice small,.support-outcome{font-size:9px;line-height:1.5}.support-choices .choice small{margin-top:3px}.support-outcome{font-size:10px}}
+
+/* One authoritative windup readout shares the ram control's existing footprint. */
+body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;width:172px;height:54px}body[data-phase="battle"] .ram-control .primary.ram{position:static;width:100%;height:100%;padding:9px 12px;min-height:0;min-width:0}.ram-label{display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:none}.ram-control.has-windup .ram-label{transform:translateY(-8px)}.heavy-countdown{position:absolute;left:0;right:0;bottom:5px;display:block;text-align:center;font-size:12px;font-weight:650;line-height:16px;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#ffe4af;text-shadow:0 1px 4px #000;pointer-events:none;opacity:1}.heavy-countdown[hidden]{display:none}
+@media(max-width:900px) and (min-width:601px){body[data-phase="battle"] .ram-control{right:18px;width:160px}.heavy-countdown{font-size:11px}}
+@media(max-width:600px){body[data-phase="battle"] .ram-control{position:relative;right:auto;top:auto;width:100%;height:43px}.ram-control.has-windup .ram-label{transform:translateY(-7px)}.heavy-countdown{font-size:10px;line-height:13px;bottom:3px}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -63,7 +68,7 @@ body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -1349,7 +1354,7 @@ function enemyCastle(){const {e,y}=bodyPositions();const defeated=['loot','graft
  if(game.phase!=='grafting'&&game.phase!=='route'&&(game.phase!=='won'||showDyingBoss)){const h=isBoss?330:263;const sprite=texturedModule(ctx,game.enemy.type,e,y,h,false,game.phase==='won'?Math.min(1,bossAfterHit/.3):defeated?.92:1);if(!sprite)building(ctx,game.enemy.type,e,y,game.enemy.type==='forge'||game.chapter===2?h/195:1.5,false);glow(e-5,y-h*.43,isBoss?95:50,'#dd935142',.7+Math.sin(visualTime*4)*.1);if(isBoss)drawGateSupports();
  if(game.phase==='loot'){ctx.save();const pulse=.4+Math.sin(visualTime*2)*.12;ctx.globalAlpha=pulse;ctx.strokeStyle='#dab76e';ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(e,y+2,100,18,0,0,Math.PI*2);ctx.stroke();ctx.restore();glow(e,y-120,150,'#dbb56322',.7);}
  }
- if(game.windup>0&&game.phase==='battle'){const a=(2.2-game.windup)/2.2;glow(e,y-100,170,'#d4512755',a*.8);ctx.save();ctx.globalAlpha=.2+a*.5;ctx.strokeStyle='#e99462';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(e,y+4,112,20,0,0,Math.PI*2*a);ctx.stroke();ctx.restore();ctx.font='600 15px system-ui';ctx.textAlign='center';ctx.fillStyle='#f3c58b';ctx.shadowColor='#000';ctx.shadowBlur=10;ctx.fillText('重擊蓄力  '+game.windup.toFixed(1)+'s',e,y-(isBoss?354:287));ctx.shadowBlur=0;}
+ if(game.windup>0&&game.phase==='battle'){const a=(2.2-game.windup)/2.2;glow(e,y-100,170,'#d4512755',a*.8);ctx.save();ctx.globalAlpha=.2+a*.5;ctx.strokeStyle='#e99462';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(e,y+4,112,20,0,0,Math.PI*2*a);ctx.stroke();ctx.restore();}
  if(enemyFlash>0)glow(e,y-110,170,'#ffd49e77',enemyFlash*.5);
 }
 function drawGraft(dt=0){if(!game.graft)return;const {e,y}=bodyPositions(),isForge=game.graft.type==='forge',precise=isForge||game.chapter===2,s=precise?coolingModulePose(game.graft.slot,game.graft.type):slotPos(game.graft.slot),targetHeight=precise?s.height:mountedHeight(game.graft.type);const t=Math.min(1,game.graft.time/1.35);let x,yy,scale;if(t<.22){const a=t/.22;x=e;yy=y-115*(1-Math.pow(1-a,3));scale=1;}else if(t<.80){const a=(t-.22)/.58,q=a*a*(3-2*a);x=e+(s.x-e)*q;yy=y-115+(s.y-y+75)*q-Math.sin(a*Math.PI)*85;scale=1-(1-targetHeight/263)*q;}else{const a=(t-.8)/.2;x=s.x;yy=s.y-40*(1-a)*(1-a);scale=targetHeight/263;}
@@ -1462,6 +1467,17 @@ function completedRunReport(){
 }
 function actionRow(text,button){return `<div class="action-row"><p class="action-description">${text}</p>${button}</div>`}
 function button(text,id,cls='primary'){return `<button class="${cls}" id="${id}">${text}</button>`}
+function syncRamReadout(){
+ const rb=$('ram'),readout=$('heavy-countdown'),control=$('ram-control');
+ const warn=game.phase==='battle'&&game.windup>0;
+ if(readout){const text=warn?'重擊倒數 '+(Math.ceil(game.windup*10)/10).toFixed(1)+' 秒':'';readout.hidden=!warn;if(readout.textContent!==text)readout.textContent=text;}
+ if(control)control.classList.toggle('has-windup',warn);
+ if(!rb||game.phase!=='battle')return;
+ rb.disabled=game.ramUsed||game.paused;rb.classList.toggle('danger',warn&&!game.ramUsed);
+ const label='<span class="ram-label">'+(game.ramUsed?'衝撞已用完':warn?'衝撞 · 打斷重擊':'衝撞 <span class="key">SPACE</span>')+'</span>';
+ if(rb.innerHTML!==label)rb.innerHTML=label;
+ rb.setAttribute('aria-label',game.ramUsed?'衝撞已用完':warn?'衝撞，打斷蓄力中的重擊':'衝撞，每場可用一次');
+}
 function updateUI(force=false){
  const second=game.chapter===2,fork=second&&game.expeditionPlan==='support-fork',total=game.stageCount(),finalBattle=game.isFinalBattle(),expansionLoot=second&&game.stage===0&&game.phase==='loot';
  document.body.dataset.chapter=String(game.chapter);document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);
@@ -1470,8 +1486,7 @@ function updateUI(force=false){
  $('restart').textContent=second?'重走本章':'重走此路線';$('restart').setAttribute('aria-label',second?'重走赤砂關，還原入章三座建築與 300 城體':'重走此路線');$('retreat').hidden=!second;
  $('pause-overlay').hidden=!game.paused;$('pause').disabled=!['battle','grafting'].includes(game.phase);$('pause').textContent=game.paused?'繼續':'暫停';$('pause').setAttribute('aria-label',game.paused?'繼續遊戲':'暫停遊戲');
  if(game.phase==='battle'){
-  const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):'魔城交戰中';$('field-caption').innerHTML=warn?`<span>!</span> 敵方重擊倒數 ${game.windup.toFixed(1)} 秒`:'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'')+(second&&game.enemy.guarded?' · 守門石偶會攔截普通射擊':'');
-  const rb=$('ram');if(rb){rb.disabled=game.ramUsed||game.paused;rb.classList.toggle('danger',warn&&!game.ramUsed);rb.innerHTML=game.ramUsed?'衝撞已用完':warn?'衝撞 · 打斷重擊':`衝撞 <span class="key">SPACE</span>`}
+  const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):'魔城交戰中';$('field-caption').innerHTML=warn?'<span>!</span> 敵方重擊蓄力中':'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'')+(second&&game.enemy.guarded?' · 守門石偶會攔截普通射擊':'');
  }
  const phaseKey=game.chapter+':'+game.phase+':'+game.stage;
  if(force||uiPhase!==phaseKey){uiPhase=phaseKey;const a=$('actions');let k='',title='',caption='',tag='';
@@ -1480,7 +1495,7 @@ function updateUI(force=false){
    else{k=game.routeLabel()+' · 奪塔之旅';title='第一座塔，將成為你的城';caption='<span>01</span> 先搶一座箭塔，讓它替你打下一仗';tag='第一站 · 奪取箭塔';a.innerHTML=actionRow('攻下眼前的哨塔。接著可選'+game.routeOptions(1).map(t=>BUILDINGS[t].short).join('或')+'。',button('出發，攻下箭塔','begin'));$('begin').onclick=onAction(()=>start('arrow'));}
    $('begin').disabled=!artLoaded;if(!artLoaded)$('begin').textContent='點亮城心…';
   }
-  else if(game.phase==='battle'){k=second?'赤砂關 · 自動作戰':'交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=finalBattle?(second?'終點 · 赤砂關':'終點 · 王冠堡壘'):`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0&&!second?'按一次衝撞，給它重重一擊。每場只能用一次。':CastleFeedback.ramTactics()+(second&&game.enemy.guarded?' 衝撞可越過守門石偶。':''),button('衝撞 <span class="key">SPACE</span>','ram','primary ram'));$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
+  else if(game.phase==='battle'){k=second?'赤砂關 · 自動作戰':'交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=finalBattle?(second?'終點 · 赤砂關':'終點 · 王冠堡壘'):`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0&&!second?'按一次衝撞，給它重重一擊。每場只能用一次。':CastleFeedback.ramTactics()+(second&&game.enemy.guarded?' 衝撞可越過守門石偶。':''),`<div id="ram-control" class="ram-control">${button('<span class="ram-label">衝撞 <span class="key">SPACE</span></span>','ram','primary ram')}<span id="heavy-countdown" class="heavy-countdown" role="timer" aria-live="off" hidden></span></div>`);$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
   else if(game.phase==='loot'){
    const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=expansionLoot?'重砲連同地基，整座接上城首':`整座${b.short}，現在是你的`;tag=expansionLoot?'攻城成功 · 擴建魔城':'攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+(expansionLoot?' · 原有三座建築完整保留':' · 建築完整保留');
    if(expansionLoot){a.innerHTML=actionRow('這座重砲與地基會一起移植，在城首新增第 4 插槽。原本三座建築全部保留。',button('帶走重砲與地基 · 擴出第 4 插槽','take'));$('take').onclick=onAction(()=>install(3));}
@@ -1510,7 +1525,7 @@ function updateUI(force=false){
   $('slot-hint').textContent=choose?'點選要替換的建築':expansionLoot?'帶走地基，即可擴出第 4 插槽':game.graft?.expansion?'第 4 插槽正在接合':second&&game.slots.length===4?'第 4 插槽已接上城首':'搶來的建築，接在這裡';
   const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):(game.slots.length===4?'四個插槽，一座繼續長大的魔城':'三個插槽，一座屬於你的魔城');$('synergy').className=synergy.length?'active':'';
  }
- $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);
+ $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);syncRamReadout();
 }
 
 function resetPresentation(){gateGunLaunches=0;gateGunFlashes=[];enemyFlash=0;playerFlash=0;winFlash=0;installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=game.slots.map(()=>0);sceneNeedsRender=true;uiPhase='';uiSlots='';updateUI(true)}
