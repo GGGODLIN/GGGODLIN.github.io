@@ -1,11 +1,12 @@
 {
-  "version": "0.6.0",
-  "sha256": "5ad996c6b3c2e64dfd66bb6c8b350b8bdaf559f0fad5c85acfbb3b4b1feb4da9",
-  "buildSha256": "67f494c74f6a71b03b6ed45cc8db7711cc60af5ceb171b5e475ddf2c1429e6f5",
+  "version": "0.7.0",
+  "sha256": "efeb3ad9307ddc6b6b0e7a989e17c452f4e0d81aaf4456326396c14ac72f3cc6",
+  "buildSha256": "49a96e7b7943fbd3e3ad08e0d557e6324451b42b3c86d1a59683d3a544d33d5b",
   "assets": {
     "battlefield.webp": "87b8422bbc8564c3843b9b2e00c28d39b8b3b702c734ffba92e51b367d9c55bd",
     "citadel.webp": "d53ff289454dfaada6223b1dd700203d011c964968bc4e2ef0cc234ac16cee44",
     "modules.webp": "4766d3ffe459c6f024f3fd181e6592f82603fbdfe9d4065e6701971deb2cd4c9",
+    "retaliation-forge.webp": "ff701ab5099957f1dbe5527bae80398331f1175bc4e72645a932d517d45546dc",
     "guardian.webp": "2b671edea6c70ea96b22f30a2fd2787b06a478f5d7c1c53f0db6927aa25ea9c0"
   },
   "entry": "index.html"
