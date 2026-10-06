@@ -14,6 +14,8 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 .run-metrics{display:block;font-size:15px;font-weight:650;color:#e8d7ad;line-height:1.65}.run-clock-note{display:block;font-size:10px;color:#8b9e9e;margin:1px 0 9px}.run-context{display:block;font-size:11px;line-height:1.6;color:#a5b7b4}.run-comparison{display:block;font-size:12px;line-height:1.6;color:#d2ddc4;margin-top:8px}.previous-run{color:#8fa4a5;margin-top:4px}body[data-phase="won"] .action-description{max-width:860px}
 @media(max-width:600px){.run-metrics{font-size:13px;line-height:1.6}.run-clock-note{font-size:9px;margin-bottom:7px}.run-context{font-size:10px;line-height:1.5}.run-comparison{font-size:11px;line-height:1.55;margin-top:6px}.previous-run{font-size:9px}body[data-phase="won"] .build-title{display:none}}
 .run-route-note{display:block;font-size:10px;color:#b4b594;margin:-5px 0 8px;line-height:1.5}@media(max-width:600px){.run-route-note{font-size:9px;margin-bottom:6px}}
+
+.boss-threat{display:block;color:#e2ae8b;font-size:12px;line-height:1.6;margin-bottom:4px}@media(max-width:600px){.boss-threat{font-size:11px}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -30,7 +32,7 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><button id="restart" class="text-btn">重走此路線</button></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.4.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.4.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
@@ -124,6 +126,10 @@ function enemyThreat(enemy){
  return `普通射擊${amount(enemy.atk)}／${amount(enemy.rate)}秒 · 重擊${amount(enemy.special)}`;
 }
 
+function ramTactics(){
+ return '衝撞造成 52 傷害、暈眩 2 秒。可先搶攻，也可等蓄力打斷重擊；每場一次。';
+}
+
 // Healing is already capped by the caller against current castle health.
 function repairCaption(actualHeal){
  const gain=amount(actualHeal);
@@ -159,7 +165,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={enemyThreat,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
+const API={enemyThreat,ramTactics,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -380,19 +386,19 @@ function button(text,id,cls='primary'){return `<button class="${cls}" id="${id}"
 function updateUI(force=false){document.body.dataset.phase=game.phase;$('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;$('round-label').textContent=game.phase==='ready'?'約 3 分鐘 · 5 場戰鬥':`第 ${Math.min(game.stage+1,5)} 站 / 5`;
  $('pause-overlay').hidden=!game.paused;$('pause').disabled=!['battle','grafting'].includes(game.phase);$('pause').textContent=game.paused?'繼續':'暫停';$('pause').setAttribute('aria-label',game.paused?'繼續遊戲':'暫停遊戲');
  if(game.phase==='battle'){
- const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):game.ramUsed?'魔城交戰中':'等待破綻，衝撞敵城';$('field-caption').innerHTML=warn?`<span>!</span> 敵方重擊倒數 ${game.windup.toFixed(1)} 秒`:'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'');
+ const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):'魔城交戰中';$('field-caption').innerHTML=warn?`<span>!</span> 敵方重擊倒數 ${game.windup.toFixed(1)} 秒`:'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'');
  const rb=$('ram');if(rb){rb.disabled=game.ramUsed||game.paused;rb.classList.toggle('danger',warn&&!game.ramUsed);rb.innerHTML=game.ramUsed?'衝撞已用完':warn?'衝撞 · 打斷重擊':`衝撞 <span class="key">SPACE</span>`}
  }
  if(force||uiPhase!==game.phase){uiPhase=game.phase;const a=$('actions');let k='',title='',caption='',tag='';
  if(game.phase==='ready'){k=game.routeLabel()+' · 奪塔之旅';title='第一座塔，將成為你的城';caption='<span>01</span> 先搶一座箭塔，讓它替你打下一仗';tag='第一站 · 奪取箭塔';a.innerHTML=actionRow('攻下眼前的哨塔。接著可選'+game.routeOptions(1).map(t=>BUILDINGS[t].short).join('或')+'。',button('出發，攻下箭塔','begin'));$('begin').disabled=!artLoaded;if(!artLoaded)$('begin').textContent='點亮城心…';$('begin').onclick=onAction(()=>start('arrow'));}
- else if(game.phase==='battle'){k='交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=game.stage===4?'終點 · 王冠堡壘':`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0?'按一次衝撞，給它重重一擊。每場只能用一次。':'衝撞造成 52 傷害、暈眩敵城，還能打斷正在蓄力的重擊。',button('衝撞 <span class="key">SPACE</span>','ram','primary ram'));$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
+ else if(game.phase==='battle'){k='交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=game.stage===4?'終點 · 王冠堡壘':`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0?'按一次衝撞，給它重重一擊。每場只能用一次。':CastleFeedback.ramTactics(),button('衝撞 <span class="key">SPACE</span>','ram','primary ram'));$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
  else if(game.phase==='loot'){const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=`整座${b.short}，現在是你的`;tag='攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+' · 建築完整保留';a.innerHTML=actionRow(`${b.desc}${free===-1?' 城頂滿了，選下面一座建築替換。':''}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
  else if(game.phase==='grafting'){k='接合中';title='戰利品正在接合';tag='建築移植';caption='<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow('接上牽引索，抬起地基……',`<button class="primary" disabled>正在接合</button>`)}
  else if(game.phase==='route'){k=game.routeLabel()+' · 選擇下一站';title=game.stage===1?'帶上箭塔，繼續前進':game.stage===4?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？';tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品');
- if(game.stage===4){a.innerHTML=actionRow('重擊更猛烈的王冠堡壘就在前方。留好衝撞，讓整座魔城一起出力。',button('迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
+ if(game.stage===4){const boss=CastleEngine.makeEnemy('boss',game.stage);a.innerHTML=actionRow(`<span class="boss-threat">城體${boss.hp} · ${CastleFeedback.enemyThreat(boss)}</span>${CastleFeedback.ramTactics()}`,button('迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
  else{a.innerHTML='<div class="choices">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=CastleEngine.makeEnemy(type,game.stage);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${b.name}</h3><p>${b.desc}</p><small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · 勝利後帶走${b.short}</small></div><span class="take">攻下它</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}}
  else if(game.phase==='won'){k='旅程完成';title='你帶走的，成了你的整座城';tag='五座城 · 一段旅程';caption='<span>♜</span> 王冠堡壘已攻陷';a.innerHTML=actionRow(completedRunReport(),button('換路再出發','again'));$('again').onclick=onAction(replayJourney);}
- else if(game.phase==='lost'){k='魔城倒下';title='再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 留到敵方蓄力時衝撞，可以少挨一次重擊';a.innerHTML=actionRow(`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button('重試此路線','again'));$('again').onclick=onAction(restart);}
+ else if(game.phase==='lost'){k='魔城倒下';title='再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 衝撞可提早削血，也能留到蓄力時打斷重擊';a.innerHTML=actionRow(`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button('重試此路線','again'));$('again').onclick=onAction(restart);}
  $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
  $('journey').innerHTML=Array.from({length:5},(_,i)=>`${i?'<b></b>':''}<i class="${i<game.stage||game.phase==='won'?'done':i===game.stage?'current':''}" title="第 ${i+1} 站"></i>`).join('');
  uiSlots='';
