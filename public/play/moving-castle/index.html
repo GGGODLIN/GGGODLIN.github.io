@@ -74,7 +74,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -1625,8 +1625,18 @@ function render(dt){if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())
 function burst(x,y,n,color){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,v=20+Math.random()*95;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-20,life:.3+Math.random()*.6,color,size:2+Math.random()*4})}}
 function play(freq,duration=.08,type='triangle',vol=.04){if(!sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){sound=false}}
 function say(t){toast=t;toastTimer=2.1;$('announcer').textContent=t;}
+// A new encounter owns its own effects; delayed lethal-hit feedback must not hit the next target.
+function clearEncounterPresentation(){
+ summonAnnounced=false;forgeAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];
+ enemyFlash=0;playerFlash=0;winFlash=0;bossAfterHit=0;
+ shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();
+ dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];
+ particles=[];floaters=[];shockwaves=[];visualImpacts=[];
+ hitStop=0;ramAnim=0;toast='';toastTimer=0;shake=0;shakeOffset={x:0,y:0};
+ recoils=game.slots.map(()=>0);sceneNeedsRender=true;
+}
 function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
- if(ev.type==='start'){summonAnnounced=false;if(game.chapter===2){toast='';toastTimer=0;}shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();coolingPulses=[];forgeFlares=[];forgeAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];}
+ if(ev.type==='start')clearEncounterPresentation();
  else if(ev.type==='enemyGuardianSummon'){const q=enemyGuardianPose();burst(q.x,q.y-10,10,'#c6a284');}
  else if(ev.type==='projectileLaunch')launchProjectile(ev);
  else if(ev.type==='projectileImpact')finishProjectile(ev);
@@ -1643,7 +1653,7 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
  else if(ev.type==='loss'){coolingPulses=[];forgeFlares=[];gateGunFlashes=[];shots=[];enemyGuardRemnants=[];guardRemnants=[];say('城心熄滅');play(58,.5,'sine',.04);}
  }
 }
-async function start(type){if(!artLoaded||checkpointClient?.blocked)return;if(checkpointClient&&!await checkpointClient.prepareStart())return;checkpointClient?.mark('battle');if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
+async function start(type){if(!artLoaded||checkpointClient?.blocked)return;if(checkpointClient&&!await checkpointClient.prepareStart())return;checkpointClient?.mark('battle');if(game.start(type)){events();uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
 function install(i){if(checkpointClient?.blocked||!game.canInstall(i))return;const before=game.synergies();checkpointClient?.mark('graft');if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
 function ram(){if(checkpointClient?.blocked)return;if(game.ram()){events();updateUI(true);checkpointClient?.observe()}}
 function completedRunReport(){
@@ -1721,7 +1731,7 @@ function updateUI(force=false){
  $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);syncRamReadout();
 }
 
-function resetPresentation(){summonAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];enemyFlash=0;playerFlash=0;winFlash=0;installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=game.slots.map(()=>0);sceneNeedsRender=true;uiPhase='';uiSlots='';updateUI(true)}
+function resetPresentation(){clearEncounterPresentation();installBefore=[];synergyPulseUntil=0;uiPhase='';uiSlots='';updateUI(true)}
 function restart(){const changed=game.chapter===2?game.retryChapter():game.reset();if(changed)resetPresentation()}
 function replayJourney(){if(game.rebuildFirstChapter())resetPresentation()}
 function continueExpedition(){if(game.continueExpedition())resetPresentation()}
