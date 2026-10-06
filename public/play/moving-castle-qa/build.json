@@ -1,11 +1,12 @@
 {
-  "version": "0.4.0",
-  "sha256": "77ee8234e020d731b6b1e46bc6678995e04d879e552ecad0111ca1cb8e4e0706",
-  "buildSha256": "09c02526bea202c0f17fb32516461cae9d4e9f1e8d635a790aaac565e2063145",
+  "version": "0.4.1",
+  "sha256": "d7372ff6877d913547fa96c9d7c3ca07b94ee630d9c2e15f2a7d60b485db1667",
+  "buildSha256": "1026480639dad98a344ef8b21804e6cc3999d9ce8b41f393a21c1f6cbf66d47c",
   "assets": {
     "battlefield.webp": "87b8422bbc8564c3843b9b2e00c28d39b8b3b702c734ffba92e51b367d9c55bd",
     "citadel.webp": "d53ff289454dfaada6223b1dd700203d011c964968bc4e2ef0cc234ac16cee44",
-    "modules.webp": "4766d3ffe459c6f024f3fd181e6592f82603fbdfe9d4065e6701971deb2cd4c9"
+    "modules.webp": "4766d3ffe459c6f024f3fd181e6592f82603fbdfe9d4065e6701971deb2cd4c9",
+    "guardian.webp": "2b671edea6c70ea96b22f30a2fd2787b06a478f5d7c1c53f0db6927aa25ea9c0"
   },
   "entry": "index.html"
 }
