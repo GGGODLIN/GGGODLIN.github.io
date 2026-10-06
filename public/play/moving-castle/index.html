@@ -10,6 +10,9 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 .choice .route-threat{color:#e2ae8b;font-size:11px;letter-spacing:.015em;margin-top:7px}.slot.choose{align-items:flex-start;min-height:84px}.slot.choose>span{min-width:0;flex:1}.slot.choose small{font-size:11px;line-height:1.55;color:#c5c7b5;display:block;white-space:normal;margin-top:6px}.slot.choose img{margin-top:5px;flex-shrink:0}.deck-footer{align-items:center}#synergy.active{display:flex;gap:8px;flex-wrap:wrap}.synergy-chip{display:inline-flex;gap:8px;align-items:center;color:#d8c59e;border:1px solid #b6ad7c40;background:#3543383d;padding:6px 9px;font-size:11px;line-height:1.3;letter-spacing:.015em}.synergy-chip b{font-weight:600;color:#d4e7bd}#synergy.recent .synergy-chip{border-color:#d5c18a;background:#69713d45;box-shadow:0 0 18px #dbc57825}.slot.choose:hover small,.slot.choose:focus-visible small{color:#eee6ce}
 @media(max-width:600px){.choice .route-threat{font-size:10px;margin-top:5px}.slot.choose{min-height:112px;display:flex;flex-direction:column;align-items:center;text-align:center}.slot.choose img{width:29px;height:34px;margin:0}.slot.choose strong{font-size:10px}.slot.choose small{font-size:9px;line-height:1.4;margin-top:4px}.synergy-chip{font-size:10px;padding:5px 7px;gap:6px}#synergy.active{gap:5px}.deck-footer{align-items:flex-start}.deck-footer .text-btn{padding-top:5px}}
 @media(max-width:600px){.field-caption,body[data-phase="battle"] .field-caption,body[data-phase="route"] .field-caption{top:186px;bottom:auto}}
+/* A compact journey receipt, kept in this session and separate from any score. */
+.run-metrics{display:block;font-size:15px;font-weight:650;color:#e8d7ad;line-height:1.65}.run-clock-note{display:block;font-size:10px;color:#8b9e9e;margin:1px 0 9px}.run-context{display:block;font-size:11px;line-height:1.6;color:#a5b7b4}.run-comparison{display:block;font-size:12px;line-height:1.6;color:#d2ddc4;margin-top:8px}.previous-run{color:#8fa4a5;margin-top:4px}body[data-phase="won"] .action-description{max-width:860px}
+@media(max-width:600px){.run-metrics{font-size:13px;line-height:1.6}.run-clock-note{font-size:9px;margin-bottom:7px}.run-context{font-size:10px;line-height:1.5}.run-comparison{font-size:11px;line-height:1.55;margin-top:6px}.previous-run{font-size:9px}body[data-phase="won"] .build-title{display:none}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -26,7 +29,7 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><button id="restart" class="text-btn">重新開始</button></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.3.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.3.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
@@ -46,25 +49,25 @@ function makeEnemy(type,stage){
 }
 function synergiesFor(slots){let a=[];if(slots.filter(x=>x==='arrow').length>=2)a.push('交叉火網 · 箭塔射速 +40%');if(slots.some((x,i)=>x==='cannon'&&(slots[i-1]==='grove'||slots[i+1]==='grove')))a.push('冷卻水循環 · 重砲裝填 +30%');if(slots.includes('nest')&&slots.includes('arrow'))a.push('弩兵護送 · 石偶傷害 +25%');return a;}
 class Game{
- constructor(){this.reset()}
- reset(){this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
+ constructor(){this.lastCompletedRun=null;this.reset()}
+ reset(){this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
  setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=[.5,.7,.9];this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;}
  event(type,data={}){this.events.push({type,...data})}
  drain(){const e=this.events;this.events=[];return e}
  start(type){if(!['ready','route'].includes(this.phase))return false;
  if(this.phase==='route'&&!ROUTES[this.stage].includes(type))return false;
- this.enemy=makeEnemy(type||'arrow',this.stage);this.phase='battle';this.ramUsed=false;this.battleTime=0;this.setTimers();this.event('start');return true;}
+ this.enemy=makeEnemy(type||'arrow',this.stage);this.routeTaken.push(this.enemy.type);this.phase='battle';this.ramUsed=false;this.battleTime=0;this.setTimers();this.event('start');return true;}
  damage(n,source='core',slot=-1){if(this.phase!=='battle')return;this.enemy.hp=Math.max(0,this.enemy.hp-n);this.totalDamage+=n;this.event('shot',{source,slot,damage:n});if(this.enemy.hp===0)this.win();}
  takeDamage(n,special=false){if(this.phase!=='battle')return;if(!special&&this.minions.length){const guardIndex=this.minions.length-1,guard=this.minions.pop();this.guardBlocks++;this.guardPrevented+=n;this.battleGuardBlocks++;this.event('guardBlock',{guardId:guard.id,guardIndex,prevented:n,battleBlock:this.battleGuardBlocks});return;}this.hp=Math.max(0,this.hp-n);this.event('enemyShot',{damage:n,special});if(this.hp===0){this.phase='lost';this.lastResult='lost';this.event('loss')}}
  ram(){if(this.phase!=='battle'||this.ramUsed||this.paused)return false;this.ramUsed=true;const cancelled=this.windup>0;this.windup=0;this.specialTimer=8;this.stun=2;this.event('ram',{cancelled});this.damage(52,'ram');return true;}
  heal(n){const before=this.hp;this.hp=Math.min(this.maxHp,this.hp+n);const amount=this.hp-before;if(amount>0)this.event('heal',{amount});return amount;}
- win(){if(this.phase!=='battle')return;this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
+ win(){if(this.phase!=='battle')return;this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken])});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
  install(slot){if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0||slot>2)return false;const old=this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0};this.phase='grafting';this.event('graft',this.graft);return true;}
  skip(){if(this.phase!=='loot'||this.stage===0)return false;this.heal(34);this.pendingLoot=null;this.stage++;this.phase='route';this.event('route');return true;}
  synergies(){return synergiesFor(this.slots);}
  tick(dt){if(this.paused)return;dt=Math.max(0,Math.min(dt,.1));this.clock+=dt;
  if(this.phase==='grafting'){this.graft.time+=dt;if(this.graft.time>=1.35){const installedSlot=this.graft.slot;this.slots[installedSlot]=this.graft.type;this.pendingLoot=null;this.graft=null;this.stage++;this.phase='route';this.event('installed',{slot:installedSlot})}return;}
- if(this.phase!=='battle')return;this.battleTime+=dt;this.stun=Math.max(0,this.stun-dt);
+ if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.stun=Math.max(0,this.stun-dt);
  this.coreTimer-=dt;if(this.coreTimer<=0){this.coreTimer+=1.2;this.damage(7,'core');}if(this.phase!=='battle')return;
  for(let i=0;i<3;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
  if(b==='arrow'){this.slotTimers[i]+=1.05/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(10,'arrow',i)}
@@ -154,6 +157,70 @@ function synergyChangeNotice(before,after){
 const API={enemyThreat,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script><script>/* Pure completed-run copy. Combat time comes from the active engine clock;
+ * route choices, pauses and visual hit stop do not advance that clock. */
+(function(root){
+'use strict';
+
+const NAMES={arrow:'箭塔',cannon:'重砲',grove:'古樹',nest:'兵營',boss:'王冠堡壘'};
+
+function validate(result){
+ if(!result||typeof result!=='object')throw new TypeError('Expected a completed run');
+ for(const key of ['combatTime','hp','maxHp','blocked']){
+  const value=result[key];
+  if(typeof value!=='number'||!Number.isFinite(value)||value<0)throw new TypeError(`Expected finite non-negative ${key}`);
+ }
+ if(result.hp>result.maxHp)throw new TypeError('Remaining HP cannot exceed maximum HP');
+ if(!Number.isInteger(result.blocked))throw new TypeError('Blocked shots must be a whole count');
+ if(!Array.isArray(result.build)||result.build.length!==3)throw new TypeError('Expected three build slots');
+ for(const type of result.build){
+  if(type!==null&&(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type)))throw new TypeError('Unknown build type');
+ }
+ if(!Array.isArray(result.route))throw new TypeError('Expected a route');
+ for(const type of result.route){
+  if(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type))throw new TypeError('Unknown route type');
+ }
+}
+
+function roundedTime(value){
+ // Avoid overflowing otherwise valid finite numbers when shifting the decimal.
+ return value<1e20?Math.round(value*10)/10:value;
+}
+
+function seconds(value){return roundedTime(value).toFixed(1);}
+
+function metricLine(result){
+ validate(result);
+ return `交戰計時 ${seconds(result.combatTime)} 秒 · 剩餘城體 ${result.hp}／${result.maxHp} · 擋下普通射擊 ${result.blocked} 發`;
+}
+
+function buildContext(result){
+ validate(result);
+ // Remove only the mandatory endpoints, never a chosen second arrow tower.
+ const start=result.route[0]==='arrow'?1:0;
+ const end=result.route[result.route.length-1]==='boss'?result.route.length-1:result.route.length;
+ const route=result.route.slice(start,end).map(type=>NAMES[type]);
+ const build=result.build.map(type=>type===null?'空位':NAMES[type]);
+ return `建築（左至右）：${build.join('、')} · 選路：${route.length?route.join(' → '):'無岔路'}`;
+}
+
+function comparisonLine(current,previous){
+ validate(current);
+ if(previous===null)return '再試一種組合，下次通關就能比較';
+ validate(previous);
+ // Compare the displayed precision, so a tiny difference never reads “快 0.0 秒”.
+ const time=roundedTime(current.combatTime)-roundedTime(previous.combatTime);
+ const hp=current.hp-previous.hp,blocked=current.blocked-previous.blocked;
+ const timeText=time===0?'戰鬥時間相同':`戰鬥${time<0?'快':'慢'} ${seconds(Math.abs(time))} 秒`;
+ const hpText=hp===0?'剩餘城體相同':`剩餘城體${hp>0?'多':'少'} ${Math.abs(hp)}`;
+ const blockText=blocked===0?'擋下發數相同':`${blocked>0?'多':'少'}擋 ${Math.abs(blocked)} 發普通射擊`;
+ return `與上次相比：${timeText} · ${hpText} · ${blockText}`;
+}
+
+const API={metricLine,buildContext,comparisonLine};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;
+else root.CastleRunSummary=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right"},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."}};
 (function(){
@@ -297,6 +364,7 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
 function start(type){if(!artLoaded)return;if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
 function install(i){const before=game.synergies();if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
 function ram(){if(game.ram()){events();updateUI(true)}}
+function completedRunReport(){const result=game.completedRun,previous=game.comparisonRun;if(!result)return '王冠堡壘已攻陷。';return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span><span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;}
 function actionRow(text,button){return `<div class="action-row"><p class="action-description">${text}</p>${button}</div>`}
 function button(text,id,cls='primary'){return `<button class="${cls}" id="${id}">${text}</button>`}
 function updateUI(force=false){document.body.dataset.phase=game.phase;$('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;$('round-label').textContent=game.phase==='ready'?'約 3 分鐘 · 5 場戰鬥':`第 ${Math.min(game.stage+1,5)} 站 / 5`;
@@ -313,7 +381,7 @@ function updateUI(force=false){document.body.dataset.phase=game.phase;$('hp-text
  else if(game.phase==='route'){k='選擇下一站';title=game.stage===1?'帶上箭塔，繼續前進':game.stage===4?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？';tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品');
  if(game.stage===4){a.innerHTML=actionRow('重擊更猛烈的王冠堡壘就在前方。留好衝撞，讓整座魔城一起出力。',button('迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
  else{a.innerHTML='<div class="choices">'+ROUTES[game.stage].map(type=>{const b=BUILDINGS[type],e=CastleEngine.makeEnemy(type,game.stage);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${b.name}</h3><p>${b.desc}</p><small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · 勝利後帶走${b.short}</small></div><span class="take">攻下它</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}}
- else if(game.phase==='won'){k='旅程完成';title='你帶走的，成了你的整座城';tag='五座城 · 一段旅程';caption='<span>♜</span> 王冠堡壘已攻陷';a.innerHTML=actionRow(`帶著 ${game.slots.filter(Boolean).length} 座戰利品建築，攻下 5 座堡壘。${game.guardBlocks?'石偶替魔城擋下 '+game.guardBlocks+' 發普通射擊。':'再走一次，試試另一種組合。'}`,button('再造一座魔城','again'));$('again').onclick=onAction(restart);}
+ else if(game.phase==='won'){k='旅程完成';title='你帶走的，成了你的整座城';tag='五座城 · 一段旅程';caption='<span>♜</span> 王冠堡壘已攻陷';a.innerHTML=actionRow(completedRunReport(),button('再造一座魔城','again'));$('again').onclick=onAction(restart);}
  else if(game.phase==='lost'){k='魔城倒下';title='再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 留到敵方蓄力時衝撞，可以少挨一次重擊';a.innerHTML=actionRow(`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button('重新出發','again'));$('again').onclick=onAction(restart);}
  $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
  $('journey').innerHTML=Array.from({length:5},(_,i)=>`${i?'<b></b>':''}<i class="${i<game.stage||game.phase==='won'?'done':i===game.stage?'current':''}" title="第 ${i+1} 站"></i>`).join('');
@@ -330,7 +398,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.paus
 function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0;hitStop=Math.max(0,hitStop-dt);if(!game.paused&&!frozen)visualTime+=dt;game.tick(frozen?0:dt);events();updateUI();render(game.paused||frozen?0:dt);requestAnimationFrame(frame)}
 updateUI(true);requestAnimationFrame(frame);
 // A read-only snapshot supports practical smoke tests without granting mutation hooks.
-Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,artLoaded,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented})});
+Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,artLoaded,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
 })();
 </script>
 </body></html>
