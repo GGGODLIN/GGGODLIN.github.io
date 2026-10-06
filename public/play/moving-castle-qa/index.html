@@ -33,6 +33,16 @@ body[data-paused="true"] .primary.ram.danger{animation-play-state:paused}
 body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-footer #synergy{flex:1;min-width:180px}
 @media(min-width:601px) and (max-width:900px){.slots[data-capacity="4"] .slot{gap:5px;padding-left:5px;padding-right:5px}.slots[data-capacity="4"] .slot img{width:31px}.slots[data-capacity="4"] .slot strong{font-size:11px}.slots[data-capacity="4"] .slot.choose{flex-direction:column;align-items:flex-start}.slots[data-capacity="4"] .slot.choose img{height:35px;margin:0}.slots[data-capacity="4"] .slot.choose small{font-size:10px}.ending-actions .primary{min-width:180px;padding-left:12px;padding-right:12px}}
 @media(max-width:600px){.ending-actions{gap:6px}.ending-actions .primary{min-height:38px;padding-top:8px;padding-bottom:8px}.continuation-note{font-size:10px;margin-top:6px}.chapter-entry-note{font-size:10px}.chapter-retry-note{font-size:10px;margin-top:5px}.defender-preview{font-size:10px;line-height:1.6}.slots[data-capacity="4"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.slots[data-capacity="4"] .slot{min-height:43px;gap:7px;padding:4px 7px}.slots[data-capacity="4"] .slot img{width:30px;height:37px}.slots[data-capacity="4"] .slot.choose{flex-direction:row;align-items:flex-start;text-align:left;min-height:79px}.slots[data-capacity="4"] .slot.choose img{width:27px;height:34px;margin-top:2px}.slots[data-capacity="4"] .slot.choose small{font-size:9px;line-height:1.45}.deck-actions{gap:12px;flex-wrap:wrap}.deck-actions .text-btn{padding-top:2px}.fixed-route .choice{min-height:76px}.fixed-route .mini-art{height:58px}body[data-chapter="2"] .deck-footer #synergy{min-width:150px}body[data-chapter="2"] .command-deck{padding-top:12px}body[data-chapter="2"][data-phase="route"] .action-description{font-size:10px}}
+/* One quiet browser-local checkpoint, separate from the combat controls. */
+.save-status{display:flex;gap:8px;align-items:baseline;margin:8px 0 0;padding-top:7px;border-top:1px solid #94a5a31b;font-size:10px;line-height:1.5;color:#a4b4b1}.save-status strong{font-weight:600;white-space:nowrap;color:#d1c4a5}.save-status strong:before{content:"";display:inline-block;width:5px;height:5px;vertical-align:2px;margin-right:6px;border:1px solid currentColor;transform:rotate(45deg)}.save-status[data-state="saved"] strong{color:#b1ceb7}.save-status[data-state="saved"] strong:before{background:currentColor}.save-status[data-state="failed"] strong,.save-status[data-state="conflict"] strong{color:#edb383}.save-status[data-state="failed"],.save-status[data-state="conflict"],.save-status[data-state="unsaved"]{color:#c2c7bd}.save-status[hidden]{display:none}
+.checkpoint-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at center,#09151ca6,#060e14e6);backdrop-filter:blur(5px);overflow-y:auto;overscroll-behavior:contain}.checkpoint-card{width:min(100%,620px);max-height:calc(100svh - 48px);overflow-y:auto;padding:27px 30px 23px;background:linear-gradient(135deg,#203039fa,#121b22fc 66%);border:1px solid #bdaa7b70;border-top-color:#e3c594b0;box-shadow:0 25px 90px #0009,inset 0 1px 0 #eaca8c18;scrollbar-color:#88744d #162128}.checkpoint-kicker{color:#c4b18b;font-size:10px;letter-spacing:.16em}.checkpoint-card h2{font-family:"Noto Serif TC","Songti TC",serif;font-size:28px;letter-spacing:.08em;line-height:1.45;font-weight:600;color:#f1e0ba;margin:8px 0 10px}.checkpoint-context{font-size:12px;line-height:1.75;color:#bdc9c4;margin:0}.checkpoint-hull{font-family:Georgia,"Noto Serif TC",serif;font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:.05em;color:#cce0c7;margin:11px 0 0}.checkpoint-build-wrap{margin-top:17px;padding-top:14px;border-top:1px solid #c5b9922d}#checkpoint-build-label{font-size:10px;margin:0 0 9px;color:#b9ac8b}.checkpoint-build{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;list-style:none;margin:0;padding:0;counter-reset:saved-slot}.checkpoint-build[data-capacity="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}.checkpoint-build li{counter-increment:saved-slot;position:relative;min-width:0;min-height:58px;display:flex;align-items:center;gap:6px;padding:10px 8px 8px;background:#14242b9c;border:1px solid #a7b49e2c;border-radius:2px;font-size:11px;line-height:1.5;color:#dfd7c2;overflow-wrap:anywhere}.checkpoint-build li:before{content:counter(saved-slot,decimal-leading-zero);position:absolute;right:5px;top:1px;font-family:Georgia,serif;font-size:9px;color:#92a49c}.checkpoint-build li img{width:28px;height:37px;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 3px 4px #0008)}.checkpoint-build li strong{font-weight:500}.checkpoint-build li[data-empty="true"]{color:#97a9a4;border-style:dashed}.checkpoint-note{margin:16px 0;font-size:13px;line-height:1.85;color:#d3d8cc}.checkpoint-actions{display:flex;flex-wrap:wrap;gap:9px}.checkpoint-actions .primary{flex:1;min-width:190px;min-height:46px;font-size:13px;padding:12px 16px;white-space:normal}.checkpoint-replacement-note{color:#cbb795;font-size:11px;line-height:1.65;margin:11px 0 0}.checkpoint-comparison-note{color:#9bacaa;font-size:10px;line-height:1.65;margin:8px 0 0}.checkpoint-overlay[hidden],.checkpoint-overlay [hidden]{display:none!important}.checkpoint-card p:empty,.checkpoint-build:empty,.checkpoint-build-wrap:has(.checkpoint-build:empty){display:none}
+@media(max-width:600px){.save-status{font-size:9px;gap:5px;margin-top:7px;padding-top:6px;align-items:flex-start}.save-status strong{white-space:normal;min-width:72px;max-width:101px;flex-shrink:0}.save-status strong:before{width:4px;height:4px;margin-right:5px;vertical-align:1px}.checkpoint-overlay{padding:14px}.checkpoint-card{max-height:calc(100svh - 28px);padding:20px 18px 18px}.checkpoint-card h2{font-size:24px;letter-spacing:.04em}.checkpoint-context{font-size:11px}.checkpoint-hull{font-size:18px;margin-top:8px}.checkpoint-build-wrap{margin-top:13px;padding-top:12px}.checkpoint-build{gap:5px}.checkpoint-build li{min-height:57px;padding:13px 6px 7px;gap:4px;font-size:10px}.checkpoint-build li img{width:24px;height:32px}.checkpoint-build[data-capacity="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}.checkpoint-note{font-size:12px;line-height:1.75;margin:13px 0}.checkpoint-actions{gap:8px}.checkpoint-actions .primary{min-width:100%;min-height:44px;font-size:12px;padding:10px 13px}.checkpoint-replacement-note{font-size:10px}.checkpoint-comparison-note{font-size:10px}}
+@media(max-height:540px) and (min-width:601px){.checkpoint-overlay{padding:14px;align-items:flex-start}.checkpoint-card{max-height:calc(100svh - 28px);padding:18px 24px}.checkpoint-card h2{font-size:23px;margin-bottom:5px}.checkpoint-build-wrap{margin-top:10px;padding-top:10px}.checkpoint-note{margin:11px 0}.checkpoint-build li{min-height:49px}}
+
+/* A successful checkpoint shares the existing footer row instead of hiding more battlefield. */
+.deck-footer{flex-wrap:wrap}.deck-footer .save-status{margin:0;padding:0;border:0;flex:0 0 auto;min-width:128px}.save-status[data-state="saved"] #save-status-detail,.save-status[data-state="pending"] #save-status-detail{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.deck-footer .save-status[data-state="failed"],.deck-footer .save-status[data-state="conflict"],.deck-footer .save-status[data-state="unsaved"]{flex-basis:100%;order:3;border-top:1px solid #94a5a31b;padding-top:7px;margin-top:1px}
+@media(max-width:600px){.deck-footer .save-status{min-width:96px;font-size:9px}.deck-footer .save-status strong{min-width:0;max-width:none}.deck-footer .save-status[data-state="failed"],.deck-footer .save-status[data-state="conflict"],.deck-footer .save-status[data-state="unsaved"]{padding-top:6px}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -47,10 +57,23 @@ body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-
 <div class="status-line"><div><span id="phase-kicker" class="eyebrow">一座會長大的城</span><h2 id="phase-title">把敵人的塔，變成你的力量</h2></div><span id="round-label">約 3 分鐘 · 5 場戰鬥</span></div>
 <div id="actions"></div>
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
-<div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
+<div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.8.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.9.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
+<section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
+<div class="checkpoint-card">
+<span class="eyebrow checkpoint-kicker">此瀏覽器 · 旅程進度</span>
+<h2 id="checkpoint-title">魔城仍在，旅程待續</h2>
+<p id="checkpoint-context" class="checkpoint-context"></p>
+<p id="checkpoint-hull" class="checkpoint-hull" hidden></p>
+<div class="checkpoint-build-wrap"><p id="checkpoint-build-label" class="eyebrow">城頂建築 · 由左至右</p><ol id="checkpoint-build" class="checkpoint-build" aria-label="已儲存的建築，由左至右"></ol></div>
+<p id="checkpoint-note" class="checkpoint-note"></p>
+<div class="checkpoint-actions"><button type="button" id="checkpoint-continue" class="primary">繼續旅程</button><button type="button" id="checkpoint-new" class="primary secondary" aria-describedby="checkpoint-replacement-note">新旅程 · 路線 A</button><button type="button" id="checkpoint-reload" class="primary" hidden>重新讀取最新進度</button><button type="button" id="checkpoint-unsaved" class="primary secondary" hidden>先玩新旅程 · 不儲存</button></div>
+<p id="checkpoint-replacement-note" class="checkpoint-replacement-note">將以三個空插槽、完整城體的新魔城，取代這段已儲存的旅程。</p>
+<p id="checkpoint-comparison-note" class="checkpoint-comparison-note">重新載入後不保留先前的通關比較；本趟旅程的結果仍可查看。</p>
+</div>
+</section>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
 (function(root){
@@ -78,6 +101,119 @@ function makeEnemy(type,stage){
  return {type,name:stage===0?'孤立的疾風哨塔':b.name,hp:Math.round(b.hp*scale),maxHp:Math.round(b.hp*scale),atk:stage===0?5:Math.round(b.atk*(1+stage*.08)),rate:b.rate,special:18+stage*5,reward:type};
 }
 function synergiesFor(slots){let a=[];if(slots.filter(x=>x==='arrow').length>=2)a.push('交叉火網 · 箭塔射速 +40%');if(slots.some((x,i)=>x==='cannon'&&(slots[i-1]==='grove'||slots[i+1]==='grove')))a.push('冷卻水循環 · 重砲裝填 +30%');if(slots.includes('nest')&&slots.includes('arrow'))a.push('弩兵護送 · 石偶傷害 +25%');return a;}
+// Decision checkpoints deliberately contain no live entities, queues or clocks.
+// The storage envelope versions the schema separately from these combat rules.
+const CHECKPOINT_RULES_VERSION='red-sand-1';
+const CHECKPOINT_STATE_KEYS=Object.freeze(['chapter','phase','stage','routeVariant','slots','hp','maxHp','routeTaken','enemyHp','pendingLoot','lastBattleRepair','runCombatTime','kills','totalDamage','guardBlocks','guardPrevented','forgeInstalled','forgeHits','forgeDamage','completedRun']);
+const CHECKPOINT_KEYS=Object.freeze([...CHECKPOINT_STATE_KEYS,'chapterEntry','firstEnding']);
+const CHECKPOINT_RESULT_KEYS=Object.freeze(['combatTime','hp','maxHp','blocked','routeVariant','build','route','forgeInstalled','forgeHits','forgeDamage']);
+const STABLE_PHASES=Object.freeze(['ready','route','loot','won','lost']);
+function checkpointError(){throw new TypeError('Invalid decision checkpoint');}
+function checkpointRecord(value,keys){
+ if(!value||typeof value!=='object'||Array.isArray(value))checkpointError();
+ const prototype=Object.getPrototypeOf(value);
+ if(prototype!==Object.prototype&&prototype!==null)checkpointError();
+ const own=Reflect.ownKeys(value);
+ if(own.length!==keys.length||own.some(key=>typeof key!=='string'||!keys.includes(key)))checkpointError();
+ for(const key of keys){const d=Object.getOwnPropertyDescriptor(value,key);if(!d||!('value' in d))checkpointError();}
+ return value;
+}
+function checkpointArray(value,min,max,accept){
+ if(!Array.isArray(value)||value.length<min||value.length>max||Reflect.ownKeys(value).length!==value.length+1)checkpointError();
+ const result=[];
+ for(let i=0;i<value.length;i++){const d=Object.getOwnPropertyDescriptor(value,String(i));if(!d||!('value' in d)||!accept(d.value))checkpointError();result.push(d.value);}
+ return result;
+}
+function checkpointNumber(value,max,integer=false){if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>max||(integer&&!Number.isInteger(value)))checkpointError();return value===0?0:value;}
+function checkpointBuilding(value){return value===null||typeof value==='string'&&Object.hasOwn(BUILDINGS,value);}
+function sameCheckpointArray(a,b){return a.length===b.length&&a.every((value,i)=>value===b[i]);}
+function checkpointEnemy(state){
+ // A route decision already advanced stage; its visible enemy is the defeated one.
+ const stage=state.phase==='route'?state.stage-1:state.stage;
+ const type=state.phase==='ready'?(state.chapter===2?'cannon':'arrow'):state.routeTaken.at(-1);
+ return state.chapter===2?{...EXPEDITION[stage]}:makeEnemy(type,stage);
+}
+function checkpointBuildPossible(state,entry){
+ if(state.chapter===2){
+  if(state.forgeInstalled!==entry.includes('forge'))return false;
+  if(state.stage===0)return sameCheckpointArray(state.slots,entry);
+  const expanded=[...entry,'cannon'];
+  if(sameCheckpointArray(state.slots,expanded))return true;
+  return state.stage===2&&expanded.some((_,i)=>sameCheckpointArray(state.slots,expanded.map((type,j)=>j===i?'grove':type)));
+ }
+ // At most four rewards, three slots: bounded structural reachability, not a
+ // simulation or score/anti-cheat check. This also preserves replaced forges.
+ let choices=[{slots:[null,null,null],forgeInstalled:false}];
+ for(let i=0;i<state.stage;i++){
+  const type=state.routeTaken[i],next=[];
+  for(const choice of choices){
+   if(i>0)next.push(choice);
+   for(let slot=0;slot<3;slot++)next.push({slots:choice.slots.map((old,j)=>j===slot?type:old),forgeInstalled:choice.forgeInstalled||type==='forge'});
+  }
+  choices=next;
+ }
+ return choices.some(choice=>choice.forgeInstalled===state.forgeInstalled&&sameCheckpointArray(choice.slots,state.slots));
+}
+function checkpointResult(value,state){
+ const keys=state.chapter===2?[...CHECKPOINT_RESULT_KEYS,'chapter','startingBuild']:CHECKPOINT_RESULT_KEYS;
+ checkpointRecord(value,keys);
+ const result={combatTime:checkpointNumber(value.combatTime,1e7),hp:checkpointNumber(value.hp,300,true),maxHp:checkpointNumber(value.maxHp,300,true),blocked:checkpointNumber(value.blocked,1e9,true),routeVariant:value.routeVariant,build:checkpointArray(value.build,state.slots.length,state.slots.length,checkpointBuilding),route:checkpointArray(value.route,state.routeTaken.length,state.routeTaken.length,v=>typeof v==='string'&&(v==='boss'||Object.hasOwn(BUILDINGS,v))),forgeInstalled:value.forgeInstalled,forgeHits:checkpointNumber(value.forgeHits,1e9,true),forgeDamage:checkpointNumber(value.forgeDamage,1e9,true)};
+ for(const [resultKey,stateKey] of [['combatTime','runCombatTime'],['hp','hp'],['maxHp','maxHp'],['blocked','guardBlocks'],['routeVariant','routeVariant'],['forgeInstalled','forgeInstalled'],['forgeHits','forgeHits'],['forgeDamage','forgeDamage']])if(result[resultKey]!==state[stateKey])checkpointError();
+ if(!sameCheckpointArray(result.build,state.slots)||!sameCheckpointArray(result.route,state.routeTaken))checkpointError();
+ if(state.chapter===2){if(value.chapter!==2)checkpointError();result.chapter=2;result.startingBuild=checkpointArray(value.startingBuild,3,3,checkpointBuilding);}
+ return result;
+}
+function checkpointState(value,keys=CHECKPOINT_STATE_KEYS){
+ checkpointRecord(value,keys);
+ if(![1,2].includes(value.chapter)||!STABLE_PHASES.includes(value.phase)||![0,1].includes(value.routeVariant)||typeof value.forgeInstalled!=='boolean')checkpointError();
+ const last=value.chapter===2?2:4;
+ const state={chapter:value.chapter,phase:value.phase,stage:checkpointNumber(value.stage,last,true),routeVariant:value.routeVariant};
+ if(state.phase==='ready'&&state.stage!==0||state.phase==='route'&&state.stage===0||state.phase==='loot'&&state.stage===last||state.phase==='won'&&state.stage!==last)checkpointError();
+ const capacity=state.chapter===2&&state.stage>0?4:3;
+ state.slots=checkpointArray(value.slots,capacity,capacity,checkpointBuilding);
+ state.hp=checkpointNumber(value.hp,300,true);state.maxHp=checkpointNumber(value.maxHp,300,true);
+ if(state.maxHp!==300||(state.phase==='lost'?state.hp!==0:state.hp===0))checkpointError();
+ const count=state.phase==='ready'?0:state.phase==='route'?state.stage:state.stage+1;
+ state.routeTaken=checkpointArray(value.routeTaken,count,count,v=>typeof v==='string'&&(v==='boss'||Object.hasOwn(BUILDINGS,v)));
+ for(let i=0;i<count;i++)if(state.chapter===2?state.routeTaken[i]!==EXPEDITION[i].type:!ROUTE_SETS[state.routeVariant][i].includes(state.routeTaken[i]))checkpointError();
+ const enemy=checkpointEnemy(state);
+ state.enemyHp=checkpointNumber(value.enemyHp,enemy.maxHp,true);
+ if(state.phase==='ready'?state.enemyHp!==enemy.maxHp:state.phase!=='lost'&&state.enemyHp!==0)checkpointError();
+ state.pendingLoot=value.pendingLoot;
+ if(state.pendingLoot!==(state.phase==='loot'?enemy.reward:null))checkpointError();
+ state.lastBattleRepair=checkpointNumber(value.lastBattleRepair,34,true);
+ state.runCombatTime=checkpointNumber(value.runCombatTime,1e7);
+ state.kills=checkpointNumber(value.kills,last+1,true);
+ if(state.kills!==(state.phase==='won'||state.phase==='loot'?state.stage+1:state.stage))checkpointError();
+ for(const key of ['totalDamage','guardBlocks','guardPrevented','forgeHits','forgeDamage'])state[key]=checkpointNumber(value[key],1e9,true);
+ state.forgeInstalled=value.forgeInstalled;
+ if(!state.forgeInstalled&&(state.forgeHits||state.forgeDamage)||state.forgeHits===0&&state.forgeDamage!==0||state.forgeHits>0&&state.forgeDamage===0||state.forgeDamage>state.forgeHits*18||state.forgeDamage>state.totalDamage||state.guardBlocks===0&&state.guardPrevented!==0||state.guardPrevented<state.guardBlocks)checkpointError();
+ if(state.phase==='ready'&&(state.hp!==300||state.lastBattleRepair||state.runCombatTime||state.kills||state.totalDamage||state.guardBlocks||state.guardPrevented||state.forgeHits||state.forgeDamage))checkpointError();
+ if(state.stage===0&&state.phase==='lost'&&state.lastBattleRepair!==0)checkpointError();
+ if(state.phase==='loot'&&(state.hp<=state.lastBattleRepair||state.lastBattleRepair<34&&state.hp!==300))checkpointError();
+ if(state.phase==='won')state.completedRun=checkpointResult(value.completedRun,state);else{if(value.completedRun!==null)checkpointError();state.completedRun=null;}
+ if(state.chapter===1&&!checkpointBuildPossible(state,null))checkpointError();
+ return state;
+}
+function validateCheckpoint(data){
+ const state=checkpointState(data,CHECKPOINT_KEYS);
+ if(state.chapter===1){
+  if(data.chapterEntry!==null||data.firstEnding!==null)checkpointError();
+  return {...state,chapterEntry:null,firstEnding:null};
+ }
+ checkpointRecord(data.chapterEntry,['slots','hp']);
+ const chapterEntry={slots:checkpointArray(data.chapterEntry.slots,3,3,checkpointBuilding),hp:data.chapterEntry.hp};
+ if(chapterEntry.hp!==300)checkpointError();
+ const firstEnding=checkpointState(data.firstEnding);
+ if(firstEnding.chapter!==1||firstEnding.phase!=='won'||firstEnding.routeVariant!==state.routeVariant||!sameCheckpointArray(chapterEntry.slots,firstEnding.slots)||!checkpointBuildPossible(state,chapterEntry.slots)||state.completedRun&&!sameCheckpointArray(state.completedRun.startingBuild,chapterEntry.slots))checkpointError();
+ return {...state,chapterEntry,firstEnding};
+}
+function freezeCheckpointResult(result){
+ if(!result)return null;
+ Object.freeze(result.build);Object.freeze(result.route);
+ if(result.startingBuild)Object.freeze(result.startingBuild);
+ return Object.freeze(result);
+}
 class Game{
  #projectiles=[];
  #reservations=new Map();
@@ -96,6 +232,39 @@ class Game{
  constructor(){this.lastCompletedRun=null;this.routeVariant=0;this.reset()}
  reset(){this.#chapterEntry=null;this.#firstEnding=null;return this.#resetRun(1,[null,null,null]);}
  #resetRun(chapter,slots){this.#chapter=chapter;this.#forgeInstalled=chapter===2&&slots.includes('forge');this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[...slots];this.enemy=this.enemyPreview();this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
+ exportCheckpoint(){
+  if(!STABLE_PHASES.includes(this.phase))return null;
+  const data=this.#checkpointState();
+  data.chapterEntry=this.chapter===2?this.#chapterEntry:null;
+  data.firstEnding=this.chapter===2?this.#checkpointState(this.#firstEnding):null;
+  // Validation copies every field and array. No export aliases mutable runtime
+  // state or the immutable entry/ending dependency retained inside this Game.
+  return validateCheckpoint(data);
+ }
+ #checkpointState(ending=null){
+  const s=ending||this;
+  return {chapter:ending?1:this.chapter,phase:ending?'won':this.phase,stage:s.stage,routeVariant:s.routeVariant,slots:s.slots,hp:s.hp,maxHp:s.maxHp,routeTaken:s.routeTaken,enemyHp:s.enemy.hp,pendingLoot:ending?null:this.pendingLoot,lastBattleRepair:s.lastBattleRepair,runCombatTime:s.runCombatTime,kills:s.kills,totalDamage:s.totalDamage,guardBlocks:s.guardBlocks,guardPrevented:s.guardPrevented,forgeInstalled:ending?s.forgeInstalled:this.#forgeInstalled,forgeHits:ending?s.forgeHits:this.#forgeHits,forgeDamage:ending?s.forgeDamage:this.#forgeDamage,completedRun:s.completedRun};
+ }
+ restoreCheckpoint(data){
+  // Nothing on the active instance changes until the whole dependency graph is
+  // validated and detached. Restore committed values, never replay rewards.
+  const state=validateCheckpoint(data);
+  const entry=state.chapterEntry?Object.freeze({slots:Object.freeze(state.chapterEntry.slots),hp:300}):null;
+  let ending=null;
+  if(state.firstEnding){
+   const s=state.firstEnding;
+   ending=Object.freeze({...s,slots:Object.freeze(s.slots),routeTaken:Object.freeze(s.routeTaken),enemy:Object.freeze({...checkpointEnemy(s),hp:s.enemyHp}),completedRun:freezeCheckpointResult(s.completedRun),comparisonRun:null,lastResult:'won',clock:0,battleTime:0,ramUsed:false});
+  }
+  this.#resetRun(state.chapter,state.slots);
+  this.#chapterEntry=entry;this.#firstEnding=ending;
+  for(const key of ['phase','stage','routeVariant','hp','maxHp','routeTaken','pendingLoot','lastBattleRepair','runCombatTime','kills','totalDamage','guardBlocks','guardPrevented'])this[key]=state[key];
+  this.enemy={...checkpointEnemy(state),hp:state.enemyHp};
+  this.#forgeInstalled=state.forgeInstalled;this.#forgeHits=state.forgeHits;this.#forgeDamage=state.forgeDamage;
+  this.completedRun=freezeCheckpointResult(state.completedRun);
+  this.lastResult=state.phase==='won'?'won':state.phase==='lost'?'lost':null;
+  this.lastCompletedRun=null;this.#lastCompletedChapter2=null;this.comparisonRun=null;
+  return this;
+ }
  setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=this.slots.map((_,i)=>[.5,.7,.9,1.1][i]);this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;this.#projectiles=[];this.#reservations.clear();this.#nextProjectileId=0;this.battleEpoch=(this.battleEpoch||0)+1;this.#enemyGuardian=null;this.#enemyGuardianTimer=.5;this.#nextEnemyGuardianId=0;}
  stageCount(){return this.chapter===2?EXPEDITION.length:ROUTES.length;}
  isFinalBattle(){return this.stage===this.stageCount()-1;}
@@ -270,14 +439,14 @@ class Game{
  this.enemyTimer-=dt;if(this.enemyTimer<=0){this.enemyTimer+=this.enemy.rate;this.takeDamage(this.enemy.atk);}
  }
 }
-const API={Game,BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
+const API={Game,BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor,CHECKPOINT_RULES_VERSION,validateCheckpoint};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>/* Presentation-only protection against clicks landing on a newly replaced panel. */
 (function(root){
 'use strict';
 function createPhasePointerGuard(now=()=>performance.now(),quietMs=450){
  let lastAcceptedPhase=null,lastPointerAt=-Infinity;
- return {allow(phase,event){
+ return {fence(phase='transition'){lastAcceptedPhase=phase;lastPointerAt=now();},allow(phase,event){
   // Keyboard-activated buttons and direct keyboard shortcuts stay immediate.
   if(!event||event.detail===0)return true;
   const time=now();
@@ -456,6 +625,401 @@ const API={metricLine,forgeContribution,buildContext,comparisonLine};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleRunSummary=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
+</script><script>/* Pure checkpoint presentation. Import validation and storage belong to their
+ * own modules; this view never writes a save or interpolates imported copy. */
+(function(root){
+'use strict';
+
+const NAMES=Object.freeze({arrow:'疾風箭塔',cannon:'熔爐重砲',grove:'修復古樹',nest:'石偶兵營',forge:'反擊熔爐'});
+const PHASES=Object.freeze(['ready','route','loot','won','lost']);
+const NEW_LABEL='新旅程 · 路線 A';
+const REPLACEMENT_NOTE='將以三個空插槽、完整城體的新魔城，取代這段已儲存的旅程。';
+const COMPARISON_NOTE='重新載入後不保留先前的通關比較；本趟旅程的結果仍可查看。';
+const own=(value,key)=>Object.prototype.hasOwnProperty.call(value,key);
+
+function assertSummaryInput(checkpoint,interrupted){
+ if(!checkpoint||typeof checkpoint!=='object'||Array.isArray(checkpoint))throw new TypeError('Expected a validated checkpoint');
+ const {chapter,phase,stage,routeVariant,slots,hp,maxHp}=checkpoint;
+ if(![1,2].includes(chapter)||!PHASES.includes(phase)||![0,1].includes(routeVariant))throw new TypeError('Unknown checkpoint context');
+ if(!Number.isInteger(stage)||stage<0||stage>(chapter===2?2:4))throw new TypeError('Unknown checkpoint station');
+ if(!Array.isArray(slots)||slots.length!==(chapter===2&&stage>0?4:3))throw new TypeError('Unexpected checkpoint capacity');
+ for(let i=0;i<slots.length;i++)if(!own(slots,i)||(slots[i]!==null&&(typeof slots[i]!=='string'||!own(NAMES,slots[i]))))throw new TypeError('Unknown checkpoint building');
+ if(typeof hp!=='number'||!Number.isFinite(hp)||hp<0||typeof maxHp!=='number'||!Number.isFinite(maxHp)||maxHp<=0||hp>maxHp)throw new TypeError('Invalid checkpoint hull');
+ if(interrupted!==null&&interrupted!=='battle'&&interrupted!=='graft')throw new TypeError('Unknown interruption');
+ if(interrupted==='battle'&&!['ready','route'].includes(phase)||interrupted==='graft'&&phase!=='loot')throw new TypeError('Incompatible interruption');
+}
+
+function summary(checkpoint,interrupted=null){
+ assertSummaryInput(checkpoint,interrupted);
+ const {chapter,phase,stage,routeVariant,slots,hp,maxHp}=checkpoint;
+ const second=chapter===2,route=routeVariant===0?'A':'B';
+ const chapterLabel=second?'第二章・赤砂關':'第一章・奪塔之旅';
+ const routeLabel=second?`入章路線 ${route}`:`路線 ${route}`;
+ const phaseLabel={ready:'出發前',route:'下一站出發前',loot:'戰利品尚未領取',won:'已通關',lost:'戰敗'}[phase];
+ let title='魔城仍在，旅程待續',continueLabel='繼續旅程';
+ let note={ready:'繼續後回到出發前，準備好再開戰。',route:'繼續後回到下一站的出發畫面，確認目標後再開戰。',loot:'繼續後回到尚未領取的戰利品，再決定如何接上魔城。',won:second?'查看赤砂關的通關結果；這段旅程已完成。':'查看王冠堡壘的通關結果，之後可選擇前往第二章・赤砂關。',lost:'回到戰敗與重試畫面；繼續不會回復城體，也不會自動重開。'}[phase];
+ if(phase==='won'){title=second?'赤砂關已在身後':'王冠堡壘已攻下';continueLabel=second?'查看赤砂關結局':'查看第一章結局';}
+ if(phase==='lost'){title='這段旅程停在戰敗';continueLabel='查看戰敗與重試';}
+ if(interrupted==='battle')note='上次的戰鬥尚未完成。繼續後回到出發前，這一仗需要重打；未完成戰鬥的傷害與計時不會保留。';
+ if(interrupted==='graft')note=second&&stage===0?'上次的接合尚未完成。回到未領取的重砲與地基，保留原有三個插槽；再次確認安裝後才擴出第 4 插槽。':'上次的接合尚未完成。繼續後回到未領取的戰利品，保留接合前的建築，再選擇安裝一次。';
+ return {
+  title,context:`${chapterLabel} · ${routeLabel} · 第 ${stage+1}／${second?3:5} 站 · ${phaseLabel}`,
+  hull:`城體 ${hp}／${maxHp}`,build:slots.map((type,i)=>({slot:i+1,type,name:type===null?'空插槽':NAMES[type]})),
+  buildLabel:'城頂建築 · 由左至右',note,continueLabel,newLabel:NEW_LABEL,
+  replacementNote:REPLACEMENT_NOTE,comparisonNote:COMPARISON_NOTE
+ };
+}
+
+function problem(kind){
+ // These flags describe safe actions, not permission to mutate a stored record.
+ if(kind==='invalid')kind='corrupt';
+ const copy={
+  corrupt:{title:'這段進度暫時無法接續',note:'儲存內容無法辨識，原有進度仍保留。你可以明確選擇以新旅程取代，或先玩不儲存的新旅程。',showNew:true,showUnsaved:true},
+  'unknown-version':{title:'這段進度來自不同版本',note:'目前版本無法接續這段進度，原有內容仍保留。你可以明確選擇以新旅程取代，或先玩不儲存的新旅程。',showNew:true,showUnsaved:true},
+  conflict:{title:'另一個分頁更新了旅程',note:'這個分頁已停止儲存，以免蓋掉較新的進度。請先重新讀取最新進度，再決定是否接續；也可以留在這裡繼續玩，但接下來不會儲存。',showReload:true,showUnsaved:true},
+  unavailable:{title:'這次旅程暫時無法儲存',note:'目前無法安全讀寫這個瀏覽器的進度。仍可開始新旅程，但關閉或重新載入後，本次進度將不會保留。',showUnsaved:true}
+ };
+ if(!own(copy,kind))throw new TypeError('Unknown checkpoint problem');
+ return {context:'此瀏覽器的單一旅程進度',hull:'',build:[],buildLabel:'',continueLabel:'繼續旅程',newLabel:NEW_LABEL,
+  reloadLabel:'重新讀取最新進度',unsavedLabel:kind==='conflict'?'留在此處 · 不儲存':'先玩新旅程 · 不儲存',
+  replacementNote:kind==='corrupt'||kind==='unknown-version'?REPLACEMENT_NOTE:'',comparisonNote:'',
+  showContinue:false,showNew:false,showReload:false,showUnsaved:false,...copy[kind]};
+}
+
+function saveStatus(state,reason=null){
+ if(state==='saving')state='pending';
+ if(state==='idle')return {state:'pending',label:'尚未儲存',detail:'選擇旅程後，才會儲存本次進度。'};
+ if(state==='unsaved'&&(reason==='write-failed'||reason==='write'))state='failed';
+ const copy={
+  pending:{label:'正在儲存',detail:'完成後才可安心重新載入。'},
+  saved:{label:'已儲存於此瀏覽器',detail:'只記錄出發與領獎等節點；清除網站資料會移除進度。'},
+  failed:{label:'儲存失敗',detail:'這次變更未儲存；重新載入不會保留本次變更，原有進度不受影響。'},
+  conflict:{label:'儲存已停止',detail:'另一個分頁更新了進度；此處的新變更不會覆蓋它。'},
+  unsaved:{label:'本次不儲存',detail:'仍可遊玩；關閉或重新載入後，本次進度不會保留。'}
+ };
+ if(!own(copy,state))throw new TypeError('Unknown save status');
+ let detail=copy[state].detail;
+ if(state==='unsaved'){
+  if(['locks','locks-unavailable','lock-busy'].includes(reason))detail='目前無法安全協調分頁間的儲存；仍可遊玩，但本次進度不會保留。';
+  else if(['read','read-failed'].includes(reason))detail='目前無法讀取原有進度；這次只在本分頁遊玩，關閉或重新載入後不會保留。';
+  else if(['storage','storage-unavailable','scope-unavailable'].includes(reason))detail='目前無法使用此瀏覽器的儲存；仍可遊玩，但本次進度不會保留。';
+  else if(reason==='invalid-record')detail='原有進度無法接續且尚未取代；本次遊玩不會儲存。';
+ }
+ return {state,label:copy[state].label,detail};
+}
+
+const API={summary,problem,saveStatus};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;
+else root.CastleCheckpointView=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script><script>/* One browser-local decision checkpoint. No gameplay, network, or comparison history. */
+(function(root){
+'use strict';
+const SCHEMA_VERSION=1,MAX_BYTES=16*1024,PREFIX='moving-castle:checkpoint:';
+const ENVELOPE_KEYS=['schemaVersion','rulesVersion','scope','runId','revision','savedAt','checkpoint','interrupted'];
+const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
+const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
+
+function canonicalPathname(pathname){
+ if(typeof pathname!=='string'||!pathname.startsWith('/')||pathname.startsWith('//')||pathname.length>2048||/[\u0000-\u001f\\]/.test(pathname))throw new TypeError('Invalid deployment pathname');
+ let path=pathname.split(/[?#]/,1)[0].replace(/\/+$/,'');
+ if(path.endsWith('/index.html'))path=path.slice(0,-11).replace(/\/+$/,'');
+ return path||'/';
+}
+function encodedBytes(value){
+ // Count UTF-8 bytes without depending on TextEncoder availability.
+ let size=0;
+ for(let i=0;i<value.length;i++){
+  const c=value.charCodeAt(i);
+  if(c<128)size++;else if(c<2048)size+=2;
+  else if(c>=0xd800&&c<=0xdbff&&i+1<value.length&&value.charCodeAt(i+1)>=0xdc00&&value.charCodeAt(i+1)<=0xdfff){size+=4;i++;}
+  else size+=3;
+ }
+ return size;
+}
+function validMarker(marker,checkpoint){
+ if(marker!==null&&marker!=='battle'&&marker!=='graft')throw new TypeError('Invalid interruption marker');
+ if(marker==='battle'&&!['ready','route'].includes(checkpoint.phase))throw new TypeError('Battle requires a departure checkpoint');
+ if(marker==='graft'&&checkpoint.phase!=='loot')throw new TypeError('Graft requires an unclaimed loot checkpoint');
+ return marker;
+}
+function randomRunId(){
+ if(root.crypto&&typeof root.crypto.randomUUID==='function')return root.crypto.randomUUID();
+ return 'run-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+}
+
+function createCheckpointStore(options={}){
+ const engine=options.engine||root.CastleEngine||{};
+ const validateCheckpoint=options.validateCheckpoint||engine.validateCheckpoint;
+ const rulesVersion=options.rulesVersion||engine.CHECKPOINT_RULES_VERSION;
+ if(typeof validateCheckpoint!=='function'||typeof rulesVersion!=='string'||!rulesVersion.length)throw new TypeError('Checkpoint validator and rules version are required');
+ const getStorage=options.getStorage||(()=>own(options,'storage')?options.storage:root.localStorage);
+ const getLocks=options.getLocks||(()=>own(options,'locks')?options.locks:root.navigator&&root.navigator.locks);
+ const now=options.now||Date.now,makeRunId=options.makeRunId||randomRunId;
+ const eventTarget=own(options,'eventTarget')?options.eventTarget:root;
+ let scope=null,key=null,scopeError=false;
+ try{scope=canonicalPathname(own(options,'pathname')?options.pathname:root.location&&root.location.pathname);key=PREFIX+scope;}catch(_){scopeError=true;}
+ let session=null,sequence=0,tail=Promise.resolve(),disposed=false;
+ let state='idle',reason=null,pending=false,lastConfirmed=null,confirmedRaw=undefined;
+ const listeners=new Set();
+ function status(){return {state,reason,pending,active:!!(session&&session.active&&!disposed),lastConfirmed:clone(lastConfirmed),confirmedRaw,scope,key,lockName:key};}
+ function notify(nextState,nextReason=null,isPending=false){
+  state=nextState;reason=nextReason;pending=isPending;
+  for(const listener of listeners){try{listener(status());}catch(_){/* A view cannot invalidate a committed write. */}}
+ }
+ function result(kind,ok,checkpoint){
+  const value={ok,kind,status:status()};
+  if(checkpoint!==undefined)value.checkpoint=clone(checkpoint);
+  return value;
+ }
+ function read(){
+  if(scopeError)return {ok:false,reason:'scope-unavailable'};
+  let storage;
+  try{storage=getStorage();if(!storage||typeof storage.getItem!=='function'||typeof storage.setItem!=='function')return {ok:false,reason:'storage-unavailable'};}
+  catch(_){return {ok:false,reason:'storage-unavailable'};}
+  try{const raw=storage.getItem(key);if(raw!==null&&typeof raw!=='string')return {ok:false,reason:'read-failed'};return {ok:true,raw,storage};}
+  catch(_){return {ok:false,reason:'read-failed'};}
+ }
+ function canonicalCheckpoint(value){
+  // Always detach before enqueuing any asynchronous operation, even with an injected validator.
+  const canonical=validateCheckpoint(value);
+  if(!canonical||typeof canonical!=='object'||Array.isArray(canonical))throw new TypeError('Invalid checkpoint');
+  return clone(canonical);
+ }
+ function decode(raw){
+  if(typeof raw!=='string')throw new TypeError('Missing checkpoint record');
+  if(encodedBytes(raw)>MAX_BYTES)throw new RangeError('Checkpoint record is oversized');
+  const value=JSON.parse(raw);
+  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==ENVELOPE_KEYS.length||ENVELOPE_KEYS.some(k=>!own(value,k)))throw new TypeError('Invalid checkpoint envelope');
+  if(value.schemaVersion!==SCHEMA_VERSION||value.rulesVersion!==rulesVersion)throw new TypeError('Unsupported checkpoint version');
+  if(value.scope!==scope||typeof value.runId!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(value.runId))throw new TypeError('Invalid checkpoint identity');
+  if(!Number.isSafeInteger(value.revision)||value.revision<1||!Number.isSafeInteger(value.savedAt)||value.savedAt<0)throw new TypeError('Invalid checkpoint revision or date');
+  const checkpoint=canonicalCheckpoint(value.checkpoint);
+  return {schemaVersion:SCHEMA_VERSION,rulesVersion,scope,runId:value.runId,revision:value.revision,savedAt:value.savedAt,checkpoint,interrupted:validMarker(value.interrupted,checkpoint)};
+ }
+ function load(){
+  const current=read();let loaded;
+  if(!current.ok)loaded={kind:'unavailable',raw:undefined,reason:current.reason};
+  else if(current.raw===null)loaded={kind:'empty',raw:null};
+  else{
+   try{const record=decode(current.raw);loaded={kind:'available',raw:current.raw,record,checkpoint:clone(record.checkpoint)};}
+   catch(_){loaded={kind:'invalid',raw:current.raw,reason:'invalid-record'};}
+  }
+  if(!session){
+   confirmedRaw=loaded.raw;lastConfirmed=loaded.record?clone(loaded.record):null;
+   notify(loaded.kind==='unavailable'||loaded.kind==='invalid'?'unsaved':'idle',loaded.reason||null);
+  }
+  return loaded;
+ }
+ function conflict(){
+  if(session)session.blocked=true;
+  notify('conflict','record-changed');
+ }
+ function isCurrent(token,owner){return !disposed&&token===sequence&&owner===session&&!owner.blocked;}
+ function enqueue(owner,checkpoint,marker,activation){
+  const token=++sequence;
+  notify('saving',null,true);
+  const work=async()=>{
+   if(!isCurrent(token,owner))return result('superseded',false);
+   const unsaved=why=>{
+    if(!isCurrent(token,owner))return result('superseded',false);
+    notify('unsaved',why);return result('unsaved',true,activation?checkpoint:undefined);
+   };
+   if(owner.expectedRaw===undefined)return unsaved(owner.unavailableReason||'no-observed-record');
+   if(scopeError)return unsaved('scope-unavailable');
+   let locks;
+   try{locks=getLocks();if(!locks||typeof locks.request!=='function')return unsaved('locks-unavailable');}
+   catch(_){return unsaved('locks-unavailable');}
+   try{
+    return await locks.request(key,{mode:'exclusive',ifAvailable:true},lock=>{
+     if(!isCurrent(token,owner))return result('superseded',false);
+     if(!lock)return unsaved('lock-busy');
+     // The lock contains only synchronous read, compare, validation and atomic setItem.
+     const current=read();
+     if(!current.ok)return unsaved(current.reason);
+     if(current.raw!==owner.expectedRaw){conflict();return result('conflict',false);}
+     if(activation==='resume'){
+      // Revalidate the currently held record before this tab claims its writer revision.
+      try{decode(current.raw);}catch(_){owner.blocked=true;notify('unsaved','invalid-record');return result('invalid',false);}
+     }
+     let record,raw;
+     try{
+      record={schemaVersion:SCHEMA_VERSION,rulesVersion,scope,runId:owner.runId,revision:owner.revision+1,savedAt:now(),checkpoint,interrupted:marker};
+      // Validate metadata supplied through injected clocks/ID generators, as well as payload bounds.
+      raw=JSON.stringify(record);record=decode(raw);
+      raw=JSON.stringify(record);
+      if(encodedBytes(raw)>MAX_BYTES)throw new RangeError('Checkpoint record is oversized');
+     }catch(_){return unsaved('invalid-record');}
+     try{current.storage.setItem(key,raw);}catch(_){return unsaved('write-failed');}
+     owner.expectedRaw=raw;owner.revision=record.revision;
+     confirmedRaw=raw;lastConfirmed=clone(record);
+     notify('saved');
+     return result('saved',true,activation?checkpoint:undefined);
+    });
+   }catch(_){return unsaved('locks-unavailable');}
+  };
+  const task=tail.then(work,work);
+  // No rejected operation can break subsequent autosaves.
+  tail=task.then(()=>undefined,()=>undefined);
+  return task;
+ }
+ function invalidResult(why,invalidatePending=false){
+  if(invalidatePending){sequence++;notify('unsaved',why);}
+  return Promise.resolve({ok:false,kind:'invalid',reason:why,status:status()});
+ }
+ function newRun(value,expectedRaw){
+  if(disposed)return invalidResult('disposed');
+  let checkpoint,runId;
+  try{checkpoint=canonicalCheckpoint(value);runId=makeRunId();if(typeof runId!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(runId))throw new TypeError('Invalid run ID');}
+  catch(_){return invalidResult('invalid-checkpoint',true);}
+  if(expectedRaw!==undefined&&expectedRaw!==null&&typeof expectedRaw!=='string')return invalidResult('invalid-expected-record',true);
+  session={active:true,blocked:false,expectedRaw,runId,revision:0};
+  return enqueue(session,checkpoint,null,'new');
+ }
+ function resume(expectedRaw){
+  if(disposed)return invalidResult('disposed');
+  let record;
+  try{record=decode(expectedRaw);}catch(_){return invalidResult('invalid-record');}
+  session={active:true,blocked:false,expectedRaw,runId:record.runId,revision:record.revision};
+  return enqueue(session,record.checkpoint,record.interrupted,'resume');
+ }
+ function save(value,interrupted=null){
+  if(disposed)return invalidResult('disposed');
+  let checkpoint;
+  try{checkpoint=canonicalCheckpoint(value);validMarker(interrupted,checkpoint);}catch(_){return invalidResult('invalid-checkpoint',true);}
+  if(!session||!session.active)return Promise.resolve(result('inactive',false));
+  if(session.blocked)return Promise.resolve(result('conflict',false));
+  return enqueue(session,checkpoint,interrupted,null);
+ }
+ function onStorage(event){
+  if(disposed||!session||session.blocked||(event.key!==key&&event.key!==null))return;
+  // Events are an early warning only; reread so a delayed event cannot create a false conflict.
+  const current=read();
+  if(!current.ok){notify('unsaved',current.reason);return;}
+  if(session.expectedRaw!==undefined&&current.raw!==session.expectedRaw){sequence++;conflict();}
+ }
+ if(eventTarget&&typeof eventTarget.addEventListener==='function')eventTarget.addEventListener('storage',onStorage);
+ return {
+  load,resume,newRun,save,getStatus:status,scope,key,lockName:key,
+  subscribe(listener){if(typeof listener!=='function')throw new TypeError('Expected a status listener');listeners.add(listener);try{listener(status());}catch(_){}return ()=>listeners.delete(listener);},
+  dispose(){disposed=true;sequence++;pending=false;if(session)session.active=false;if(eventTarget&&typeof eventTarget.removeEventListener==='function')eventTarget.removeEventListener('storage',onStorage);listeners.clear();}
+ };
+}
+const API={createCheckpointStore,canonicalPathname,encodedBytes,SCHEMA_VERSION,MAX_BYTES};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleCheckpoint=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script><script>/* UI/lifecycle bridge for the one local decision checkpoint. No live combat state. */
+(function(root){
+'use strict';
+function createCheckpointClient({game,engine,store,view,document,onReset,icon,allowPointer,fencePointer}){
+ const $=id=>document.getElementById(id),buttonIds=['checkpoint-continue','checkpoint-new','checkpoint-reload','checkpoint-unsaved'];
+ let startup=null,gate=null,busy=false,active=false,optedOut=false,lastQueued=null,unsubscribe=null,disposed=false;
+ const safeFocus=node=>{try{node?.focus?.({preventScroll:true});}catch(_){node?.focus?.();}};
+ function backgroundBlocked(value){const shell=document.querySelector?.('.game-shell');if(shell){shell.inert=value;if(value)shell.setAttribute('aria-hidden','true');else shell.removeAttribute('aria-hidden');}}
+ function status(value){
+  if(disposed)return;
+  const node=$('save-status');if(!node)return;
+  if(value.state==='idle'&&!active){node.hidden=true;return;}
+  const text=view.saveStatus(value.state,value.reason);node.hidden=false;node.dataset.state=text.state;
+  $('save-status-label').textContent=text.label;$('save-status-detail').textContent=text.detail;
+ }
+ function setBusy(value){busy=value;for(const id of buttonIds){const b=$(id);if(b)b.disabled=value;}const begin=$('begin');if(begin)begin.disabled=value;}
+ function summaryFor(loaded){return view.summary(loaded.checkpoint,loaded.record?.interrupted??null);}
+ function refreshPrompt(){
+  const overlay=$('checkpoint-overlay');if(!overlay)return;
+  overlay.hidden=!gate;backgroundBlocked(!!gate);
+  if(!gate)return;
+  let text=gate.kind==='available'?summaryFor(gate.loaded):view.problem(gate.kind);
+  if(gate.kind==='conflict'&&gate.retained){const retained=view.summary(gate.retained);text={...text,context:retained.context+' · 此分頁版本',hull:retained.hull,build:retained.build,buildLabel:retained.buildLabel};}
+  for(const [id,key]of [['checkpoint-title','title'],['checkpoint-context','context'],['checkpoint-hull','hull'],['checkpoint-build-label','buildLabel'],['checkpoint-note','note'],['checkpoint-replacement-note','replacementNote'],['checkpoint-comparison-note','comparisonNote']]){
+   const node=$(id);node.textContent=text[key]||'';if(id==='checkpoint-hull')node.hidden=!text.hull;
+  }
+  const list=$('checkpoint-build');list.textContent='';list.dataset.capacity=String(text.build?.length||0);
+  for(const item of text.build||[]){const li=document.createElement('li');li.dataset.empty=String(item.type===null);if(item.type&&icon){const img=document.createElement('img');img.src=icon(item.type);img.alt='';li.appendChild(img);}const name=document.createElement('strong');name.textContent=item.name;li.appendChild(name);list.appendChild(li);}
+  const available=gate.kind==='available';
+  for(const [id,shown,label]of [['checkpoint-continue',available||text.showContinue,text.continueLabel],['checkpoint-new',available||text.showNew,text.newLabel],['checkpoint-reload',text.showReload,text.reloadLabel],['checkpoint-unsaved',text.showUnsaved,text.unsavedLabel]]){const b=$(id);b.hidden=!shown;if(label)b.textContent=label;b.disabled=busy;}
+ }
+ function showGate(kind,loaded=null,retained=null){gate={kind,loaded,retained};refreshPrompt();safeFocus(buttonIds.map($).find(b=>b&&!b.hidden&&!b.disabled)||$('checkpoint-overlay'));}
+ function closeGate(){const wasOpen=!!gate;gate=null;refreshPrompt();if(wasOpen)fencePointer?.('checkpoint:closed');safeFocus(document.querySelector?.('#actions button:not(:disabled)')||$('begin')||$('take')||$('boss')||$('again')||$('game'));}
+ function readStartup(){
+  try{startup=store.load();}catch(_){startup={kind:'unavailable',raw:undefined,reason:'read-failed'};status({state:'unsaved',reason:'read-failed'});}
+  if(startup.kind==='available')showGate('available',startup);
+  else if(startup.kind==='invalid')showGate('corrupt',startup);
+  else if(startup.kind==='unavailable')showGate('unavailable',startup);
+  else closeGate();
+  return startup;
+ }
+ function safelyExport(){try{return game.exportCheckpoint();}catch(_){status({state:'unsaved',reason:'invalid-checkpoint'});return null;}}
+ function queue(checkpoint,interrupted){
+  if(!checkpoint||!active||optedOut||disposed)return;
+  const token=JSON.stringify(checkpoint)+'|'+String(interrupted);if(token===lastQueued)return;
+  lastQueued=token;
+  try{Promise.resolve(store.save(checkpoint,interrupted)).catch(()=>status({state:'unsaved',reason:'write-failed'}));}
+  catch(_){status({state:'unsaved',reason:'write-failed'});}
+ }
+ function observe(){if(gate||busy||!active||optedOut||disposed)return;queue(safelyExport(),null);}
+ function mark(interrupted){if(gate||busy||!active||optedOut||disposed)return;queue(safelyExport(),interrupted);}
+ function conflictOrInvalid(result,retained){
+  if(result?.kind==='conflict'){showGate('conflict',null,retained);return;}
+  if(result?.kind==='superseded'){showGate('conflict',null,retained);return;}
+  try{startup=store.load();}catch(_){startup={kind:'unavailable',raw:undefined};}
+  showGate(startup.kind==='unavailable'?'unavailable':'corrupt',startup);
+ }
+ async function activate(kind){
+  if(busy||disposed)return false;
+  let checkpoint;
+  try{checkpoint=kind==='resume'?startup?.checkpoint:new engine.Game().exportCheckpoint();}catch(_){showGate('corrupt',startup);return false;}
+  if(!checkpoint)return false;
+  setBusy(true);let result;
+  try{result=kind==='resume'?await store.resume(startup.raw):await store.newRun(checkpoint,startup?.raw);}
+  catch(_){result={ok:true,kind:'unsaved',checkpoint};status({state:'unsaved',reason:'write-failed'});}
+  setBusy(false);
+  if(!result.ok){conflictOrInvalid(result,checkpoint);return false;}
+  try{game.restoreCheckpoint(result.checkpoint||checkpoint);}catch(_){active=false;conflictOrInvalid({kind:'invalid'},checkpoint);return false;}
+  active=true;optedOut=false;lastQueued=null;onReset();closeGate();observe();return true;
+ }
+ async function prepareStart(){
+  if(gate||busy||disposed)return false;
+  if(active||optedOut)return true;
+  const checkpoint=safelyExport();if(!checkpoint){optedOut=true;return true;}
+  setBusy(true);let result;
+  try{result=await store.newRun(checkpoint,startup?.raw);}catch(_){result={ok:true,kind:'unsaved'};status({state:'unsaved',reason:'write-failed'});}
+  setBusy(false);
+  if(!result.ok){conflictOrInvalid(result,checkpoint);return false;}
+  active=true;lastQueued=JSON.stringify(checkpoint)+'|null';fencePointer?.('checkpoint:activation');return true;
+ }
+ function chooseUnsaved(){
+  if(busy||disposed)return false;
+  const retained=gate?.kind==='conflict'?gate.retained:null;
+  try{game.restoreCheckpoint(retained||new engine.Game().exportCheckpoint());}catch(_){game.routeVariant=0;game.reset();}
+  active=false;optedOut=true;lastQueued=null;store.dispose();onReset();closeGate();status({state:'unsaved',reason:'explicit-unsaved'});return true;
+ }
+ function checkpointAction(fn){return event=>{if(busy||!gate)return false;if(allowPointer&&!allowPointer('checkpoint:'+gate.kind,event))return false;return fn();};}
+ function handleKey(event){
+  if(!gate&&!busy)return false;
+  if(event.key==='Tab'||event.code==='Tab'){
+   if(gate){const buttons=buttonIds.map($).filter(b=>b&&!b.hidden&&!b.disabled);if(buttons.length){const at=buttons.indexOf(document.activeElement),next=event.shiftKey?(at<=0?buttons.length-1:at-1):(at<0||at===buttons.length-1?0:at+1);event.preventDefault();safeFocus(buttons[next]);}}
+  }else if(event.code==='KeyP'||event.key==='Escape'||busy||((event.code==='Space'||event.key===' ')&&document.activeElement?.tagName!=='BUTTON'))event.preventDefault();
+  return true;
+ }
+ function initialize(){
+  unsubscribe=store.subscribe(status);
+  $('checkpoint-continue').onclick=checkpointAction(()=>activate('resume'));
+  $('checkpoint-new').onclick=checkpointAction(()=>activate('new'));
+  $('checkpoint-reload').onclick=checkpointAction(()=>readStartup());
+  $('checkpoint-unsaved').onclick=checkpointAction(chooseUnsaved);
+  readStartup();return api;
+ }
+ const api={initialize,prepareStart,observe,mark,refreshPrompt,handleKey,
+  get blocked(){return !!gate||busy;},get pendingResume(){return !!gate;},
+  get state(){return {gate:gate?.kind||null,busy,active,optedOut,storage:store.getStatus()};},
+  dispose(){disposed=true;unsubscribe?.();store.dispose();backgroundBlocked(false);}
+ };
+ return api;
+}
+const API={createCheckpointClient};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleCheckpointClient=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right","coolantIntakes":{"left":[165,385],"right":[310,385]}},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215],"coolantOutlet":[230,400]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]},"forge":{"file":"retaliation-forge.webp","rect":[0,0,561,701],"pivot":[281,697],"muzzle":[530,233],"coreOrigin":[194,349],"recommendedHeight":130,"facing":"right"}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."},"guardian":{"file":"guardian.webp","width":512,"height":160,"displayScale":0.5,"footOffset":16,"impactOffset":[0,-27],"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"step":{"rect":[256,0,128,160],"pivot":[64,152]},"brace":{"rect":[384,0,128,160],"pivot":[64,152]}},"notes":"Original slate-and-brass guardian. Ready, one step pose, and brace only; no alternating walk-cycle claim. Movement and interception coordinates are unchanged."},"expeditionBackdrop":{"file":"red-sand.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.803401,"contactRatio":0.820404},"frontDeck":{"file":"front-deck.webp","width":600,"height":445,"rect":[0,0,600,445],"nativeRect":[1420,378,300,222.5],"nativeBounds":[1420,378,1720,600.5],"nativeHullSize":[1774,887],"socket":[1590,438],"socketAnchor":[170,60],"pivot":[340,120],"facing":"right","drawOrder":"hull, extension, installed modules, cooling pipes","notes":["rect and pivot use source-image pixels; nativeWidth/image width gives uniform 0.5 scale; nativeRect is hull x,y,width,height; nativeBounds is hull left,top,right,bottom","Draw the full source rect into nativeRect transformed by the unchanged hull transform; mount the fourth module at socket","During capture use the same socket anchor and native relative size; offset extension with the lifted cannon so the assembly locks without a jump","Keep all original three socket coordinates and hull scale unchanged; leave the ram-contact pixel at (1760,476) exposed","No cannon or other building is baked into the foundation; all five existing module types were checked in offline composites","The 600x445 encoded aspect yields 222.5 native height; its actual nonzero alpha ends at hull Y591, inside the proposed 600 limit"],"nativeWidth":300,"nativeHeight":222.5,"mount":[1590,438]}};
 (function(){
 'use strict';
@@ -463,13 +1027,14 @@ const {Game,BUILDINGS,ROUTES}=CastleEngine;
 const game=new Game();
 const pointerGuard=CastleInput.createPhasePointerGuard();
 let installBefore=[],synergyPulseUntil=0,bossAfterHit=0;
-function onAction(action){return event=>{if(pointerGuard.allow(game.phase,event))action(event);};}
+let checkpointClient=null;
+function onAction(action){return event=>{if(checkpointClient?.blocked)return false;if(pointerGuard.allow(game.phase,event)){const result=action(event);if(result&&typeof result.then==='function')result.then(()=>checkpointClient?.observe(),()=>{});else checkpointClient?.observe();return result;}};}
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let small=innerWidth<=600,W=small?930:1280,H=small?1350:800,last=0,visualTime=0,shake=0,ramAnim=0,toast='',toastTimer=0,uiPhase='',uiSlots='',sound=false,audio=null,focusPending=false,hitStop=0,shockwaves=[],embers=[],visualImpacts=[],sceneNeedsRender=true;
 const ART=typeof CastleArtManifest!=='undefined'?CastleArtManifest:{};const textures={};const moduleOutlines={};let hullTip=null;let artLoaded=false;
 const imageEntries=[['backdrop',ART.backdrop],['hull',ART.hull],...Object.entries(ART.modules||{}).map(([k,v])=>['module-'+k,v]),...(ART.guardian?[['guardian',ART.guardian]]:[])];
-Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true);loadChapterArt()});
+Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true);loadChapterArt();checkpointClient?.refreshPrompt()});
 let chapterArtStarted=false;
 function loadChapterArt(){if(chapterArtStarted)return;chapterArtStarted=true;for(const [key,spec] of [['redBackdrop',ART.expeditionBackdrop],['frontDeck',ART.frontDeck]]){if(!spec?.file)continue;const img=new Image();img.onload=()=>{textures[key]=img;sceneNeedsRender=true};img.onerror=()=>{sceneNeedsRender=true};img.src='assets/art-v2/'+spec.file;}}
 const golemTracks=new Map();
@@ -765,13 +1330,13 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
  else if(ev.type==='loss'){coolingPulses=[];forgeFlares=[];shots=[];enemyGuardRemnants=[];guardRemnants=[];say('城心熄滅');play(58,.5,'sine',.04);}
  }
 }
-function start(type){if(!artLoaded)return;if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
-function install(i){const before=game.synergies();if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
-function ram(){if(game.ram()){events();updateUI(true)}}
+async function start(type){if(!artLoaded||checkpointClient?.blocked)return;if(checkpointClient&&!await checkpointClient.prepareStart())return;checkpointClient?.mark('battle');if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
+function install(i){if(checkpointClient?.blocked)return;const before=game.synergies();checkpointClient?.mark('graft');if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
+function ram(){if(checkpointClient?.blocked)return;if(game.ram()){events();updateUI(true);checkpointClient?.observe()}}
 function completedRunReport(){
  const result=game.completedRun,previous=game.comparisonRun&&((game.comparisonRun.chapter||1)===(result?.chapter||game.chapter))?game.comparisonRun:null;
  if(!result)return game.chapter===2?'赤砂關已攻陷。':'王冠堡壘已攻陷。';
- const forge=CastleRunSummary.forgeContribution(result),routeNote=game.chapter===2?'赤砂關 · 本章 3 場戰鬥；僅與上次赤砂關比較':'換路依序輪替 A／B；重新載入從 A 開始';
+ const forge=CastleRunSummary.forgeContribution(result),routeNote=game.chapter===2?'赤砂關 · 本章 3 場戰鬥；僅比較本分頁完成的本章旅程':'換路輪替 A／B；通關比較僅保留在本分頁';
  return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span>${forge?`<span class="run-contribution">${forge}</span>`:''}<span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-route-note">${routeNote}</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;
 }
 function actionRow(text,button){return `<div class="action-row"><p class="action-description">${text}</p>${button}</div>`}
@@ -832,14 +1397,20 @@ function restart(){const changed=game.chapter===2?game.retryChapter():game.reset
 function replayJourney(){if(game.rebuildFirstChapter())resetPresentation()}
 function continueExpedition(){if(game.continueExpedition())resetPresentation()}
 function retreatChapter(){if(game.retreat())resetPresentation()}
-function pause(){if(!['battle','grafting'].includes(game.phase))return;game.paused=!game.paused;updateUI();}
+function pause(){if(checkpointClient?.blocked||!['battle','grafting'].includes(game.phase))return;game.paused=!game.paused;updateUI();}
 $('pause').onclick=pause;$('resume').onclick=pause;$('restart').onclick=onAction(restart);$('retreat').onclick=onAction(retreatChapter);$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'音效 開':'音效 關';$('sound').setAttribute('aria-pressed',sound);$('sound').setAttribute('aria-label',sound?'關閉音效':'開啟音效');if(sound)play(440,.1,'sine',.03)};
-addEventListener('keydown',e=>{if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
+addEventListener('keydown',e=>{if(checkpointClient?.handleKey(e))return;if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.paused&&['battle','grafting'].includes(game.phase)){game.paused=true;updateUI()}});
-function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0;if(!game.paused)hitStop=Math.max(0,hitStop-dt);const activeDt=game.paused||frozen?0:dt;if(activeDt){visualTime+=activeDt;ramAnim=Math.max(0,ramAnim-activeDt);}game.tick(activeDt);events();updateUI();if(activeDt>0||sceneNeedsRender){render(activeDt);sceneNeedsRender=false;}requestAnimationFrame(frame)}
+function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0||checkpointClient?.blocked;if(!game.paused&&!checkpointClient?.blocked)hitStop=Math.max(0,hitStop-dt);const activeDt=game.paused||frozen?0:dt;if(activeDt){visualTime+=activeDt;ramAnim=Math.max(0,ramAnim-activeDt);}game.tick(activeDt);events();updateUI();checkpointClient?.observe();if(activeDt>0||sceneNeedsRender){render(activeDt);sceneNeedsRender=false;}requestAnimationFrame(frame)}
+function initializeCheckpointResume(){
+ if(typeof CastleCheckpoint==='undefined'||typeof CastleCheckpointView==='undefined'||typeof CastleCheckpointClient==='undefined')return;
+ try{const store=CastleCheckpoint.createCheckpointStore({pathname:window.location?.pathname,validateCheckpoint:CastleEngine.validateCheckpoint,rulesVersion:CastleEngine.CHECKPOINT_RULES_VERSION});checkpointClient=CastleCheckpointClient.createCheckpointClient({game,engine:CastleEngine,store,view:CastleCheckpointView,document,onReset:resetPresentation,icon,allowPointer:(key,event)=>pointerGuard.allow(key,event),fencePointer:key=>pointerGuard.fence(key)});checkpointClient.initialize();}
+ catch(_){checkpointClient?.dispose();checkpointClient=null;const node=$('save-status');if(node){node.hidden=false;node.dataset.state='unsaved';$('save-status-label').textContent='本次不儲存';$('save-status-detail').textContent='目前無法使用此瀏覽器的儲存；仍可遊玩。';}}
+}
+initializeCheckpointResume();
 updateUI(true);requestAnimationFrame(frame);
 // A read-only snapshot supports practical smoke tests without granting mutation hooks.
-Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,chapter:game.chapter,enemyGuardian:game.enemyGuardian,artLoaded,routeVariant:game.routeVariant,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
+Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,chapter:game.chapter,resumePending:!!checkpointClient?.pendingResume,saveState:checkpointClient?.state.storage.state||null,enemyGuardian:game.enemyGuardian,artLoaded,routeVariant:game.routeVariant,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
 })();
 </script>
 </body></html>
