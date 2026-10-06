@@ -32,7 +32,7 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><button id="restart" class="text-btn">重走此路線</button></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.4.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.5.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
@@ -44,6 +44,9 @@ const BUILDINGS={
  grove:{name:'修復古樹',short:'古樹',tag:'修復',color:'#87dab1',desc:'每 3 秒修復 10 城體。放在重砲旁，還能幫它冷卻。',stat:'修復 10 / 3 秒',hp:180,atk:9,rate:1.8},
  nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:'每 3.5 秒召喚石偶，會攻擊並擋 1 發普通射擊；重擊無法擋。',stat:'召喚 / 3.5 秒 · 格擋 1 發',hp:195,atk:12,rate:1.9}
 };
+// Contact timing is shared with presentation; ram deliberately keeps its legacy path.
+const PROJECTILE_DURATIONS=Object.freeze({core:.43,arrow:.43,minion:.43,cannon:.64,normal:.45,heavy:.58});
+const IMPACT_EPSILON=1e-8;
 const ROUTES=[['arrow'],['cannon','grove'],['nest','arrow'],['grove','cannon'],['boss']];
 const ROUTE_SETS=[ROUTES,[['arrow'],['nest','grove'],['cannon','arrow'],['grove','cannon'],['boss']]];
 function makeEnemy(type,stage){
@@ -53,9 +56,12 @@ function makeEnemy(type,stage){
 }
 function synergiesFor(slots){let a=[];if(slots.filter(x=>x==='arrow').length>=2)a.push('交叉火網 · 箭塔射速 +40%');if(slots.some((x,i)=>x==='cannon'&&(slots[i-1]==='grove'||slots[i+1]==='grove')))a.push('冷卻水循環 · 重砲裝填 +30%');if(slots.includes('nest')&&slots.includes('arrow'))a.push('弩兵護送 · 石偶傷害 +25%');return a;}
 class Game{
+ #projectiles=[];
+ #reservations=new Map();
+ #nextProjectileId=0;
  constructor(){this.lastCompletedRun=null;this.routeVariant=0;this.reset()}
  reset(){this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
- setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=[.5,.7,.9];this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;}
+ setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=[.5,.7,.9];this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;this.#projectiles=[];this.#reservations.clear();this.#nextProjectileId=0;this.battleEpoch=(this.battleEpoch||0)+1;}
  event(type,data={}){this.events.push({type,...data})}
  drain(){const e=this.events;this.events=[];return e}
  routeOptions(stage=this.stage){return [...(ROUTE_SETS[this.routeVariant][stage]||[])];}
@@ -64,17 +70,88 @@ class Game{
  start(type){if(!['ready','route'].includes(this.phase))return false;
  if(this.phase==='route'&&!this.routeOptions().includes(type))return false;
  this.enemy=makeEnemy(type||'arrow',this.stage);this.routeTaken.push(this.enemy.type);this.phase='battle';this.ramUsed=false;this.battleTime=0;this.setTimers();this.event('start');return true;}
- damage(n,source='core',slot=-1){if(this.phase!=='battle')return;this.enemy.hp=Math.max(0,this.enemy.hp-n);this.totalDamage+=n;this.event('shot',{source,slot,damage:n});if(this.enemy.hp===0)this.win();}
- takeDamage(n,special=false){if(this.phase!=='battle')return;if(!special&&this.minions.length){const guardIndex=this.minions.length-1,guard=this.minions.pop();this.guardBlocks++;this.guardPrevented+=n;this.battleGuardBlocks++;this.event('guardBlock',{guardId:guard.id,guardIndex,prevented:n,battleBlock:this.battleGuardBlocks});return;}this.hp=Math.max(0,this.hp-n);this.event('enemyShot',{damage:n,special});if(this.hp===0){this.phase='lost';this.lastResult='lost';this.event('loss')}}
- ram(){if(this.phase!=='battle'||this.ramUsed||this.paused)return false;this.ramUsed=true;const cancelled=this.windup>0;this.windup=0;this.specialTimer=8;this.stun=2;this.event('ram',{cancelled});this.damage(52,'ram');return true;}
+ #launch(fields,duration,targetEntity=null){
+  const shot=Object.freeze({id:this.#nextProjectileId++,epoch:this.battleEpoch,launchedAt:this.battleTime,dueAt:this.battleTime+duration,duration,slot:-1,special:false,guardId:null,guardIndex:null,...fields});
+  this.#projectiles.push({shot,targetEntity});
+  this.event('projectileLaunch',shot);
+  return shot;
+ }
+ damage(n,source='core',slot=-1){
+  if(this.phase!=='battle')return;
+  this.#launch({side:'friendly',source,slot,damage:n,target:'enemy'},PROJECTILE_DURATIONS[source]??PROJECTILE_DURATIONS.core,this.enemy);
+ }
+ takeDamage(n,special=false){
+  if(this.phase!=='battle')return;
+  let target='hull',guardId=null,guardIndex=null,guard=null;
+  if(!special){
+   for(let i=this.minions.length-1;i>=0;i--){
+    const candidate=this.minions[i];
+    if(candidate.life>0&&!this.#reservations.has(candidate.id)){
+     guardIndex=i;guard=this.minions.splice(i,1)[0];guardId=guard.id;target='guard';break;
+    }
+   }
+  }
+  const source=special?'heavy':'normal';
+  const shot=this.#launch({side:'hostile',source,damage:n,special,target,guardId,guardIndex},PROJECTILE_DURATIONS[source]);
+  // A reserved guard stops attacking and occupying the active cap. Its life is
+  // frozen until this particular shot contacts or the encounter cancels it.
+  if(guard)this.#reservations.set(guardId,{guard,shotId:shot.id,epoch:shot.epoch});
+ }
+ #resolveImpact({shot,targetEntity}){
+  if(shot.epoch!==this.battleEpoch)return;
+  let actual=0,outcome='spent',blocked={};
+  if(shot.target==='guard'){
+   const reservation=this.#reservations.get(shot.guardId);
+   if(reservation?.shotId===shot.id&&reservation.epoch===shot.epoch){
+    this.#reservations.delete(shot.guardId);
+    this.guardBlocks++;this.guardPrevented+=shot.damage;this.battleGuardBlocks++;
+    outcome='blocked';blocked={prevented:shot.damage,battleBlock:this.battleGuardBlocks};
+   }
+  }else if(shot.target==='hull'&&shot.side==='hostile'){
+   if(Number.isFinite(this.hp)&&this.hp>0){actual=Math.min(this.hp,shot.damage);this.hp=Math.max(0,this.hp-shot.damage);outcome='hull';}
+  }else if(shot.target==='enemy'&&shot.side==='friendly'){
+   if(targetEntity&&targetEntity===this.enemy&&Number.isFinite(targetEntity.hp)&&targetEntity.hp>0){
+    actual=Math.min(targetEntity.hp,shot.damage);targetEntity.hp=Math.max(0,targetEntity.hp-shot.damage);this.totalDamage+=shot.damage;outcome='enemy';
+   }
+  }
+  this.event('projectileImpact',{...shot,actual,outcome,...blocked});
+ }
+ #cancelProjectiles(reason){
+  for(const {shot} of this.#projectiles)this.event('projectileCancel',{id:shot.id,epoch:shot.epoch,reason});
+  this.#projectiles=[];this.#reservations.clear();
+ }
+ #adjudicate(){
+  if(this.hp===0){
+   this.#cancelProjectiles('loss');this.phase='lost';this.lastResult='lost';this.minions=[];this.event('loss');
+  }else if(this.enemy?.hp===0)this.win();
+ }
+ #resolveDue(){
+  this.#projectiles.sort((a,b)=>a.shot.dueAt-b.shot.dueAt||a.shot.id-b.shot.id);
+  while(this.phase==='battle'&&this.#projectiles.length&&this.#projectiles[0].shot.dueAt<=this.battleTime+IMPACT_EPSILON){
+   const dueAt=this.#projectiles[0].shot.dueAt,group=[];
+   while(this.#projectiles.length&&Math.abs(this.#projectiles[0].shot.dueAt-dueAt)<=IMPACT_EPSILON)group.push(this.#projectiles.shift());
+   // Remove the whole equal-time group before resolution. Each ID can be
+   // consumed once, and opposing simultaneous lethal hits both count.
+   group.sort((a,b)=>a.shot.id-b.shot.id);
+   for(const entry of group)this.#resolveImpact(entry);
+   this.#adjudicate();
+  }
+ }
+ ram(){
+  if(this.phase!=='battle'||this.ramUsed||this.paused)return false;
+  this.ramUsed=true;const cancelled=this.windup>0;this.windup=0;this.specialTimer=8;this.stun=2;
+  this.event('ram',{cancelled});
+  this.enemy.hp=Math.max(0,this.enemy.hp-52);this.totalDamage+=52;
+  this.event('shot',{source:'ram',slot:-1,damage:52});this.#adjudicate();return true;
+ }
  heal(n){const before=this.hp;this.hp=Math.min(this.maxHp,this.hp+n);const amount=this.hp-before;if(amount>0)this.event('heal',{amount});return amount;}
- win(){if(this.phase!=='battle')return;this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken])});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
+ win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken])});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
  install(slot){if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0||slot>2)return false;const old=this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0};this.phase='grafting';this.event('graft',this.graft);return true;}
  skip(){if(this.phase!=='loot'||this.stage===0)return false;this.heal(34);this.pendingLoot=null;this.stage++;this.phase='route';this.event('route');return true;}
  synergies(){return synergiesFor(this.slots);}
- tick(dt){if(this.paused)return;dt=Math.max(0,Math.min(dt,.1));this.clock+=dt;
+ tick(dt){if(this.paused)return;dt=Math.max(0,Math.min(dt,.1));if(!dt)return;this.clock+=dt;
  if(this.phase==='grafting'){this.graft.time+=dt;if(this.graft.time>=1.35){const installedSlot=this.graft.slot;this.slots[installedSlot]=this.graft.type;this.pendingLoot=null;this.graft=null;this.stage++;this.phase='route';this.event('installed',{slot:installedSlot})}return;}
- if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.stun=Math.max(0,this.stun-dt);
+ if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.#resolveDue();if(this.phase!=='battle')return;this.stun=Math.max(0,this.stun-dt);
  this.coreTimer-=dt;if(this.coreTimer<=0){this.coreTimer+=1.2;this.damage(7,'core');}if(this.phase!=='battle')return;
  for(let i=0;i<3;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
  if(b==='arrow'){this.slotTimers[i]+=1.05/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(10,'arrow',i)}
@@ -85,13 +162,13 @@ class Game{
  }
  for(const m of this.minions){m.life-=dt;m.timer-=dt;if(m.timer<=0){m.timer+=1;this.damage(this.slots.includes('arrow')?5:4,'minion');}if(this.phase!=='battle')return;}
  this.minions=this.minions.filter(m=>m.life>0);
- if(this.stun>0)return;
+ if(this.stun>0||!this.enemy)return;
  if(this.windup>0){this.windup-=dt;if(this.windup<=0){this.takeDamage(this.enemy.special,true);this.specialTimer=8;}return;}
  this.specialTimer-=dt;if(this.specialTimer<=0){this.windup=2.2;this.event('windup');return;}
  this.enemyTimer-=dt;if(this.enemyTimer<=0){this.enemyTimer+=this.enemy.rate;this.takeDamage(this.enemy.atk);}
  }
 }
-const API={Game,BUILDINGS,ROUTES,ROUTE_SETS,makeEnemy,synergiesFor};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
+const API={Game,BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>/* Presentation-only protection against clicks landing on a newly replaced panel. */
 (function(root){
@@ -251,6 +328,8 @@ const ART=typeof CastleArtManifest!=='undefined'?CastleArtManifest:{};const text
 const imageEntries=[['backdrop',ART.backdrop],['hull',ART.hull],...Object.entries(ART.modules||{}).map(([k,v])=>['module-'+k,v]),...(ART.guardian?[['guardian',ART.guardian]]:[])];
 Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true)});
 const golemTracks=new Map();
+const settledShots=new Set();
+let dissolutions=[],impactGlows=[];
 let guardRemnants=[],particles=[],shots=[],floaters=[],recoils=[0,0,0],enemyFlash=0,playerFlash=0,winFlash=0;
 const palette={stone:'#bcb58e',light:'#e1d1a4',dark:'#54666a',ink:'#17313a',gold:'#efc776',red:'#b44e47',teal:'#83c9a8'};
 const buildingIcons={};
@@ -346,11 +425,68 @@ function enemyCastle(){const {e,y}=bodyPositions();const defeated=['loot','graft
 function drawGraft(){if(!game.graft)return;const {e,y}=bodyPositions(),s=slotPos(game.graft.slot);const t=Math.min(1,game.graft.time/1.35);let x,yy,scale;if(t<.22){const a=t/.22;x=e;yy=y-115*(1-Math.pow(1-a,3));scale=1;}else if(t<.80){const a=(t-.22)/.58,q=a*a*(3-2*a);x=e+(s.x-e)*q;yy=y-115+(s.y-y+75)*q-Math.sin(a*Math.PI)*85;scale=1-(1-mountedHeight(game.graft.type)/263)*q;}else{const a=(t-.8)/.2;x=s.x;yy=s.y-40*(1-a)*(1-a);scale=mountedHeight(game.graft.type)/263;}
  const h=263*scale;glow(x,yy-h*.4,h*.7,'#dcb7713b',.6);ctx.save();ctx.strokeStyle='#dec28680';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(s.x-24,s.y-7);ctx.lineTo(x-32*scale,yy-h*.7);ctx.moveTo(s.x+24,s.y-7);ctx.lineTo(x+32*scale,yy-h*.7);ctx.stroke();ctx.translate(x,yy);ctx.rotate(reduced?0:Math.sin(t*Math.PI*2)*.035);if(!texturedModule(ctx,game.graft.type,0,0,h,t>.7,1,t<.75?-1:1))building(ctx,game.graft.type,0,0,scale,true);ctx.restore();if(Math.random()<.7)particles.push({x:x+(Math.random()-.5)*65,y:yy-10,vx:(Math.random()-.5)*20,vy:-20-Math.random()*50,life:.6,color:'#d9b76d',size:1.2+Math.random()*2});
 }
-function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');glow(x,yy,heavy?120:44,'#ffd49dcc');shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
-function render(dt){ramAnim=Math.max(0,ramAnim-dt);if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())bossAfterHit=Math.max(0,bossAfterHit-dt);updateGolemTracks(dt);ctx.save();ctx.clearRect(0,0,W,H);if(shake>0&&!reduced)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake*.65);background();enemyCastle();playerCastle();drawGraft();
- for(const s of shots){s.t+=dt;const t=Math.min(1,s.t/s.duration),x=s.x+(s.tx-s.x)*t,yy=s.y+(s.ty-s.y)*t-(s.arc||0)*Math.sin(t*Math.PI);ctx.save();ctx.globalCompositeOperation='screen';const heavy=s.kind==='cannon';glow(x,yy,heavy?34:16,heavy?'#e8904ca0':s.kind==='enemy'?'#c7735255':'#dac58b55',.8);const dx=s.tx-s.x,dy=s.ty-s.y-(s.arc||0)*Math.PI*Math.cos(t*Math.PI),ang=Math.atan2(dy,dx);ctx.translate(x,yy);ctx.rotate(ang);const trail=heavy?54:s.kind==='arrow'?48:31;const lg=ctx.createLinearGradient(-trail,0,7,0);lg.addColorStop(0,'#00000000');lg.addColorStop(.75,s.color+'77');lg.addColorStop(1,s.color);ctx.fillStyle=lg;ctx.fillRect(-trail,-(heavy?2:1),trail+9,heavy?4:2);if(s.kind==='arrow'){line(ctx,[-18,0],[9,0],'#f8e4ac',1.4);poly(ctx,[[9,0],[3,-3],[3,3]],'#fff1c5');}else{circle(ctx,0,0,heavy?5.5:3,s.color);circle(ctx,1,-1,heavy?2.8:1.3,'#fff3d4')}ctx.restore();if(heavy&&Math.random()<.8)particles.push({x,y:yy,vx:-15+Math.random()*30,vy:-15+Math.random()*15,life:.3+Math.random()*.3,color:'#af9d83',size:2+Math.random()*3});if(t>=1&&!s.hit){s.hit=true;impact({x:s.tx,y:s.ty,kind:s.kind,enemy:s.kind==='enemy',damage:s.damage,special:s.special,color:s.color,blocked:s.blocked,guardId:s.guardId});}}
- shots=shots.filter(x=>x.t<x.duration);
+// The engine owns all automatic-shot outcomes. Rendering only follows its clock and IDs.
+function projectileKey(s){return s.epoch+':'+s.id;}
+function projectileTarget(s){
+ if(s.target==='guard')return {x:s.tx,y:s.ty};
+ const {p,e,y}=bodyPositions();
+ return s.target==='hull'?{x:p+s.targetOffsetX,y:y+s.targetOffsetY}:{x:e+s.targetOffsetX,y:y+s.targetOffsetY};
+}
+function projectilePoint(s){
+ const target=projectileTarget(s),age=Math.max(0,game.battleTime-s.launchedAt),progress=Math.min(1,age/s.duration);
+ return {age,progress,target,x:s.x+(target.x-s.x)*progress,y:s.y+(target.y-s.y)*progress-(s.arc||0)*Math.sin(progress*Math.PI)};
+}
+function dissipateProjectile(s){
+ const q=projectilePoint(s),color=s.kind==='enemy'?'#9fadb7':'#d0c49f';
+ dissolutions.push({x:q.x,y:q.y,life:.22,color});burst(q.x,q.y,reduced?2:5,color);
+}
+function launchProjectile(ev){
+ const key=projectileKey(ev);if(ev.epoch!==game.battleEpoch||settledShots.has(key)||shots.some(s=>projectileKey(s)===key))return;
+ const {p,e,y}=bodyPositions(),hostile=ev.side==='hostile';let pos,targetOffsetX,targetOffsetY,tx,ty;
+ if(hostile){
+  pos=moduleOrigin(game.enemy.type,e,y,game.enemy.type==='boss'?330:263,false);targetOffsetX=-75;targetOffsetY=-96;
+  if(ev.target==='guard'){
+   const pose=golemTracks.get(ev.guardId)||golemPose(ev.guardIndex);tx=pose.x;ty=pose.y-27;golemTracks.delete(ev.guardId);
+   guardRemnants.push({id:ev.guardId,index:ev.guardIndex,x:pose.x,y:pose.y,epoch:ev.epoch,projectileId:ev.id});
+  }
+ }else{
+  const q=ev.slot>=0?slotPos(ev.slot):null,m=hullMetrics();
+  pos=q?moduleOrigin(ev.source,q.x,q.y,mountedHeight(ev.source)*(small?.97:1),true):ev.source==='minion'?{x:p+277,y:y-31}:{x:m.x+280*m.scale,y:m.y+280*m.scale};
+  targetOffsetX=(Math.random()-.5)*45;targetOffsetY=-80-Math.random()*70;
+  if(ev.slot>=0)recoils[ev.slot]=1;
+  play(ev.source==='cannon'?63:690,ev.source==='cannon'?.15:.035,ev.source==='cannon'?'sawtooth':'triangle',ev.source==='cannon'?.035:.008);
+ }
+ shots.push({...ev,x:pos.x,y:pos.y,tx,ty,targetOffsetX,targetOffsetY,t:Math.max(0,game.battleTime-ev.launchedAt),kind:hostile?'enemy':ev.source,blocked:ev.target==='guard',color:hostile?'#de9671':ev.source==='cannon'?'#ffc775':ev.source==='minion'?'#a7c8bb':'#ead7a2',arc:hostile?(ev.special?70:25):ev.source==='cannon'?120:5});
+}
+function finishProjectile(ev,cancelled=false){
+ const key=projectileKey(ev),s=shots.find(s=>projectileKey(s)===key);if(!s||settledShots.has(key))return;
+ settledShots.add(key);shots=shots.filter(s=>projectileKey(s)!==key);
+ const target=projectileTarget(s);
+ guardRemnants=guardRemnants.filter(g=>g.epoch!==ev.epoch||g.projectileId!==ev.id);
+ if(cancelled||ev.outcome==='spent'||ev.epoch!==game.battleEpoch){dissipateProjectile(s);return;}
+ if(ev.outcome==='blocked'){
+  impact({x:target.x,y:target.y,kind:'enemy',blocked:true,guardId:ev.guardId,damage:ev.prevented??ev.damage});
+  if(ev.battleBlock===1)say('石偶擋下砲火 · 魔城未受傷');
+ }else if(ev.outcome==='enemy'||ev.outcome==='hull'){
+  impact({x:target.x,y:target.y,kind:s.kind,enemy:ev.outcome==='hull',damage:ev.actual,special:s.special,color:s.color});
+ }
+}
+function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');impactGlows.push({x,y:yy,r:heavy?120:44,life:.1});shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
+function render(dt){if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())bossAfterHit=Math.max(0,bossAfterHit-dt);updateGolemTracks(dt);ctx.save();ctx.clearRect(0,0,W,H);if(shake>0&&!reduced)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake*.65);background();enemyCastle();playerCastle();drawGraft();
+ for(const s of shots){
+  const q=projectilePoint(s);s.t=q.age;
+  ctx.save();ctx.globalCompositeOperation='screen';const heavy=s.kind==='cannon';
+  glow(q.x,q.y,heavy?34:16,heavy?'#e8904ca0':s.kind==='enemy'?'#c7735255':'#dac58b55',.8);
+  const dx=q.target.x-s.x,dy=q.target.y-s.y-(s.arc||0)*Math.PI*Math.cos(q.progress*Math.PI),ang=Math.atan2(dy,dx);
+  ctx.translate(q.x,q.y);ctx.rotate(ang);const trail=heavy?54:s.kind==='arrow'?48:31;
+  const lg=ctx.createLinearGradient(-trail,0,7,0);lg.addColorStop(0,'#00000000');lg.addColorStop(.75,s.color+'77');lg.addColorStop(1,s.color);ctx.fillStyle=lg;ctx.fillRect(-trail,-(heavy?2:1),trail+9,heavy?4:2);
+  if(s.kind==='arrow'){line(ctx,[-18,0],[9,0],'#f8e4ac',1.4);poly(ctx,[[9,0],[3,-3],[3,3]],'#fff1c5');}
+  else{circle(ctx,0,0,heavy?5.5:3,s.color);circle(ctx,1,-1,heavy?2.8:1.3,'#fff3d4')}
+  ctx.restore();if(heavy&&dt>0&&Math.random()<.8)particles.push({x:q.x,y:q.y,vx:-15+Math.random()*30,vy:-15+Math.random()*15,life:.3+Math.random()*.3,color:'#af9d83',size:2+Math.random()*3});
+ }
+ for(const d of dissolutions){d.life-=dt;const a=Math.max(0,d.life/.22);ctx.save();ctx.globalAlpha=a*.6;ctx.strokeStyle=d.color;ctx.lineWidth=1;ctx.beginPath();ctx.arc(d.x,d.y,3+(1-a)*10,0,Math.PI*2);ctx.stroke();ctx.restore();}dissolutions=dissolutions.filter(d=>d.life>0);
  for(const v of visualImpacts){v.delay-=dt;if(v.delay<=1e-8&&!v.done){v.done=true;if(v.kind==='ram'){const contact=ramGeometry();v.x=contact.contactX;v.y=contact.contactY;}impact(v);}}visualImpacts=visualImpacts.filter(v=>!v.done);
+ for(const g of impactGlows){glow(g.x,g.y,g.r,'#ffd49dcc',Math.max(0,g.life/.1));g.life-=dt;}impactGlows=impactGlows.filter(g=>g.life>0);
  for(const r of shockwaves){r.t+=dt;const a=r.t/.42;ctx.save();ctx.globalAlpha=Math.max(0,1-a)*.7;ctx.globalCompositeOperation='screen';ctx.strokeStyle=r.color;ctx.lineWidth=(1-a)*3;ctx.beginPath();ctx.arc(r.x,r.y,8+a*r.r,0,Math.PI*2);ctx.stroke();ctx.restore();glow(r.x,r.y,Math.max(1,r.r*(1-a)),r.color+'77',Math.max(0,1-a));}shockwaves=shockwaves.filter(r=>r.t<.42);
  for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=p.smoke?-4:80;ctx.globalAlpha=Math.max(0,p.life)*.8;ctx.fillStyle=p.color;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.x*.11);ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.7);ctx.restore();}ctx.globalAlpha=1;particles=particles.filter(x=>x.life>0);
  for(const f of floaters){f.life-=dt;f.y-=dt*(f.big?28:20);ctx.globalAlpha=Math.min(1,f.life*2);ctx.textAlign='center';ctx.font=`${f.big?'700':'500'} ${f.big?27:16}px Georgia,"Noto Serif TC",serif`;ctx.strokeStyle='#050c14c0';ctx.lineWidth=3;ctx.strokeText(f.text,f.x,f.y);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}ctx.globalAlpha=1;floaters=floaters.filter(x=>x.life>0);
@@ -363,14 +499,16 @@ function burst(x,y,n,color){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,v
 function play(freq,duration=.08,type='triangle',vol=.04){if(!sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){sound=false}}
 function say(t){toast=t;toastTimer=2.1;$('announcer').textContent=t;}
 function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
- if(ev.type==='shot'){if(ev.source==='ram')continue;const q=ev.slot>=0?slotPos(ev.slot):null,m=hullMetrics();const pos=q?moduleOrigin(ev.source,q.x,q.y,mountedHeight(ev.source)*(small?.97:1),true):ev.source==='minion'?{x:p+277,y:y-31}:{x:m.x+280*m.scale,y:m.y+280*m.scale};shots.push({x:pos.x,y:pos.y,tx:e+(Math.random()-.5)*45,ty:y-80-Math.random()*70,t:0,duration:ev.source==='cannon'?.64:.43,kind:ev.source,damage:ev.damage,color:ev.source==='cannon'?'#ffc775':ev.source==='minion'?'#a7c8bb':'#ead7a2',arc:ev.source==='cannon'?120:5});if(ev.slot>=0)recoils[ev.slot]=1;play(ev.source==='cannon'?63:690,ev.source==='cannon'?.15:.035,ev.source==='cannon'?'sawtooth':'triangle',ev.source==='cannon'?.035:.008);}
- else if(ev.type==='enemyShot'){const origin=moduleOrigin(game.enemy.type,e,y,game.enemy.type==='boss'?330:263,false);shots.push({x:origin.x,y:origin.y,tx:p-75,ty:y-96,t:0,duration:ev.special?.58:.45,kind:'enemy',damage:ev.damage,special:ev.special,color:'#de9671',arc:ev.special?70:25});}
- else if(ev.type==='guardBlock'){const origin=moduleOrigin(game.enemy.type,e,y,game.enemy.type==='boss'?330:263,false),index=ev.guardIndex,pose=golemTracks.get(ev.guardId)||golemPose(index),x=pose.x,yy=pose.y;golemTracks.delete(ev.guardId);guardRemnants.push({id:ev.guardId,index,x,y:yy});shots.push({x:origin.x,y:origin.y,tx:x,ty:yy-27,t:0,duration:.45,kind:'enemy',damage:ev.prevented,color:'#de9671',arc:25,blocked:true,guardId:ev.guardId});if(ev.battleBlock===1)say('石偶擋下砲火 · 魔城未受傷');}
+ if(ev.type==='start'){shots=[];guardRemnants=[];golemTracks.clear();settledShots.clear();}
+ else if(ev.type==='projectileLaunch')launchProjectile(ev);
+ else if(ev.type==='projectileImpact')finishProjectile(ev);
+ else if(ev.type==='projectileCancel')finishProjectile(ev,true);
+ // Ram remains the existing immediate-control ability with its preserved contact animation.
  else if(ev.type==='ram'){ramAnim=.82;const contact=ramGeometry();visualImpacts.push({delay:.35,x:contact.contactX,y:contact.contactY,kind:'ram',damage:52});say(ev.cancelled?'衝撞 · 重擊中斷':'衝撞 · 敵城失衡');play(38,.28,'sawtooth',.05);}
  else if(ev.type==='heal'){floaters.push({x:p-145,y:y-245,text:'+'+ev.amount,color:'#b5d5b8',life:1.15});}
  else if(ev.type==='repair'){const q=slotPos(ev.slot);burst(q.x,q.y-95,9,'#a9cbae');shockwaves.push({x:q.x,y:q.y-55,t:0,r:80,color:'#93bfa7'});play(380,.17,'sine',.012);}
  else if(ev.type==='summon'){const q=slotPos(ev.slot);burst(q.x,q.y-20,11,'#c1b794');glow(q.x,q.y-25,80,'#b5cab433');say('石偶出征');}
- else if(ev.type==='win'){if(game.stage===4)bossAfterHit=.3;// Preserve shots already in flight so the final hit lands visually.
+ else if(ev.type==='win'){if(game.stage===4)bossAfterHit=.3;// The authoritative lethal contact stays visible before the target fades.
  visualImpacts.push({delay:.45,x:e,y:y-50,kind:'cannon',damage:0});say(game.stage===4?'王冠隕落':'敵城陷落 · 建築可奪取');play(350,.3,'triangle',.035);}
  else if(ev.type==='graft'){say('奪取建築');play(210,.3,'sine',.025);}
  else if(ev.type==='installed'){const q=slotPos(ev.slot),after=game.synergies(),changed=JSON.stringify(installBefore)!==JSON.stringify(after);say(changed?CastleFeedback.synergyChangeNotice(installBefore,after):BUILDINGS[game.slots[ev.slot]].short+'加入魔城');if(changed)synergyPulseUntil=game.clock+3;burst(q.x,q.y,22,'#d2b77c');shockwaves.push({x:q.x,y:q.y,t:0,r:60,color:'#d2b77c'});shake=3;play(130,.24,'triangle',.025);}
@@ -406,14 +544,14 @@ function updateUI(force=false){document.body.dataset.phase=game.phase;$('hp-text
  const slotKey=game.slots.join(',')+'|'+game.phase;if(uiSlots!==slotKey){uiSlots=slotKey;const choose=game.phase==='loot'&&game.slots.every(Boolean);$('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong><small>${choose?effect:BUILDINGS[b].tag}</small></span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');if(choose)$('slots').querySelectorAll('button').forEach(b=>b.onclick=onAction(()=>install(Number(b.dataset.slot))));$('slot-hint').textContent=choose?'點選要替換的建築':'搶來的建築，接在這裡';const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):'三個插槽，一座屬於你的魔城';$('synergy').className=synergy.length?'active':'';}
  $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);
 }
-function resetPresentation(){installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];guardRemnants=[];golemTracks.clear();particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;recoils=[0,0,0];uiPhase='';uiSlots='';updateUI(true)}
+function resetPresentation(){installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;recoils=[0,0,0];uiPhase='';uiSlots='';updateUI(true)}
 function restart(){game.reset();resetPresentation()}
 function replayJourney(){if(game.replay())resetPresentation()}
 function pause(){if(!['battle','grafting'].includes(game.phase))return;game.paused=!game.paused;updateUI();}
 $('pause').onclick=pause;$('resume').onclick=pause;$('restart').onclick=onAction(restart);$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'音效 開':'音效 關';$('sound').setAttribute('aria-pressed',sound);$('sound').setAttribute('aria-label',sound?'關閉音效':'開啟音效');if(sound)play(440,.1,'sine',.03)};
 addEventListener('keydown',e=>{if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.paused&&['battle','grafting'].includes(game.phase)){game.paused=true;updateUI()}});
-function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0;hitStop=Math.max(0,hitStop-dt);if(!game.paused&&!frozen)visualTime+=dt;game.tick(frozen?0:dt);events();updateUI();render(game.paused||frozen?0:dt);requestAnimationFrame(frame)}
+function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0;hitStop=Math.max(0,hitStop-dt);const activeDt=game.paused||frozen?0:dt;if(activeDt){visualTime+=activeDt;ramAnim=Math.max(0,ramAnim-activeDt);}game.tick(activeDt);events();updateUI();render(activeDt);requestAnimationFrame(frame)}
 updateUI(true);requestAnimationFrame(frame);
 // A read-only snapshot supports practical smoke tests without granting mutation hooks.
 Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,artLoaded,routeVariant:game.routeVariant,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
