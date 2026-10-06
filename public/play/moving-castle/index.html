@@ -68,7 +68,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.2</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -1132,7 +1132,7 @@ function loadChapterArt(){if(chapterArtStarted)return;chapterArtStarted=true;for
 const golemTracks=new Map();
 const settledShots=new Set();
 let dissolutions=[],impactGlows=[],coolingPulses=[],forgeFlares=[];
-let forgeAnnounced=false;
+let forgeAnnounced=false,summonAnnounced=false;
 let gateGunLaunches=0,gateGunFlashes=[];
 let shakeOffset={x:0,y:0};
 let enemyGuardRemnants=[],guardRemnants=[],particles=[],shots=[],floaters=[],recoils=[0,0,0],enemyFlash=0,playerFlash=0,winFlash=0;
@@ -1439,7 +1439,7 @@ function burst(x,y,n,color){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,v
 function play(freq,duration=.08,type='triangle',vol=.04){if(!sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){sound=false}}
 function say(t){toast=t;toastTimer=2.1;$('announcer').textContent=t;}
 function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
- if(ev.type==='start'){if(game.chapter===2){toast='';toastTimer=0;}shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();coolingPulses=[];forgeFlares=[];forgeAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];}
+ if(ev.type==='start'){summonAnnounced=false;if(game.chapter===2){toast='';toastTimer=0;}shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();coolingPulses=[];forgeFlares=[];forgeAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];}
  else if(ev.type==='enemyGuardianSummon'){const q=enemyGuardianPose();burst(q.x,q.y-10,10,'#c6a284');}
  else if(ev.type==='projectileLaunch')launchProjectile(ev);
  else if(ev.type==='projectileImpact')finishProjectile(ev);
@@ -1448,7 +1448,7 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
  else if(ev.type==='ram'){ramAnim=.82;const contact=ramGeometry();visualImpacts.push({delay:.35,x:contact.contactX,y:contact.contactY,kind:'ram',damage:52});say(ev.cancelled?'衝撞 · 重擊中斷':'衝撞 · 敵城失衡');play(38,.28,'sawtooth',.05);}
  else if(ev.type==='heal'){floaters.push({x:p-145,y:y-245,text:'+'+ev.amount,color:'#b5d5b8',life:1.15});}
  else if(ev.type==='repair'){const q=slotPos(ev.slot);burst(q.x,q.y-95,9,'#a9cbae');shockwaves.push({x:q.x,y:q.y-55,t:0,r:80,color:'#93bfa7'});play(380,.17,'sine',.012);}
- else if(ev.type==='summon'){const q=slotPos(ev.slot);burst(q.x,q.y-20,11,'#c1b794');glow(q.x,q.y-25,80,'#b5cab433');say('石偶出征');}
+ else if(ev.type==='summon'){const q=slotPos(ev.slot);burst(q.x,q.y-20,11,'#c1b794');glow(q.x,q.y-25,80,'#b5cab433');if(!summonAnnounced&&toastTimer<=0&&game.windup<=0){summonAnnounced=true;say('石偶出征');}}
  else if(ev.type==='win'){coolingPulses=[];forgeFlares=[];gateGunFlashes=[];if(game.isFinalBattle())bossAfterHit=.3;// The authoritative lethal contact stays visible before the target fades.
  visualImpacts.push({delay:.45,x:e,y:y-50,kind:'cannon',damage:0});say(game.isFinalBattle()?(game.chapter===2?'赤砂關已破':'王冠隕落'):'敵城陷落 · 建築可奪取');play(350,.3,'triangle',.035);}
  else if(ev.type==='graft'){say('奪取建築');play(210,.3,'sine',.025);}
@@ -1528,7 +1528,7 @@ function updateUI(force=false){
  $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);syncRamReadout();
 }
 
-function resetPresentation(){gateGunLaunches=0;gateGunFlashes=[];enemyFlash=0;playerFlash=0;winFlash=0;installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=game.slots.map(()=>0);sceneNeedsRender=true;uiPhase='';uiSlots='';updateUI(true)}
+function resetPresentation(){summonAnnounced=false;gateGunLaunches=0;gateGunFlashes=[];enemyFlash=0;playerFlash=0;winFlash=0;installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=game.slots.map(()=>0);sceneNeedsRender=true;uiPhase='';uiSlots='';updateUI(true)}
 function restart(){const changed=game.chapter===2?game.retryChapter():game.reset();if(changed)resetPresentation()}
 function replayJourney(){if(game.rebuildFirstChapter())resetPresentation()}
 function continueExpedition(){if(game.continueExpedition())resetPresentation()}
