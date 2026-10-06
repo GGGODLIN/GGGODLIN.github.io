@@ -74,7 +74,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -571,6 +571,10 @@ function expeditionEntry(){
  return '保留現有 3 座建築 · 城體整備至 300 · 3 場戰鬥';
 }
 
+function expeditionDiscovery(slots){
+ return slots.includes('nest')?'帶著兵營展開新一趟赤砂關，第二站可選爆破工坊':'想試爆破兵？下一局帶兵營通關，再進赤砂關';
+}
+
 function expeditionRetry(){
  return '還原入章時的 3 座建築與 300 城體，從運砲車重來；本章取得的第 4 插槽與替換會重置。';
 }
@@ -686,7 +690,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,installationReason,repairCaption,salvageLabel,replacementSummary,incomingCapability,removedCapability,synergyChangeNotice};
+const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionDiscovery,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,installationReason,repairCaption,salvageLabel,replacementSummary,incomingCapability,removedCapability,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -740,7 +744,13 @@ function seconds(value){return roundedTime(value).toFixed(1);}
 
 function metricLine(result){
  validate(result);
- return `交戰計時 ${seconds(result.combatTime)} 秒 · 剩餘城體 ${result.hp}／${result.maxHp} · 擋下普通射擊 ${result.blocked} 發`;
+ const blockLabel=result.build.includes('workshop')?'工坊安裝前格擋':'擋下普通射擊';
+ return `交戰計時 ${seconds(result.combatTime)} 秒 · 剩餘城體 ${result.hp}／${result.maxHp} · ${blockLabel} ${result.blocked} 發`;
+}
+
+function workshopEndingTitle(result){
+ validate(result);
+ return result.build.includes('workshop')?'你把攔截換成爆破，赤砂關已破':'';
 }
 
 function forgeContribution(result){
@@ -791,7 +801,7 @@ function comparisonLine(current,previous){
  return `${routeNote}與上次相比：${timeText} · ${hpText} · ${blockText}`;
 }
 
-const API={expeditionContext,metricLine,forgeContribution,buildContext,comparisonLine};
+const API={expeditionContext,metricLine,workshopEndingTitle,forgeContribution,buildContext,comparisonLine};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleRunSummary=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -1685,9 +1695,9 @@ function updateUI(force=false){
    else{a.innerHTML='<div class="choices'+(fork?' support-choices':second?' fixed-route':'')+'">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=game.enemyPreview(type),preview=CastleFeedback.choiceSynergy(type,game.slots,CastleEngine.OWNED_BUILDINGS,CastleEngine.ESCORT_MULTIPLIER);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${second?e.name:b.name}</h3>${fork?`<strong class="support-preview">${CastleFeedback.supportPreview(type)}</strong>`:''}<p>${fork?CastleFeedback.supportReward(type,CastleEngine.OWNED_BUILDINGS,game.slots):b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small>${fork&&e.guarded?'<small class="route-guard">本戰石偶每 3.5 秒召出；攔 1 發普通射擊（含重砲／熔爐），衝撞越過。</small>':''}<small>城體 ${e.hp} · ${second?'勝利後可替換一座建築，或保留現有組合':'勝利後帶走'+b.short}</small></div><span class="take">${fork?'攻下它':second?'繼續前進':'攻下它'}</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}
   }
   else if(game.phase==='won'){
-   k=second?'赤砂關 · 旅程完成':'旅程完成';title=second?'你的魔城更大了，赤砂關已破':'你帶走的，成了你的整座城';tag=second?'三場戰鬥 · 四座建築':'五座城 · 一段旅程';caption=second?'<span>♜</span> 赤砂關已攻陷':'<span>♜</span> 王冠堡壘已攻陷';
+   k=second?'赤砂關 · 旅程完成':'旅程完成';title=second?((game.completedRun&&CastleRunSummary.workshopEndingTitle(game.completedRun))||'你的魔城更大了，赤砂關已破'):'你帶走的，成了你的整座城';tag=second?'三場戰鬥 · 四座建築':'五座城 · 一段旅程';caption=second?'<span>♜</span> 赤砂關已攻陷':'<span>♜</span> 王冠堡壘已攻陷';
    if(second){a.innerHTML=actionRow(completedRunReport()+`<span class="chapter-retry-note">${CastleFeedback.expeditionRetry()}</span>`,button('重走赤砂關','again'));$('again').onclick=onAction(restart);}
-   else{a.innerHTML=actionRow(completedRunReport()+`<span class="continuation-note">可選擇前往赤砂關：${CastleFeedback.expeditionEntry()} 換路再出發會從空城重新開始。</span>`,`<div class="ending-actions">${button('帶上魔城，前往赤砂關','continue-expedition')}${button('換路再出發','again','primary secondary')}</div>`);$('continue-expedition').onclick=onAction(continueExpedition);$('again').onclick=onAction(replayJourney);}
+   else{a.innerHTML=actionRow(completedRunReport()+`<span class="continuation-note">可選擇前往赤砂關：${CastleFeedback.expeditionEntry()}。${CastleFeedback.expeditionDiscovery(game.slots)}。換路再出發會從空城重新開始。</span>`,`<div class="ending-actions">${button('帶上魔城，前往赤砂關','continue-expedition')}${button('換路再出發','again','primary secondary')}</div>`);$('continue-expedition').onclick=onAction(continueExpedition);$('again').onclick=onAction(replayJourney);}
   }
   else if(game.phase==='lost'){k=second?'赤砂關 · 魔城倒下':'魔城倒下';title=second?'帶上入章時的魔城，再試一次':'再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 衝撞可提早削血，也能留到蓄力時打斷重擊';a.innerHTML=actionRow(second?`走到了赤砂關第 ${game.stage+1} 站。${CastleFeedback.expeditionRetry()}`:`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button(second?'重試赤砂關':'重試此路線','again'));$('again').onclick=onAction(restart);}
   $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
