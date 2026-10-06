@@ -1,13 +1,15 @@
 {
-  "version": "0.10.4",
-  "sha256": "1c7170c8c9ed52e060b1c251fd0044c851d4c8318dde21c897100978a3d6658c",
-  "buildSha256": "3a1a95f7399dfb8990854ca3e2dbf111bda9f708f1e695f5348bd1ae96837460",
+  "version": "0.11.0",
+  "sha256": "cead6950760f5f8d8e676d043371b80cd41bd25fd26d0b0616d4d12c50fbaa55",
+  "buildSha256": "7b93c5976e052abc515c19123e85a83df34806b53262f7cb58d047462754edc2",
   "assets": {
     "battlefield.webp": "87b8422bbc8564c3843b9b2e00c28d39b8b3b702c734ffba92e51b367d9c55bd",
     "citadel.webp": "d53ff289454dfaada6223b1dd700203d011c964968bc4e2ef0cc234ac16cee44",
     "modules.webp": "4766d3ffe459c6f024f3fd181e6592f82603fbdfe9d4065e6701971deb2cd4c9",
     "retaliation-forge.webp": "ff701ab5099957f1dbe5527bae80398331f1175bc4e72645a932d517d45546dc",
+    "workshop.webp": "8a8b49992d5ad85c772cee4b38ae7b278ec44b31dfeb0bf3fb3d6600adda3ce0",
     "guardian.webp": "2b671edea6c70ea96b22f30a2fd2787b06a478f5d7c1c53f0db6927aa25ea9c0",
+    "sapper.webp": "16c4b28a753eb76390ab24d97231f91c8d06edecd9e70ca6125eb526a1f7142e",
     "red-sand.webp": "bc4493162ce6e6d2c422866d6591a2d394658802863455cba025b38abf008812",
     "front-deck.webp": "94c1fd7df54e03e80ecf4d2b20c7ca63d0534e13176ab9df7ac3ed8947786015"
   },

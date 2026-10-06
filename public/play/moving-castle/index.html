@@ -56,6 +56,8 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 /* Replacement keeps one shared gain line and a compact per-building sacrifice. */
 .incoming-capability{display:block;color:#e2d2aa;font-size:12px;line-height:1.6;margin-bottom:3px}.slot.choose,.slots[data-capacity="4"] .slot.choose{display:grid;grid-template-columns:29px minmax(0,1fr);column-gap:7px;row-gap:3px;align-content:start;align-items:center;min-height:84px;padding:7px 9px}.slot.choose>span{display:contents}.slot.choose img,.slots[data-capacity="4"] .slot.choose img{grid-column:1;grid-row:1;width:27px;height:29px;margin:0}.slot.choose strong{grid-column:2;grid-row:1;font-size:11px}.slot.choose .slot-capability,.slot.choose .slot-synergy{grid-column:1/-1;font-size:10.5px;line-height:1.45;margin:0;white-space:normal;overflow-wrap:anywhere}.slot.choose .slot-capability{color:#e4c39e}.slot.choose .slot-synergy{color:#bdcdb8}
 @media(max-width:600px){.incoming-capability{font-size:10px;line-height:1.55}.slot.choose,.slots[data-capacity="4"] .slot.choose{grid-template-columns:23px minmax(0,1fr);column-gap:5px;row-gap:3px;padding:6px;min-height:89px;text-align:left}.slot.choose img,.slots[data-capacity="4"] .slot.choose img{width:22px;height:26px}.slot.choose strong{font-size:10px;letter-spacing:0}.slot.choose .slot-capability,.slot.choose .slot-synergy{font-size:9px;line-height:1.4}}
+
+.slot.choose.dependency-locked:disabled{opacity:1;border-color:#7f76624d;background:#172127d9;cursor:not-allowed}.slot.dependency-locked strong{color:#beb99e}.slot.dependency-locked .slot-capability{color:#b9c4ba}
 </style></head>
 <body>
 <main class="game-shell">
@@ -72,7 +74,7 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><p id="save-status" class="save-status" data-state="pending" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="save-status-label"></strong><span id="save-status-detail"></span></p><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.10.4</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.11.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <section id="checkpoint-overlay" class="checkpoint-overlay" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title" aria-describedby="checkpoint-context checkpoint-note" tabindex="-1" hidden>
 <div class="checkpoint-card">
@@ -93,14 +95,17 @@ body[data-phase="battle"] .ram-control{position:absolute;right:24px;top:17px;wid
 'use strict';
 // Installed capabilities are independent of BUILDINGS' hostile atk/rate stats.
 // Interception is the existing one-shot reservation/consumption rule, not armor.
+const ESCORT_MULTIPLIER=1.25;
 const OWNED_BUILDINGS=Object.freeze({
  arrow:Object.freeze({damage:10,interval:1.05}),
  cannon:Object.freeze({damage:35,interval:3.3}),
  grove:Object.freeze({heal:10,interval:3}),
  nest:Object.freeze({interval:3.5,unitDamage:4,unitInterval:1,ordinaryIntercepts:1}),
- forge:Object.freeze({damage:18})
+ forge:Object.freeze({damage:18}),
+ workshop:Object.freeze({damage:48,travel:1.2,arming:.24})
 });
 const BUILDINGS={
+ workshop:{name:'爆破工坊',short:'工坊',tag:'爆破兵',color:'#e5ab69',desc:`把兵營每 ${OWNED_BUILDINGS.nest.interval} 秒的新石偶改裝為爆破兵；${OWNED_BUILDINGS.workshop.travel} 秒後接觸爆炸，造成 ${OWNED_BUILDINGS.workshop.damage} 傷害，失去持續攻擊與格擋。多座工坊不疊加。`,stat:`新石偶改裝 · ${OWNED_BUILDINGS.workshop.damage} 傷害 / ${OWNED_BUILDINGS.workshop.travel} 秒抵達`,hp:240,atk:14,rate:1.9,special:28,guarded:true},
  forge:{name:'反擊熔爐',short:'熔爐',tag:'反擊',color:'#f37d53',desc:`接上後用城體換火力：中彈且存活就反擊${OWNED_BUILDINGS.forge.damage}傷害；石偶擋住不觸發。`,stat:`受擊反擊${OWNED_BUILDINGS.forge.damage} · 無定時射擊`,hp:195,atk:12,rate:1.9},
  arrow:{name:'疾風箭塔',short:'箭塔',tag:'連射',color:'#d9c897',desc:'每秒射出弩箭。兩座箭塔一起裝，射速再快 40%。',stat:`${OWNED_BUILDINGS.arrow.damage} 傷害 / ${OWNED_BUILDINGS.arrow.interval} 秒`,hp:118,atk:8,rate:1.6},
  cannon:{name:'熔爐重砲',short:'重砲',tag:'爆破',color:'#f39e53',desc:'重砲轟開城牆。緊鄰修復樹時，裝填加快 30%。',stat:`${OWNED_BUILDINGS.cannon.damage} 傷害 / ${OWNED_BUILDINGS.cannon.interval} 秒`,hp:210,atk:20,rate:2.5},
@@ -108,7 +113,7 @@ const BUILDINGS={
  nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:`每 ${OWNED_BUILDINGS.nest.interval} 秒召喚石偶，每隻基礎攻擊 ${OWNED_BUILDINGS.nest.unitDamage/OWNED_BUILDINGS.nest.unitInterval} 傷害／秒；可擋 ${OWNED_BUILDINGS.nest.ordinaryIntercepts} 發普通射擊，重擊無法擋。`,stat:`召喚 / ${OWNED_BUILDINGS.nest.interval} 秒 · 格擋 ${OWNED_BUILDINGS.nest.ordinaryIntercepts} 發`,hp:195,atk:12,rate:1.9}
 };
 // Contact timing is shared with presentation; ram deliberately keeps its legacy path.
-const PROJECTILE_DURATIONS=Object.freeze({forge:.43,core:.43,arrow:.43,minion:.43,cannon:.64,normal:.45,heavy:.58});
+const PROJECTILE_DURATIONS=Object.freeze({sapper:OWNED_BUILDINGS.workshop.travel,forge:.43,core:.43,arrow:.43,minion:.43,cannon:.64,normal:.45,heavy:.58});
 const IMPACT_EPSILON=1e-8;
 const ROUTES=[['arrow'],['forge','grove'],['nest','arrow'],['grove','cannon'],['boss']];
 const ROUTE_SETS=[ROUTES,[['arrow'],['nest','grove'],['cannon','arrow'],['grove','cannon'],['boss']]];
@@ -119,13 +124,16 @@ const EXPEDITION=Object.freeze([
 ]);
 // The old expedition is retained verbatim for imported v0.9 chapter-two runs.
 const SUPPORT_BARRACKS=Object.freeze({type:'nest',name:'赤砂石偶兵營',hp:240,maxHp:240,atk:14,rate:1.9,special:28,reward:'nest',guarded:true});
-function expeditionOptions(plan,stage){return stage===1&&plan==='support-fork'?['grove','nest']:(EXPEDITION[stage]?[EXPEDITION[stage].type]:[]);}
+const SUPPORT_WORKSHOP=Object.freeze({type:'workshop',name:'赤砂爆破工坊',hp:BUILDINGS.workshop.hp,maxHp:BUILDINGS.workshop.hp,atk:BUILDINGS.workshop.atk,rate:BUILDINGS.workshop.rate,special:BUILDINGS.workshop.special,reward:'workshop',guarded:BUILDINGS.workshop.guarded});
+function forkPlan(plan){return plan==='support-fork'||plan==='workshop-fork';}
+function expeditionOptions(plan,stage){return stage===1&&forkPlan(plan)?['grove',plan==='workshop-fork'?'workshop':'nest']:(EXPEDITION[stage]?[EXPEDITION[stage].type]:[]);}
 function expeditionEnemy(plan,consequence,type,stage){
  if(!EXPEDITION[stage])return null;
  if(stage===1&&plan==='support-fork'&&type==='nest')return {...SUPPORT_BARRACKS};
+ if(stage===1&&plan==='workshop-fork'&&type==='workshop')return {...SUPPORT_WORKSHOP};
  const enemy={...EXPEDITION[stage]};
- if(stage===1&&plan==='support-fork')enemy.name='赤砂供水綠洲';
- if(stage===2&&plan==='support-fork'){
+ if(stage===1&&forkPlan(plan))enemy.name='赤砂供水綠洲';
+ if(stage===2&&forkPlan(plan)){
   if(consequence==='water')enemy.rate=3;
   if(consequence==='sentry')enemy.guarded=false;
  }
@@ -136,11 +144,11 @@ function makeEnemy(type,stage){
  const b=BUILDINGS[type], scale=stage===0?0.7:1+(stage-1)*.23;
  return {type,name:stage===0?'孤立的疾風哨塔':b.name,hp:Math.round(b.hp*scale),maxHp:Math.round(b.hp*scale),atk:stage===0?5:Math.round(b.atk*(1+stage*.08)),rate:b.rate,special:18+stage*5,reward:type};
 }
-function synergiesFor(slots){let a=[];if(slots.filter(x=>x==='arrow').length>=2)a.push('交叉火網 · 箭塔射速 +40%');if(slots.some((x,i)=>x==='cannon'&&(slots[i-1]==='grove'||slots[i+1]==='grove')))a.push('冷卻水循環 · 重砲裝填 +30%');if(slots.includes('nest')&&slots.includes('arrow'))a.push('弩兵護送 · 石偶傷害 +25%');return a;}
+function synergiesFor(slots){let a=[];if(slots.filter(x=>x==='arrow').length>=2)a.push('交叉火網 · 箭塔射速 +40%');if(slots.some((x,i)=>x==='cannon'&&(slots[i-1]==='grove'||slots[i+1]==='grove')))a.push('冷卻水循環 · 重砲裝填 +30%');if(slots.includes('nest')&&slots.includes('arrow'))a.push(`弩兵護送 · ${slots.includes('workshop')?'爆破兵':'石偶'}傷害 +${(ESCORT_MULTIPLIER-1)*100}%`);if(slots.includes('nest')&&slots.includes('workshop'))a.push(`爆破改裝 · 新石偶 ${OWNED_BUILDINGS.workshop.damage*(slots.includes('arrow')?ESCORT_MULTIPLIER:1)} 傷害 · ${OWNED_BUILDINGS.workshop.travel} 秒接觸 · 不格擋`);return a;}
 // Decision checkpoints deliberately contain no live entities, queues or clocks.
 // The storage envelope versions the schema separately from these combat rules.
-const CHECKPOINT_RULES_VERSION='red-sand-fork-1';
-const CHECKPOINT_COMPATIBLE_RULES_VERSIONS=Object.freeze(['red-sand-1',CHECKPOINT_RULES_VERSION]);
+const CHECKPOINT_RULES_VERSION='red-sand-workshop-1';
+const CHECKPOINT_COMPATIBLE_RULES_VERSIONS=Object.freeze(['red-sand-1','red-sand-fork-1',CHECKPOINT_RULES_VERSION]);
 const LEGACY_CHECKPOINT_STATE_KEYS=Object.freeze(['chapter','phase','stage','routeVariant','slots','hp','maxHp','routeTaken','enemyHp','pendingLoot','lastBattleRepair','runCombatTime','kills','totalDamage','guardBlocks','guardPrevented','forgeInstalled','forgeHits','forgeDamage','completedRun']);
 const CHECKPOINT_STATE_KEYS=Object.freeze([...LEGACY_CHECKPOINT_STATE_KEYS,'expeditionPlan','gateConsequence']);
 const CHECKPOINT_KEYS=Object.freeze([...CHECKPOINT_STATE_KEYS,'chapterEntry','firstEnding']);
@@ -172,13 +180,14 @@ function checkpointEnemy(state){
  const type=state.phase==='ready'?(state.chapter===2?'cannon':'arrow'):state.routeTaken.at(-1);
  return state.chapter===2?expeditionEnemy(state.expeditionPlan,state.gateConsequence,type,stage):makeEnemy(type,stage);
 }
+function installationDependency(slots,type,slot){return type==='workshop'&&(!slots.includes('nest')||slots[slot]==='nest'&&slots.filter(value=>value==='nest').length===1)?'requires-nest':null;}
 function checkpointBuildPossible(state,entry){
  if(state.chapter===2){
   if(state.forgeInstalled!==entry.includes('forge'))return false;
   if(state.stage===0)return sameCheckpointArray(state.slots,entry);
   const expanded=[...entry,'cannon'];
   if(sameCheckpointArray(state.slots,expanded))return true;
-  return state.stage===2&&expanded.some((_,i)=>sameCheckpointArray(state.slots,expanded.map((type,j)=>j===i?state.routeTaken[1]:type)));
+  return state.stage===2&&expanded.some((_,i)=>!installationDependency(expanded,state.routeTaken[1],i)&&sameCheckpointArray(state.slots,expanded.map((type,j)=>j===i?state.routeTaken[1]:type)));
  }
  // At most four rewards, three slots: bounded structural reachability, not a
  // simulation or score/anti-cheat check. This also preserves replaced forges.
@@ -202,14 +211,14 @@ function checkpointResult(value,state,legacy=false){
  if(state.chapter===2){if(value.chapter!==2)checkpointError();result.chapter=2;result.startingBuild=checkpointArray(value.startingBuild,3,3,checkpointBuilding);if(!legacy){for(const key of ['expeditionPlan','gateConsequence']){if(value[key]!==state[key])checkpointError();result[key]=value[key];}}}
  return result;
 }
-function checkpointState(value,keys=CHECKPOINT_STATE_KEYS,legacy=false){
+function checkpointState(value,keys=CHECKPOINT_STATE_KEYS,legacy=false,workshop=true){
  checkpointRecord(value,keys);
  if(![1,2].includes(value.chapter)||!STABLE_PHASES.includes(value.phase)||![0,1].includes(value.routeVariant)||typeof value.forgeInstalled!=='boolean')checkpointError();
  const last=value.chapter===2?2:4;
  const state={chapter:value.chapter,phase:value.phase,stage:checkpointNumber(value.stage,last,true),routeVariant:value.routeVariant};
  if(!legacy){
   state.expeditionPlan=value.expeditionPlan;state.gateConsequence=value.gateConsequence;
-  if(state.chapter===1?state.expeditionPlan!==null||state.gateConsequence!==null:!['legacy','support-fork'].includes(state.expeditionPlan)||![null,'water','sentry'].includes(state.gateConsequence))checkpointError();
+  if(state.chapter===1?state.expeditionPlan!==null||state.gateConsequence!==null:!(workshop?['legacy','support-fork','workshop-fork']:['legacy','support-fork']).includes(state.expeditionPlan)||![null,'water','sentry'].includes(state.gateConsequence))checkpointError();
  }
  if(state.phase==='ready'&&state.stage!==0||state.phase==='route'&&state.stage===0||state.phase==='loot'&&state.stage===last||state.phase==='won'&&state.stage!==last)checkpointError();
  const capacity=state.chapter===2&&state.stage>0?4:3;
@@ -221,7 +230,7 @@ function checkpointState(value,keys=CHECKPOINT_STATE_KEYS,legacy=false){
  for(let i=0;i<count;i++)if(state.chapter===2?!expeditionOptions(state.expeditionPlan,i).includes(state.routeTaken[i]):!ROUTE_SETS[state.routeVariant][i].includes(state.routeTaken[i]))checkpointError();
  if(!legacy&&state.chapter===2){
   const conquered=state.stage===2||state.stage===1&&state.phase==='loot';
-  const expected=state.expeditionPlan==='support-fork'&&conquered?(state.routeTaken[1]==='grove'?'water':'sentry'):null;
+  const expected=forkPlan(state.expeditionPlan)&&conquered?(state.routeTaken[1]==='grove'?'water':'sentry'):null;
   if(state.gateConsequence!==expected)checkpointError();
  }
  const enemy=checkpointEnemy(state);
@@ -243,22 +252,23 @@ function checkpointState(value,keys=CHECKPOINT_STATE_KEYS,legacy=false){
  if(state.chapter===1&&!checkpointBuildPossible(state,null))checkpointError();
  return state;
 }
-function checkpointSchema(data,legacy=false){
- const state=checkpointState(data,legacy?LEGACY_CHECKPOINT_KEYS:CHECKPOINT_KEYS,legacy);
+function checkpointSchema(data,legacy=false,workshop=true){
+ const state=checkpointState(data,legacy?LEGACY_CHECKPOINT_KEYS:CHECKPOINT_KEYS,legacy,workshop);
  if(state.chapter===1){
   if(data.chapterEntry!==null||data.firstEnding!==null)checkpointError();
   return {...state,chapterEntry:null,firstEnding:null};
  }
  checkpointRecord(data.chapterEntry,['slots','hp']);
  const chapterEntry={slots:checkpointArray(data.chapterEntry.slots,3,3,checkpointBuilding),hp:data.chapterEntry.hp};
- if(chapterEntry.hp!==300)checkpointError();
- const firstEnding=checkpointState(data.firstEnding,legacy?LEGACY_CHECKPOINT_STATE_KEYS:CHECKPOINT_STATE_KEYS,legacy);
+ if(chapterEntry.hp!==300||state.expeditionPlan==='workshop-fork'&&!chapterEntry.slots.includes('nest'))checkpointError();
+ const firstEnding=checkpointState(data.firstEnding,legacy?LEGACY_CHECKPOINT_STATE_KEYS:CHECKPOINT_STATE_KEYS,legacy,workshop);
  if(firstEnding.chapter!==1||firstEnding.phase!=='won'||firstEnding.routeVariant!==state.routeVariant||!sameCheckpointArray(chapterEntry.slots,firstEnding.slots)||!checkpointBuildPossible(state,chapterEntry.slots)||state.completedRun&&!sameCheckpointArray(state.completedRun.startingBuild,chapterEntry.slots))checkpointError();
  return {...state,chapterEntry,firstEnding};
 }
 function validateCheckpoint(data){return checkpointSchema(data);}
 function migrateCheckpoint(data,fromRulesVersion){
  if(fromRulesVersion===CHECKPOINT_RULES_VERSION)return validateCheckpoint(data);
+ if(fromRulesVersion==='red-sand-fork-1')return checkpointSchema(data,false,false);
  if(fromRulesVersion!=='red-sand-1')checkpointError();
  // Validate the entire old record, dependencies, routes and results before
  // adding metadata. Unknown versions are never guessed or normalized.
@@ -293,7 +303,7 @@ class Game{
  #nextEnemyGuardianId=0;
  constructor(){this.lastCompletedRun=null;this.routeVariant=0;this.reset()}
  reset(){this.#chapterEntry=null;this.#firstEnding=null;return this.#resetRun(1,[null,null,null]);}
- #resetRun(chapter,slots,plan=chapter===2?'support-fork':null){this.#chapter=chapter;this.#expeditionPlan=plan;this.#gateConsequence=null;this.#forgeInstalled=chapter===2&&slots.includes('forge');this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[...slots];this.enemy=this.enemyPreview();this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
+ #resetRun(chapter,slots,plan=chapter===2?(slots.includes('nest')?'workshop-fork':'support-fork'):null){this.#chapter=chapter;this.#expeditionPlan=plan;this.#gateConsequence=null;this.#forgeInstalled=chapter===2&&slots.includes('forge');this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[...slots];this.enemy=this.enemyPreview();this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
  exportCheckpoint(){
   if(!STABLE_PHASES.includes(this.phase))return null;
   const data=this.#checkpointState();
@@ -461,7 +471,7 @@ class Game{
   this.event('shot',{source:'ram',slot:-1,damage:52});this.#adjudicate();return true;
  }
  heal(n){const before=this.hp;this.hp=Math.min(this.maxHp,this.hp+n);const amount=this.hp-before;if(amount>0)this.event('heal',{amount});return amount;}
- win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');if(this.chapter===2&&this.expeditionPlan==='support-fork'&&this.stage===1)this.#gateConsequence=this.enemy.type==='grove'?'water':'sentry';this.kills++;this.minions=[];this.event('win');if(this.isFinalBattle()){
+ win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');if(this.chapter===2&&forkPlan(this.expeditionPlan)&&this.stage===1)this.#gateConsequence=this.enemy.type==='grove'?'water':'sentry';this.kills++;this.minions=[];this.event('win');if(this.isFinalBattle()){
   this.comparisonRun=this.chapter===2?this.#lastCompletedChapter2:this.lastCompletedRun;
   const result={combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken]),forgeInstalled:this.#forgeInstalled,forgeHits:this.#forgeHits,forgeDamage:this.#forgeDamage};
   if(this.chapter===2){result.chapter=2;result.startingBuild=this.#chapterEntry.slots;result.expeditionPlan=this.expeditionPlan;result.gateConsequence=this.gateConsequence;}
@@ -469,10 +479,16 @@ class Game{
   if(this.chapter===2)this.#lastCompletedChapter2=this.completedRun;else this.lastCompletedRun=this.completedRun;
   this.phase='won';this.lastResult='won';return;
  }this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
- install(slot){
+ installationBlockReason(slot){return installationDependency(this.slots,this.pendingLoot,slot);}
+ canInstall(slot){
   if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0)return false;
   const expansion=this.chapter===2&&this.stage===0;
   if(expansion?(slot!==3||this.slots.length!==3||this.pendingLoot!=='cannon'):slot>=(this.chapter===2?this.slots.length:3))return false;
+  return !this.installationBlockReason(slot);
+ }
+ install(slot){
+  if(!this.canInstall(slot))return false;
+  const expansion=this.chapter===2&&this.stage===0;
   const old=expansion?null:this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0,...(expansion?{expansion:true}:{})};this.phase='grafting';this.event('graft',this.graft);return true;
  }
  skip(){if(this.phase!=='loot'||this.stage===0)return false;this.heal(34);this.pendingLoot=null;this.stage++;this.phase='route';this.event('route');return true;}
@@ -493,10 +509,22 @@ class Game{
  if(b==='arrow'){this.slotTimers[i]+=OWNED_BUILDINGS.arrow.interval/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(OWNED_BUILDINGS.arrow.damage,'arrow',i)}
  else if(b==='cannon'){const cooled=this.slots[i-1]==='grove'||this.slots[i+1]==='grove';this.slotTimers[i]+=OWNED_BUILDINGS.cannon.interval/(cooled?1.3:1);this.damage(OWNED_BUILDINGS.cannon.damage,'cannon',i)}
  else if(b==='grove'){this.slotTimers[i]+=OWNED_BUILDINGS.grove.interval;this.heal(OWNED_BUILDINGS.grove.heal);this.event('repair',{slot:i})}
- else if(b==='nest'){this.slotTimers[i]+=OWNED_BUILDINGS.nest.interval;if(this.minions.length<3){this.minions.push({id:this.nextMinionId++,life:12,timer:.5});this.event('summon',{slot:i})}}
+ else if(b==='nest'){
+  this.slotTimers[i]+=OWNED_BUILDINGS.nest.interval;
+  // Keep the original active-guardian eligibility check. Reserved guardians
+  // already left this cap and remain owned by their exact incoming projectile.
+  if(this.minions.length<3){
+   const unitId=this.nextMinionId++,workshopSlot=this.slots.indexOf('workshop');
+   if(workshopSlot>=0){
+    // A new unit becomes one ordinary pending attack. No existing active or
+    // reserved guardian is touched; several workshops still select one producer.
+    this.#launch({side:'friendly',source:'sapper',slot:i,unitId,barracksSlot:i,workshopSlot,damage:OWNED_BUILDINGS.workshop.damage*(this.slots.includes('arrow')?ESCORT_MULTIPLIER:1),target:'enemy'},PROJECTILE_DURATIONS.sapper,this.enemy);
+   }else{this.minions.push({id:unitId,life:12,timer:.5});this.event('summon',{slot:i});}
+  }
+ }
  if(this.phase!=='battle')return;
  }
- for(const m of this.minions){m.life-=dt;m.timer-=dt;if(m.timer<=0){m.timer+=OWNED_BUILDINGS.nest.unitInterval;this.damage(OWNED_BUILDINGS.nest.unitDamage*(this.slots.includes('arrow')?1.25:1),'minion');}if(this.phase!=='battle')return;}
+ for(const m of this.minions){m.life-=dt;m.timer-=dt;if(m.timer<=0){m.timer+=OWNED_BUILDINGS.nest.unitInterval;this.damage(OWNED_BUILDINGS.nest.unitDamage*(this.slots.includes('arrow')?ESCORT_MULTIPLIER:1),'minion');}if(this.phase!=='battle')return;}
  this.minions=this.minions.filter(m=>m.life>0);
  if(this.stun>0||!this.enemy)return;
  if(this.windup>0){this.windup-=dt;if(this.windup<=0){this.takeDamage(this.enemy.special,true);this.specialTimer=8;}return;}
@@ -504,7 +532,7 @@ class Game{
  this.enemyTimer-=dt;if(this.enemyTimer<=0){this.enemyTimer+=this.enemy.rate;this.takeDamage(this.enemy.atk);}
  }
 }
-const API={Game,BUILDINGS,OWNED_BUILDINGS,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor,CHECKPOINT_RULES_VERSION,CHECKPOINT_COMPATIBLE_RULES_VERSIONS,validateCheckpoint,migrateCheckpoint};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
+const API={Game,BUILDINGS,OWNED_BUILDINGS,ESCORT_MULTIPLIER,ROUTES,ROUTE_SETS,PROJECTILE_DURATIONS,makeEnemy,synergiesFor,CHECKPOINT_RULES_VERSION,CHECKPOINT_COMPATIBLE_RULES_VERSIONS,validateCheckpoint,migrateCheckpoint};if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>/* Presentation-only protection against clicks landing on a newly replaced panel. */
 (function(root){
@@ -553,7 +581,7 @@ function defenderPreview(enemy){
 
 function supportPreview(type){
  if(type==='grove')return '攻陷後切斷一條供水：關城普通砲擊 1.5→3 秒；重擊照常。';
- if(type==='nest')return '攻陷後切斷石偶增援：關城不再召喚守衛；砲擊照常。';
+ if(type==='nest'||type==='workshop')return '攻陷後切斷石偶增援：關城不再召喚守衛；砲擊照常。';
  return '';
 }
 function supportOutcome(plan,consequence){
@@ -562,8 +590,10 @@ function supportOutcome(plan,consequence){
  if(consequence==='sentry')return '石偶增援已切斷 · 關城不再召喚守衛；砲擊照常';
  return '';
 }
-function supportReward(type){
+function supportReward(type,ownedBuildings,slots=[]){
  if(type==='grove')return '戰利品：每 3 秒修復 10；緊鄰重砲時，裝填 +30%。';
+ if(type==='workshop')return `戰利品：${capabilityText(type,ownedBuildings)}。`;
+ if(type==='nest'&&slots.includes('workshop'))return `戰利品：每 ${amount(ownedBuildings.nest.interval)} 秒召喚爆破兵，接觸爆炸 ${amount(ownedBuildings.workshop.damage)} 傷害；不持續攻擊、不格擋。`;
  if(type==='nest')return '戰利品：每 3.5 秒召喚石偶，每擊 4 傷害；可擋 1 發普通射擊。';
  return '';
 }
@@ -573,11 +603,26 @@ function ramTactics(){
 }
 
 function choiceInteraction(type,slots){
+ if(slots.includes('forge')&&(type==='workshop'||type==='nest'&&slots.includes('workshop')))return '爆破兵不攔截射擊；城體實際中彈且雙方存活時，仍會觸發熔爐反擊。';
  return type==='nest'&&slots.includes('forge')?'石偶擋下的射擊會保住城體，不會觸發熔爐反擊。':'';
 }
 
-function choiceSynergy(type,slots){
+function choiceSynergy(type,slots,ownedBuildings,escortMultiplier){
+ // Preview only an escort that this choice can actually activate. Keep the
+ // original guardian-only call and its copy unchanged for historical routes.
+ const explosive=type==='workshop'&&slots.includes('nest')&&slots.includes('arrow')||type==='nest'&&slots.includes('workshop')&&slots.includes('arrow')||type==='arrow'&&slots.includes('workshop')&&slots.includes('nest');
+ if(explosive){
+  const damage=ownedBuildings?.workshop?.damage;
+  amount(damage);amount(escortMultiplier);
+  return `搭配箭塔：爆破兵接觸爆炸 ${amount(damage)}→${amount(damage*escortMultiplier)}（+${amount((escortMultiplier-1)*100)}%）`;
+ }
  return type==='nest'&&slots.includes('arrow')?'搭配箭塔：石偶每擊 4→5（+25%）':'';
+}
+
+function installationReason(reason){
+ if(reason===null)return '';
+ if(reason==='requires-nest')return '必須保留兵營，工坊才有石偶可改造';
+ throw new TypeError('Unknown installation reason');
 }
 
 // Healing is already capped by the caller against current castle health.
@@ -616,6 +661,7 @@ function capabilityText(type,ownedBuildings){
  if(type==='grove')return `每 ${amount(b.interval)} 秒修復 ${amount(b.heal)} 城體`;
  if(type==='nest')return `每 ${amount(b.interval)} 秒召喚石偶；每隻 ${amount(b.unitDamage)} 傷害／${amount(b.unitInterval)} 秒，擋 ${amount(b.ordinaryIntercepts)} 發普通射擊後碎裂（重擊無法擋）`;
  if(type==='forge')return `城體實際中彈且雙方存活時反擊 ${amount(b.damage)} 傷害；石偶擋住不觸發`;
+ if(type==='workshop')return `須保留兵營；往後新召石偶改為爆破兵，${amount(b.travel)} 秒接觸爆炸 ${amount(b.damage)} 傷害，可被敵方守衛攔下；失去持續攻擊與格擋；工坊不自行召喚`;
  throw new TypeError('Expected an owned building');
 }
 function incomingCapability(type,ownedBuildings){
@@ -628,6 +674,7 @@ function removedCapability(oldType,incomingType,ownedBuildings){
  const removed=capabilityText(oldType,ownedBuildings);
  if(oldType===incomingType)return '基礎能力不變';
  if(oldType==='nest')return `移除本座（基礎）：石偶攻擊與擋 ${amount(ownedBuildings.nest.ordinaryIntercepts)} 發普通射擊`;
+ if(oldType==='workshop')return `移除本座（基礎）：新召石偶的爆破改裝（${amount(ownedBuildings.workshop.damage)} 傷害）`;
  return `移除本座（基礎）：${removed}`;
 }
 
@@ -639,7 +686,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,incomingCapability,removedCapability,synergyChangeNotice};
+const API={supportPreview,supportOutcome,supportReward,enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,installationReason,repairCaption,salvageLabel,replacementSummary,incomingCapability,removedCapability,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -648,7 +695,7 @@ else root.CastleFeedback=API;
 (function(root){
 'use strict';
 
-const NAMES={arrow:'箭塔',cannon:'重砲',grove:'古樹',nest:'兵營',forge:'熔爐',boss:'王冠堡壘'};
+const NAMES={arrow:'箭塔',cannon:'重砲',grove:'古樹',nest:'兵營',forge:'熔爐',workshop:'工坊',boss:'王冠堡壘'};
 
 function validate(result){
  if(!result||typeof result!=='object')throw new TypeError('Expected a completed run');
@@ -665,17 +712,23 @@ function validate(result){
   if(type!==null&&(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type)))throw new TypeError('Unknown build type');
  }
  if(result.chapter===2){
-  if(result.expeditionPlan!==undefined&&!['legacy','support-fork'].includes(result.expeditionPlan))throw new TypeError('Unknown expedition plan');
+  if(result.expeditionPlan!==undefined&&!['legacy','support-fork','workshop-fork'].includes(result.expeditionPlan))throw new TypeError('Unknown expedition plan');
   if(result.gateConsequence!==undefined&&![null,'water','sentry'].includes(result.gateConsequence))throw new TypeError('Unknown gate consequence');
-  if(result.expeditionPlan==='support-fork'&&!['water','sentry'].includes(result.gateConsequence))throw new TypeError('Incomplete support route');
+  if(['support-fork','workshop-fork'].includes(result.expeditionPlan)&&!['water','sentry'].includes(result.gateConsequence))throw new TypeError('Incomplete support route');
   if(result.expeditionPlan==='legacy'&&result.gateConsequence!=null)throw new TypeError('Legacy gate has no support consequence');
   if(!Array.isArray(result.startingBuild)||result.startingBuild.length!==3)throw new TypeError('Expected three starting build slots');
   for(const type of result.startingBuild)if(type!==null&&(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type)))throw new TypeError('Unknown starting build type');
+  if(result.startingBuild.includes('workshop'))throw new TypeError('Unexpected starting workshop');
+  if(result.expeditionPlan==='workshop-fork'&&!result.startingBuild.includes('nest'))throw new TypeError('Workshop route requires starting barracks');
  }
  if(!Array.isArray(result.route))throw new TypeError('Expected a route');
  for(const type of result.route){
   if(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type))throw new TypeError('Unknown route type');
  }
+ if(result.chapter===2&&result.expeditionPlan==='workshop-fork'){
+  if(result.route.length!==3||result.route[0]!=='cannon'||result.route[1]!== (result.gateConsequence==='water'?'grove':'workshop')||result.route[2]!=='boss')throw new TypeError('Inconsistent workshop route');
+  if(result.build.includes('workshop')&&(result.gateConsequence!=='sentry'||!result.build.includes('nest')))throw new TypeError('Inconsistent workshop build');
+ }else if(result.build.includes('workshop')||result.route.includes('workshop'))throw new TypeError('Unexpected workshop context');
 }
 
 function roundedTime(value){
@@ -704,8 +757,8 @@ function forgeContribution(result){
 function expeditionContext(result){
  validate(result);
  if(result.chapter!==2)return '';
- if(result.expeditionPlan!=='support-fork')return '原版行程';
- return result.gateConsequence==='water'?'供水路 · 關城普通砲擊減慢':'兵營路 · 關城石偶增援切斷';
+ if(!['support-fork','workshop-fork'].includes(result.expeditionPlan))return '原版行程';
+ return result.gateConsequence==='water'?'供水路 · 關城普通砲擊減慢':`${result.expeditionPlan==='workshop-fork'?'工坊路':'兵營路'} · 關城石偶增援切斷`;
 }
 
 function buildContext(result){
@@ -747,7 +800,7 @@ else root.CastleRunSummary=API;
 (function(root){
 'use strict';
 
-const NAMES=Object.freeze({arrow:'疾風箭塔',cannon:'熔爐重砲',grove:'修復古樹',nest:'石偶兵營',forge:'反擊熔爐'});
+const NAMES=Object.freeze({arrow:'疾風箭塔',cannon:'熔爐重砲',grove:'修復古樹',nest:'石偶兵營',forge:'反擊熔爐',workshop:'爆破工坊'});
 const PHASES=Object.freeze(['ready','route','loot','won','lost']);
 const NEW_LABEL='新旅程 · 路線 A';
 const REPLACEMENT_NOTE='將以三個空插槽、完整城體的新魔城，取代這段已儲存的旅程。';
@@ -757,11 +810,12 @@ const own=(value,key)=>Object.prototype.hasOwnProperty.call(value,key);
 function assertSummaryInput(checkpoint,interrupted){
  if(!checkpoint||typeof checkpoint!=='object'||Array.isArray(checkpoint))throw new TypeError('Expected a validated checkpoint');
  const {chapter,phase,stage,routeVariant,slots,hp,maxHp}=checkpoint;
- if(chapter===2){if(checkpoint.expeditionPlan!==undefined&&!['legacy','support-fork'].includes(checkpoint.expeditionPlan))throw new TypeError('Unknown saved itinerary');if(checkpoint.gateConsequence!==undefined&&![null,'water','sentry'].includes(checkpoint.gateConsequence))throw new TypeError('Unknown saved support');}
+ if(chapter===2){if(checkpoint.expeditionPlan!==undefined&&!['legacy','support-fork','workshop-fork'].includes(checkpoint.expeditionPlan))throw new TypeError('Unknown saved itinerary');if(checkpoint.gateConsequence!==undefined&&![null,'water','sentry'].includes(checkpoint.gateConsequence))throw new TypeError('Unknown saved support');}
  if(![1,2].includes(chapter)||!PHASES.includes(phase)||![0,1].includes(routeVariant))throw new TypeError('Unknown checkpoint context');
  if(!Number.isInteger(stage)||stage<0||stage>(chapter===2?2:4))throw new TypeError('Unknown checkpoint station');
  if(!Array.isArray(slots)||slots.length!==(chapter===2&&stage>0?4:3))throw new TypeError('Unexpected checkpoint capacity');
  for(let i=0;i<slots.length;i++)if(!own(slots,i)||(slots[i]!==null&&(typeof slots[i]!=='string'||!own(NAMES,slots[i]))))throw new TypeError('Unknown checkpoint building');
+ if(slots.includes('workshop')&&(chapter!==2||checkpoint.expeditionPlan!=='workshop-fork'||!slots.includes('nest')||checkpoint.gateConsequence!=='sentry'))throw new TypeError('Unexpected saved workshop');
  if(typeof hp!=='number'||!Number.isFinite(hp)||hp<0||typeof maxHp!=='number'||!Number.isFinite(maxHp)||maxHp<=0||hp>maxHp)throw new TypeError('Invalid checkpoint hull');
  if(interrupted!==null&&interrupted!=='battle'&&interrupted!=='graft')throw new TypeError('Unknown interruption');
  if(interrupted==='battle'&&!['ready','route'].includes(phase)||interrupted==='graft'&&phase!=='loot')throw new TypeError('Incompatible interruption');
@@ -772,7 +826,8 @@ function summary(checkpoint,interrupted=null){
  const {chapter,phase,stage,routeVariant,slots,hp,maxHp}=checkpoint;
  const second=chapter===2,route=routeVariant===0?'A':'B';
  const chapterLabel=second?'第二章・赤砂關':'第一章・奪塔之旅';
- const supportLabel=checkpoint.expeditionPlan==='support-fork'?(checkpoint.gateConsequence==='water'?'供水已切斷 · 關城普通砲擊減慢':checkpoint.gateConsequence==='sentry'?'石偶增援已切斷':'支援岔路待選'):'原版行程';
+ const fork=['support-fork','workshop-fork'].includes(checkpoint.expeditionPlan),workshop=checkpoint.expeditionPlan==='workshop-fork';
+ const supportLabel=fork?(checkpoint.gateConsequence==='water'?'供水已切斷 · 關城普通砲擊減慢':checkpoint.gateConsequence==='sentry'?`${workshop?'工坊路 · ':''}石偶增援已切斷`:workshop?'工坊岔路待選':'支援岔路待選'):'原版行程';
  const routeLabel=second?`入章路線 ${route} · ${supportLabel}`:`路線 ${route}`;
  const phaseLabel={ready:'出發前',route:'下一站出發前',loot:'戰利品尚未領取',won:'已通關',lost:'戰敗'}[phase];
  let title='魔城仍在，旅程待續',continueLabel='繼續旅程';
@@ -873,7 +928,7 @@ function createCheckpointStore(options={}){
  const validateCheckpoint=options.validateCheckpoint||engine.validateCheckpoint;
  const rulesVersion=options.rulesVersion||engine.CHECKPOINT_RULES_VERSION;
  const migrateCheckpoint=engine.migrateCheckpoint;
- const acceptsLegacy=typeof migrateCheckpoint==='function'&&Array.isArray(engine.CHECKPOINT_COMPATIBLE_RULES_VERSIONS)&&engine.CHECKPOINT_COMPATIBLE_RULES_VERSIONS.includes('red-sand-1');
+ const migrationVersions=typeof migrateCheckpoint==='function'&&Array.isArray(engine.CHECKPOINT_COMPATIBLE_RULES_VERSIONS)?['red-sand-1','red-sand-fork-1'].filter(version=>engine.CHECKPOINT_COMPATIBLE_RULES_VERSIONS.includes(version)):[];
  if(typeof validateCheckpoint!=='function'||typeof rulesVersion!=='string'||!rulesVersion.length)throw new TypeError('Checkpoint validator and rules version are required');
  const getStorage=options.getStorage||(()=>own(options,'storage')?options.storage:root.localStorage);
  const getLocks=options.getLocks||(()=>own(options,'locks')?options.locks:root.navigator&&root.navigator.locks);
@@ -913,9 +968,9 @@ function createCheckpointStore(options={}){
   if(encodedBytes(raw)>MAX_BYTES)throw new RangeError('Checkpoint record is oversized');
   const value=JSON.parse(raw);
   if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==ENVELOPE_KEYS.length||ENVELOPE_KEYS.some(k=>!own(value,k)))throw new TypeError('Invalid checkpoint envelope');
-  // Only the explicitly supported v0.9 rules may cross this version boundary.
+  // Only the two explicitly supported historical rules may cross this boundary.
   // Unknown versions never reach a migration hook or an automatic replacement.
-  const legacy=value.rulesVersion!==rulesVersion&&value.rulesVersion==='red-sand-1'&&acceptsLegacy;
+  const legacy=value.rulesVersion!==rulesVersion&&migrationVersions.includes(value.rulesVersion);
   if(value.schemaVersion!==SCHEMA_VERSION||value.rulesVersion!==rulesVersion&&!legacy)throw new TypeError('Unsupported checkpoint version');
   if(value.scope!==scope||typeof value.runId!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(value.runId))throw new TypeError('Invalid checkpoint identity');
   if(!Number.isSafeInteger(value.revision)||value.revision<1||!Number.isSafeInteger(value.savedAt)||value.savedAt<0)throw new TypeError('Invalid checkpoint revision or date');
@@ -1149,7 +1204,7 @@ function createCheckpointClient({game,engine,store,view,document,onReset,icon,al
 const API={createCheckpointClient};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.CastleCheckpointClient=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
-</script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right","coolantIntakes":{"left":[165,385],"right":[310,385]}},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215],"coolantOutlet":[230,400]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]},"forge":{"file":"retaliation-forge.webp","rect":[0,0,561,701],"pivot":[281,697],"muzzle":[530,233],"coreOrigin":[194,349],"recommendedHeight":130,"facing":"right"}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."},"guardian":{"file":"guardian.webp","width":512,"height":160,"displayScale":0.5,"footOffset":16,"impactOffset":[0,-27],"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"step":{"rect":[256,0,128,160],"pivot":[64,152]},"brace":{"rect":[384,0,128,160],"pivot":[64,152]}},"notes":"Original slate-and-brass guardian. Ready, one step pose, and brace only; no alternating walk-cycle claim. Movement and interception coordinates are unchanged."},"expeditionBackdrop":{"file":"red-sand.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.803401,"contactRatio":0.820404},"frontDeck":{"file":"front-deck.webp","width":600,"height":445,"rect":[0,0,600,445],"nativeRect":[1420,378,300,222.5],"nativeBounds":[1420,378,1720,600.5],"nativeHullSize":[1774,887],"socket":[1590,438],"socketAnchor":[170,60],"pivot":[340,120],"facing":"right","drawOrder":"hull, extension, installed modules, cooling pipes","notes":["rect and pivot use source-image pixels; nativeWidth/image width gives uniform 0.5 scale; nativeRect is hull x,y,width,height; nativeBounds is hull left,top,right,bottom","Draw the full source rect into nativeRect transformed by the unchanged hull transform; mount the fourth module at socket","During capture use the same socket anchor and native relative size; offset extension with the lifted cannon so the assembly locks without a jump","Keep all original three socket coordinates and hull scale unchanged; leave the ram-contact pixel at (1760,476) exposed","No cannon or other building is baked into the foundation; all five existing module types were checked in offline composites","The 600x445 encoded aspect yields 222.5 native height; its actual nonzero alpha ends at hull Y591, inside the proposed 600 limit"],"nativeWidth":300,"nativeHeight":222.5,"mount":[1590,438]}};
+</script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right","coolantIntakes":{"left":[165,385],"right":[310,385]}},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215],"coolantOutlet":[230,400]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]},"forge":{"file":"retaliation-forge.webp","rect":[0,0,561,701],"pivot":[281,697],"muzzle":[530,233],"coreOrigin":[194,349],"recommendedHeight":130,"facing":"right"},"workshop":{"file":"workshop.webp","rect":[0,0,500,650],"pivot":[222,635],"armingOrigin":[228,411],"muzzle":[228,411],"assemblyOrigin":[228,545],"recommendedHeight":130,"facing":"right"}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."},"guardian":{"file":"guardian.webp","width":512,"height":160,"displayScale":0.5,"footOffset":16,"impactOffset":[0,-27],"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"step":{"rect":[256,0,128,160],"pivot":[64,152]},"brace":{"rect":[384,0,128,160],"pivot":[64,152]}},"notes":"Original slate-and-brass guardian. Ready, one step pose, and brace only; no alternating walk-cycle claim. Movement and interception coordinates are unchanged."},"expeditionBackdrop":{"file":"red-sand.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.803401,"contactRatio":0.820404},"frontDeck":{"file":"front-deck.webp","width":600,"height":445,"rect":[0,0,600,445],"nativeRect":[1420,378,300,222.5],"nativeBounds":[1420,378,1720,600.5],"nativeHullSize":[1774,887],"socket":[1590,438],"socketAnchor":[170,60],"pivot":[340,120],"facing":"right","drawOrder":"hull, extension, installed modules, cooling pipes","notes":["rect and pivot use source-image pixels; nativeWidth/image width gives uniform 0.5 scale; nativeRect is hull x,y,width,height; nativeBounds is hull left,top,right,bottom","Draw the full source rect into nativeRect transformed by the unchanged hull transform; mount the fourth module at socket","During capture use the same socket anchor and native relative size; offset extension with the lifted cannon so the assembly locks without a jump","Keep all original three socket coordinates and hull scale unchanged; leave the ram-contact pixel at (1760,476) exposed","No cannon or other building is baked into the foundation; all five existing module types were checked in offline composites","The 600x445 encoded aspect yields 222.5 native height; its actual nonzero alpha ends at hull Y591, inside the proposed 600 limit"],"nativeWidth":300,"nativeHeight":222.5,"mount":[1590,438]},"sapper":{"file":"sapper.webp","width":384,"height":160,"displayScale":0.5,"footOffset":16,"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"strideA":{"rect":[128,0,128,160],"pivot":[64,152]},"strideB":{"rect":[256,0,128,160],"pivot":[64,152]}},"notes":"Original armed stone guardian, ground-contact pivots matched to guardian; authoritative arming and travel clock drives pose, no extra combat timer."}};
 (function(){
 'use strict';
 const {Game,BUILDINGS,ROUTES}=CastleEngine;
@@ -1162,7 +1217,7 @@ const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let small=innerWidth<=600,W=small?930:1280,H=small?1350:800,last=0,visualTime=0,shake=0,ramAnim=0,toast='',toastTimer=0,uiPhase='',uiSlots='',sound=false,audio=null,focusPending=false,hitStop=0,shockwaves=[],embers=[],visualImpacts=[],sceneNeedsRender=true;
 const ART=typeof CastleArtManifest!=='undefined'?CastleArtManifest:{};const textures={};const moduleOutlines={};let hullTip=null;let artLoaded=false;
-const imageEntries=[['backdrop',ART.backdrop],['hull',ART.hull],...Object.entries(ART.modules||{}).map(([k,v])=>['module-'+k,v]),...(ART.guardian?[['guardian',ART.guardian]]:[])];
+const imageEntries=[...(ART.sapper?[['sapper',ART.sapper]]:[]),['backdrop',ART.backdrop],['hull',ART.hull],...Object.entries(ART.modules||{}).map(([k,v])=>['module-'+k,v]),...(ART.guardian?[['guardian',ART.guardian]]:[])];
 Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true);loadChapterArt();checkpointClient?.refreshPrompt()});
 let chapterArtStarted=false;
 function loadChapterArt(){if(chapterArtStarted)return;chapterArtStarted=true;for(const [key,spec] of [['redBackdrop',ART.expeditionBackdrop],['frontDeck',ART.frontDeck]]){if(!spec?.file)continue;const img=new Image();img.onload=()=>{textures[key]=img;sceneNeedsRender=true};img.onerror=()=>{sceneNeedsRender=true};img.src='assets/art-v2/'+spec.file;}}
@@ -1184,9 +1239,9 @@ function ramGeometry(){const base=restingPositions(),approach=game.phase==='batt
 function bodyPositions(){const {p,e,y}=restingPositions(),approach=game.phase==='battle'?Math.min(1,game.battleTime/.85):1;let push=0,recoil=0;if(ramAnim>0){const t=.82-ramAnim;let q;if(t<.31){const a=t/.31;q=a*a*(3-2*a);}else if(t<=.39)q=1;else{const a=(t-.39)/.43;q=1-a*a*(3-2*a);recoil=Math.sin(a*Math.PI)*9;}push=q*ramGeometry().distance;}return {p:p-(1-approach)*20+push,e:e+(1-approach)*30+recoil,y};}
 function hullMetrics(){const {p,y}=bodyPositions(),spec=ART.hull||{};const width=small?540:590;const nw=spec.width||1536,nh=spec.height||1024,scale=width/nw;const contact=spec.contactY??nh*.92;return {x:p-width*.52,y:y-contact*scale,w:width,h:nh*scale,scale,spec};}
 function slotPos(i){const m=hullMetrics(),nw=m.spec.width||1536,nh=m.spec.height||1024;const sock=m.spec.sockets||[nw*.44,nw*.62,nw*.80];return {x:m.x+(i===3?(ART.frontDeck?.mount?.[0]??1590):sock[i])*m.scale,y:m.y+(i===3?(ART.frontDeck?.mount?.[1]??438):(m.spec.roofY??nh*.46))*m.scale};}
-function moduleOrigin(type,x,y,height,owned=true){if(game.chapter===2&&!textures['module-'+type]){const pt=({arrow:[31,-115],cannon:[51,-62],grove:[0,-41],nest:[0,-20],boss:[0,-111]})[type];if(pt)return{x:x+pt[0]*height/195*(owned?1:-1),y:y+pt[1]*height/195};}if(type==='forge'&&!textures['module-forge'])return {x:x+(owned?1:-1)*83*height/195,y:y-101*height/195};const spec=ART.modules?.[type],pt=spec?.muzzle||spec?.healOrigin||spec?.spawnOrigin;if(!spec||!pt)return {x:x+(owned?20:-20),y:y-height*.66};const sc=height/spec.rect[3],pv=spec.pivot||[spec.rect[2]/2,spec.rect[3]];return {x:x+(pt[0]-pv[0])*sc*(owned?1:-1),y:y+(pt[1]-pv[1])*sc};}
+function moduleOrigin(type,x,y,height,owned=true){if(game.chapter===2&&!textures['module-'+type]){const pt=({arrow:[31,-115],cannon:[51,-62],grove:[0,-41],nest:[0,-20],boss:[0,-111]})[type];if(pt)return{x:x+pt[0]*height/195*(owned?1:-1),y:y+pt[1]*height/195};}if(type==='forge'&&!textures['module-forge'])return {x:x+(owned?1:-1)*83*height/195,y:y-101*height/195};const spec=ART.modules?.[type],pt=spec?.muzzle||spec?.healOrigin||spec?.spawnOrigin||spec?.armingOrigin;if(!spec||!pt)return {x:x+(owned?20:-20),y:y-height*.66};const sc=height/spec.rect[3],pv=spec.pivot||[spec.rect[2]/2,spec.rect[3]];return {x:x+(pt[0]-pv[0])*sc*(owned?1:-1),y:y+(pt[1]-pv[1])*sc};}
 function glow(x,y,r,color,alpha=1){ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();}
-function mountedHeight(type){return ({arrow:157,cannon:132,grove:151,nest:108,forge:130})[type]||157;}
+function mountedHeight(type){return ({arrow:157,cannon:132,grove:151,nest:108,forge:130,workshop:130})[type]||157;}
 // Graft presentation only: the engine keeps the old module until its existing swap.
 function dockingEase(value){const t=Math.max(0,Math.min(1,value));return t*t*(3-2*t);}
 function outgoingPresentation(slot){
@@ -1236,6 +1291,13 @@ function building(c,type,x,y,scale=1,owned=true,t=visualTime,glow=0,opacity=1){i
  rr(c,-24,-91,48,91,2,stone,ink);rr(c,9,-90,15,90,1,shade);bricks(c,-22,-87,43,84);poly(c,[[-29,-86],[-29,-101],[-18,-101],[-18,-95],[-7,-95],[-7,-102],[6,-102],[6,-95],[17,-95],[17,-102],[29,-102],[29,-86]],'#decda6',ink);rr(c,-28,-90,56,8,1,'#77887b',ink);windowSlit(c,-4,-63);windowSlit(c,-4,-22);line(c,[-23,-112],[21,-118],'#513e31',5);line(c,[17,-129],[21,-118],'#392f29',3);line(c,[21,-118],[19,-106],'#392f29',3);line(c,[18,-128],[18,-107],'#e5d4a2',1);line(c,[-4,-119],[31,-115],'#d7cca4',3);flag(c,-16,-115,owned,t);
  }else if(type==='cannon'){
  rr(c,-33,-48,66,48,4,'#836954',ink);rr(c,-37,-9,74,11,2,'#b9a281',ink);for(let i=-22;i<=22;i+=22)windowSlit(c,i,-19,'#f6a550');circle(c,0,-56,29,'#a96b45',ink);circle(c,0,-56,20,'#d48c50',ink);rr(c,0,-73,49,23,5,'#4a6064',ink);rr(c,34,-77,17,31,3,'#c29b6b',ink);rr(c,45,-72,7,21,2,'#233a40');line(c,[8,-67],[36,-67],'#a2afa1',3);rr(c,-27,-87,14,25,2,'#687679',ink);rr(c,-30,-91,20,7,1,'#bca482',ink);circle(c,-19,-88,3,'#e8ad68');flag(c,-25,-90,owned,t);
+ }else if(type==='workshop'){
+ const iron='#414c4e',brass='#a28b5c';
+ rr(c,-59,-15,118,17,2,'#6d746b',ink);rr(c,-48,-119,96,105,2,iron,brass);bricks(c,-45,-112,89,91);
+ rr(c,-29,-81,58,67,[23,23,0,0],'#162429',brass);circle(c,-6,-56,3,'#b7dcc9');circle(c,6,-56,3,'#b7dcc9');
+ rr(c,-51,-150,18,142,2,'#56605b',ink);line(c,[-43,-145],[48,-177],brass,9);line(c,[-43,-139],[30,-111],'#707a6b',5);line(c,[40,-174],[40,-91],'#b29c71',2);circle(c,40,-87,5,null,brass);
+ for(const x of [-42,32]){rr(c,x-10,-39,20,25,3,'#655546',ink);line(c,[x-9,-32],[x+9,-32],brass,3);line(c,[x-9,-23],[x+9,-23],brass,3);}
+ rr(c,-27,-117,55,18,2,'#212c2f',brass);for(const x of [-18,0,18])circle(c,x,-108,3,'#e6ae65');
  }else if(type==='forge'){
  c.save();if(!owned)c.scale(-1,1);const iron='#495557',edge='#ab8955';
  rr(c,-67,-14,134,14,2,'#798079',ink);poly(c,[[-54,-20],[-60,-117],[-41,-153],[37,-149],[57,-116],[51,-20]],iron,edge);
@@ -1388,10 +1450,42 @@ function guardianPose(i,requested){if(requested==='brace')return 'brace';const t
 function drawGuardianSprite(x,y,i,requested){const im=textures.guardian,spec=ART.guardian;if(!im||!spec)return false;const frame=spec.frames[guardianPose(i,requested)];if(!frame)return false;const scale=spec.displayScale;ctx.save();contactShadow(x,y+spec.footOffset,28,5);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,...frame.rect,x-frame.pivot[0]*scale,y+spec.footOffset-frame.pivot[1]*scale,frame.rect[2]*scale,frame.rect[3]*scale);ctx.restore();return true;}
 function golem(x,y,i,requested='ready'){if(drawGuardianSprite(x,y,i,requested))return;ctx.save();ctx.translate(x,y);ctx.scale(.84,.84);const stride=reduced?0:Math.sin(visualTime*7+i)*3.2;const steel=ctx.createLinearGradient(-22,0,22,0);steel.addColorStop(0,'#263037');steel.addColorStop(.43,'#77827d');steel.addColorStop(.57,'#a5a992');steel.addColorStop(1,'#303e44');const brass='#998366';contactShadow(0,18,34,5);poly(ctx,[[-16,0],[-5,1],[-7,19+stride],[-23,20+stride],[-22,14]],steel,'#1a232b');poly(ctx,[[6,1],[16,0],[21,15-stride],[26,18-stride],[10,21-stride],[5,15]],steel,'#1a232b');line(ctx,[-14,6],[-13,15+stride],brass,1);line(ctx,[11,7],[15,16-stride],brass,1);poly(ctx,[[-19,-31],[-11,-39],[12,-37],[21,-26],[16,-4],[0,3],[-15,-4]],steel,'#1b252d');poly(ctx,[[-15,-28],[0,-35],[16,-28],[13,-13],[0,-7],[-14,-14]],'#3e4b50',brass);poly(ctx,[[-25,-32],[-16,-35],[-14,-20],[-20,-10],[-29,-18]],steel,'#182730');poly(ctx,[[18,-35],[27,-30],[29,-16],[20,-11],[15,-22]],steel,'#182730');line(ctx,[-25,-18],[-30,-2+stride*.5],'#5d6b6a',8);line(ctx,[26,-18],[31,-3-stride*.5],'#5d6b6a',8);poly(ctx,[[-11,-47],[-6,-55],[8,-55],[13,-47],[10,-35],[-8,-35]],steel,'#192a32');line(ctx,[-7,-45],[8,-45],'#d6a865',2);poly(ctx,[[-13,-47],[-12,-57],[-5,-51]],'#737c72',brass);circle(ctx,0,-22,6,'#201f1b',brass);circle(ctx,0,-22,3,'#eebd76');glow(0,-22,18,'#d895493f',.7);for(const q of [[-14,-27],[15,-25],[-19,-5],[20,-7]])circle(ctx,q[0],q[1],1.5,'#baa17b');ctx.restore();}
 function pendingFriendlyImpact(){return shots.some(s=>s.kind!=='enemy')||visualImpacts.some(v=>!v.done&&v.kind==='ram');}
+// Explosive units use the same authoritative pending-contact clock as shots,
+// but their visible actor runs along the ground and meets the target facade.
+function sapperEnemyTarget(){
+ const {e,y}=bodyPositions(),type=game.enemy.type,spec=ART.modules?.[type],height=type==='boss'?330:263;
+ const fallbackScale=type==='forge'||game.chapter===2?height/195:1.5;
+ // Front wall at the runner's chest height, in the procedural building units.
+ const fallbackFace={boss:94,arrow:24,cannon:33,grove:31,nest:34,forge:52,workshop:48};
+ let x=e-(fallbackFace[type]??48)*fallbackScale;
+ if(spec&&textures['module-'+type]){
+  const scale=height/spec.rect[3],pivot=spec.pivot||[spec.rect[2]/2,spec.rect[3]],row=Math.round(pivot[1]-27/scale),edge=moduleOutlines[type];let max=-1;
+  if(edge)for(let r=Math.max(0,row-3);r<=Math.min(edge.length-1,row+3);r++)max=Math.max(max,edge[r]);
+  if(max>=0)x=e-(max-pivot[0])*scale;
+ }
+ return {x,y:y-27};
+}
+function drawSapper(s,q){
+ const arming=CastleEngine.OWNED_BUILDINGS.workshop.arming,armed=reduced||q.age>=arming*.5,walking=q.age>arming,x=q.x-14,y=q.y+27;
+ const spec=armed?ART.sapper:ART.guardian,im=armed?textures.sapper:textures.guardian;
+ const frameKey=!walking||reduced?'ready':Math.floor(Math.abs(q.x-s.x)/36)%2?'strideB':'strideA',frame=spec?.frames?.[frameKey]||spec?.frames?.ready;
+ contactShadow(x,y+16,27,5);
+ if(im&&frame){const scale=spec.displayScale??.5;ctx.drawImage(im,...frame.rect,x-frame.pivot[0]*scale,y+(spec.footOffset??16)-frame.pivot[1]*scale,frame.rect[2]*scale,frame.rect[3]*scale);}
+ else{
+  if(!drawGuardianSprite(x,y,0,'ready'))golem(x,y,0,'ready');
+  if(armed){ctx.save();ctx.translate(x,y);rr(ctx,3,-44,20,25,4,'#665241','#1b2528');line(ctx,[4,-38],[22,-38],'#c2a477',3);line(ctx,[4,-25],[22,-25],'#c2a477',3);line(ctx,[13,-44],[16,-49],'#b69a67',2);circle(ctx,16,-49,2,'#f0c57d');ctx.restore();}
+ }
+ if(q.age<arming){
+  const fade=1-q.age/arming,pose=coolingModulePose(s.workshopSlot,'workshop'),part=ART.modules?.workshop,origin=part?.armingOrigin;
+  const scale=part?pose.height/part.rect[3]:1,point=origin?{x:pose.x+(origin[0]-part.pivot[0])*scale,y:pose.y+(origin[1]-part.pivot[1])*scale}:{x:pose.x,y:pose.y-70};
+  glow(point.x,point.y,27,'#e5b26788',fade*.6);glow(x+8,y-34,23,'#deb06b66',fade*.5);
+ }
+ if(armed)glow(x+14,y-40,8,'#f5c57866',.45);
+}
 function dyingBossVisible(){return game.phase==='won'&&(bossAfterHit>0||ramAnim>0||pendingFriendlyImpact());}
 // The fork's gate has two visible supply-fed ordinary gun outlets. The main
 // crown keeps heavy attacks. Presentation follows actual launch events only.
-function hasGateSupports(){return game.chapter===2&&game.expeditionPlan==='support-fork'&&game.enemy.type==='boss';}
+function hasGateSupports(){return game.chapter===2&&['support-fork','workshop-fork'].includes(game.expeditionPlan)&&game.enemy.type==='boss';}
 function gateGunPower(index){return Math.max(0,...gateGunFlashes.filter(f=>f.index===index&&f.epoch===game.battleEpoch).map(f=>1-(game.battleTime-f.at)/.3));}
 function gateGunPose(index){const {e,y}=bodyPositions();return {x:e+(index===0?-51:79)+gateGunPower(index)*4,y:y-7,height:94};}
 function drawGateSupports(){
@@ -1438,12 +1532,14 @@ function drawGraft(dt=0){if(!game.graft)return;const {e,y}=bodyPositions(),isFor
 function projectileKey(s){return s.epoch+':'+s.id;}
 function projectileTarget(s){
  if(s.target==='guard'||s.target==='enemyGuard')return {x:s.tx,y:s.ty};
+ if(s.kind==='sapper')return sapperEnemyTarget();
  const {p,e,y}=bodyPositions();
  return s.target==='hull'?{x:p+s.targetOffsetX,y:y+s.targetOffsetY}:{x:e+s.targetOffsetX,y:y+s.targetOffsetY};
 }
 function projectilePoint(s){
  const target=projectileTarget(s),age=Math.max(0,game.battleTime-s.launchedAt),progress=Math.min(1,age/s.duration);
- return {age,progress,target,x:s.x+(target.x-s.x)*progress,y:s.y+(target.y-s.y)*progress-(s.arc||0)*Math.sin(progress*Math.PI)};
+ const move=s.kind==='sapper'?Math.max(0,Math.min(1,(age-CastleEngine.OWNED_BUILDINGS.workshop.arming)/(s.duration-CastleEngine.OWNED_BUILDINGS.workshop.arming))):progress;
+ return {age,progress,target,x:s.x+(target.x-s.x)*move,y:s.y+(target.y-s.y)*move-(s.arc||0)*Math.sin(move*Math.PI)};
 }
 function dissipateProjectile(s){
  const q=projectilePoint(s),color=s.kind==='enemy'?'#9fadb7':'#d0c49f';
@@ -1459,6 +1555,12 @@ function launchProjectile(ev){
    const pose=golemTracks.get(ev.guardId)||golemPose(ev.guardIndex);tx=pose.x;ty=pose.y-27;golemTracks.delete(ev.guardId);
    guardRemnants.push({id:ev.guardId,index:ev.guardIndex,x:pose.x,y:pose.y,epoch:ev.epoch,projectileId:ev.id});
   }
+ }else if(ev.source==='sapper'){
+  const target=ev.target==='enemyGuard'?enemyGuardianPose():sapperEnemyTarget();
+  const spawn=golemPose(0);pos={x:Math.min(spawn.x-10,target.x-64),y:spawn.y-27};targetOffsetX=0;targetOffsetY=-27;
+  if(ev.target==='enemyGuard'){tx=target.x;ty=target.y-27;enemyGuardRemnants.push({id:ev.enemyGuardId,epoch:ev.epoch,projectileId:ev.id,x:target.x,y:target.y});}
+  if(!summonAnnounced&&toastTimer<=0&&game.windup<=0){summonAnnounced=true;say('爆破兵出征 · 放棄攔截，直攻敵城');}
+  play(165,.09,'triangle',.014);
  }else{
   const q=ev.slot>=0?slotPos(ev.slot):null,m=hullMetrics();
   pos=q?moduleOrigin(ev.source,q.x,q.y,mountedHeight(ev.source)*(small?.97:1),true):ev.source==='minion'?{x:p+277,y:y-31}:{x:m.x+280*m.scale,y:m.y+280*m.scale};
@@ -1469,7 +1571,7 @@ function launchProjectile(ev){
   if(ev.source==='forge'){const pose=coolingModulePose(ev.slot);pos=moduleOrigin('forge',pose.x,pose.y,pose.height,true);forgeFlares.push({slot:ev.slot,id:ev.id,epoch:ev.epoch,launchedAt:ev.launchedAt,triggerId:ev.triggerId});if(!forgeAnnounced){forgeAnnounced=true;say('城體中彈 · 熔爐立刻反擊');}}
   play(ev.source==='forge'?115:ev.source==='cannon'?63:690,ev.source==='forge'?.12:ev.source==='cannon'?.15:.035,ev.source==='forge'||ev.source==='cannon'?'sawtooth':'triangle',ev.source==='forge'?.023:ev.source==='cannon'?.035:.008);
  }
- shots.push({...ev,x:pos.x,y:pos.y,tx,ty,targetOffsetX,targetOffsetY,t:Math.max(0,game.battleTime-ev.launchedAt),kind:hostile?'enemy':ev.source,blocked:ev.target==='guard',color:hostile?'#de9671':ev.source==='forge'?'#ff9861':ev.source==='cannon'?'#ffc775':ev.source==='minion'?'#a7c8bb':'#ead7a2',arc:hostile?(ev.special?70:25):ev.source==='cannon'?120:ev.source==='forge'?28:5});
+ shots.push({...ev,x:pos.x,y:pos.y,tx,ty,targetOffsetX,targetOffsetY,t:Math.max(0,game.battleTime-ev.launchedAt),kind:hostile?'enemy':ev.source,blocked:ev.target==='guard',color:hostile?'#de9671':ev.source==='sapper'?'#dba466':ev.source==='forge'?'#ff9861':ev.source==='cannon'?'#ffc775':ev.source==='minion'?'#a7c8bb':'#ead7a2',arc:hostile?(ev.special?70:25):ev.source==='sapper'?0:ev.source==='cannon'?120:ev.source==='forge'?28:5});
 }
 function finishProjectile(ev,cancelled=false){
  const key=projectileKey(ev),s=shots.find(s=>projectileKey(s)===key);if(!s||settledShots.has(key))return;
@@ -1485,10 +1587,11 @@ function finishProjectile(ev,cancelled=false){
   impact({x:target.x,y:target.y,kind:s.kind,enemy:ev.outcome==='hull',damage:ev.actual,special:s.special,color:s.color});
  }
 }
-function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.enemyBlocked){const heavy=v.kind==='cannon';burst(x,yy,heavy?30:16,'#c4ab91');shockwaves.push({x,y:yy,t:0,r:heavy?66:38,color:'#d99972'});floaters.push({x,y:yy-28,text:'截住 '+v.damage,color:'#efba93',life:1,big:false});if(heavy){impactGlows.push({x,y:yy,r:80,life:.1});shake=Math.max(shake,3);if(!reduced)hitStop=.025;}play(heavy?82:280,.12,'triangle',.026);return;}if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');impactGlows.push({x,y:yy,r:heavy?120:44,life:.1});shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
+function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.enemyBlocked){const heavy=v.kind==='cannon'||v.kind==='sapper';burst(x,yy,heavy?30:16,'#c4ab91');shockwaves.push({x,y:yy,t:0,r:heavy?66:38,color:'#d99972'});floaters.push({x,y:yy-28,text:'截住 '+v.damage,color:'#efba93',life:1,big:false});if(heavy){impactGlows.push({x,y:yy,r:80,life:.1});shake=Math.max(shake,3);if(!reduced)hitStop=.025;}play(heavy?82:280,.12,'triangle',.026);return;}if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='sapper'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');impactGlows.push({x,y:yy,r:heavy?120:44,life:.1});shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
 function render(dt){if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())bossAfterHit=Math.max(0,bossAfterHit-dt);updateGolemTracks(dt);ctx.save();ctx.clearRect(0,0,W,H);if(shake>0&&!reduced){if(dt>0)shakeOffset={x:(Math.random()-.5)*shake,y:(Math.random()-.5)*shake*.65};ctx.translate(shakeOffset.x,shakeOffset.y);}background();enemyCastle();drawEnemyGuardians();playerCastle(dt);drawGraft(dt);
  for(const s of shots){
   const q=projectilePoint(s);s.t=q.age;
+  if(s.kind==='sapper'){drawSapper(s,q);continue;}
   ctx.save();ctx.globalCompositeOperation='screen';const heavy=s.kind==='cannon';
   glow(q.x,q.y,heavy?34:s.kind==='forge'?25:16,heavy?'#e8904ca0':s.kind==='forge'?'#ff7e4277':s.kind==='enemy'?'#c7735255':'#dac58b55',.8);
   const dx=q.target.x-s.x,dy=q.target.y-s.y-(s.arc||0)*Math.PI*Math.cos(q.progress*Math.PI),ang=Math.atan2(dy,dx);
@@ -1531,7 +1634,7 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
  }
 }
 async function start(type){if(!artLoaded||checkpointClient?.blocked)return;if(checkpointClient&&!await checkpointClient.prepareStart())return;checkpointClient?.mark('battle');if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
-function install(i){if(checkpointClient?.blocked)return;const before=game.synergies();checkpointClient?.mark('graft');if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
+function install(i){if(checkpointClient?.blocked||!game.canInstall(i))return;const before=game.synergies();checkpointClient?.mark('graft');if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
 function ram(){if(checkpointClient?.blocked)return;if(game.ram()){events();updateUI(true);checkpointClient?.observe()}}
 function completedRunReport(){
  const result=game.completedRun,previous=game.comparisonRun&&((game.comparisonRun.chapter||1)===(result?.chapter||game.chapter))?game.comparisonRun:null;
@@ -1553,7 +1656,7 @@ function syncRamReadout(){
  rb.setAttribute('aria-label',game.ramUsed?'衝撞已用完':warn?'衝撞，打斷蓄力中的重擊':'衝撞，每場可用一次');
 }
 function updateUI(force=false){
- const second=game.chapter===2,fork=second&&game.expeditionPlan==='support-fork',total=game.stageCount(),finalBattle=game.isFinalBattle(),expansionLoot=second&&game.stage===0&&game.phase==='loot';
+ const second=game.chapter===2,fork=second&&['support-fork','workshop-fork'].includes(game.expeditionPlan),total=game.stageCount(),finalBattle=game.isFinalBattle(),expansionLoot=second&&game.stage===0&&game.phase==='loot';
  document.body.dataset.chapter=String(game.chapter);document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);
  $('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;
  $('round-label').textContent=game.phase==='ready'?(second?'赤砂關 · 3 場戰鬥':'約 3 分鐘 · 5 場戰鬥'):`${second?'赤砂關 · ':''}第 ${Math.min(game.stage+1,total)} 站 / ${total}`;
@@ -1573,13 +1676,13 @@ function updateUI(force=false){
   else if(game.phase==='loot'){
    const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=expansionLoot?'重砲連同地基，整座接上城首':`整座${b.short}，現在是你的`;tag=expansionLoot?'攻城成功 · 擴建魔城':'攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+(expansionLoot?' · 原有三座建築完整保留':' · 建築完整保留');
    if(expansionLoot){a.innerHTML=actionRow('這座重砲與地基會一起移植，在城首新增第 4 插槽。原本三座建築全部保留。',button('帶走重砲與地基 · 擴出第 4 插槽','take'));$('take').onclick=onAction(()=>install(3));}
-   else{a.innerHTML=actionRow(`${fork&&game.stage===1?`<span class="support-outcome">${CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)}</span>`:''}${free===-1?`<span class="incoming-capability">接上後（基礎）：${CastleFeedback.incomingCapability(game.pendingLoot,CastleEngine.OWNED_BUILDINGS)}</span>選一座換下，或保留原組合。`:b.desc}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
+   else{a.innerHTML=actionRow(`${fork&&game.stage===1?`<span class="support-outcome">${CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)}</span>`:''}${free===-1?`<span class="incoming-capability">接上後（基礎）：${CastleFeedback.incomingCapability(game.pendingLoot,CastleEngine.OWNED_BUILDINGS)}</span>選一座換下，或保留原組合。`:b.desc}`,free>=0?(game.pendingLoot==='workshop'?`<div class="ending-actions">${button(`把${b.short}接上魔城`,'take')}${button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary secondary')}</div>`:button(`把${b.short}接上魔城`,'take')):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));if(free<0||game.pendingLoot==='workshop')$('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
   }
   else if(game.phase==='grafting'){const expanding=Boolean(game.graft?.expansion);k=expanding?'擴建中 · 第 4 插槽':'接合中';title=expanding?'重砲與地基，正在接上城首':'戰利品正在接合';tag=expanding?'魔城擴建':'建築移植';caption=expanding?'<span>＋</span> 抬起整座地基 · 原有三座建築完整保留':'<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow(expanding?'牽引地基，鎖上城首支架……接合完成後啟用第 4 插槽。':'接上牽引索，抬起地基……',`<button class="primary" disabled>${expanding?'正在擴建':'正在接合'}</button>`)}
   else if(game.phase==='route'){
    k=game.routeLabel()+(second?' · 繼續前進':' · 選擇下一站');title=second?(finalBattle?'最後一仗，突破赤砂關':fork?'先拆哪一道防線？':'帶上第四座建築，前往綠洲'):(game.stage===1?'帶上箭塔，繼續前進':finalBattle?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？');tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(second?(finalBattle?(CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)||'守門石偶攔截普通射擊 · 衝撞可越過防線'):fork?'攻陷即削弱關城 · 是否安裝戰利品，由你決定':'第 4 插槽已接合 · 下一站可替換古樹，或保留組合'):(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品'));
    if(finalBattle){const boss=game.enemyPreview('boss');a.innerHTML=actionRow(`<span class="boss-threat">城體${boss.hp} · ${CastleFeedback.enemyThreat(boss)}</span>${second?`<span class="support-outcome">${CastleFeedback.supportOutcome(game.expeditionPlan,game.gateConsequence)}</span><span class="defender-preview">${CastleFeedback.defenderPreview(boss)}</span>`:''}${CastleFeedback.ramTactics()}`,button(second?'迎戰赤砂關':'迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
-   else{a.innerHTML='<div class="choices'+(fork?' support-choices':second?' fixed-route':'')+'">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=game.enemyPreview(type),preview=CastleFeedback.choiceSynergy(type,game.slots);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${second?e.name:b.name}</h3>${fork?`<strong class="support-preview">${CastleFeedback.supportPreview(type)}</strong>`:''}<p>${fork?CastleFeedback.supportReward(type):b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small>${fork&&e.guarded?'<small class="route-guard">本戰石偶每 3.5 秒召出；攔 1 發普通射擊（含重砲／熔爐），衝撞越過。</small>':''}<small>城體 ${e.hp} · ${second?'勝利後可替換一座建築，或保留現有組合':'勝利後帶走'+b.short}</small></div><span class="take">${fork?'攻下它':second?'繼續前進':'攻下它'}</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}
+   else{a.innerHTML='<div class="choices'+(fork?' support-choices':second?' fixed-route':'')+'">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=game.enemyPreview(type),preview=CastleFeedback.choiceSynergy(type,game.slots,CastleEngine.OWNED_BUILDINGS,CastleEngine.ESCORT_MULTIPLIER);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${second?e.name:b.name}</h3>${fork?`<strong class="support-preview">${CastleFeedback.supportPreview(type)}</strong>`:''}<p>${fork?CastleFeedback.supportReward(type,CastleEngine.OWNED_BUILDINGS,game.slots):b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small>${fork&&e.guarded?'<small class="route-guard">本戰石偶每 3.5 秒召出；攔 1 發普通射擊（含重砲／熔爐），衝撞越過。</small>':''}<small>城體 ${e.hp} · ${second?'勝利後可替換一座建築，或保留現有組合':'勝利後帶走'+b.short}</small></div><span class="take">${fork?'攻下它':second?'繼續前進':'攻下它'}</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}
   }
   else if(game.phase==='won'){
    k=second?'赤砂關 · 旅程完成':'旅程完成';title=second?'你的魔城更大了，赤砂關已破':'你帶走的，成了你的整座城';tag=second?'三場戰鬥 · 四座建築':'五座城 · 一段旅程';caption=second?'<span>♜</span> 赤砂關已攻陷':'<span>♜</span> 王冠堡壘已攻陷';
@@ -1594,10 +1697,16 @@ function updateUI(force=false){
  const slotKey=game.chapter+'|'+game.slots.join(',')+'|'+game.phase+'|'+game.pendingLoot;
  if(uiSlots!==slotKey){
   uiSlots=slotKey;const choose=game.phase==='loot'&&!expansionLoot&&game.slots.every(Boolean);$('slots').setAttribute('data-capacity',String(game.slots.length));
-  $('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';const capability=choose?CastleFeedback.removedCapability(b,game.pendingLoot,CastleEngine.OWNED_BUILDINGS):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+capability+'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong>${choose?`<small class="slot-capability">${capability}</small>${effect==='協同效果不變'?'':`<small class="slot-synergy">${effect}</small>`}`:`<small>${BUILDINGS[b].tag}</small>`}</span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');
-  if(choose)$('slots').querySelectorAll('button').forEach(b=>b.onclick=onAction(()=>install(Number(b.dataset.slot))));
+  $('slots').innerHTML=game.slots.map((b,i)=>{
+   const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;
+   const reason=choose?game.installationBlockReason(i):null,blocked=CastleFeedback.installationReason(reason),allowed=choose&&game.canInstall(i);
+   const effect=choose&&!blocked?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';
+   const capability=choose?(blocked||CastleFeedback.removedCapability(b,game.pendingLoot,CastleEngine.OWNED_BUILDINGS)):'';
+   return `<button class="slot ${b?'filled':''} ${choose?'choose':''} ${blocked?'dependency-locked':''}" data-slot="${i}" ${allowed?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+capability+(effect?'。'+effect:''):''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?(blocked?'保留 · ':'替換 · '):''}${BUILDINGS[b].short}</strong>${choose?`<small class="slot-capability">${capability}</small>${!effect||effect==='協同效果不變'?'':`<small class="slot-synergy">${effect}</small>`}`:`<small>${BUILDINGS[b].tag}</small>`}</span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`;
+  }).join('');
+  if(choose)$('slots').querySelectorAll('button').forEach(b=>{if(!b.disabled)b.onclick=onAction(()=>install(Number(b.dataset.slot)))});
   $('slot-hint').textContent=choose?'點選要替換的建築':expansionLoot?'帶走地基，即可擴出第 4 插槽':game.graft?.expansion?'第 4 插槽正在接合':second&&game.slots.length===4?'第 4 插槽已接上城首':'搶來的建築，接在這裡';
-  const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):(game.slots.length===4?'四個插槽，一座繼續長大的魔城':'三個插槽，一座屬於你的魔城');$('synergy').className=synergy.length?'active':'';
+  const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts.slice(1).join(' · ')}</b></span>`}).join(''):(game.slots.length===4?'四個插槽，一座繼續長大的魔城':'三個插槽，一座屬於你的魔城');$('synergy').className=synergy.length?'active':'';
  }
  $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);syncRamReadout();
 }
