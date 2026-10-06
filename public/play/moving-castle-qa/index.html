@@ -23,6 +23,16 @@ body[data-paused="true"] .primary.ram.danger{animation-play-state:paused}
 .choice .build-preview{color:#c4d6b6;font-size:11px;line-height:1.55;margin-top:6px}
 .run-contribution{display:block;color:#dfad82;font-size:12px;line-height:1.6;margin:3px 0 5px}
 @media(max-width:600px){.choice .build-preview{font-size:10px}.run-contribution{font-size:11px}}
+
+/* The optional expedition keeps the field prominent and gives four sockets room. */
+.ending-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}.ending-actions .primary{width:100%}.primary.secondary{background:#1d2a2d99;border-color:#9aab9766;color:#c8d1b9;box-shadow:none}
+.continuation-note{display:block;color:#e2c79a;font-size:12px;line-height:1.6;margin-top:9px}.chapter-entry-note{display:block;color:#dac69e;margin-bottom:4px}.chapter-retry-note{display:block;color:#a7b6af;font-size:11px;line-height:1.6;margin-top:7px}.defender-preview{display:block;color:#c5cfbf;font-size:12px;line-height:1.65;margin:4px 0 6px;max-width:780px}
+.deck-actions{display:flex;gap:14px;justify-content:flex-end;align-items:center;flex-shrink:0;margin-left:auto}.deck-actions [hidden]{display:none}.deck-actions .text-btn{white-space:nowrap}#retreat{color:#b5a189}
+.slots[data-capacity="4"]{grid-template-columns:repeat(4,minmax(0,1fr));max-width:940px}.slots[data-capacity="4"] .slot{padding-left:8px;padding-right:8px;gap:7px}.slots[data-capacity="4"] .slot>span{min-width:0}.slots[data-capacity="4"] .slot img{flex-shrink:0;width:39px}.slots[data-capacity="4"] .slot.choose small{overflow-wrap:anywhere;line-height:1.5}
+.choices.fixed-route{grid-template-columns:1fr}.fixed-route .choice{min-height:86px}.fixed-route .mini-art{height:72px}.fixed-route .choice .take{display:block}
+body[data-chapter="2"] .deck-footer{flex-wrap:wrap}body[data-chapter="2"] .deck-footer #synergy{flex:1;min-width:180px}
+@media(min-width:601px) and (max-width:900px){.slots[data-capacity="4"] .slot{gap:5px;padding-left:5px;padding-right:5px}.slots[data-capacity="4"] .slot img{width:31px}.slots[data-capacity="4"] .slot strong{font-size:11px}.slots[data-capacity="4"] .slot.choose{flex-direction:column;align-items:flex-start}.slots[data-capacity="4"] .slot.choose img{height:35px;margin:0}.slots[data-capacity="4"] .slot.choose small{font-size:10px}.ending-actions .primary{min-width:180px;padding-left:12px;padding-right:12px}}
+@media(max-width:600px){.ending-actions{gap:6px}.ending-actions .primary{min-height:38px;padding-top:8px;padding-bottom:8px}.continuation-note{font-size:10px;margin-top:6px}.chapter-entry-note{font-size:10px}.chapter-retry-note{font-size:10px;margin-top:5px}.defender-preview{font-size:10px;line-height:1.6}.slots[data-capacity="4"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.slots[data-capacity="4"] .slot{min-height:43px;gap:7px;padding:4px 7px}.slots[data-capacity="4"] .slot img{width:30px;height:37px}.slots[data-capacity="4"] .slot.choose{flex-direction:row;align-items:flex-start;text-align:left;min-height:79px}.slots[data-capacity="4"] .slot.choose img{width:27px;height:34px;margin-top:2px}.slots[data-capacity="4"] .slot.choose small{font-size:9px;line-height:1.45}.deck-actions{gap:12px;flex-wrap:wrap}.deck-actions .text-btn{padding-top:2px}.fixed-route .choice{min-height:76px}.fixed-route .mini-art{height:58px}body[data-chapter="2"] .deck-footer #synergy{min-width:150px}body[data-chapter="2"] .command-deck{padding-top:12px}body[data-chapter="2"][data-phase="route"] .action-description{font-size:10px}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -37,9 +47,9 @@ body[data-paused="true"] .primary.ram.danger{animation-play-state:paused}
 <div class="status-line"><div><span id="phase-kicker" class="eyebrow">一座會長大的城</span><h2 id="phase-title">把敵人的塔，變成你的力量</h2></div><span id="round-label">約 3 分鐘 · 5 場戰鬥</span></div>
 <div id="actions"></div>
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
-<div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><button id="restart" class="text-btn">重走此路線</button></div>
+<div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><span class="deck-actions"><button id="restart" class="text-btn">重走此路線</button><button id="retreat" class="text-btn" hidden aria-label="放棄本章，還原王冠堡壘通關時的建築、城體與結果">放棄本章，回王冠堡壘</button></span></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.7.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.8.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
@@ -57,6 +67,11 @@ const PROJECTILE_DURATIONS=Object.freeze({forge:.43,core:.43,arrow:.43,minion:.4
 const IMPACT_EPSILON=1e-8;
 const ROUTES=[['arrow'],['forge','grove'],['nest','arrow'],['grove','cannon'],['boss']];
 const ROUTE_SETS=[ROUTES,[['arrow'],['nest','grove'],['cannon','arrow'],['grove','cannon'],['boss']]];
+const EXPEDITION=Object.freeze([
+ Object.freeze({type:'cannon',name:'赤砂重砲運輸堡',hp:210,maxHp:210,atk:22,rate:2.5,special:23,reward:'cannon'}),
+ Object.freeze({type:'grove',name:'赤砂修復綠洲',hp:221,maxHp:221,atk:10,rate:1.8,special:28,reward:'grove'}),
+ Object.freeze({type:'boss',name:'赤砂關',hp:465,maxHp:465,atk:15,rate:1.5,special:37,reward:null,guarded:true})
+]);
 function makeEnemy(type,stage){
  if(type==='boss') return {type,name:'王冠堡壘',hp:465,maxHp:465,atk:15,rate:1.5,special:37,reward:null};
  const b=BUILDINGS[type], scale=stage===0?0.7:1+(stage-1)*.23;
@@ -71,19 +86,57 @@ class Game{
  #forgeInstalled=false;
  #forgeHits=0;
  #forgeDamage=0;
+ #chapter=1;
+ #chapterEntry=null;
+ #firstEnding=null;
+ #lastCompletedChapter2=null;
+ #enemyGuardian=null;
+ #enemyGuardianTimer=.5;
+ #nextEnemyGuardianId=0;
  constructor(){this.lastCompletedRun=null;this.routeVariant=0;this.reset()}
- reset(){this.#forgeInstalled=false;this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
- setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=[.5,.7,.9];this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;this.#projectiles=[];this.#reservations.clear();this.#nextProjectileId=0;this.battleEpoch=(this.battleEpoch||0)+1;}
+ reset(){this.#chapterEntry=null;this.#firstEnding=null;return this.#resetRun(1,[null,null,null]);}
+ #resetRun(chapter,slots){this.#chapter=chapter;this.#forgeInstalled=chapter===2&&slots.includes('forge');this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[...slots];this.enemy=this.enemyPreview();this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
+ setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=this.slots.map((_,i)=>[.5,.7,.9,1.1][i]);this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;this.#projectiles=[];this.#reservations.clear();this.#nextProjectileId=0;this.battleEpoch=(this.battleEpoch||0)+1;this.#enemyGuardian=null;this.#enemyGuardianTimer=.5;this.#nextEnemyGuardianId=0;}
+ stageCount(){return this.chapter===2?EXPEDITION.length:ROUTES.length;}
+ isFinalBattle(){return this.stage===this.stageCount()-1;}
+ enemyPreview(type,stage=this.stage){return this.chapter===2?(EXPEDITION[stage]?{...EXPEDITION[stage]}:null):makeEnemy(type||'arrow',stage);}
+ get chapter(){return this.#chapter;}
+ get startingBuild(){return this.#chapterEntry?.slots||null;}
+ get completedHistory(){return Object.freeze({1:this.lastCompletedRun,2:this.#lastCompletedChapter2});}
+ get enemyGuardian(){const g=this.#enemyGuardian;return g?Object.freeze({id:g.id,epoch:g.epoch,reserved:g.reserved,shotId:g.shotId}):null;}
+ continueExpedition(){
+  if(this.chapter!==1||this.phase!=='won'||!this.completedRun||this.slots.length!==3)return false;
+  if(!this.#firstEnding){
+   const state={};
+   for(const key of ['stage','hp','maxHp','clock','battleTime','ramUsed','kills','totalDamage','guardBlocks','guardPrevented','lastBattleRepair','runCombatTime','routeVariant','completedRun','comparisonRun','lastResult'])state[key]=this[key];
+   this.#firstEnding=Object.freeze({...state,slots:Object.freeze([...this.slots]),routeTaken:Object.freeze([...this.routeTaken]),enemy:Object.freeze({...this.enemy}),forgeInstalled:this.#forgeInstalled,forgeHits:this.#forgeHits,forgeDamage:this.#forgeDamage});
+   this.#chapterEntry=Object.freeze({slots:Object.freeze([...this.slots]),hp:300});
+  }
+  this.#resetRun(2,this.#chapterEntry.slots);return true;
+ }
+ retryChapter(){return this.chapter===2&&this.#chapterEntry?this.#resetRun(2,this.#chapterEntry.slots):this.reset();}
+ retreat(){
+  if(this.chapter!==2||!this.#firstEnding)return false;
+  const s=this.#firstEnding;this.#resetRun(1,s.slots);
+  for(const key of ['stage','hp','maxHp','clock','battleTime','ramUsed','kills','totalDamage','guardBlocks','guardPrevented','lastBattleRepair','runCombatTime','routeVariant','completedRun','comparisonRun','lastResult'])this[key]=s[key];
+  this.routeTaken=[...s.routeTaken];this.enemy={...s.enemy};this.#forgeInstalled=s.forgeInstalled;this.#forgeHits=s.forgeHits;this.#forgeDamage=s.forgeDamage;this.phase='won';return true;
+ }
+ rebuildFirstChapter(){if(this.chapter===2&&!this.retreat())return false;return this.replay();}
  event(type,data={}){this.events.push({type,...data})}
  drain(){const e=this.events;this.events=[];return e}
- routeOptions(stage=this.stage){return [...(ROUTE_SETS[this.routeVariant][stage]||[])];}
- routeLabel(){return '路線 '+(this.routeVariant===0?'A':'B');}
- replay(){if(this.phase!=='won')return false;this.routeVariant=(this.routeVariant+1)%ROUTE_SETS.length;this.reset();return true;}
+ routeOptions(stage=this.stage){return this.chapter===2?(EXPEDITION[stage]?[EXPEDITION[stage].type]:[]):[...(ROUTE_SETS[this.routeVariant][stage]||[])];}
+ routeLabel(){return this.chapter===2?'赤砂關':'路線 '+(this.routeVariant===0?'A':'B');}
+ replay(){if(this.chapter!==1||this.phase!=='won')return false;this.routeVariant=(this.routeVariant+1)%ROUTE_SETS.length;this.reset();return true;}
  start(type){if(!['ready','route'].includes(this.phase))return false;
+ if(this.chapter===2){type=type||this.routeOptions()[0];if(!this.routeOptions().includes(type))return false;}
  if(this.phase==='route'&&!this.routeOptions().includes(type))return false;
- this.enemy=makeEnemy(type||'arrow',this.stage);this.routeTaken.push(this.enemy.type);this.phase='battle';this.ramUsed=false;this.battleTime=0;this.setTimers();this.event('start');return true;}
+ this.enemy=this.enemyPreview(type);this.routeTaken.push(this.enemy.type);this.phase='battle';this.ramUsed=false;this.battleTime=0;this.setTimers();this.event('start');return true;}
  #launch(fields,duration,targetEntity=null){
+  const guardian=this.#enemyGuardian;
+  const intercept=fields.side==='friendly'&&fields.target==='enemy'&&guardian&&!guardian.reserved&&guardian.epoch===this.battleEpoch&&guardian.enemy===targetEntity&&targetEntity===this.enemy;
+  if(intercept)fields={...fields,target:'enemyGuard',enemyGuardId:guardian.id};
   const shot=Object.freeze({id:this.#nextProjectileId++,epoch:this.battleEpoch,launchedAt:this.battleTime,dueAt:this.battleTime+duration,duration,slot:-1,special:false,guardId:null,guardIndex:null,...fields});
+  if(intercept){guardian.reserved=true;guardian.shotId=shot.id;}
   this.#projectiles.push({shot,targetEntity});
   this.event('projectileLaunch',shot);
   return shot;
@@ -112,7 +165,13 @@ class Game{
  #resolveImpact({shot,targetEntity}){
   if(shot.epoch!==this.battleEpoch)return;
   let actual=0,outcome='spent',blocked={};
-  if(shot.target==='guard'){
+  if(shot.target==='enemyGuard'){
+   const guardian=this.#enemyGuardian;
+   if(guardian?.reserved&&guardian.id===shot.enemyGuardId&&guardian.shotId===shot.id&&guardian.epoch===shot.epoch){
+    this.#enemyGuardian=null;
+    if(targetEntity&&targetEntity===this.enemy&&guardian.enemy===targetEntity){outcome='enemyBlocked';blocked={prevented:shot.damage};}
+   }
+  }else if(shot.target==='guard'){
    const reservation=this.#reservations.get(shot.guardId);
    if(reservation?.shotId===shot.id&&reservation.epoch===shot.epoch){
     this.#reservations.delete(shot.guardId);
@@ -131,6 +190,7 @@ class Game{
   return outcome==='hull'&&actual>0 ? {shot,actual} : null;
  }
  #cancelProjectiles(reason){
+  this.#enemyGuardian=null;
   for(const {shot} of this.#projectiles)this.event('projectileCancel',{id:shot.id,epoch:shot.epoch,reason});
   this.#projectiles=[];this.#reservations.clear();
  }
@@ -167,15 +227,35 @@ class Game{
   this.event('shot',{source:'ram',slot:-1,damage:52});this.#adjudicate();return true;
  }
  heal(n){const before=this.hp;this.hp=Math.min(this.maxHp,this.hp+n);const amount=this.hp-before;if(amount>0)this.event('heal',{amount});return amount;}
- win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken]),forgeInstalled:this.#forgeInstalled,forgeHits:this.#forgeHits,forgeDamage:this.#forgeDamage});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
- install(slot){if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0||slot>2)return false;const old=this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0};this.phase='grafting';this.event('graft',this.graft);return true;}
+ win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');this.kills++;this.minions=[];this.event('win');if(this.isFinalBattle()){
+  this.comparisonRun=this.chapter===2?this.#lastCompletedChapter2:this.lastCompletedRun;
+  const result={combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken]),forgeInstalled:this.#forgeInstalled,forgeHits:this.#forgeHits,forgeDamage:this.#forgeDamage};
+  if(this.chapter===2){result.chapter=2;result.startingBuild=this.#chapterEntry.slots;}
+  this.completedRun=Object.freeze(result);
+  if(this.chapter===2)this.#lastCompletedChapter2=this.completedRun;else this.lastCompletedRun=this.completedRun;
+  this.phase='won';this.lastResult='won';return;
+ }this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
+ install(slot){
+  if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0)return false;
+  const expansion=this.chapter===2&&this.stage===0;
+  if(expansion?(slot!==3||this.slots.length!==3||this.pendingLoot!=='cannon'):slot>=(this.chapter===2?this.slots.length:3))return false;
+  const old=expansion?null:this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0,...(expansion?{expansion:true}:{})};this.phase='grafting';this.event('graft',this.graft);return true;
+ }
  skip(){if(this.phase!=='loot'||this.stage===0)return false;this.heal(34);this.pendingLoot=null;this.stage++;this.phase='route';this.event('route');return true;}
  synergies(){return synergiesFor(this.slots);}
  tick(dt){if(this.paused)return;dt=Math.max(0,Math.min(dt,.1));if(!dt)return;this.clock+=dt;
  if(this.phase==='grafting'){this.graft.time+=dt;if(this.graft.time>=1.35){const installedSlot=this.graft.slot;this.slots[installedSlot]=this.graft.type;if(this.graft.type==='forge')this.#forgeInstalled=true;this.pendingLoot=null;this.graft=null;this.stage++;this.phase='route';this.event('installed',{slot:installedSlot})}return;}
- if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.#resolveDue();if(this.phase!=='battle')return;this.stun=Math.max(0,this.stun-dt);
+ if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.#resolveDue();if(this.phase!=='battle')return;
+ // This defensive clock is independent of the gate's attack, stun and windup.
+ // Summons follow due contacts, before launches on the same boundary. A
+ // reserved defender still occupies the single cap until its exact contact.
+ if(this.chapter===2&&this.isFinalBattle()&&this.enemy?.guarded){
+  this.#enemyGuardianTimer-=dt;
+  if(this.#enemyGuardianTimer<=0){this.#enemyGuardianTimer+=3.5;if(!this.#enemyGuardian){this.#enemyGuardian={id:this.#nextEnemyGuardianId++,epoch:this.battleEpoch,reserved:false,shotId:null,enemy:this.enemy};this.event('enemyGuardianSummon',{enemyGuardId:this.#enemyGuardian.id,epoch:this.battleEpoch});}}
+ }
+ this.stun=Math.max(0,this.stun-dt);
  this.coreTimer-=dt;if(this.coreTimer<=0){this.coreTimer+=1.2;this.damage(7,'core');}if(this.phase!=='battle')return;
- for(let i=0;i<3;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
+ for(let i=0;i<this.slots.length;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
  if(b==='arrow'){this.slotTimers[i]+=1.05/(this.slots.filter(x=>x==='arrow').length>=2?1.4:1);this.damage(10,'arrow',i)}
  else if(b==='cannon'){const cooled=this.slots[i-1]==='grove'||this.slots[i+1]==='grove';this.slotTimers[i]+=3.3/(cooled?1.3:1);this.damage(35,'cannon',i)}
  else if(b==='grove'){this.slotTimers[i]+=3;this.heal(10);this.event('repair',{slot:i})}
@@ -225,6 +305,18 @@ function enemyThreat(enemy){
  return `普通射擊${amount(enemy.atk)}／${amount(enemy.rate)}秒 · 重擊${amount(enemy.special)}`;
 }
 
+function expeditionEntry(){
+ return '保留現有 3 座建築 · 城體整備至 300 · 3 場戰鬥';
+}
+
+function expeditionRetry(){
+ return '還原入章時的 3 座建築與 300 城體，從運砲車重來；本章取得的第 4 插槽與替換會重置。';
+}
+
+function defenderPreview(enemy){
+ return enemy.guarded?'守門石偶每 3.5 秒召出，最多 1 隻；攔下 1 發普通射擊（含重砲、熔爐）後碎裂。衝撞是近戰，可越過攔截。':'';
+}
+
 function ramTactics(){
  return '衝撞造成 52 傷害、暈眩 2 秒。可先搶攻，也可等蓄力打斷重擊；每場一次。';
 }
@@ -272,7 +364,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={enemyThreat,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
+const API={enemyThreat,expeditionEntry,expeditionRetry,defenderPreview,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -290,11 +382,16 @@ function validate(result){
   if(typeof value!=='number'||!Number.isFinite(value)||value<0)throw new TypeError(`Expected finite non-negative ${key}`);
  }
  if(result.routeVariant!==undefined&&result.routeVariant!==0&&result.routeVariant!==1)throw new TypeError('Unknown route variant');
+ if(result.chapter!==undefined&&result.chapter!==1&&result.chapter!==2)throw new TypeError('Unknown chapter');
  if(result.hp>result.maxHp)throw new TypeError('Remaining HP cannot exceed maximum HP');
  if(!Number.isInteger(result.blocked))throw new TypeError('Blocked shots must be a whole count');
- if(!Array.isArray(result.build)||result.build.length!==3)throw new TypeError('Expected three build slots');
+ if(!Array.isArray(result.build)||result.build.length!==(result.chapter===2?4:3))throw new TypeError('Unexpected build capacity');
  for(const type of result.build){
   if(type!==null&&(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type)))throw new TypeError('Unknown build type');
+ }
+ if(result.chapter===2){
+  if(!Array.isArray(result.startingBuild)||result.startingBuild.length!==3)throw new TypeError('Expected three starting build slots');
+  for(const type of result.startingBuild)if(type!==null&&(typeof type!=='string'||!Object.prototype.hasOwnProperty.call(NAMES,type)))throw new TypeError('Unknown starting build type');
  }
  if(!Array.isArray(result.route))throw new TypeError('Expected a route');
  for(const type of result.route){
@@ -327,6 +424,10 @@ function forgeContribution(result){
 
 function buildContext(result){
  validate(result);
+ if(result.chapter===2){
+  const names=slots=>slots.map(type=>type===null?'空位':NAMES[type]).join('、');
+  return `第二章・赤砂關 · 起始建築（左至右）：${names(result.startingBuild)} · 最終建築（左至右）：${names(result.build)} · 行程：${result.route.map(type=>type==='boss'?'赤砂關':NAMES[type]).join(' → ')}`;
+ }
  // Remove only the mandatory endpoints, never a chosen second arrow tower.
  const start=result.route[0]==='arrow'?1:0;
  const end=result.route[result.route.length-1]==='boss'?result.route.length-1:result.route.length;
@@ -338,15 +439,16 @@ function buildContext(result){
 
 function comparisonLine(current,previous){
  validate(current);
- if(previous===null)return '再試一種組合，下次通關就能比較';
+ if(previous===null)return current.chapter===2?'再走一次赤砂關，下次本章通關就能比較':'再試一種組合，下次通關就能比較';
  validate(previous);
+ if((current.chapter||1)!==(previous.chapter||1))return '章節不同，不比較交戰時間、城體與格擋';
  // Compare the displayed precision, so a tiny difference never reads “快 0.0 秒”.
  const time=roundedTime(current.combatTime)-roundedTime(previous.combatTime);
  const hp=current.hp-previous.hp,blocked=current.blocked-previous.blocked;
  const timeText=time===0?'戰鬥時間相同':`戰鬥${time<0?'快':'慢'} ${seconds(Math.abs(time))} 秒`;
  const hpText=hp===0?'剩餘城體相同':`剩餘城體${hp>0?'多':'少'} ${Math.abs(hp)}`;
  const blockText=blocked===0?'擋下發數相同':`${blocked>0?'多':'少'}擋 ${Math.abs(blocked)} 發普通射擊`;
- const routeNote=current.routeVariant!==undefined&&previous.routeVariant!==undefined&&current.routeVariant!==previous.routeVariant?'路線不同；':'';
+ const routeNote=current.chapter===2?(current.startingBuild.some((type,i)=>type!==previous.startingBuild[i])?'起始建築不同；':''):(current.routeVariant!==undefined&&previous.routeVariant!==undefined&&current.routeVariant!==previous.routeVariant?'路線不同；':'');
  return `${routeNote}與上次相比：${timeText} · ${hpText} · ${blockText}`;
 }
 
@@ -354,7 +456,7 @@ const API={metricLine,forgeContribution,buildContext,comparisonLine};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleRunSummary=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
-</script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right","coolantIntakes":{"left":[165,385],"right":[310,385]}},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215],"coolantOutlet":[230,400]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]},"forge":{"file":"retaliation-forge.webp","rect":[0,0,561,701],"pivot":[281,697],"muzzle":[530,233],"coreOrigin":[194,349],"recommendedHeight":130,"facing":"right"}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."},"guardian":{"file":"guardian.webp","width":512,"height":160,"displayScale":0.5,"footOffset":16,"impactOffset":[0,-27],"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"step":{"rect":[256,0,128,160],"pivot":[64,152]},"brace":{"rect":[384,0,128,160],"pivot":[64,152]}},"notes":"Original slate-and-brass guardian. Ready, one step pose, and brace only; no alternating walk-cycle claim. Movement and interception coordinates are unchanged."}};
+</script><script>const CastleArtManifest={"version":2,"style":"Original painterly dark-fantasy siege art: moonlit slate stone, oxidized brass, amber furnaces, muted teal heraldry","backdrop":{"file":"battlefield.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.804},"hull":{"file":"citadel.webp","width":1774,"height":887,"bounds":[9,11,1759,844],"roofY":438,"sockets":[752,1036,1308],"contactY":847,"pivot":[887,847],"facing":"right","recommendedDrawWidth":540},"modules":{"arrow":{"file":"modules.webp","rect":[37,1,452,509],"pivot":[208,500],"baselineBottom":500,"sourceBase":[245,501],"recommendedHeight":156,"muzzle":[425,70],"facing":"right"},"cannon":{"file":"modules.webp","rect":[521,1,486,503],"pivot":[236,498],"baselineBottom":498,"sourceBase":[757,499],"recommendedHeight":143,"muzzle":[450,63],"facing":"right","coolantIntakes":{"left":[165,385],"right":[310,385]}},"grove":{"file":"modules.webp","rect":[1068,0,454,506],"pivot":[209,503],"baselineBottom":503,"sourceBase":[1277,503],"recommendedHeight":159,"healOrigin":[230,215],"coolantOutlet":[230,400]},"nest":{"file":"modules.webp","rect":[3,517,578,495],"pivot":[291,485],"baselineBottom":485,"sourceBase":[294,1002],"recommendedHeight":133,"spawnOrigin":[300,453]},"boss":{"file":"modules.webp","rect":[581,504,525,506],"pivot":[261,497],"baselineBottom":497,"sourceBase":[842,1001],"recommendedHeight":245,"muzzle":[260,135]},"forge":{"file":"retaliation-forge.webp","rect":[0,0,561,701],"pivot":[281,697],"muzzle":[530,233],"coreOrigin":[194,349],"recommendedHeight":130,"facing":"right"}},"atlas":{"file":"modules.webp","width":1536,"height":1024,"alpha":true},"integrationNotes":["All source rectangles and pivots are native image pixels; pivots, muzzle and effect origins are relative to each module's source rectangle.","Draw each module with its pivot at the mounting socket. Its horizontal base center can differ from the rectangular center because weapons and flags protrude.","Citadel includes the left command keep and mechanical legs. The three other roof pads are empty.","Backdrop has contact plane around 80% image height; use contactY/groundY to align combat sprites rather than forcing the old 70% horizon.","Citadel and module atlas contain real alpha; inspect over a solid contrasting background rather than interpreting embedded preview mattes.","Source images were generated separately; match scene with one subtle cool ambient wash and preserve warm emissive windows.","Direction can be mirrored for enemy modules; mirror around pivot and flip muzzle x too.","Tree leaf tips reach atlas top edge; all functional tree and base geometry remain intact.","Approximate effect origins provided for renderer tuning; cannon muzzle is near upper right end of barrel."],"provenance":{"type":"original_ai_generated","generator":"OpenAI built-in image_gen","createdAt":"2026-10-06","thirdPartyArtwork":false,"referenceUse":"No third-party artwork or external game assets were used. Original text prompts only. Current prototype screenshot was inspected for functional layout, not used as an image input.","sourceFiles":{"backdrop":"generated_images/exec-e5a4b8dc-1863-4cdd-b58d-35c96cda18e5.png","hull":"generated_images/exec-07a3d6d4-fe25-4440-8533-38f316a361bc.png","modules":"generated_images/exec-ee7991e7-81fc-4a96-847d-a7a05e23bf03.png"},"processing":"WebP encoding only with ImageMagick; alpha quality 100 for cutouts. No background-removal postprocessing or manual alteration."},"guardian":{"file":"guardian.webp","width":512,"height":160,"displayScale":0.5,"footOffset":16,"impactOffset":[0,-27],"frames":{"ready":{"rect":[0,0,128,160],"pivot":[64,152]},"step":{"rect":[256,0,128,160],"pivot":[64,152]},"brace":{"rect":[384,0,128,160],"pivot":[64,152]}},"notes":"Original slate-and-brass guardian. Ready, one step pose, and brace only; no alternating walk-cycle claim. Movement and interception coordinates are unchanged."},"expeditionBackdrop":{"file":"red-sand.webp","width":1672,"height":941,"groundY":756,"contactY":772,"groundRatio":0.803401,"contactRatio":0.820404},"frontDeck":{"file":"front-deck.webp","width":600,"height":445,"rect":[0,0,600,445],"nativeRect":[1420,378,300,222.5],"nativeBounds":[1420,378,1720,600.5],"nativeHullSize":[1774,887],"socket":[1590,438],"socketAnchor":[170,60],"pivot":[340,120],"facing":"right","drawOrder":"hull, extension, installed modules, cooling pipes","notes":["rect and pivot use source-image pixels; nativeWidth/image width gives uniform 0.5 scale; nativeRect is hull x,y,width,height; nativeBounds is hull left,top,right,bottom","Draw the full source rect into nativeRect transformed by the unchanged hull transform; mount the fourth module at socket","During capture use the same socket anchor and native relative size; offset extension with the lifted cannon so the assembly locks without a jump","Keep all original three socket coordinates and hull scale unchanged; leave the ram-contact pixel at (1760,476) exposed","No cannon or other building is baked into the foundation; all five existing module types were checked in offline composites","The 600x445 encoded aspect yields 222.5 native height; its actual nonzero alpha ends at hull Y591, inside the proposed 600 limit"],"nativeWidth":300,"nativeHeight":222.5,"mount":[1590,438]}};
 (function(){
 'use strict';
 const {Game,BUILDINGS,ROUTES}=CastleEngine;
@@ -367,13 +469,15 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let small=innerWidth<=600,W=small?930:1280,H=small?1350:800,last=0,visualTime=0,shake=0,ramAnim=0,toast='',toastTimer=0,uiPhase='',uiSlots='',sound=false,audio=null,focusPending=false,hitStop=0,shockwaves=[],embers=[],visualImpacts=[],sceneNeedsRender=true;
 const ART=typeof CastleArtManifest!=='undefined'?CastleArtManifest:{};const textures={};const moduleOutlines={};let hullTip=null;let artLoaded=false;
 const imageEntries=[['backdrop',ART.backdrop],['hull',ART.hull],...Object.entries(ART.modules||{}).map(([k,v])=>['module-'+k,v]),...(ART.guardian?[['guardian',ART.guardian]]:[])];
-Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true)});
+Promise.all(imageEntries.map(([key,spec])=>new Promise(resolve=>{if(!spec?.file){resolve();return}const img=new Image();img.onload=()=>{textures[key]=img;if(key==='hull')cacheHullTip(img);else if(key.startsWith('module-'))cacheModuleOutline(key.slice(7),img,spec);resolve()};img.onerror=()=>resolve();img.src='assets/art-v2/'+spec.file;}))).then(()=>{artLoaded=true;Object.keys(buildingIcons).forEach(k=>delete buildingIcons[k]);uiSlots='';updateUI(true);loadChapterArt()});
+let chapterArtStarted=false;
+function loadChapterArt(){if(chapterArtStarted)return;chapterArtStarted=true;for(const [key,spec] of [['redBackdrop',ART.expeditionBackdrop],['frontDeck',ART.frontDeck]]){if(!spec?.file)continue;const img=new Image();img.onload=()=>{textures[key]=img;sceneNeedsRender=true};img.onerror=()=>{sceneNeedsRender=true};img.src='assets/art-v2/'+spec.file;}}
 const golemTracks=new Map();
 const settledShots=new Set();
 let dissolutions=[],impactGlows=[],coolingPulses=[],forgeFlares=[];
 let forgeAnnounced=false;
 let shakeOffset={x:0,y:0};
-let guardRemnants=[],particles=[],shots=[],floaters=[],recoils=[0,0,0],enemyFlash=0,playerFlash=0,winFlash=0;
+let enemyGuardRemnants=[],guardRemnants=[],particles=[],shots=[],floaters=[],recoils=[0,0,0],enemyFlash=0,playerFlash=0,winFlash=0;
 const palette={stone:'#bcb58e',light:'#e1d1a4',dark:'#54666a',ink:'#17313a',gold:'#efc776',red:'#b44e47',teal:'#83c9a8'};
 const buildingIcons={};
 function resize(){small=innerWidth<=600;W=small?930:1280;H=small?1350:800;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);sceneNeedsRender=true;}
@@ -381,11 +485,11 @@ resize();addEventListener('resize',resize);
 function restingPositions(){return {p:small?283:325,e:small?747:1010,y:small?706:535};}
 function cacheHullTip(img){try{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const d=c.getContext('2d');d.drawImage(img,0,0);const pixels=d.getImageData(0,0,c.width,c.height).data;for(let x=c.width-1;x>=0;x--){let total=0,count=0;for(let y=0;y<c.height;y++)if(pixels[(y*c.width+x)*4+3]>128){total+=y;count++;}if(count){hullTip={x,y:total/count};break;}}}catch(e){hullTip=null;}}
 function cacheModuleOutline(type,img,spec){try{const [sx,sy,w,h]=spec.rect,c=document.createElement('canvas');c.width=w;c.height=h;const d=c.getContext('2d');d.drawImage(img,sx,sy,w,h,0,0,w,h);const pixels=d.getImageData(0,0,w,h).data,edge=new Int16Array(h).fill(-1);for(let y=0;y<h;y++)for(let x=w-1;x>=0;x--)if(pixels[(y*w+x)*4+3]>128){edge[y]=x;break;}moduleOutlines[type]=edge;}catch(e){delete moduleOutlines[type];}}
-function ramGeometry(){const base=restingPositions(),approach=game.phase==='battle'?Math.min(1,game.battleTime/.85):1,p=base.p-(1-approach)*20,e=base.e+(1-approach)*30,y=base.y,spec=ART.hull||{},width=small?540:590,scale=width/(spec.width||1536),height=spec.height||1024,tip=hullTip||{x:(spec.width||1536)*.995,y:height*.55};const nose=textures.hull?{x:p-width*.52+tip.x*scale,y:y-(spec.contactY??height*.92)*scale+tip.y*scale}:{x:p+236,y:y-53};const type=game.enemy.type,enemy=ART.modules?.[type],enemyHeight=type==='boss'?330:263;let front=e-(type==='boss'?105:type==='forge'?70:38);if(enemy&&textures['module-'+type]){const sc=enemyHeight/enemy.rect[3],pivot=enemy.pivot||[enemy.rect[2]/2,enemy.rect[3]],row=Math.round(pivot[1]+(nose.y-y)/sc),edge=moduleOutlines[type];let max=-1;if(edge)for(let r=Math.max(0,row-3);r<=Math.min(edge.length-1,row+3);r++)max=Math.max(max,edge[r]);if(max<0)max=enemy.rect[2]-1;front=e-(max-pivot[0])*sc;}return {nose,front,distance:Math.max(0,front-nose.x+2),contactX:front,contactY:nose.y};}
+function ramGeometry(){const base=restingPositions(),approach=game.phase==='battle'?Math.min(1,game.battleTime/.85):1,p=base.p-(1-approach)*20,e=base.e+(1-approach)*30,y=base.y,spec=ART.hull||{},width=small?540:590,scale=width/(spec.width||1536),height=spec.height||1024,tip=hullTip||{x:(spec.width||1536)*.995,y:height*.55};const nose=textures.hull?{x:p-width*.52+tip.x*scale,y:y-(spec.contactY??height*.92)*scale+tip.y*scale}:{x:p+236+(game.slots.length>3?92:0),y:y-53};const type=game.enemy.type,enemy=ART.modules?.[type],enemyHeight=type==='boss'?330:263;let front=e-(type==='boss'?105:type==='forge'?70:38);if(enemy&&textures['module-'+type]){const sc=enemyHeight/enemy.rect[3],pivot=enemy.pivot||[enemy.rect[2]/2,enemy.rect[3]],row=Math.round(pivot[1]+(nose.y-y)/sc),edge=moduleOutlines[type];let max=-1;if(edge)for(let r=Math.max(0,row-3);r<=Math.min(edge.length-1,row+3);r++)max=Math.max(max,edge[r]);if(max<0)max=enemy.rect[2]-1;front=e-(max-pivot[0])*sc;}return {nose,front,distance:Math.max(0,front-nose.x+2),contactX:front,contactY:nose.y};}
 function bodyPositions(){const {p,e,y}=restingPositions(),approach=game.phase==='battle'?Math.min(1,game.battleTime/.85):1;let push=0,recoil=0;if(ramAnim>0){const t=.82-ramAnim;let q;if(t<.31){const a=t/.31;q=a*a*(3-2*a);}else if(t<=.39)q=1;else{const a=(t-.39)/.43;q=1-a*a*(3-2*a);recoil=Math.sin(a*Math.PI)*9;}push=q*ramGeometry().distance;}return {p:p-(1-approach)*20+push,e:e+(1-approach)*30+recoil,y};}
 function hullMetrics(){const {p,y}=bodyPositions(),spec=ART.hull||{};const width=small?540:590;const nw=spec.width||1536,nh=spec.height||1024,scale=width/nw;const contact=spec.contactY??nh*.92;return {x:p-width*.52,y:y-contact*scale,w:width,h:nh*scale,scale,spec};}
-function slotPos(i){const m=hullMetrics(),nw=m.spec.width||1536,nh=m.spec.height||1024;const sock=m.spec.sockets||[nw*.44,nw*.62,nw*.80];return {x:m.x+sock[i]*m.scale,y:m.y+(m.spec.roofY??nh*.46)*m.scale};}
-function moduleOrigin(type,x,y,height,owned=true){if(type==='forge'&&!textures['module-forge'])return {x:x+(owned?1:-1)*83*height/195,y:y-101*height/195};const spec=ART.modules?.[type],pt=spec?.muzzle||spec?.healOrigin||spec?.spawnOrigin;if(!spec||!pt)return {x:x+(owned?20:-20),y:y-height*.66};const sc=height/spec.rect[3],pv=spec.pivot||[spec.rect[2]/2,spec.rect[3]];return {x:x+(pt[0]-pv[0])*sc*(owned?1:-1),y:y+(pt[1]-pv[1])*sc};}
+function slotPos(i){const m=hullMetrics(),nw=m.spec.width||1536,nh=m.spec.height||1024;const sock=m.spec.sockets||[nw*.44,nw*.62,nw*.80];return {x:m.x+(i===3?(ART.frontDeck?.mount?.[0]??1590):sock[i])*m.scale,y:m.y+(i===3?(ART.frontDeck?.mount?.[1]??438):(m.spec.roofY??nh*.46))*m.scale};}
+function moduleOrigin(type,x,y,height,owned=true){if(game.chapter===2&&!textures['module-'+type]){const pt=({arrow:[31,-115],cannon:[51,-62],grove:[0,-41],nest:[0,-20],boss:[0,-111]})[type];if(pt)return{x:x+pt[0]*height/195*(owned?1:-1),y:y+pt[1]*height/195};}if(type==='forge'&&!textures['module-forge'])return {x:x+(owned?1:-1)*83*height/195,y:y-101*height/195};const spec=ART.modules?.[type],pt=spec?.muzzle||spec?.healOrigin||spec?.spawnOrigin;if(!spec||!pt)return {x:x+(owned?20:-20),y:y-height*.66};const sc=height/spec.rect[3],pv=spec.pivot||[spec.rect[2]/2,spec.rect[3]];return {x:x+(pt[0]-pv[0])*sc*(owned?1:-1),y:y+(pt[1]-pv[1])*sc};}
 function glow(x,y,r,color,alpha=1){ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();}
 function mountedHeight(type){return ({arrow:157,cannon:132,grove:151,nest:108,forge:130})[type]||157;}
 function texturedModule(c,type,x,y,height,owned=true,opacity=1,facing=null){const im=textures['module-'+type],spec=ART.modules?.[type];if(!im||!spec)return false;const rect=spec.rect||[0,0,im.width,im.height],w=height*rect[2]/rect[3];c.save();c.globalAlpha=opacity;c.shadowColor='#01050990';c.shadowBlur=12;c.shadowOffsetY=8;const scale=height/rect[3],pivot=spec.pivot||[rect[2]/2,rect[3]];c.save();c.translate(x,y);c.scale(facing??(owned?1:-1),1);c.drawImage(im,...rect,-pivot[0]*scale,-pivot[1]*scale,w,height);c.restore();c.shadowBlur=0;c.shadowOffsetY=0;if(owned){c.globalCompositeOperation='screen';c.globalAlpha=opacity*.25;const g=c.createRadialGradient(x,y-height*.50,0,x,y-height*.5,height*.4);g.addColorStop(0,'#eaba6640');g.addColorStop(1,'#0000');c.fillStyle=g;c.fillRect(x-w/2,y-height,w,height)}c.restore();return true;}
@@ -396,7 +500,7 @@ function circle(c,x,y,r,fill,stroke){c.beginPath();c.arc(x,y,r,0,Math.PI*2);if(f
 function windowSlit(c,x,y,col='#f1d990'){rr(c,x-3,y-8,6,16,3,'#293d3e');rr(c,x-1,y-6,2,10,1,col)}
 function bricks(c,x,y,w,h){c.strokeStyle='#344b4630';c.lineWidth=1;for(let r=0;r<h/16;r++){c.beginPath();c.moveTo(x,y+r*16);c.lineTo(x+w,y+r*16);c.stroke();for(let i=0;i<w/24;i++){const a=x+i*24+(r%2?12:0);if(a<x+w)line(c,[a,y+r*16],[a,y+r*16+16],'#344b4625',1)}}}
 function flag(c,x,y,owned,t){line(c,[x,y+29],[x,y-18],'#d7c596',2);poly(c,[[x,y-18],[x+25,y-14+Math.sin(t*3)*3],[x+21,y+1],[x,y-2]],owned?'#91d4af':'#c45b4d');line(c,[x+6,y-13],[x+6,y-1],owned?'#d7efd3':'#ecc697',2)}
-function building(c,type,x,y,scale=1,owned=true,t=visualTime,glow=0){if(type!=='core'&&texturedModule(c,type,x,y,(type==='boss'?290:195)*scale,owned))return;c.save();c.translate(x,y);c.scale(scale,scale);c.lineJoin='round';c.lineWidth=2.5;const stone=owned?'#c8c097':'#c4ae8c',shade=owned?'#798779':'#8d7464',ink='#203a40';
+function building(c,type,x,y,scale=1,owned=true,t=visualTime,glow=0){if(type!=='core'&&texturedModule(c,type,x,y,(type==='boss'?290:195)*scale,owned))return;c.save();c.translate(x,y);c.scale(scale,scale);if(game.chapter===2&&!owned&&type!=='forge')c.scale(-1,1);c.lineJoin='round';c.lineWidth=2.5;const stone=owned?'#c8c097':'#c4ae8c',shade=owned?'#798779':'#8d7464',ink='#203a40';
  if(glow>0){c.shadowColor=owned?'#a9e7c2':'#ffc47d';c.shadowBlur=glow*20;}
  if(type==='arrow'){
  rr(c,-24,-91,48,91,2,stone,ink);rr(c,9,-90,15,90,1,shade);bricks(c,-22,-87,43,84);poly(c,[[-29,-86],[-29,-101],[-18,-101],[-18,-95],[-7,-95],[-7,-102],[6,-102],[6,-95],[17,-95],[17,-102],[29,-102],[29,-86]],'#decda6',ink);rr(c,-28,-90,56,8,1,'#77887b',ink);windowSlit(c,-4,-63);windowSlit(c,-4,-22);line(c,[-23,-112],[21,-118],'#513e31',5);line(c,[17,-129],[21,-118],'#392f29',3);line(c,[21,-118],[19,-106],'#392f29',3);line(c,[18,-128],[18,-107],'#e5d4a2',1);line(c,[-4,-119],[31,-115],'#d7cca4',3);flag(c,-16,-115,owned,t);
@@ -424,13 +528,13 @@ function building(c,type,x,y,scale=1,owned=true,t=visualTime,glow=0){if(type!=='
  c.restore();}
 function icon(type){if(buildingIcons[type])return buildingIcons[type];const c=document.createElement('canvas');c.width=144;c.height=170;building(c.getContext('2d'),type,72,162,.74,true,0);return buildingIcons[type]=c.toDataURL()}
 function grass(c,x,y,s=1){line(c,[x-4*s,y],[x-7*s,y-11*s],'#547c68',1.5);line(c,[x,y],[x+2*s,y-17*s],'#6b9074',1.5);line(c,[x+4*s,y],[x+9*s,y-8*s],'#6e9276',1.5)}
-function background(){const {y}=bodyPositions();const bg=textures.backdrop;ctx.fillStyle='#111c24';ctx.fillRect(0,0,W,H);if(bg){const sc=Math.max(W/bg.width,H/bg.height),dw=bg.width*sc,dh=bg.height*sc;const ground=ART.backdrop?.groundY??bg.height*.79;const yy=Math.min(0,y-ground*sc);const drift=Math.sin(visualTime*.025)*8;ctx.drawImage(bg,(W-dw)/2+drift,yy,dw,dh);}
- else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#101d2d');g.addColorStop(.7,'#44585b');g.addColorStop(1,'#142029');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
- const mist=ctx.createLinearGradient(0,y-340,0,y+40);mist.addColorStop(0,'#789aaa00');mist.addColorStop(.48,'#9bb8c72b');mist.addColorStop(.87,'#a7bac522');mist.addColorStop(1,'#6b899400');ctx.fillStyle=mist;ctx.fillRect(0,y-340,W,380);
+function background(){const {y}=bodyPositions(),red=game.chapter===2;const bg=red?textures.redBackdrop:textures.backdrop,spec=red?ART.expeditionBackdrop:ART.backdrop;ctx.fillStyle=red?'#271b19':'#111c24';ctx.fillRect(0,0,W,H);if(bg){const sc=Math.max(W/bg.width,H/bg.height),dw=bg.width*sc,dh=bg.height*sc;const ground=spec?.groundY??bg.height*.79;const yy=Math.min(0,y-ground*sc);const drift=Math.sin(visualTime*.025)*8;ctx.drawImage(bg,(W-dw)/2+drift,yy,dw,dh);}
+ else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,red?'#442a27':'#101d2d');g.addColorStop(.7,red?'#a16e4b':'#44585b');g.addColorStop(1,red?'#332621':'#142029');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+ const mist=ctx.createLinearGradient(0,y-340,0,y+40);mist.addColorStop(0,red?'#ac765a00':'#789aaa00');mist.addColorStop(.48,red?'#d39a6428':'#9bb8c72b');mist.addColorStop(.87,red?'#bc805422':'#a7bac522');mist.addColorStop(1,red?'#9e634600':'#6b899400');ctx.fillStyle=mist;ctx.fillRect(0,y-340,W,380);
  // Long drifting fog banks and suspended ash sit at different depths.
- for(let i=0;i<5;i++){const x=((i*319+visualTime*(i%2?7:-5))%(W+420)+W+420)%(W+420)-210,yy=y-22+i*23;ctx.save();ctx.globalAlpha=.13;const f=ctx.createRadialGradient(x,yy,0,x,yy,270);f.addColorStop(0,'#a0b7bb');f.addColorStop(1,'#60758000');ctx.translate(x,yy);ctx.scale(1,.14);ctx.fillStyle=f;ctx.fillRect(-400,-300,800,600);ctx.restore();}
+ for(let i=0;i<5;i++){const x=((i*319+visualTime*(i%2?7:-5))%(W+420)+W+420)%(W+420)-210,yy=y-22+i*23;ctx.save();ctx.globalAlpha=.13;const f=ctx.createRadialGradient(x,yy,0,x,yy,270);f.addColorStop(0,red?'#ca966d':'#a0b7bb');f.addColorStop(1,red?'#a66e4500':'#60758000');ctx.translate(x,yy);ctx.scale(1,.14);ctx.fillStyle=f;ctx.fillRect(-400,-300,800,600);ctx.restore();}
  const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,'#07121f25');shade.addColorStop(.35,'#00000000');shade.addColorStop(.71,'#020a1100');shade.addColorStop(1,'#03090ff2');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
- for(let i=0;i<65;i++){const x=(i*119.731+visualTime*(i%2?4:-7)+W*5)%W,yy=(i*43.719+visualTime*(i%3+1)*3)%(y+80);ctx.globalAlpha=.12+(i%4)*.09;circle(ctx,x,yy,i%4===0?1.45:.65,i%5===0?'#dfae6f':'#c4d5d8')}ctx.globalAlpha=1;
+ for(let i=0;i<65;i++){const x=(i*119.731+visualTime*(i%2?4:-7)+W*5)%W,yy=(i*43.719+visualTime*(i%3+1)*3)%(y+80);ctx.globalAlpha=.12+(i%4)*.09;circle(ctx,x,yy,i%4===0?1.45:.65,i%5===0?'#dfae6f':red?'#cf9d7a':'#c4d5d8')}ctx.globalAlpha=1;
 }
 function contactShadow(x,y,w,h=20){ctx.save();const g=ctx.createRadialGradient(x,y,0,x,y,w);g.addColorStop(0,'#03070dcc');g.addColorStop(1,'#03070d00');ctx.translate(x,y);ctx.scale(1,h/w);ctx.fillStyle=g;ctx.fillRect(-w,-w,w*2,w*2);ctx.restore();}
 function golemPose(i){const {p,y}=bodyPositions();return textures.hull?{x:p+258+i*33+Math.sin(visualTime*5+i)*2,y:y+1+Math.sin(visualTime*7+i)*1.7}:{x:p+200+i*37+Math.sin(visualTime*6+i)*3,y:y+24+Math.sin(visualTime*8+i)*3};}
@@ -449,10 +553,10 @@ function coolingModulePose(slot,type=game.slots[slot]){
  const {p,y}=bodyPositions();
  if(textures.hull){
   const q=slotPos(slot),moving=game.phase==='battle',bob=reduced?0:Math.sin(visualTime*(moving?4.4:1.5))*(moving?1.25:.6);
-  return {x:q.x-recoils[slot]*4,y:q.y+bob,height:mountedHeight(type)*(small?.97:1),vectorScale:mountedHeight(type)*(small?.97:1)/195};
+  return {x:q.x-(recoils[slot]||0)*4,y:q.y+bob,height:mountedHeight(type)*(small?.97:1),vectorScale:mountedHeight(type)*(small?.97:1)/195};
  }
  const walk=game.phase==='battle'?visualTime*3.5:visualTime*.7,bob=Math.sin(walk)*1.1;
- return {x:p-46+slot*92-recoils[slot]*3,y:y+bob-110,height:195*.78,vectorScale:.78};
+ return {x:p-46+slot*92-(recoils[slot]||0)*3,y:y+bob-110,height:195*.78,vectorScale:.78};
 }
 function coolingAnchor(slot,point,vectorPoint){
  const type=game.slots[slot],pose=coolingModulePose(slot),spec=ART.modules?.[type];
@@ -461,7 +565,7 @@ function coolingAnchor(slot,point,vectorPoint){
  }
  // The procedural hull draws procedural modules; do not draw a floating link
  // when a loaded hull has no visible module art.
- if(textures.hull)return null;
+ if(textures.hull&&game.chapter!==2)return null;
  return {x:pose.x+vectorPoint[0]*pose.vectorScale,y:pose.y+vectorPoint[1]*pose.vectorScale};
 }
 function coolingCurve(link){
@@ -505,14 +609,31 @@ function drawForgeFlares(){
   glow(q.x,q.y,reduced?30:42,'#ff914777',power*.9);glow(q.x,q.y,15,'#ffe0a799',power*.65);
  }
 }
-function fallbackPlayerCastle(){const {p,y}=bodyPositions(),walk=game.phase==='battle'?visualTime*3.5:visualTime*.7,bob=Math.sin(walk)*1.1;
+function drawFrontDeck(c,x,y,scale,facing=1){
+ const im=textures.frontDeck,spec=ART.frontDeck||{},nativeWidth=spec.nativeWidth||300;
+ c.save();c.translate(x,y);c.scale(facing,1);
+ if(im){const factor=nativeWidth/im.width*scale,pivot=spec.pivot||[im.width*170/300,im.height*60/222];c.drawImage(im,-pivot[0]*factor,-pivot[1]*factor,im.width*factor,im.height*factor);}
+ else{c.scale(scale,scale);poly(c,[[-159,-5],[-140,-42],[-75,-59],[33,-43],[114,-9],[111,9],[-157,12]],'#5c6460','#222c2c');rr(c,-166,-7,292,18,2,'#b1a27f','#342e29');poly(c,[[-156,13],[-114,110],[-87,133],[-117,15]],'#4e5b59','#252d2e');poly(c,[[113,14],[81,87],[-4,148],[-28,139],[69,70],[89,15]],'#69716b','#263231');line(c,[-135,15],[-73,70],'#b59868',9);line(c,[71,19],[-9,109],'#b59868',8);for(const xx of [-138,-89,-38,14,65,107])circle(c,xx,2,4,'#d0b67d','#4a4539');}
+ c.restore();
+}
+function enemyGuardianPose(){const {e,y}=bodyPositions();return {x:e-148,y:y+1};}
+function drawEnemyGuardianAt(q,brace=false){
+ const im=textures.guardian,spec=ART.guardian,frame=spec?.frames?.[brace?'brace':'ready'];
+ if(im&&frame){const sc=spec.displayScale;ctx.save();contactShadow(q.x,q.y+spec.footOffset,28,5);ctx.translate(q.x,q.y);ctx.scale(-1,1);ctx.drawImage(im,...frame.rect,-frame.pivot[0]*sc,spec.footOffset-frame.pivot[1]*sc,frame.rect[2]*sc,frame.rect[3]*sc);ctx.restore();}
+ else{ctx.save();ctx.translate(q.x,q.y);ctx.scale(-1,1);golem(0,0,0,brace?'brace':'ready');ctx.restore();}
+ // Enemy heraldry differentiates the reused original stonework without changing its silhouette.
+ ctx.save();ctx.strokeStyle='#d99575';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q.x-8,q.y+17);ctx.lineTo(q.x,q.y+21);ctx.lineTo(q.x+8,q.y+17);ctx.stroke();ctx.restore();
+}
+function drawEnemyGuardians(){const g=game.enemyGuardian;if(game.phase==='battle'&&g&&!g.reserved)drawEnemyGuardianAt(enemyGuardianPose());for(const r of enemyGuardRemnants)drawEnemyGuardianAt(r,true);}
+function fallbackPlayerCastle(){const {p,y}=bodyPositions(),extension=game.slots.length>3?92:0,walk=game.phase==='battle'?visualTime*3.5:visualTime*.7,bob=Math.sin(walk)*1.1;
  ctx.save();ctx.translate(p,y+bob);ctx.fillStyle='#173a3980';ctx.beginPath();ctx.ellipse(10,55,194,17,0,0,Math.PI*2);ctx.fill();
  for(let i=0;i<4;i++){const x=-127+i*83,off=Math.sin(walk+i*1.6)*5;line(ctx,[x,-4],[x+off,31],'#233f43',14);line(ctx,[x+off,31],[x-14-off,49],'#a0a48b',12);line(ctx,[x-14-off,49],[x+12-off,49],'#233c40',9);circle(ctx,x+off,31,9,'#687f70','#24434a');circle(ctx,x+off,31,3,'#c4ba88')}
- poly(ctx,[[-175,-95],[171,-95],[190,-56],[163,-14],[-131,-14],[-174,-44]],'#9d9e7f','#223e41');poly(ctx,[[-169,-45],[179,-55],[162,-17],[-129,-17]],'#617b6a','#223e41');bricks(ctx,-160,-87,320,44);rr(ctx,-176,-99,354,13,3,'#d0c294','#27464a');rr(ctx,-154,-44,294,11,3,'#465d5b');
- for(let i=0;i<7;i++){rr(ctx,-142+i*43,-78,28,24,4,'#4a645c','#314d4b');line(ctx,[-137+i*43,-65],[-120+i*43,-65],'#a1b193',2)}
- poly(ctx,[[165,-53],[218,-62],[219,-48],[164,-29]],'#8ca091','#213e41');poly(ctx,[[213,-63],[236,-53],[214,-46]],'#e2d1a0','#253e40');line(ctx,[183,-57],[205,-53],'#dde0b0',3);
+ poly(ctx,[[-175,-95],[171+extension,-95],[190+extension,-56],[163+extension,-14],[-131,-14],[-174,-44]],'#9d9e7f','#223e41');poly(ctx,[[-169,-45],[179+extension,-55],[162+extension,-17],[-129,-17]],'#617b6a','#223e41');bricks(ctx,-160,-87,320+extension,44);rr(ctx,-176,-99,354+extension,13,3,'#d0c294','#27464a');rr(ctx,-154,-44,294+extension,11,3,'#465d5b');
+ for(let i=0;i<7+(extension?2:0);i++){rr(ctx,-142+i*43,-78,28,24,4,'#4a645c','#314d4b');line(ctx,[-137+i*43,-65],[-120+i*43,-65],'#a1b193',2)}
+ poly(ctx,[[165+extension,-53],[218+extension,-62],[219+extension,-48],[164+extension,-29]],'#8ca091','#213e41');poly(ctx,[[213+extension,-63],[236+extension,-53],[214+extension,-46]],'#e2d1a0','#253e40');line(ctx,[183+extension,-57],[205+extension,-53],'#dde0b0',3);
  building(ctx,'core',-131,-99,.91,true,visualTime,playerFlash*.03);
- for(let i=0;i<3;i++){const x=-46+i*92;rr(ctx,x-36,-110,72,12,2,game.slots[i]?'#c8bb90':'#67867a','#27484b');if(game.slots[i]){ctx.save();ctx.translate(-recoils[i]*3,0);building(ctx,game.slots[i],x,-110,.78,true);ctx.restore()}else{ctx.setLineDash([4,4]);rr(ctx,x-25,-161,50,47,3,null,'#b7d1b135');ctx.setLineDash([]);ctx.fillStyle='#c4dbc36b';ctx.font='15px system-ui';ctx.textAlign='center';ctx.fillText('+',x,-132)}}
+ if(extension)drawFrontDeck(ctx,230,-110,92/282);
+ for(let i=0;i<game.slots.length;i++){const x=-46+i*92;rr(ctx,x-36,-110,72,12,2,game.slots[i]?'#c8bb90':'#67867a','#27484b');if(game.slots[i]){ctx.save();ctx.translate(-recoils[i]*3,0);building(ctx,game.slots[i],x,-110,.78,true);ctx.restore()}else{ctx.setLineDash([4,4]);rr(ctx,x-25,-161,50,47,3,null,'#b7d1b135');ctx.setLineDash([]);ctx.fillStyle='#c4dbc36b';ctx.font='15px system-ui';ctx.textAlign='center';ctx.fillText('+',x,-132)}}
  if(playerFlash>0){ctx.globalAlpha=playerFlash*.12;ctx.fillStyle='#f0ab84';ctx.fillRect(-176,-100,354,87)}
  ctx.restore();
  for(let i=0;i<game.minions.length;i++){const q=liveGolemPose(i);golem(q.x,q.y,i)}
@@ -520,7 +641,8 @@ function fallbackPlayerCastle(){const {p,y}=bodyPositions(),walk=game.phase==='b
 function playerCastle(dt=0){const im=textures.hull;if(!im){fallbackPlayerCastle();drawCoolingConnections();drawForgeFlares();drawGuardRemnants();return}const {p,y}=bodyPositions(),m=hullMetrics();const moving=game.phase==='battle';const bob=reduced?0:Math.sin(visualTime*(moving?4.4:1.5))*(moving?1.25:.6);contactShadow(p+5,y+10,310,20);glow(p-80,y-38,120,'#b56d2932',.5+Math.sin(visualTime*5)*.12);
  ctx.save();ctx.translate(0,bob);ctx.shadowColor='#01060980';ctx.shadowBlur=15;ctx.shadowOffsetY=8;ctx.drawImage(im,m.x,m.y,m.w,m.h);ctx.shadowBlur=0;ctx.shadowOffsetY=0;
  if(moving){for(const joint of [[278,585],[758,610],[1190,620]]){const gx=m.x+joint[0]*m.scale,gy=m.y+joint[1]*m.scale;ctx.save();ctx.translate(gx,gy);ctx.rotate(visualTime*.8);ctx.globalAlpha=.23;for(let n=0;n<6;n++){ctx.rotate(Math.PI/3);line(ctx,[3,0],[11,0],'#d6b16f',1)}ctx.restore();}}
- for(let i=0;i<3;i++){const q=slotPos(i),b=game.slots[i];if(b){ctx.save();ctx.translate(-recoils[i]*4,0);if(!texturedModule(ctx,b,q.x,q.y,mountedHeight(b)*(small?.97:1),true)&&b==='forge')building(ctx,b,q.x,q.y,mountedHeight(b)*(small?.97:1)/195,true);ctx.restore();if(b==='grove')glow(q.x,q.y-74,44,'#6cae983b',.5);if(b==='nest')glow(q.x,q.y-34,32,'#a5a9c333',.5);if(recoils[i]>.7){const muzzle=moduleOrigin(b,q.x,q.y,mountedHeight(b)*(small?.97:1),true);glow(muzzle.x,muzzle.y,b==='cannon'?85:34,b==='cannon'?'#ffc57cbb':'#eed79866',recoils[i]);}}
+ if(game.slots.length>3){const deck=slotPos(3);drawFrontDeck(ctx,deck.x,deck.y,m.scale);}
+ for(let i=0;i<game.slots.length;i++){const q=slotPos(i),b=game.slots[i];if(b){ctx.save();ctx.translate(-recoils[i]*4,0);if(!texturedModule(ctx,b,q.x,q.y,mountedHeight(b)*(small?.97:1),true)&&(b==='forge'||game.chapter===2))building(ctx,b,q.x,q.y,mountedHeight(b)*(small?.97:1)/195,true);ctx.restore();if(b==='grove')glow(q.x,q.y-74,44,'#6cae983b',.5);if(b==='nest')glow(q.x,q.y-34,32,'#a5a9c333',.5);if(recoils[i]>.7){const muzzle=moduleOrigin(b,q.x,q.y,mountedHeight(b)*(small?.97:1),true);glow(muzzle.x,muzzle.y,b==='cannon'?85:34,b==='cannon'?'#ffc57cbb':'#eed79866',recoils[i]);}}
  else{ctx.save();ctx.globalAlpha=.65;ctx.strokeStyle='#c8d1b1';ctx.lineWidth=1;ctx.setLineDash([3,7]);ctx.beginPath();ctx.ellipse(q.x,q.y+2,31,6,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.font='13px Georgia';ctx.textAlign='center';ctx.fillStyle='#c4caaa';ctx.fillText(String(i+1),q.x,q.y-14);ctx.restore();}}
  ctx.restore();
  drawCoolingConnections();drawForgeFlares();
@@ -538,19 +660,19 @@ function dyingBossVisible(){return game.phase==='won'&&(bossAfterHit>0||ramAnim>
 function enemyCastle(){const {e,y}=bodyPositions();const defeated=['loot','grafting','route','won'].includes(game.phase);const isBoss=game.enemy.type==='boss',showDyingBoss=dyingBossVisible();contactShadow(e,y+8,isBoss?210:140,18);
  // Fallen rubble remains where the intact trophy was lifted out.
  if(game.phase==='route'||game.phase==='grafting'||(game.phase==='won'&&!showDyingBoss)){ctx.save();ctx.globalAlpha=.75;for(let i=0;i<11;i++){const x=e-80+i*15,yy=y-7+Math.sin(i*2.4)*5;poly(ctx,[[x-14,yy+8],[x-9,yy-8],[x+6,yy-12],[x+18,yy+7]],i%2?'#35434a':'#526068','#26343c')}ctx.restore();}
- if(game.phase!=='grafting'&&game.phase!=='route'&&(game.phase!=='won'||showDyingBoss)){const h=isBoss?330:263;const sprite=texturedModule(ctx,game.enemy.type,e,y,h,false,game.phase==='won'?Math.min(1,bossAfterHit/.3):defeated?.92:1);if(!sprite)building(ctx,game.enemy.type,e,y,game.enemy.type==='forge'?h/195:1.5,false);glow(e-5,y-h*.43,isBoss?95:50,'#dd935142',.7+Math.sin(visualTime*4)*.1);
+ if(game.phase!=='grafting'&&game.phase!=='route'&&(game.phase!=='won'||showDyingBoss)){const h=isBoss?330:263;const sprite=texturedModule(ctx,game.enemy.type,e,y,h,false,game.phase==='won'?Math.min(1,bossAfterHit/.3):defeated?.92:1);if(!sprite)building(ctx,game.enemy.type,e,y,game.enemy.type==='forge'||game.chapter===2?h/195:1.5,false);glow(e-5,y-h*.43,isBoss?95:50,'#dd935142',.7+Math.sin(visualTime*4)*.1);
  if(game.phase==='loot'){ctx.save();const pulse=.4+Math.sin(visualTime*2)*.12;ctx.globalAlpha=pulse;ctx.strokeStyle='#dab76e';ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(e,y+2,100,18,0,0,Math.PI*2);ctx.stroke();ctx.restore();glow(e,y-120,150,'#dbb56322',.7);}
  }
  if(game.windup>0&&game.phase==='battle'){const a=(2.2-game.windup)/2.2;glow(e,y-100,170,'#d4512755',a*.8);ctx.save();ctx.globalAlpha=.2+a*.5;ctx.strokeStyle='#e99462';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(e,y+4,112,20,0,0,Math.PI*2*a);ctx.stroke();ctx.restore();ctx.font='600 15px system-ui';ctx.textAlign='center';ctx.fillStyle='#f3c58b';ctx.shadowColor='#000';ctx.shadowBlur=10;ctx.fillText('重擊蓄力  '+game.windup.toFixed(1)+'s',e,y-(isBoss?354:287));ctx.shadowBlur=0;}
  if(enemyFlash>0)glow(e,y-110,170,'#ffd49e77',enemyFlash*.5);
 }
-function drawGraft(dt=0){if(!game.graft)return;const {e,y}=bodyPositions(),isForge=game.graft.type==='forge',s=isForge?coolingModulePose(game.graft.slot,'forge'):slotPos(game.graft.slot),targetHeight=isForge?s.height:mountedHeight(game.graft.type);const t=Math.min(1,game.graft.time/1.35);let x,yy,scale;if(t<.22){const a=t/.22;x=e;yy=y-115*(1-Math.pow(1-a,3));scale=1;}else if(t<.80){const a=(t-.22)/.58,q=a*a*(3-2*a);x=e+(s.x-e)*q;yy=y-115+(s.y-y+75)*q-Math.sin(a*Math.PI)*85;scale=1-(1-targetHeight/263)*q;}else{const a=(t-.8)/.2;x=s.x;yy=s.y-40*(1-a)*(1-a);scale=targetHeight/263;}
- const h=263*scale;glow(x,yy-h*.4,h*.7,'#dcb7713b',.6);ctx.save();ctx.strokeStyle='#dec28680';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(s.x-24,s.y-7);ctx.lineTo(x-32*scale,yy-h*.7);ctx.moveTo(s.x+24,s.y-7);ctx.lineTo(x+32*scale,yy-h*.7);ctx.stroke();ctx.translate(x,yy);ctx.rotate(reduced?0:Math.sin(t*Math.PI*2)*.035);if(!texturedModule(ctx,game.graft.type,0,0,h,t>.7,1,t<.75?-1:1))building(ctx,game.graft.type,0,0,isForge?h/195:scale,isForge?t>=.75:true);ctx.restore();if(dt>0&&Math.random()<.7)particles.push({x:x+(Math.random()-.5)*65,y:yy-10,vx:(Math.random()-.5)*20,vy:-20-Math.random()*50,life:.6,color:'#d9b76d',size:1.2+Math.random()*2});
+function drawGraft(dt=0){if(!game.graft)return;const {e,y}=bodyPositions(),isForge=game.graft.type==='forge',precise=isForge||game.chapter===2,s=precise?coolingModulePose(game.graft.slot,game.graft.type):slotPos(game.graft.slot),targetHeight=precise?s.height:mountedHeight(game.graft.type);const t=Math.min(1,game.graft.time/1.35);let x,yy,scale;if(t<.22){const a=t/.22;x=e;yy=y-115*(1-Math.pow(1-a,3));scale=1;}else if(t<.80){const a=(t-.22)/.58,q=a*a*(3-2*a);x=e+(s.x-e)*q;yy=y-115+(s.y-y+75)*q-Math.sin(a*Math.PI)*85;scale=1-(1-targetHeight/263)*q;}else{const a=(t-.8)/.2;x=s.x;yy=s.y-40*(1-a)*(1-a);scale=targetHeight/263;}
+ const h=263*scale;glow(x,yy-h*.4,h*.7,'#dcb7713b',.6);ctx.save();ctx.strokeStyle='#dec28680';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(s.x-24,s.y-7);ctx.lineTo(x-32*scale,yy-h*.7);ctx.moveTo(s.x+24,s.y-7);ctx.lineTo(x+32*scale,yy-h*.7);ctx.stroke();if(game.graft.expansion){ctx.beginPath();ctx.rect(-W*2,-H*2,W*4,H*2+y);ctx.clip();}ctx.translate(x,yy);ctx.rotate(reduced?0:Math.sin(t*Math.PI*2)*.035);if(game.graft.expansion){const baseScale=textures.hull?hullMetrics().scale:92/282;drawFrontDeck(ctx,0,0,baseScale*h/targetHeight,t<.75?-1:1);}if(!texturedModule(ctx,game.graft.type,0,0,h,t>.7,1,t<.75?-1:1))building(ctx,game.graft.type,0,0,precise?h/195:scale,precise?t>=.75:true);ctx.restore();if(dt>0&&Math.random()<.7)particles.push({x:x+(Math.random()-.5)*65,y:yy-10,vx:(Math.random()-.5)*20,vy:-20-Math.random()*50,life:.6,color:'#d9b76d',size:1.2+Math.random()*2});
 }
 // The engine owns all automatic-shot outcomes. Rendering only follows its clock and IDs.
 function projectileKey(s){return s.epoch+':'+s.id;}
 function projectileTarget(s){
- if(s.target==='guard')return {x:s.tx,y:s.ty};
+ if(s.target==='guard'||s.target==='enemyGuard')return {x:s.tx,y:s.ty};
  const {p,e,y}=bodyPositions();
  return s.target==='hull'?{x:p+s.targetOffsetX,y:y+s.targetOffsetY}:{x:e+s.targetOffsetX,y:y+s.targetOffsetY};
 }
@@ -576,6 +698,8 @@ function launchProjectile(ev){
   const q=ev.slot>=0?slotPos(ev.slot):null,m=hullMetrics();
   pos=q?moduleOrigin(ev.source,q.x,q.y,mountedHeight(ev.source)*(small?.97:1),true):ev.source==='minion'?{x:p+277,y:y-31}:{x:m.x+280*m.scale,y:m.y+280*m.scale};
   targetOffsetX=(Math.random()-.5)*45;targetOffsetY=-80-Math.random()*70;
+  if(game.chapter===2&&ev.slot>=0){recoils[ev.slot]=1;const q=coolingModulePose(ev.slot);pos=moduleOrigin(ev.source,q.x,q.y,q.height,true);}
+  if(ev.target==='enemyGuard'){const q=enemyGuardianPose();tx=q.x;ty=q.y-27;enemyGuardRemnants.push({id:ev.enemyGuardId,epoch:ev.epoch,projectileId:ev.id,x:q.x,y:q.y});}
   if(ev.slot>=0)recoils[ev.slot]=1;
   if(ev.source==='forge'){const pose=coolingModulePose(ev.slot);pos=moduleOrigin('forge',pose.x,pose.y,pose.height,true);forgeFlares.push({slot:ev.slot,id:ev.id,epoch:ev.epoch,launchedAt:ev.launchedAt,triggerId:ev.triggerId});if(!forgeAnnounced){forgeAnnounced=true;say('城體中彈 · 熔爐立刻反擊');}}
   play(ev.source==='forge'?115:ev.source==='cannon'?63:690,ev.source==='forge'?.12:ev.source==='cannon'?.15:.035,ev.source==='forge'||ev.source==='cannon'?'sawtooth':'triangle',ev.source==='forge'?.023:ev.source==='cannon'?.035:.008);
@@ -586,17 +710,18 @@ function finishProjectile(ev,cancelled=false){
  const key=projectileKey(ev),s=shots.find(s=>projectileKey(s)===key);if(!s||settledShots.has(key))return;
  settledShots.add(key);shots=shots.filter(s=>projectileKey(s)!==key);
  const target=projectileTarget(s);
- guardRemnants=guardRemnants.filter(g=>g.epoch!==ev.epoch||g.projectileId!==ev.id);
+ guardRemnants=guardRemnants.filter(g=>g.epoch!==ev.epoch||g.projectileId!==ev.id);enemyGuardRemnants=enemyGuardRemnants.filter(g=>g.epoch!==ev.epoch||g.projectileId!==ev.id);
  if(cancelled||ev.outcome==='spent'||ev.epoch!==game.battleEpoch){dissipateProjectile(s);return;}
- if(ev.outcome==='blocked'){
+ if(ev.outcome==='enemyBlocked'){impact({x:target.x,y:target.y,kind:s.kind,enemyBlocked:true,damage:ev.prevented??ev.damage});}
+ else if(ev.outcome==='blocked'){
   impact({x:target.x,y:target.y,kind:'enemy',blocked:true,guardId:ev.guardId,damage:ev.prevented??ev.damage});
   if(ev.battleBlock===1)say('石偶擋下砲火 · 魔城未受傷');
  }else if(ev.outcome==='enemy'||ev.outcome==='hull'){
   impact({x:target.x,y:target.y,kind:s.kind,enemy:ev.outcome==='hull',damage:ev.actual,special:s.special,color:s.color});
  }
 }
-function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');impactGlows.push({x,y:yy,r:heavy?120:44,life:.1});shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
-function render(dt){if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())bossAfterHit=Math.max(0,bossAfterHit-dt);updateGolemTracks(dt);ctx.save();ctx.clearRect(0,0,W,H);if(shake>0&&!reduced){if(dt>0)shakeOffset={x:(Math.random()-.5)*shake,y:(Math.random()-.5)*shake*.65};ctx.translate(shakeOffset.x,shakeOffset.y);}background();enemyCastle();playerCastle(dt);drawGraft(dt);
+function impact(v){const {p,e,y}=bodyPositions();const x=v.x??(v.enemy?p:e),yy=v.y??y-115;if(v.enemyBlocked){const heavy=v.kind==='cannon';burst(x,yy,heavy?30:16,'#c4ab91');shockwaves.push({x,y:yy,t:0,r:heavy?66:38,color:'#d99972'});floaters.push({x,y:yy-28,text:'截住 '+v.damage,color:'#efba93',life:1,big:false});if(heavy){impactGlows.push({x,y:yy,r:80,life:.1});shake=Math.max(shake,3);if(!reduced)hitStop=.025;}play(heavy?82:280,.12,'triangle',.026);return;}if(v.blocked){guardRemnants=guardRemnants.filter(g=>g.id!==v.guardId);burst(x,yy,19,'#aabcae');shockwaves.push({x,y:yy,t:0,r:42,color:'#a9d6c9'});floaters.push({x,y:yy-28,text:'擋下 '+v.damage,color:'#c3e7d8',life:1,big:false});play(390,.1,'triangle',.027);return;}const heavy=v.kind==='cannon'||v.kind==='ram'||v.special;burst(x,yy,heavy?32:7,v.color||'#daba86');impactGlows.push({x,y:yy,r:heavy?120:44,life:.1});shockwaves.push({x,y:yy,t:0,r:heavy?80:25,color:v.enemy?'#d78e6b':'#edc686'});if(v.damage>0)floaters.push({x:x+(Math.random()-.5)*40,y:yy-40,text:'−'+v.damage,color:v.enemy?'#d9a186':'#e8d8aa',life:heavy?1.0:.7,big:heavy});if(v.enemy)playerFlash=1;else enemyFlash=1;if(heavy){shake=Math.max(shake,v.kind==='ram'?13:6);if(!reduced)hitStop=.045;play(v.kind==='ram'?42:75,.2,'sawtooth',.045);}else play(v.enemy?120:350,.05,'triangle',.012);}
+function render(dt){if(game.phase==='won'&&ramAnim<=0&&!pendingFriendlyImpact())bossAfterHit=Math.max(0,bossAfterHit-dt);updateGolemTracks(dt);ctx.save();ctx.clearRect(0,0,W,H);if(shake>0&&!reduced){if(dt>0)shakeOffset={x:(Math.random()-.5)*shake,y:(Math.random()-.5)*shake*.65};ctx.translate(shakeOffset.x,shakeOffset.y);}background();enemyCastle();drawEnemyGuardians();playerCastle(dt);drawGraft(dt);
  for(const s of shots){
   const q=projectilePoint(s);s.t=q.age;
   ctx.save();ctx.globalCompositeOperation='screen';const heavy=s.kind==='cannon';
@@ -623,7 +748,8 @@ function burst(x,y,n,color){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,v
 function play(freq,duration=.08,type='triangle',vol=.04){if(!sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){sound=false}}
 function say(t){toast=t;toastTimer=2.1;$('announcer').textContent=t;}
 function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
- if(ev.type==='start'){shots=[];guardRemnants=[];golemTracks.clear();settledShots.clear();coolingPulses=[];forgeFlares=[];forgeAnnounced=false;}
+ if(ev.type==='start'){if(game.chapter===2){toast='';toastTimer=0;}shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();coolingPulses=[];forgeFlares=[];forgeAnnounced=false;}
+ else if(ev.type==='enemyGuardianSummon'){const q=enemyGuardianPose();burst(q.x,q.y-10,10,'#c6a284');}
  else if(ev.type==='projectileLaunch')launchProjectile(ev);
  else if(ev.type==='projectileImpact')finishProjectile(ev);
  else if(ev.type==='projectileCancel')finishProjectile(ev,true);
@@ -632,53 +758,88 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
  else if(ev.type==='heal'){floaters.push({x:p-145,y:y-245,text:'+'+ev.amount,color:'#b5d5b8',life:1.15});}
  else if(ev.type==='repair'){const q=slotPos(ev.slot);burst(q.x,q.y-95,9,'#a9cbae');shockwaves.push({x:q.x,y:q.y-55,t:0,r:80,color:'#93bfa7'});play(380,.17,'sine',.012);}
  else if(ev.type==='summon'){const q=slotPos(ev.slot);burst(q.x,q.y-20,11,'#c1b794');glow(q.x,q.y-25,80,'#b5cab433');say('石偶出征');}
- else if(ev.type==='win'){coolingPulses=[];forgeFlares=[];if(game.stage===4)bossAfterHit=.3;// The authoritative lethal contact stays visible before the target fades.
- visualImpacts.push({delay:.45,x:e,y:y-50,kind:'cannon',damage:0});say(game.stage===4?'王冠隕落':'敵城陷落 · 建築可奪取');play(350,.3,'triangle',.035);}
+ else if(ev.type==='win'){coolingPulses=[];forgeFlares=[];if(game.isFinalBattle())bossAfterHit=.3;// The authoritative lethal contact stays visible before the target fades.
+ visualImpacts.push({delay:.45,x:e,y:y-50,kind:'cannon',damage:0});say(game.isFinalBattle()?(game.chapter===2?'赤砂關已破':'王冠隕落'):'敵城陷落 · 建築可奪取');play(350,.3,'triangle',.035);}
  else if(ev.type==='graft'){say('奪取建築');play(210,.3,'sine',.025);}
- else if(ev.type==='installed'){coolingPulses=[];forgeFlares=[];const q=slotPos(ev.slot),after=game.synergies(),changed=JSON.stringify(installBefore)!==JSON.stringify(after);say(changed?CastleFeedback.synergyChangeNotice(installBefore,after):BUILDINGS[game.slots[ev.slot]].short+'加入魔城');if(changed)synergyPulseUntil=game.clock+3;burst(q.x,q.y,22,'#d2b77c');shockwaves.push({x:q.x,y:q.y,t:0,r:60,color:'#d2b77c'});shake=3;play(130,.24,'triangle',.025);}
- else if(ev.type==='loss'){coolingPulses=[];forgeFlares=[];shots=[];guardRemnants=[];say('城心熄滅');play(58,.5,'sine',.04);}
+ else if(ev.type==='installed'){if(recoils[ev.slot]===undefined)recoils[ev.slot]=0;coolingPulses=[];forgeFlares=[];const q=slotPos(ev.slot),after=game.synergies(),changed=JSON.stringify(installBefore)!==JSON.stringify(after);say(changed?CastleFeedback.synergyChangeNotice(installBefore,after):BUILDINGS[game.slots[ev.slot]].short+'加入魔城');if(changed)synergyPulseUntil=game.clock+3;burst(q.x,q.y,22,'#d2b77c');shockwaves.push({x:q.x,y:q.y,t:0,r:60,color:'#d2b77c'});shake=3;play(130,.24,'triangle',.025);}
+ else if(ev.type==='loss'){coolingPulses=[];forgeFlares=[];shots=[];enemyGuardRemnants=[];guardRemnants=[];say('城心熄滅');play(58,.5,'sine',.04);}
  }
 }
 function start(type){if(!artLoaded)return;if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
 function install(i){const before=game.synergies();if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
 function ram(){if(game.ram()){events();updateUI(true)}}
-function completedRunReport(){const result=game.completedRun,previous=game.comparisonRun;if(!result)return '王冠堡壘已攻陷。';const forge=CastleRunSummary.forgeContribution(result);return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span>${forge?`<span class="run-contribution">${forge}</span>`:''}<span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-route-note">換路依序輪替 A／B；重新載入從 A 開始</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;}
+function completedRunReport(){
+ const result=game.completedRun,previous=game.comparisonRun&&((game.comparisonRun.chapter||1)===(result?.chapter||game.chapter))?game.comparisonRun:null;
+ if(!result)return game.chapter===2?'赤砂關已攻陷。':'王冠堡壘已攻陷。';
+ const forge=CastleRunSummary.forgeContribution(result),routeNote=game.chapter===2?'赤砂關 · 本章 3 場戰鬥；僅與上次赤砂關比較':'換路依序輪替 A／B；重新載入從 A 開始';
+ return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span>${forge?`<span class="run-contribution">${forge}</span>`:''}<span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-route-note">${routeNote}</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;
+}
 function actionRow(text,button){return `<div class="action-row"><p class="action-description">${text}</p>${button}</div>`}
 function button(text,id,cls='primary'){return `<button class="${cls}" id="${id}">${text}</button>`}
-function updateUI(force=false){document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);$('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;$('round-label').textContent=game.phase==='ready'?'約 3 分鐘 · 5 場戰鬥':`第 ${Math.min(game.stage+1,5)} 站 / 5`;
+function updateUI(force=false){
+ const second=game.chapter===2,total=game.stageCount(),finalBattle=game.isFinalBattle(),expansionLoot=second&&game.stage===0&&game.phase==='loot';
+ document.body.dataset.chapter=String(game.chapter);document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);
+ $('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;
+ $('round-label').textContent=game.phase==='ready'?(second?'赤砂關 · 3 場戰鬥':'約 3 分鐘 · 5 場戰鬥'):`${second?'赤砂關 · ':''}第 ${Math.min(game.stage+1,total)} 站 / ${total}`;
+ $('restart').textContent=second?'重走本章':'重走此路線';$('restart').setAttribute('aria-label',second?'重走赤砂關，還原入章三座建築與 300 城體':'重走此路線');$('retreat').hidden=!second;
  $('pause-overlay').hidden=!game.paused;$('pause').disabled=!['battle','grafting'].includes(game.phase);$('pause').textContent=game.paused?'繼續':'暫停';$('pause').setAttribute('aria-label',game.paused?'繼續遊戲':'暫停遊戲');
  if(game.phase==='battle'){
- const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):'魔城交戰中';$('field-caption').innerHTML=warn?`<span>!</span> 敵方重擊倒數 ${game.windup.toFixed(1)} 秒`:'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'');
- const rb=$('ram');if(rb){rb.disabled=game.ramUsed||game.paused;rb.classList.toggle('danger',warn&&!game.ramUsed);rb.innerHTML=game.ramUsed?'衝撞已用完':warn?'衝撞 · 打斷重擊':`衝撞 <span class="key">SPACE</span>`}
+  const warn=game.windup>0;$('phase-title').textContent=warn?(game.ramUsed?'敵城蓄力中，準備承受重擊':'敵城蓄力中，現在衝撞能打斷！'):'魔城交戰中';$('field-caption').innerHTML=warn?`<span>!</span> 敵方重擊倒數 ${game.windup.toFixed(1)} 秒`:'<span>—</span> '+CastleInput.battleCaption(game.slots,game.ramUsed)+(game.battleGuardBlocks?' · 石偶已格擋 '+game.battleGuardBlocks+' 發':'')+(second&&finalBattle?' · 守門石偶會攔截普通射擊':'');
+  const rb=$('ram');if(rb){rb.disabled=game.ramUsed||game.paused;rb.classList.toggle('danger',warn&&!game.ramUsed);rb.innerHTML=game.ramUsed?'衝撞已用完':warn?'衝撞 · 打斷重擊':`衝撞 <span class="key">SPACE</span>`}
  }
- if(force||uiPhase!==game.phase){uiPhase=game.phase;const a=$('actions');let k='',title='',caption='',tag='';
- if(game.phase==='ready'){k=game.routeLabel()+' · 奪塔之旅';title='第一座塔，將成為你的城';caption='<span>01</span> 先搶一座箭塔，讓它替你打下一仗';tag='第一站 · 奪取箭塔';a.innerHTML=actionRow('攻下眼前的哨塔。接著可選'+game.routeOptions(1).map(t=>BUILDINGS[t].short).join('或')+'。',button('出發，攻下箭塔','begin'));$('begin').disabled=!artLoaded;if(!artLoaded)$('begin').textContent='點亮城心…';$('begin').onclick=onAction(()=>start('arrow'));}
- else if(game.phase==='battle'){k='交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=game.stage===4?'終點 · 王冠堡壘':`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0?'按一次衝撞，給它重重一擊。每場只能用一次。':CastleFeedback.ramTactics(),button('衝撞 <span class="key">SPACE</span>','ram','primary ram'));$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
- else if(game.phase==='loot'){const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=`整座${b.short}，現在是你的`;tag='攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+' · 建築完整保留';a.innerHTML=actionRow(`${b.desc}${free===-1?' 城頂滿了，選下面一座建築替換。':''}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
- else if(game.phase==='grafting'){k='接合中';title='戰利品正在接合';tag='建築移植';caption='<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow('接上牽引索，抬起地基……',`<button class="primary" disabled>正在接合</button>`)}
- else if(game.phase==='route'){k=game.routeLabel()+' · 選擇下一站';title=game.stage===1?'帶上箭塔，繼續前進':game.stage===4?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？';tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品');
- if(game.stage===4){const boss=CastleEngine.makeEnemy('boss',game.stage);a.innerHTML=actionRow(`<span class="boss-threat">城體${boss.hp} · ${CastleFeedback.enemyThreat(boss)}</span>${CastleFeedback.ramTactics()}`,button('迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
- else{a.innerHTML='<div class="choices">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=CastleEngine.makeEnemy(type,game.stage),preview=CastleFeedback.choiceSynergy(type,game.slots);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${b.name}</h3><p>${b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · 勝利後帶走${b.short}</small></div><span class="take">攻下它</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}}
- else if(game.phase==='won'){k='旅程完成';title='你帶走的，成了你的整座城';tag='五座城 · 一段旅程';caption='<span>♜</span> 王冠堡壘已攻陷';a.innerHTML=actionRow(completedRunReport(),button('換路再出發','again'));$('again').onclick=onAction(replayJourney);}
- else if(game.phase==='lost'){k='魔城倒下';title='再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 衝撞可提早削血，也能留到蓄力時打斷重擊';a.innerHTML=actionRow(`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button('重試此路線','again'));$('again').onclick=onAction(restart);}
- $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
- $('journey').innerHTML=Array.from({length:5},(_,i)=>`${i?'<b></b>':''}<i class="${i<game.stage||game.phase==='won'?'done':i===game.stage?'current':''}" title="第 ${i+1} 站"></i>`).join('');
- uiSlots='';
+ const phaseKey=game.chapter+':'+game.phase+':'+game.stage;
+ if(force||uiPhase!==phaseKey){uiPhase=phaseKey;const a=$('actions');let k='',title='',caption='',tag='';
+  if(game.phase==='ready'){
+   if(second){const e=game.enemyPreview('cannon');k='赤砂關 · 帶上你的魔城';title='奪下地基，讓魔城再長大';caption='<span>01</span> 先奪下重砲與地基，再把第 4 座建築接上城首';tag='第一站 · 裝甲運砲車';a.innerHTML=actionRow(`<span class="chapter-entry-note">${CastleFeedback.expeditionEntry()}</span><span class="boss-threat">城體 ${e.hp} · ${CastleFeedback.enemyThreat(e)}</span>勝利後保留原有三座建築，擴出第 4 插槽並接上這座重砲。`,button('出發，奪下重砲與地基','begin'));$('begin').onclick=onAction(()=>start('cannon'));}
+   else{k=game.routeLabel()+' · 奪塔之旅';title='第一座塔，將成為你的城';caption='<span>01</span> 先搶一座箭塔，讓它替你打下一仗';tag='第一站 · 奪取箭塔';a.innerHTML=actionRow('攻下眼前的哨塔。接著可選'+game.routeOptions(1).map(t=>BUILDINGS[t].short).join('或')+'。',button('出發，攻下箭塔','begin'));$('begin').onclick=onAction(()=>start('arrow'));}
+   $('begin').disabled=!artLoaded;if(!artLoaded)$('begin').textContent='點亮城心…';
+  }
+  else if(game.phase==='battle'){k=second?'赤砂關 · 自動作戰':'交戰中 · 自動作戰';title='魔城交戰中';caption='';tag=finalBattle?(second?'終點 · 赤砂關':'終點 · 王冠堡壘'):`第 ${game.stage+1} 站 · 交戰中`;a.innerHTML=actionRow(game.stage===0&&!second?'按一次衝撞，給它重重一擊。每場只能用一次。':CastleFeedback.ramTactics()+(second&&finalBattle?' 衝撞可越過守門石偶。':''),button('衝撞 <span class="key">SPACE</span>','ram','primary ram'));$('ram').onclick=onAction(ram);$('ram').disabled=game.ramUsed||game.paused;if(game.ramUsed)$('ram').textContent='衝撞已用完';}
+  else if(game.phase==='loot'){
+   const b=BUILDINGS[game.pendingLoot],free=game.slots.indexOf(null);k='勝利 · 帶走戰利品';title=expansionLoot?'重砲連同地基，整座接上城首':`整座${b.short}，現在是你的`;tag=expansionLoot?'攻城成功 · 擴建魔城':'攻城成功';caption='<span>＋</span> '+CastleFeedback.repairCaption(game.lastBattleRepair)+(expansionLoot?' · 原有三座建築完整保留':' · 建築完整保留');
+   if(expansionLoot){a.innerHTML=actionRow('這座重砲與地基會一起移植，在城首新增第 4 插槽。原本三座建築全部保留。',button('帶走重砲與地基 · 擴出第 4 插槽','take'));$('take').onclick=onAction(()=>install(3));}
+   else{a.innerHTML=actionRow(`${b.desc}${free===-1?(second?' 四個插槽已滿，可替換下面任一座建築，或保留原組合。':' 城頂滿了，選下面一座建築替換。'):''}`,free>=0?button(`把${b.short}接上魔城`,'take'):button(CastleFeedback.salvageLabel(Math.min(34,game.maxHp-game.hp)),'salvage','primary'));if(free>=0)$('take').onclick=onAction(()=>install(free));else $('salvage').onclick=onAction(()=>{game.skip();updateUI(true)});}
+  }
+  else if(game.phase==='grafting'){const expanding=Boolean(game.graft?.expansion);k=expanding?'擴建中 · 第 4 插槽':'接合中';title=expanding?'重砲與地基，正在接上城首':'戰利品正在接合';tag=expanding?'魔城擴建':'建築移植';caption=expanding?'<span>＋</span> 抬起整座地基 · 原有三座建築完整保留':'<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow(expanding?'牽引地基，鎖上城首支架……接合完成後啟用第 4 插槽。':'接上牽引索，抬起地基……',`<button class="primary" disabled>${expanding?'正在擴建':'正在接合'}</button>`)}
+  else if(game.phase==='route'){
+   k=game.routeLabel()+(second?' · 繼續前進':' · 選擇下一站');title=second?(finalBattle?'最後一仗，突破赤砂關':'帶上第四座建築，前往綠洲'):(game.stage===1?'帶上箭塔，繼續前進':finalBattle?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？');tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(second?(finalBattle?'守門石偶攔截普通射擊 · 衝撞可越過防線':'第 4 插槽已接合 · 下一站可替換古樹，或保留組合'):(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品'));
+   if(finalBattle){const boss=game.enemyPreview('boss');a.innerHTML=actionRow(`<span class="boss-threat">城體${boss.hp} · ${CastleFeedback.enemyThreat(boss)}</span>${second?`<span class="defender-preview">${CastleFeedback.defenderPreview(boss)}</span>`:''}${CastleFeedback.ramTactics()}`,button(second?'迎戰赤砂關':'迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
+   else{a.innerHTML='<div class="choices'+(second?' fixed-route':'')+'">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=game.enemyPreview(type),preview=CastleFeedback.choiceSynergy(type,game.slots);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${second?e.name:b.name}</h3><p>${b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · ${second?'勝利後可替換一座建築，或保留現有組合':'勝利後帶走'+b.short}</small></div><span class="take">${second?'繼續前進':'攻下它'}</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}
+  }
+  else if(game.phase==='won'){
+   k=second?'赤砂關 · 旅程完成':'旅程完成';title=second?'你的魔城更大了，赤砂關已破':'你帶走的，成了你的整座城';tag=second?'三場戰鬥 · 四座建築':'五座城 · 一段旅程';caption=second?'<span>♜</span> 赤砂關已攻陷':'<span>♜</span> 王冠堡壘已攻陷';
+   if(second){a.innerHTML=actionRow(completedRunReport()+`<span class="chapter-retry-note">${CastleFeedback.expeditionRetry()}</span>`,button('重走赤砂關','again'));$('again').onclick=onAction(restart);}
+   else{a.innerHTML=actionRow(completedRunReport()+`<span class="continuation-note">可選擇前往赤砂關：${CastleFeedback.expeditionEntry()} 換路再出發會從空城重新開始。</span>`,`<div class="ending-actions">${button('帶上魔城，前往赤砂關','continue-expedition')}${button('換路再出發','again','primary secondary')}</div>`);$('continue-expedition').onclick=onAction(continueExpedition);$('again').onclick=onAction(replayJourney);}
+  }
+  else if(game.phase==='lost'){k=second?'赤砂關 · 魔城倒下':'魔城倒下';title=second?'帶上入章時的魔城，再試一次':'再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 衝撞可提早削血，也能留到蓄力時打斷重擊';a.innerHTML=actionRow(second?`走到了赤砂關第 ${game.stage+1} 站。${CastleFeedback.expeditionRetry()}`:`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button(second?'重試赤砂關':'重試此路線','again'));$('again').onclick=onAction(restart);}
+  $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
+  $('journey').innerHTML=Array.from({length:total},(_,i)=>`${i?'<b></b>':''}<i class="${i<game.stage||game.phase==='won'?'done':i===game.stage?'current':''}" title="第 ${i+1} 站"></i>`).join('');$('journey').setAttribute('aria-label',`${second?'赤砂關':'奪塔之旅'}進度：${game.phase==='won'?'完成':`第 ${Math.min(game.stage+1,total)} 站`}，共 ${total} 站`);
+  uiSlots='';
  }
- const slotKey=game.slots.join(',')+'|'+game.phase;if(uiSlots!==slotKey){uiSlots=slotKey;const choose=game.phase==='loot'&&game.slots.every(Boolean);$('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong><small>${choose?effect:BUILDINGS[b].tag}</small></span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');if(choose)$('slots').querySelectorAll('button').forEach(b=>b.onclick=onAction(()=>install(Number(b.dataset.slot))));$('slot-hint').textContent=choose?'點選要替換的建築':'搶來的建築，接在這裡';const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):'三個插槽，一座屬於你的魔城';$('synergy').className=synergy.length?'active':'';}
+ const slotKey=game.chapter+'|'+game.slots.join(',')+'|'+game.phase+'|'+game.pendingLoot;
+ if(uiSlots!==slotKey){
+  uiSlots=slotKey;const choose=game.phase==='loot'&&!expansionLoot&&game.slots.every(Boolean);$('slots').setAttribute('data-capacity',String(game.slots.length));
+  $('slots').innerHTML=game.slots.map((b,i)=>{const preview=[...game.slots];if(choose)preview[i]=game.pendingLoot;const effect=choose?CastleFeedback.replacementSummary(game.synergies(),CastleEngine.synergiesFor(preview)):'';return `<button class="slot ${b?'filled':''} ${choose?'choose':''}" data-slot="${i}" ${choose?'':'disabled'} aria-label="${choose?'以'+BUILDINGS[game.pendingLoot].name+'替換':''}插槽 ${i+1} ${b?BUILDINGS[b].name:'空位'}${choose?'。'+effect:''}">${b?`<img src="${icon(b)}" alt=""><span><strong>${choose?'替換 · ':''}${BUILDINGS[b].short}</strong><small>${choose?effect:BUILDINGS[b].tag}</small></span>`:`<span class="number">${i+1}</span><strong>空插槽</strong>`}</button>`}).join('');
+  if(choose)$('slots').querySelectorAll('button').forEach(b=>b.onclick=onAction(()=>install(Number(b.dataset.slot))));
+  $('slot-hint').textContent=choose?'點選要替換的建築':expansionLoot?'帶走地基，即可擴出第 4 插槽':game.graft?.expansion?'第 4 插槽正在接合':second&&game.slots.length===4?'第 4 插槽已接上城首':'搶來的建築，接在這裡';
+  const synergy=game.synergies();$('synergy').innerHTML=synergy.length?synergy.map(text=>{const parts=text.split(' · ');return `<span class="synergy-chip">${parts[0]}<b>${parts[1]}</b></span>`}).join(''):(game.slots.length===4?'四個插槽，一座繼續長大的魔城':'三個插槽，一座屬於你的魔城');$('synergy').className=synergy.length?'active':'';
+ }
  $('synergy').classList.toggle('recent',game.clock<synergyPulseUntil);
 }
-function resetPresentation(){installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=[0,0,0];uiPhase='';uiSlots='';updateUI(true)}
-function restart(){game.reset();resetPresentation()}
-function replayJourney(){if(game.replay())resetPresentation()}
+
+function resetPresentation(){enemyFlash=0;playerFlash=0;winFlash=0;installBefore=[];synergyPulseUntil=0;bossAfterHit=0;shots=[];enemyGuardRemnants=[];guardRemnants=[];golemTracks.clear();settledShots.clear();dissolutions=[];impactGlows=[];coolingPulses=[];forgeFlares=[];forgeAnnounced=false;particles=[];floaters=[];shockwaves=[];visualImpacts=[];hitStop=0;ramAnim=0;toastTimer=0;shake=0;shakeOffset={x:0,y:0};recoils=game.slots.map(()=>0);sceneNeedsRender=true;uiPhase='';uiSlots='';updateUI(true)}
+function restart(){const changed=game.chapter===2?game.retryChapter():game.reset();if(changed)resetPresentation()}
+function replayJourney(){if(game.rebuildFirstChapter())resetPresentation()}
+function continueExpedition(){if(game.continueExpedition())resetPresentation()}
+function retreatChapter(){if(game.retreat())resetPresentation()}
 function pause(){if(!['battle','grafting'].includes(game.phase))return;game.paused=!game.paused;updateUI();}
-$('pause').onclick=pause;$('resume').onclick=pause;$('restart').onclick=onAction(restart);$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'音效 開':'音效 關';$('sound').setAttribute('aria-pressed',sound);$('sound').setAttribute('aria-label',sound?'關閉音效':'開啟音效');if(sound)play(440,.1,'sine',.03)};
+$('pause').onclick=pause;$('resume').onclick=pause;$('restart').onclick=onAction(restart);$('retreat').onclick=onAction(retreatChapter);$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'音效 開':'音效 關';$('sound').setAttribute('aria-pressed',sound);$('sound').setAttribute('aria-label',sound?'關閉音效':'開啟音效');if(sound)play(440,.1,'sine',.03)};
 addEventListener('keydown',e=>{if(e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;if(e.code==='Space'){if(document.activeElement?.tagName==='BUTTON')return;e.preventDefault();ram()}else if(e.code==='KeyP'){e.preventDefault();pause()}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.paused&&['battle','grafting'].includes(game.phase)){game.paused=true;updateUI()}});
 function frame(now){let dt=Math.min(.05,(now-last)/1000||.016);last=now;const frozen=hitStop>0;if(!game.paused)hitStop=Math.max(0,hitStop-dt);const activeDt=game.paused||frozen?0:dt;if(activeDt){visualTime+=activeDt;ramAnim=Math.max(0,ramAnim-activeDt);}game.tick(activeDt);events();updateUI();if(activeDt>0||sceneNeedsRender){render(activeDt);sceneNeedsRender=false;}requestAnimationFrame(frame)}
 updateUI(true);requestAnimationFrame(frame);
 // A read-only snapshot supports practical smoke tests without granting mutation hooks.
-Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,artLoaded,routeVariant:game.routeVariant,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
+Object.defineProperty(window,'castleSnapshot',{get:()=>({phase:game.phase,chapter:game.chapter,enemyGuardian:game.enemyGuardian,artLoaded,routeVariant:game.routeVariant,stage:game.stage,hp:game.hp,enemyHp:game.enemy.hp,enemyType:game.enemy.type,slots:[...game.slots],battleTime:game.battleTime,paused:game.paused,ramUsed:game.ramUsed,synergies:game.synergies(),minions:game.minions.length,guardBlocks:game.guardBlocks,battleGuardBlocks:game.battleGuardBlocks,guardPrevented:game.guardPrevented,runCombatTime:game.runCombatTime})});
 })();
 </script>
 </body></html>
