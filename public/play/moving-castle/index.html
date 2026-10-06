@@ -18,6 +18,11 @@ body[data-phase="battle"] .command-deck{padding-top:13px}body[data-phase="battle
 .boss-threat{display:block;color:#e2ae8b;font-size:12px;line-height:1.6;margin-bottom:4px}@media(max-width:600px){.boss-threat{font-size:11px}}
 
 body[data-paused="true"] .primary.ram.danger{animation-play-state:paused}
+
+/* Decision context and a single factual contribution line, not a new score. */
+.choice .build-preview{color:#c4d6b6;font-size:11px;line-height:1.55;margin-top:6px}
+.run-contribution{display:block;color:#dfad82;font-size:12px;line-height:1.6;margin:3px 0 5px}
+@media(max-width:600px){.choice .build-preview{font-size:10px}.run-contribution{font-size:11px}}
 </style></head>
 <body>
 <main class="game-shell">
@@ -34,7 +39,7 @@ body[data-paused="true"] .primary.ram.danger{animation-play-state:paused}
 <div class="build-strip"><div class="build-title"><span class="eyebrow">城頂插槽</span><span id="slot-hint">搶來的建築，接在這裡</span></div><div id="slots" class="slots"></div></div>
 <div class="deck-footer"><span id="synergy" aria-live="polite">三個插槽，一座屬於你的魔城</span><button id="restart" class="text-btn">重走此路線</button></div>
 </section>
-<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.7.0</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
+<footer class="page-footer"><span>移動魔城 · 原創試玩版 0.7.1</span><span>自動戰鬥 · 空白鍵衝撞 · P 暫停</span></footer>
 </main>
 <div id="announcer" class="sr-only" aria-live="polite"></div>
 <script>/* Original deterministic battle model. No network, dependencies, or external assets. */
@@ -45,7 +50,7 @@ const BUILDINGS={
  arrow:{name:'疾風箭塔',short:'箭塔',tag:'連射',color:'#d9c897',desc:'每秒射出弩箭。兩座箭塔一起裝，射速再快 40%。',stat:'10 傷害 / 1.05 秒',hp:118,atk:8,rate:1.6},
  cannon:{name:'熔爐重砲',short:'重砲',tag:'爆破',color:'#f39e53',desc:'重砲轟開城牆。緊鄰修復樹時，裝填加快 30%。',stat:'35 傷害 / 3.3 秒',hp:210,atk:20,rate:2.5},
  grove:{name:'修復古樹',short:'古樹',tag:'修復',color:'#87dab1',desc:'每 3 秒修復 10 城體。放在重砲旁，還能幫它冷卻。',stat:'修復 10 / 3 秒',hp:180,atk:9,rate:1.8},
- nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:'每 3.5 秒召喚石偶，會攻擊並擋 1 發普通射擊；重擊無法擋。',stat:'召喚 / 3.5 秒 · 格擋 1 發',hp:195,atk:12,rate:1.9}
+ nest:{name:'石偶兵營',short:'兵營',tag:'召喚',color:'#b8a0ea',desc:'每 3.5 秒召喚石偶，每隻基礎攻擊 4 傷害／秒；可擋 1 發普通射擊，重擊無法擋。',stat:'召喚 / 3.5 秒 · 格擋 1 發',hp:195,atk:12,rate:1.9}
 };
 // Contact timing is shared with presentation; ram deliberately keeps its legacy path.
 const PROJECTILE_DURATIONS=Object.freeze({forge:.43,core:.43,arrow:.43,minion:.43,cannon:.64,normal:.45,heavy:.58});
@@ -62,8 +67,12 @@ class Game{
  #projectiles=[];
  #reservations=new Map();
  #nextProjectileId=0;
+ // Run-only contribution metadata never changes battle events or damage rules.
+ #forgeInstalled=false;
+ #forgeHits=0;
+ #forgeDamage=0;
  constructor(){this.lastCompletedRun=null;this.routeVariant=0;this.reset()}
- reset(){this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
+ reset(){this.#forgeInstalled=false;this.#forgeHits=0;this.#forgeDamage=0;this.phase='ready';this.stage=0;this.hp=300;this.maxHp=300;this.slots=[null,null,null];this.enemy=makeEnemy('arrow',0);this.clock=0;this.battleTime=0;this.ramUsed=false;this.kills=0;this.totalDamage=0;this.guardBlocks=0;this.guardPrevented=0;this.lastBattleRepair=0;this.runCombatTime=0;this.routeTaken=[];this.completedRun=null;this.comparisonRun=null;this.events=[];this.minions=[];this.pendingLoot=null;this.graft=null;this.lastResult=null;this.paused=false;this.setTimers();return this;}
  setTimers(){this.coreTimer=.7;this.enemyTimer=1.4;this.slotTimers=[.5,.7,.9];this.specialTimer=8;this.windup=0;this.stun=0;this.minions=[];this.nextMinionId=0;this.battleGuardBlocks=0;this.#projectiles=[];this.#reservations.clear();this.#nextProjectileId=0;this.battleEpoch=(this.battleEpoch||0)+1;}
  event(type,data={}){this.events.push({type,...data})}
  drain(){const e=this.events;this.events=[];return e}
@@ -115,6 +124,7 @@ class Game{
   }else if(shot.target==='enemy'&&shot.side==='friendly'){
    if(targetEntity&&targetEntity===this.enemy&&Number.isFinite(targetEntity.hp)&&targetEntity.hp>0){
     actual=Math.min(targetEntity.hp,shot.damage);targetEntity.hp=Math.max(0,targetEntity.hp-shot.damage);this.totalDamage+=shot.damage;outcome='enemy';
+    if(shot.source==='forge'&&actual>0){this.#forgeHits++;this.#forgeDamage+=actual;}
    }
   }
   this.event('projectileImpact',{...shot,actual,outcome,...blocked});
@@ -157,12 +167,12 @@ class Game{
   this.event('shot',{source:'ram',slot:-1,damage:52});this.#adjudicate();return true;
  }
  heal(n){const before=this.hp;this.hp=Math.min(this.maxHp,this.hp+n);const amount=this.hp-before;if(amount>0)this.event('heal',{amount});return amount;}
- win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken])});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
+ win(){if(this.phase!=='battle')return;this.#cancelProjectiles('win');this.kills++;this.minions=[];this.event('win');if(this.stage===4){this.comparisonRun=this.lastCompletedRun;this.completedRun=Object.freeze({combatTime:this.runCombatTime,hp:this.hp,maxHp:this.maxHp,blocked:this.guardBlocks,routeVariant:this.routeVariant,build:Object.freeze([...this.slots]),route:Object.freeze([...this.routeTaken]),forgeInstalled:this.#forgeInstalled,forgeHits:this.#forgeHits,forgeDamage:this.#forgeDamage});this.lastCompletedRun=this.completedRun;this.phase='won';this.lastResult='won';return;}this.phase='loot';this.pendingLoot=this.enemy.reward;this.lastBattleRepair=this.heal(34);}
  install(slot){if(this.phase!=='loot'||!this.pendingLoot||!Number.isInteger(slot)||slot<0||slot>2)return false;const old=this.slots[slot];this.graft={type:this.pendingLoot,slot,old,time:0};this.phase='grafting';this.event('graft',this.graft);return true;}
  skip(){if(this.phase!=='loot'||this.stage===0)return false;this.heal(34);this.pendingLoot=null;this.stage++;this.phase='route';this.event('route');return true;}
  synergies(){return synergiesFor(this.slots);}
  tick(dt){if(this.paused)return;dt=Math.max(0,Math.min(dt,.1));if(!dt)return;this.clock+=dt;
- if(this.phase==='grafting'){this.graft.time+=dt;if(this.graft.time>=1.35){const installedSlot=this.graft.slot;this.slots[installedSlot]=this.graft.type;this.pendingLoot=null;this.graft=null;this.stage++;this.phase='route';this.event('installed',{slot:installedSlot})}return;}
+ if(this.phase==='grafting'){this.graft.time+=dt;if(this.graft.time>=1.35){const installedSlot=this.graft.slot;this.slots[installedSlot]=this.graft.type;if(this.graft.type==='forge')this.#forgeInstalled=true;this.pendingLoot=null;this.graft=null;this.stage++;this.phase='route';this.event('installed',{slot:installedSlot})}return;}
  if(this.phase!=='battle')return;this.battleTime+=dt;this.runCombatTime+=dt;this.#resolveDue();if(this.phase!=='battle')return;this.stun=Math.max(0,this.stun-dt);
  this.coreTimer-=dt;if(this.coreTimer<=0){this.coreTimer+=1.2;this.damage(7,'core');}if(this.phase!=='battle')return;
  for(let i=0;i<3;i++){const b=this.slots[i];if(!b)continue;this.slotTimers[i]-=dt;if(this.slotTimers[i]>0)continue;
@@ -219,6 +229,14 @@ function ramTactics(){
  return '衝撞造成 52 傷害、暈眩 2 秒。可先搶攻，也可等蓄力打斷重擊；每場一次。';
 }
 
+function choiceInteraction(type,slots){
+ return type==='nest'&&slots.includes('forge')?'石偶擋下的射擊會保住城體，不會觸發熔爐反擊。':'';
+}
+
+function choiceSynergy(type,slots){
+ return type==='nest'&&slots.includes('arrow')?'搭配箭塔：石偶每擊 4→5（+25%）':'';
+}
+
 // Healing is already capped by the caller against current castle health.
 function repairCaption(actualHeal){
  const gain=amount(actualHeal);
@@ -254,7 +272,7 @@ function synergyChangeNotice(before,after){
  return parts.length?parts.join(' · '):'建築接合完成 · 協同不變';
 }
 
-const API={enemyThreat,ramTactics,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
+const API={enemyThreat,ramTactics,choiceInteraction,choiceSynergy,repairCaption,salvageLabel,replacementSummary,synergyChangeNotice};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleFeedback=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -296,6 +314,17 @@ function metricLine(result){
  return `交戰計時 ${seconds(result.combatTime)} 秒 · 剩餘城體 ${result.hp}／${result.maxHp} · 擋下普通射擊 ${result.blocked} 發`;
 }
 
+function forgeContribution(result){
+ validate(result);
+ const {forgeInstalled,forgeHits,forgeDamage}=result;
+ // Older completed snapshots contain no contribution metadata. Neither an
+ // enemy route nor the final build establishes the history of a prior run.
+ if(forgeInstalled===undefined&&forgeHits===undefined&&forgeDamage===undefined)return '';
+ if(typeof forgeInstalled!=='boolean'||!Number.isInteger(forgeHits)||forgeHits<0||typeof forgeDamage!=='number'||!Number.isFinite(forgeDamage)||forgeDamage<0)throw new TypeError('Expected valid forge contribution');
+ if((forgeHits===0)!==(forgeDamage===0)||(!forgeInstalled&&forgeHits>0))throw new TypeError('Inconsistent forge contribution');
+ return forgeInstalled?`熔爐反擊命中 ${forgeHits} 次 · 實際傷害 ${forgeDamage}`:'';
+}
+
 function buildContext(result){
  validate(result);
  // Remove only the mandatory endpoints, never a chosen second arrow tower.
@@ -321,7 +350,7 @@ function comparisonLine(current,previous){
  return `${routeNote}與上次相比：${timeText} · ${hpText} · ${blockText}`;
 }
 
-const API={metricLine,buildContext,comparisonLine};
+const API={metricLine,forgeContribution,buildContext,comparisonLine};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 else root.CastleRunSummary=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -613,7 +642,7 @@ function events(){const {p,e,y}=bodyPositions();for(const ev of game.drain()){
 function start(type){if(!artLoaded)return;if(game.start(type)){uiPhase='';play(190,.14,'triangle',.04);updateUI(true)}}
 function install(i){const before=game.synergies();if(game.install(i)){installBefore=before;say('整座帶走 · 接上魔城');play(210,.3,'sine',.025);uiPhase='';updateUI(true)}}
 function ram(){if(game.ram()){events();updateUI(true)}}
-function completedRunReport(){const result=game.completedRun,previous=game.comparisonRun;if(!result)return '王冠堡壘已攻陷。';return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span><span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-route-note">換路依序輪替 A／B；重新載入從 A 開始</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;}
+function completedRunReport(){const result=game.completedRun,previous=game.comparisonRun;if(!result)return '王冠堡壘已攻陷。';const forge=CastleRunSummary.forgeContribution(result);return `<span class="run-metrics">${CastleRunSummary.metricLine(result)}</span>${forge?`<span class="run-contribution">${forge}</span>`:''}<span class="run-clock-note">計時不含選路、暫停與命中停頓</span><span class="run-route-note">換路依序輪替 A／B；重新載入從 A 開始</span><span class="run-context">本趟 ${CastleRunSummary.buildContext(result)}</span><span class="run-comparison">${CastleRunSummary.comparisonLine(result,previous)}</span>${previous?`<span class="run-context previous-run">上趟 ${CastleRunSummary.buildContext(previous)}</span>`:''}`;}
 function actionRow(text,button){return `<div class="action-row"><p class="action-description">${text}</p>${button}</div>`}
 function button(text,id,cls='primary'){return `<button class="${cls}" id="${id}">${text}</button>`}
 function updateUI(force=false){document.body.dataset.phase=game.phase;document.body.dataset.paused=String(game.paused);$('hp-text').textContent=`${Math.ceil(game.hp)} / ${game.maxHp}`;$('hp-bar').style.width=(game.hp/game.maxHp*100)+'%';$('enemy-hp-text').textContent=`${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;$('enemy-hp-bar').style.width=(game.enemy.hp/game.enemy.maxHp*100)+'%';$('enemy-name').textContent=game.enemy.name;$('round-label').textContent=game.phase==='ready'?'約 3 分鐘 · 5 場戰鬥':`第 ${Math.min(game.stage+1,5)} 站 / 5`;
@@ -629,7 +658,7 @@ function updateUI(force=false){document.body.dataset.phase=game.phase;document.b
  else if(game.phase==='grafting'){k='接合中';title='戰利品正在接合';tag='建築移植';caption='<span>＋</span> 原本的敵塔，正在搬進你的魔城';a.innerHTML=actionRow('接上牽引索，抬起地基……',`<button class="primary" disabled>正在接合</button>`)}
  else if(game.phase==='route'){k=game.routeLabel()+' · 選擇下一站';title=game.stage===1?'帶上箭塔，繼續前進':game.stage===4?'最後一仗，攻下王冠堡壘':'下一座城，想帶走什麼？';tag=`準備前往第 ${game.stage+1} 站`;caption='<span>◆</span> '+(game.stage===1?'箭塔已安裝 · 下一仗開始自動連射':'你選擇的敵城，也決定下一件戰利品');
  if(game.stage===4){const boss=CastleEngine.makeEnemy('boss',game.stage);a.innerHTML=actionRow(`<span class="boss-threat">城體${boss.hp} · ${CastleFeedback.enemyThreat(boss)}</span>${CastleFeedback.ramTactics()}`,button('迎戰王冠堡壘','boss'));$('boss').onclick=onAction(()=>start('boss'))}
- else{a.innerHTML='<div class="choices">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=CastleEngine.makeEnemy(type,game.stage);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${b.name}</h3><p>${b.desc}</p><small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · 勝利後帶走${b.short}</small></div><span class="take">攻下它</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}}
+ else{a.innerHTML='<div class="choices">'+game.routeOptions().map(type=>{const b=BUILDINGS[type],e=CastleEngine.makeEnemy(type,game.stage),preview=CastleFeedback.choiceSynergy(type,game.slots);return `<button class="choice" data-route="${type}"><img class="mini-art" src="${icon(type)}" alt=""><div><h3>${b.name}</h3><p>${b.desc}${CastleFeedback.choiceInteraction(type,game.slots)}</p>${preview?`<small class="build-preview">${preview}</small>`:''}<small class="route-threat">${CastleFeedback.enemyThreat(e)}</small><small>城體 ${e.hp} · 勝利後帶走${b.short}</small></div><span class="take">攻下它</span></button>`}).join('')+'</div>';a.querySelectorAll('[data-route]').forEach(b=>b.onclick=onAction(()=>start(b.dataset.route)));}}
  else if(game.phase==='won'){k='旅程完成';title='你帶走的，成了你的整座城';tag='五座城 · 一段旅程';caption='<span>♜</span> 王冠堡壘已攻陷';a.innerHTML=actionRow(completedRunReport(),button('換路再出發','again'));$('again').onclick=onAction(replayJourney);}
  else if(game.phase==='lost'){k='魔城倒下';title='再換一個組合，重新上路';tag='旅程暫止';caption='<span>◇</span> 衝撞可提早削血，也能留到蓄力時打斷重擊';a.innerHTML=actionRow(`走到了第 ${game.stage+1} 站。${game.slots.includes('grove')?'試著把重砲裝在古樹旁邊，縮短裝填時間。':'下一次可以帶一座修復古樹，讓城體撐得更久。'}`,button('重試此路線','again'));$('again').onclick=onAction(restart);}
  $('phase-kicker').textContent=k;$('phase-title').textContent=title;if(caption)$('field-caption').innerHTML=caption;$('battle-tag').textContent=tag;$('announcer').textContent=title;
