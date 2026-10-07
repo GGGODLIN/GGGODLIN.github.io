@@ -2,7 +2,7 @@
 export const SCHEMA_VERSION = 1;
 export const MAX_SAVE_BYTES = 5_000_000;
 export const EQUIPMENT_QUALITIES = Object.freeze(['Crude','Fair','Average','Superior','Exquisite','Magnificent','Legendary','Peerless','Peerless+','Ultimate']);
-export const RULES_VERSION = 'persistent-0.91-training-v5';
+export const RULES_VERSION = 'persistent-0.91-training-v6';
 export const ATTRIBUTE_KEYS = Object.freeze(['str', 'dex', 'agi', 'end', 'int', 'wis']);
 export const RULES = Object.freeze({
   version: RULES_VERSION,
@@ -26,7 +26,7 @@ export const RULES = Object.freeze({
   externalBonuses: Object.freeze({ hath: 0, gp: 0, donation: 0, forum: 0, isekaiAttributes: 0, tower: 0, rewardMultiplier: 1, externalEligibility: false }),
 });
 
-const item = (id, name, slot, quality, attack, magic, defense, burden, description) => ({ id, name, slot, quality, attack, magic, defense, burden, description, level: ['Crude','Fair','Average','Superior'].includes(quality) ? null : 20, hands: slot === 'weapon' ? id.startsWith('staff-') ? 2 : 1 : 0, locked: false, bound: false, iwLevel: 0, forgeLevel: 0 });
+const item = (id, name, slot, quality, attack, magic, defense, burden, description) => ({ id, name, slot, quality, attack, magic, defense, burden, description, templateId: id, origin: 'starter-fixture', level: ['Crude','Fair','Average','Superior'].includes(quality) ? null : 20, hands: slot === 'weapon' ? id.startsWith('staff-') ? 2 : 1 : 0, locked: false, bound: false, iwLevel: 0, forgeLevel: 0 });
 export const STARTER_ITEMS = Object.freeze([
   item('blade-dawn', '曙光長刃', 'weapon', 'Superior', 29, 2, 0, 7, '原創演練長刃。偏重物理攻擊；裝備模板與數值皆為暫定樣本。'),
   item('staff-ember', '餘燼法杖', 'weapon', 'Exquisite', 8, 35, 0, 3, '原創演練法杖。提高魔力；尚未套用完整法杖熟練度與流派機制。'),
