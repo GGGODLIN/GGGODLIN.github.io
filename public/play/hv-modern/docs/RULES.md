@@ -1,6 +1,6 @@
 # VESPER 暮界紀行：規則與驗證紀錄
 
-日期：2026-10-07。引擎版本：`persistent-0.91-training-v6`。存檔 schema：1。
+日期：2026-10-07。引擎版本：`persistent-0.91-training-v8`。存檔 schema：1。
 
 ## 範圍與誠實標示
 
@@ -133,3 +133,11 @@ ES modules，入口 `src/engine.js`：
 [Leveling Up 修訂65211](https://ehwiki.org/index.php?title=Leveling_Up&oldid=65211#Formula) 的曲線以累計最近整數候選政策計算（Lv1 明示0），與 Level Table 的1/2/3/20/21/30/100/500錨點相符；仍不宣稱原服取整已驗證。每次升級的 AP 與十級 Mastery 資格先記錄，能力系統未完成前不提供虛假效果。
 
 訓練仍不發 EXP、Credits 或裝備；Arena 與訓練的結算路徑獨立。動畫開關不再改變最低輸入間隔；UI採250ms保守間隔，符合 Action Speed 公開的每秒不超過4次上限，但不是原服節流算法的重建。
+
+## 軍械庫整理（Checkpoint 11）
+
+[ARMORY-ORGANIZATION.md](./ARMORY-ORGANIZATION.md) 記錄置頂、保護／鎖定互斥、倉儲與資格。舊版 UI 名為保護但欄位名 locked 的標記，明示遷移為 protected；沒有把既有標記升級成較強的鎖定。所有新的裝備 ID DOM 綁定也使用編碼，延續 C10c 匯入防護。
+
+## 法術消耗與 tick 回復（Checkpoint 12）
+
+[COMBAT-RESOURCES.md](./COMBAT-RESOURCES.md) 記錄新戰鬥採用的等級百分比消耗、單次向上取整、來源冷卻／等級門檻／目標上限及 tick 型 MP／SP 回復。已進行中的舊存檔明示保留 legacy-training-v1 到整個系列結束；不在讀取途中改變其消耗、冷卻、目標或回復。新的來源政策沒有改變舊角色属性、生命／魔力上限、傷害或治療量公式。

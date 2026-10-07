@@ -1,3 +1,5 @@
+import {COMBAT_RESOURCE_POLICY,SPELL_RESOURCES,REGEN_SCALE,spellManaCost,naturalRegenRates,recoverWholeUnits} from './combat-resources.js';
+import {setEquipmentProtection,equipmentActionPermission,getContainerCounts} from './armory.js';
 import {ARENAS,createActivityState,validateActivityState,previewActivities,reserveArena,settleArenaRound,settleArenaSeries} from './arena.js';
 import {grantExperience,experienceThreshold} from './leveling.js';
 import {createExperienceLedger,validateExperienceLedger,quoteAttributeChange,applyAttributeChange,LEVEL_20_REFERENCE} from './progression.js';
@@ -100,6 +102,7 @@ export function startBattle(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:reservation?.definition.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
+    combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, _receipts: [], _settled: false,
   };
@@ -130,12 +133,18 @@ export function getEnemyView(enemy) {
 function effectiveSpirit(state) {
   return Boolean(state.battle?.spiritActive && state.player.overcharge > 30 && state.player.sp > 0);
 }
+function modernResources(state) { return !isActive(state) || state.battle.combatRules === COMBAT_RESOURCE_POLICY.id; }
 function manaCost(state, action) {
+  const spell=SPELL_RESOURCES[action.id];
+  if(modernResources(state)&&spell)return spellManaCost({level:state.player.level,baseCost:spell.baseCost,spiritStance:effectiveSpirit(state)});
   return action.mana ? Math.ceil(action.mana * (effectiveSpirit(state) ? 0.75 : 1)) : 0;
 }
+function actionCooldown(state,action){return modernResources(state)&&SPELL_RESOURCES[action.id]?SPELL_RESOURCES[action.id].cooldown:action.cooldown||0;}
+function naturalTick(state,events){const rates=naturalRegenRates(state.player.attributes),stats=getStats(state),recovered={};for(const key of ['mp','sp']){const result=recoverWholeUnits(state.player[key],key==='mp'?stats.maxMp:stats.maxSp,state.battle._regenCarry[key],rates[key+'Units']);state.player[key]=result.value;state.battle._regenCarry[key]=result.carry;recovered[key]=result.amount;}if(recovered.mp||recovered.sp)emit(state,events,`自然回復：+${recovered.mp} MP / +${recovered.sp} SP（tick ${state.battle.ticks}）`,'regen',recovered);}
 function actionError(state, action, targetId) {
   if (!isActive(state)) return '目前沒有進行中的演練';
   if (!action) return '未知的行動';
+  if(modernResources(state)&&SPELL_RESOURCES[action.id]&&state.player.level<SPELL_RESOURCES[action.id].minLevel)return `此法術需要等級 ${SPELL_RESOURCES[action.id].minLevel}（基礎熟練度 0）`;
   if (state.battle.phase === 'round-complete') return '本波已完成，請確認繼續下一波';
   if (state.player.hp <= 0) return '角色已倒下';
   if (state.battle.cooldowns[action.id] > 0) return `尚需 ${state.battle.cooldowns[action.id]} 個${action.item ? '道具或一般' : '非道具'}行動冷卻`;
@@ -158,7 +167,7 @@ export function listAvailableActions(state) {
     const reason = actionError(state, action, state.battle?.targetId);
     const cost = action.item ? `${state.potions[action.item]} 瓶 · 0 時間` : action.mana ? `${manaCost(state, action)} MP` : action.id === 'spirit' ? state.battle?.spiritActive ? '關閉架式' : '50 OC 門檻' : '無消耗';
     return { id: action.id, name: action.name, icon: action.icon, cost,
-      description: action.description, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
+      description: modernResources(state)&&SPELL_RESOURCES[action.id]?`${action.id==='fire'?'火焰：至多 3 目標，分別命中判定。':'治癒：恢復量仍為暫定模型。'}消耗 ceil(等級 × ${SPELL_RESOURCES[action.id].baseCost}%)，目前 ${manaCost(state,action)} MP；冷卻 ${actionCooldown(state,action)} 個非道具行動。能力／裝備修正尚未接入。`:!modernResources(state)&&SPELL_RESOURCES[action.id]?`本場沿用舊版固定消耗／冷卻；${action.description}`:action.description, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
   });
 }
 
@@ -172,6 +181,7 @@ function heal(state, events, resource, amount, source) {
   const max = resource === 'hp' ? stats.maxHp : stats.maxMp;
   const recovered = Math.min(max - state.player[resource], Math.max(0, Math.floor(amount)));
   state.player[resource] += recovered;
+  if(resource==='mp'&&state.player.mp===max&&state.battle?._regenCarry)state.battle._regenCarry.mp=0;
   emit(state, events, `${source}恢復 ${recovered} ${resource.toUpperCase()}`, 'heal', { amount: recovered, resource });
 }
 function settle(state, status, events, nowMs) {
@@ -231,7 +241,7 @@ function enemyAttack(state, enemy, events, focused, nowMs) {
   if (state.player.hp === 0) settle(state, 'defeat', events, nowMs);
 }
 
-function advanceTime(state, units, events, focused, nowMs) {
+function advanceTime(state, units, events, focused, nowMs, suppressRegen=false) {
   const battle = state.battle;
   if (units === 0) return;
   const end = battle.timeUnits + units;
@@ -245,6 +255,7 @@ function advanceTime(state, units, events, focused, nowMs) {
     if (battle._nextTick <= (due?.nextAt ?? Infinity)) {
       battle.ticks++;
       battle._nextTick += RULES.tickUnits;
+      if(modernResources(state)&&!suppressRegen)naturalTick(state,events);
     } else {
       due.nextAt += due.interval;
       const enemy = battle.enemies.find((entry) => entry.id === due.id);
@@ -295,17 +306,20 @@ export function performAction(state, actionId, targetId, commandId, nowMs = Date
   if (target) battle.targetId = target.id;
   if (action.id === 'attack' || action.id === 'fire') {
     const isFire = action.id === 'fire';
-    const accuracy = isFire ? clamp(stats.accuracy * (focused ? 2 : 1), 0, 100) : stats.accuracy;
-    if (random(state) * 100 < accuracy) {
-      const critical = random(state) < 0.08;
-      const base = isFire ? stats.magic * 1.7 : stats.attack * (spirit ? 2 : 1);
-      const mitigation = target.resistances[isFire ? 'fire' : 'physical'];
-      const damage = Math.max(1, Math.floor(base * (0.9 + random(state) * 0.2) * (1 - mitigation) * (critical ? 1.5 : 1)));
-      target.hp = Math.max(0, target.hp - damage);
-      emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${target.name}：${damage}${critical ? '（暴擊）' : ''}`, isFire ? 'magic' : 'attack', { targetId: target.id, amount: damage, critical });
-      if (!isFire) state.player.overcharge = Math.min(RULES.overchargeCap, state.player.overcharge + randomInt(state, 5, 10));
-      if (target.hp === 0) emit(state, events, `${target.name}已被擊倒`, 'kill', { targetId: target.id });
-    } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${target.name}`, 'miss', { targetId: target.id });
+    const targets=isFire&&modernResources(state)?[target,...battle.enemies.filter(e=>e.hp>0&&e.id!==target.id)].slice(0,SPELL_RESOURCES.fire.targets):[target];
+    for(const victim of targets){
+      const accuracy = isFire ? clamp(stats.accuracy * (focused ? 2 : 1), 0, 100) : stats.accuracy;
+      if (random(state) * 100 < accuracy) {
+        const critical = random(state) < 0.08;
+        const base = isFire ? stats.magic * 1.7 : stats.attack * (spirit ? 2 : 1);
+        const mitigation = victim.resistances[isFire ? 'fire' : 'physical'];
+        const damage = Math.max(1, Math.floor(base * (0.9 + random(state) * 0.2) * (1 - mitigation) * (critical ? 1.5 : 1)));
+        victim.hp = Math.max(0, victim.hp - damage);
+        emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${victim.name}：${damage}${critical ? '（暴擊）' : ''}`, isFire ? 'magic' : 'attack', { targetId: victim.id, amount: damage, critical });
+        if (!isFire) state.player.overcharge = Math.min(RULES.overchargeCap, state.player.overcharge + randomInt(state, 5, 10));
+        if (victim.hp === 0) emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });
+      } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${victim.name}`, 'miss', { targetId: victim.id });
+    }
   } else if (action.id === 'cure') heal(state, events, 'hp', stats.maxHp * 0.3 + stats.magic * 0.4, '治癒');
   else if (action.id === 'scan') {
     target.scanned = true;
@@ -327,8 +341,8 @@ export function performAction(state, actionId, targetId, commandId, nowMs = Date
     state.potions[action.item]--;
     heal(state, events, action.item === 'health' ? 'hp' : 'mp', action.item === 'health' ? stats.maxHp * 0.5 : stats.maxMp * 0.4, action.name);
   } else if (action.id === 'flee') emit(state, events, '正在撤離……', 'status');
-  if (action.cooldown) battle.cooldowns[action.id] = action.cooldown;
-  advanceTime(state, actionTime(state, action), events, focused, nowMs);
+  battle.cooldowns[action.id] = actionCooldown(state,action);
+  advanceTime(state, actionTime(state, action), events, focused, nowMs, action.id==='spirit'&&!wasSpirit);
   if (battle.status === 'active') {
     for (const effect of ['defend', 'focus']) battle.effects[effect] = Math.max(0, battle.effects[effect] - 1);
     if (battle.spiritActive && (state.player.overcharge <= 20 || state.player.sp <= 0)) {
@@ -379,6 +393,8 @@ export function getEquipmentEligibility(state, itemId) {
   if (isActive(state)) return { ok: false, error: '戰鬥中不能更換裝備', unequipIds: [] };
   const item = state.inventory.find((entry) => entry.id === itemId);
   if (!item) return { ok: false, error: '找不到這件裝備', unequipIds: [] };
+  const permission=equipmentActionPermission(item,'equip');
+  if(!permission.allowed)return {ok:false,error:permission.reason,unequipIds:[]};
   if (item.level !== null && item.level > state.player.level) return { ok: false, error: `裝備等級 ${item.level} 高於角色等級 ${state.player.level}`, unequipIds: [] };
   if (state.equipped[item.slot] === item.id) return { ok: false, error: '這件裝備已穿戴', unequipIds: [] };
   const mainhand = state.inventory.find((entry) => entry.id === state.equipped.weapon);
@@ -407,12 +423,9 @@ export function equipItem(state, itemId) {
   events.push({ id: `event-${state._nextEvent++}`, text: `已裝備${item.name}`, type: 'equipment' }, ...recoverOutOfCombat(state).events);
   return success(events);
 }
-export function setItemProtected(state, itemId, locked) {
-  if (typeof locked !== 'boolean') return failure('保護標記格式錯誤');
-  const item = state.inventory.find((entry) => entry.id === itemId);
-  if (!item) return failure('找不到這件裝備');
-  item.locked = locked;
-  return success();
+export function setItemProtected(state, itemId, protectedFlag) {
+  if (typeof protectedFlag !== 'boolean') return failure('保護標記格式錯誤');
+  return setEquipmentProtection(state,itemId,protectedFlag?'protected':'none');
 }
 export function getAttributeQuote(state, key, delta = 1) {
   if (state.progression?.kind === 'experience-ledger') return quoteAttributeChange(state.player.attributes, key, delta, state.progression.unspent);
@@ -464,11 +477,14 @@ function validState(state) {
   for (const item of state.inventory) {
     const original = STARTER_ITEMS.find((entry) => entry.id === item.templateId);
     if (!safeText(item.id) || !/^[a-z0-9][a-z0-9-]{0,199}$/.test(item.id) || (item.origin !== 'starter-fixture' && item.origin !== 'arena-fixture') || (item.origin === 'starter-fixture' && item.id !== item.templateId) || (item.origin === 'arena-fixture' && !/^reward-arena-[1-9]\d*$/.test(item.id))) return false;
-    if (!original || typeof item.locked !== 'boolean' || Object.keys(original).some((key) => !['id','origin','locked','level'].includes(key) && item[key] !== original[key])) return false;
+    if (!original || typeof item.locked !== 'boolean' || Object.keys(original).some((key) => !['id','origin','locked','protected','pinned','container','level'].includes(key) && item[key] !== original[key])) return false;
+    if(!['inventory','storage'].includes(item.container)||typeof item.protected!=='boolean'||typeof item.pinned!=='boolean'||item.protected&&item.locked)return false;
+    if(item.container==='storage'&&Object.values(state.equipped).includes(item.id))return false;
     if (item.level !== null && !integer(item.level, 1, 500)) return false;
     if (item.level === null && (EQUIPMENT_QUALITIES.indexOf(item.quality) >= 4 || Object.values(state.equipped).includes(item.id))) return false;
   }
   if (Object.keys(state.equipped).length !== 3 || !['weapon', 'body', 'offhand'].every((slot) => slot === 'offhand' && state.equipped[slot] === null || state.inventory.some((item) => item.id === state.equipped[slot] && item.slot === slot))) return false;
+  const countsByContainer=getContainerCounts(state);if(countsByContainer.inventory>500||countsByContainer.storage>500)return false;
   const mainhand = state.inventory.find((item) => item.id === state.equipped.weapon);
   if (state._pendingHandNormalization !== undefined && state._pendingHandNormalization !== true) return false;
   if (mainhand.hands === 2 && state.equipped.offhand !== null && !(state._pendingHandNormalization && isActive(state))) return false;
@@ -497,6 +513,7 @@ function validState(state) {
     if(completed!==(battle.status==='victory'||battle.phase==='round-complete'?battle.round:battle.round-1))return false;
   }
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
+  if(![COMBAT_RESOURCE_POLICY.id,COMBAT_RESOURCE_POLICY.legacy].includes(battle.combatRules)||!plain(battle._regenCarry)||!['mp','sp'].every(k=>integer(battle._regenCarry[k],0,REGEN_SCALE-1)))return false;
   if (typeof battle.spiritActive !== 'boolean' || typeof battle._settled !== 'boolean' || battle._settled !== (battle.status !== 'active')) return false;
   if (battle.status === 'active' && player.hp === 0) return false;
   if (battle.finalVitals !== undefined && (!plain(battle.finalVitals) || !['hp', 'mp', 'sp'].every((key) => integer(battle.finalVitals[key])))) return false;
@@ -530,16 +547,21 @@ export function restoreGame(json) {
       return value;
     });
     // Validate old progress before applying the documented rule-version migration.
-    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5'].includes(state?.rulesVersion);
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7'].includes(state?.rulesVersion);
     if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
       state.rulesVersion = RULES_VERSION;
       if (state.activities === undefined) state.activities=createActivityState(0);
       if (state.levelRewards === undefined) state.levelRewards=[];
+      if(state.battle&&state.battle.combatRules===undefined){state.battle.combatRules=COMBAT_RESOURCE_POLICY.legacy;state.battle._regenCarry={mp:0,sp:0};}
       if (state.battle && !state.battle.kind) {state.battle.kind='training';state.battle.arenaId=null;state.battle.entryDay=null;state.battle.entryLevel=state.player?.level;state.battle.entryStamina=null;for(const enemy of state.battle.enemies||[])if(enemy.powerLevel===undefined)enemy.powerLevel=0;}
       if (state.progression === undefined) state.progression = { kind: 'legacy-fixture' };
       if (state.battle && state.battle.phase === undefined) state.battle.phase = 'combat';
       if (Array.isArray(state.inventory)) for (const item of state.inventory) {
-        const original = STARTER_ITEMS.find((entry) => entry.id === item?.id);
+        const original = STARTER_ITEMS.find((entry) => entry.id === (item?.templateId||item?.id));
+        if(original&&item.protected===undefined){item.protected=Boolean(item.locked);item.locked=false;}
+        if(original&&item.pinned===undefined)item.pinned=false;
+        if(original&&item.container===undefined)item.container='inventory';
+        if(original&&item.category===undefined)item.category=original.category;
         if (original && item.templateId===undefined)item.templateId=original.id;
         if (original && item.origin===undefined)item.origin='starter-fixture';
         if (original && item.hands === undefined) item.hands = original.hands;
