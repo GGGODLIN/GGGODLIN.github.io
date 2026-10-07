@@ -570,7 +570,12 @@ function validState(state) {
   const statuses = ['active', 'victory', 'defeat', 'fled'];
   if (!state.history.every((entry) => plain(entry) && safeText(entry.battleId) && statuses.slice(1).includes(entry.status) && integer(entry.turns) && integer(entry.rounds, 1, 6))) return false;
   if (state.history.filter((entry) => entry.status === 'victory' && (!entry.kind || entry.kind==='training')).length !== state.achievements.trainingClears) return false;
-  const validEvent = (event) => plain(event) && safeText(event.id) && safeText(event.text, 2000) && safeText(event.type, 40);
+  const validEvent = (event) => plain(event) && safeText(event.id) && safeText(event.text, 2000) && safeText(event.type, 40)
+    && (event.amount===undefined||integer(event.amount))
+    && (event.critical===undefined||typeof event.critical==='boolean')
+    && ['hp','mp','sp'].every(key=>event[key]===undefined||integer(event[key]))
+    && ['targetId','actor','itemId'].every(key=>event[key]===undefined||safeText(event[key]))
+    && (event.resource===undefined||['hp','mp','sp'].includes(event.resource));
   const validReceipt = (receipt) => plain(receipt) && safeText(receipt.id) && actionById(receipt.actionId) && (receipt.targetId === null || safeText(receipt.targetId)) && receipt.result?.ok === true && Array.isArray(receipt.result.events) && receipt.result.events.every(validEvent);
   if (!Array.isArray(state._commandReceipts) || !state._commandReceipts.every(validReceipt) || new Set(state._commandReceipts.map((receipt) => receipt.id)).size !== state._commandReceipts.length) return false;
   if(!validBattleLinks(state))return false;
@@ -599,6 +604,9 @@ function validState(state) {
   if (new Set(battle.enemies.map((enemy) => enemy.id)).size !== counts[battle.round-1]) return false;
   for (const enemy of battle.enemies) {
     if (!plain(enemy) || !safeText(enemy.id) || !safeText(enemy.name) || !safeText(enemy.title) || !['wolf', 'golem', 'wraith'].includes(enemy.kind)) return false;
+    // Only PL0 training and PL100 Arena fixtures are produced by this prototype.
+    // This is an import contract, not a claim about the original game's PL cap.
+    if(!integer(enemy.powerLevel,0,100)||enemy.powerLevel!==(battle.kind==='arena'?100:0))return false;
     if (!integer(enemy.level, 1) || !integer(enemy.maxHp, 1) || !integer(enemy.hp, 0, enemy.maxHp) || !integer(enemy.attack, 0) || typeof enemy.scanned !== 'boolean') return false;
     if (!plain(enemy.resistances) || !['fire', 'physical'].every((key) => Number.isFinite(enemy.resistances[key]) && enemy.resistances[key] >= -1 && enemy.resistances[key] <= 1)) return false;
     const schedule = battle._schedule.filter((entry) => entry.id === enemy.id);
