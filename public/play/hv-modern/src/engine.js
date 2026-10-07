@@ -1,8 +1,10 @@
+import {CURATIVE_POLICY,cureHealingAmount} from './curative.js';
+import {ACCURACY_POLICY,sampleOutgoingImpact} from './combat-accuracy.js';
 import {AUDIT_POLICY,createAuditState,compactAuditState,validateRetainedHistory} from './audit-history.js';
 import {createCommandLedger,nextCommandToken as ledgerToken,inspectCommand,appendCommandReceipt,migrateLegacyReceipts,validateCommandLedger,validateCommandEvent} from './command-ledger.js';
 import {createActivityState as createLegacyActivityState,validateActivityState as validateLegacyActivityState} from './compat/arena-schema1.js';
 import {VITAL_POLICY,calculateVitals} from './vitals.js';
-import {ABILITY_POLICY,createAbilityState,validateAbilityState,abilityVitalMultipliers,purchaseAbilityRank as purchaseRank,assignAbility as assignMajor,unassignAbility as unassignMajor,resetAbility as resetOwnedAbility} from './abilities.js';
+import {ABILITY_POLICY,ALL_ABILITIES,activeCureRank,migrateLegacyAbilityState,createAbilityState,validateAbilityState,abilityVitalMultipliers,purchaseAbilityRank as purchaseRank,assignAbility as assignMajor,unassignAbility as unassignMajor,resetAbility as resetOwnedAbility} from './abilities.js';
 import {createSupplyState,validateSupplyState} from './supplies.js';
 import {RESTORATIVE_POLICY,restorativeAmount} from './restoratives.js';
 import {GENERATION_POLICY,generateEquipment,validateGeneratedEquipment} from './equipment-generation.js';
@@ -117,7 +119,7 @@ function startBattleUnsafe(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:reservation?.definition.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
-    vitalRules:state.vitalRules, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
+    vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, logOmitted:0, _settled: false,
   };
@@ -158,7 +160,11 @@ function manaCost(state, action) {
   if(modernResources(state)&&spell)return spellManaCost({level:state.player.level,baseCost:spell.baseCost,spiritStance:effectiveSpirit(state)});
   return action.mana ? Math.ceil(action.mana * (effectiveSpirit(state) ? 0.75 : 1)) : 0;
 }
-function actionCooldown(state,action){if(action.item&&modernRestoratives(state))return RESTORATIVE_POLICY[action.id].cooldown;return modernResources(state)&&SPELL_RESOURCES[action.id]?SPELL_RESOURCES[action.id].cooldown:action.cooldown||0;}
+export function getCureProfile(state){
+  const stats=getStats(state),rank=isActive(state)&&state.battle.curativeRules===CURATIVE_POLICY.legacy?0:activeCureRank(state),spec=rank?ALL_ABILITIES.betterCure.ranks[rank-1]:null;
+  return {rank,potencyPercent:spec?.potencyPercent??null,supportiveProficiency:CURATIVE_POLICY.supportiveProficiency,sourceBased:rank>0,amount:spec?cureHealingAmount({baseHp:stats.baseHp,level:state.player.level,potencyPercent:spec.potencyPercent,supportiveProficiency:CURATIVE_POLICY.supportiveProficiency}):Math.floor(stats.baseHp*.3+stats.healingMagicFixture*.4),cooldown:spec?spec.cooldown:modernResources(state)?SPELL_RESOURCES.cure.cooldown:actionById('cure').cooldown};
+}
+function actionCooldown(state,action){if(action.id==='cure')return getCureProfile(state).cooldown;if(action.item&&modernRestoratives(state))return RESTORATIVE_POLICY[action.id].cooldown;return modernResources(state)&&SPELL_RESOURCES[action.id]?SPELL_RESOURCES[action.id].cooldown:action.cooldown||0;}
 function naturalTick(state,events){const rates=naturalRegenRates(state.player.attributes),stats=getStats(state),recovered={};for(const key of ['mp','sp']){const result=recoverWholeUnits(state.player[key],key==='mp'?stats.maxMp:stats.maxSp,state.battle._regenCarry[key],rates[key+'Units']);state.player[key]=result.value;state.battle._regenCarry[key]=result.carry;recovered[key]=result.amount;}if(recovered.mp||recovered.sp)emit(state,events,`自然回復：+${recovered.mp} MP / +${recovered.sp} SP（tick ${state.battle.ticks}）`,'regen',recovered);}
 function actionError(state, action, targetId) {
   if (!isActive(state)) return '目前沒有進行中的演練';
@@ -184,9 +190,10 @@ function actionError(state, action, targetId) {
 export function listAvailableActions(state) {
   return ACTIONS.map((action) => {
     const reason = actionError(state, action, state.battle?.targetId);
+    const impactNotice=['attack','fire'].includes(action.id)?isActive(state)&&state.battle.accuracyRules===ACCURACY_POLICY.legacy?' 本場沿用舊版單次命中／8% 單次暴擊。':' 新系列採雙次對抗樣本：一次成功為半傷擦傷，兩次成功才可暴擊；暴擊最多9重、每重+50%。對抗機率與暴擊輸入仍為样本，尚非原版完整命中式。':'';
     const cost = action.item ? `${state.potions[action.item]} 瓶 · 0 時間` : action.mana ? `${manaCost(state, action)} MP` : action.id === 'spirit' ? state.battle?.spiritActive ? '關閉架式' : '50 OC 門檻' : '無消耗';
     return { id: action.id, name: action.name, icon: action.icon, cost,
-      description: action.item?(modernRestoratives(state)?`零內部時間，恢復 ${action.item==='health'?'100% 基礎 HP':'50% 基礎 MP'}，上限封頂；40 道具／一般行動冷卻。基礎資源上限與最終取整仍為明示候選，未授予能力加成。`:`本場保留舊版藥水效果／冷卻。${action.description}`):modernResources(state)&&SPELL_RESOURCES[action.id]?`${action.id==='fire'?'火焰：至多 3 目標，分別命中判定。':'治癒：恢復量仍為暫定模型。'}消耗 ceil(等級 × ${SPELL_RESOURCES[action.id].baseCost}% × ${effectiveSpirit(state)?'0.75 靈動折扣':'1（無靈動折扣）'})，目前 ${manaCost(state,action)} MP；冷卻 ${actionCooldown(state,action)} 個非道具行動。能力／裝備修正尚未接入。`:!modernResources(state)&&SPELL_RESOURCES[action.id]?`本場沿用舊版固定消耗／冷卻；${action.description}`:action.description, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
+      description: (action.item?(modernRestoratives(state)?`零內部時間，恢復 ${action.item==='health'?'100% 基礎 HP':'50% 基礎 MP'}，上限封頂；40 道具／一般行動冷卻。基礎資源上限與最終取整仍為明示候選，未授予能力加成。`:`本場保留舊版藥水效果／冷卻。${action.description}`):modernResources(state)&&SPELL_RESOURCES[action.id]?`${action.id==='fire'?'火焰：至多 3 目標，分別命中判定。':getCureProfile(state).sourceBased?'治癒：Better Cure '+getCureProfile(state).rank+' 階，恢復 '+getCureProfile(state).amount+' HP；效力 '+getCureProfile(state).potencyPercent+'，熟練度 0 樣本（成長尚未接入）。':'治癒：未裝配強化或舊系列，保留治療樣本 '+getCureProfile(state).amount+' HP。'}消耗 ceil(等級 × ${SPELL_RESOURCES[action.id].baseCost}% × ${effectiveSpirit(state)?'0.75 靈動折扣':'1（無靈動折扣）'})，目前 ${manaCost(state,action)} MP；冷卻 ${actionCooldown(state,action)} 個非道具行動。${action.id==='cure'?'僅 Better Cure 前兩階已接入；其餘修正未施工。':'能力／裝備修正尚未接入。'}`:!modernResources(state)&&SPELL_RESOURCES[action.id]?`本場沿用舊版固定消耗／冷卻；${action.description}`:action.description)+impactNotice, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
   });
 }
 
@@ -338,24 +345,27 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
     const isFire = action.id === 'fire';
     const targets=isFire&&modernResources(state)?[target,...battle.enemies.filter(e=>e.hp>0&&e.id!==target.id)].slice(0,SPELL_RESOURCES.fire.targets):[target];
     for(const victim of targets){
-      const accuracy = isFire ? clamp(stats.accuracy * (focused ? 2 : 1), 0, 100) : stats.accuracy;
-      if (random(state) * 100 < accuracy) {
-        const critical = random(state) < 0.08;
+      const accuracy = isFire ? stats.accuracy * (focused ? 2 : 1) : stats.accuracy;
+      const modern=battle.accuracyRules===ACCURACY_POLICY.id;
+      const impact=modern?sampleOutgoingImpact(accuracy,()=>random(state)):{hit:random(state)*100<Math.min(100,accuracy),glancing:false,criticalHits:0};
+      if (impact.hit) {
+        const critical = modern?impact.critical:random(state)<0.08;
+        const criticalHits=modern?impact.criticalHits:critical?1:0;
         let damage;
         if(battle.offenseRules===OFFENSE_POLICY.id){
-          damage=outgoingDamage({base:isFire?stats.magic:stats.attack,kind:isFire?'fire':'physical',rollPercent:randomInt(state,80,120),critical,spiritStance:spirit,generalMitigation:isFire?0:victim.resistances.physical,specificMitigation:isFire?victim.resistances.fire:0});
+          damage=outgoingDamage({base:isFire?stats.magic:stats.attack,kind:isFire?'fire':'physical',rollPercent:randomInt(state,80,120),critical,criticalHits,glancing:impact.glancing,spiritStance:spirit,generalMitigation:isFire?0:victim.resistances.physical,specificMitigation:isFire?victim.resistances.fire:0});
         }else{
           const base = isFire ? stats.magic * 1.7 : stats.attack * (spirit ? 2 : 1);
           const mitigation = victim.resistances[isFire ? 'fire' : 'physical'];
           damage = Math.max(1, Math.floor(base * (0.9 + random(state) * 0.2) * (1 - mitigation) * (critical ? 1.5 : 1)));
         }
         victim.hp = Math.max(0, victim.hp - damage);
-        emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${victim.name}：${damage}${critical ? '（暴擊）' : ''}`, isFire ? 'magic' : 'attack', { targetId: victim.id, amount: damage, critical });
+        emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${victim.name}：${damage}${modern&&impact.glancing?'（擦傷 ×0.5）':critical?modern?'（'+criticalHits+' 重暴擊）':'（暴擊）':''}`, isFire ? 'magic' : 'attack', { targetId: victim.id, amount: damage, critical, ...(modern?{criticalHits,glancing:impact.glancing}:{}) });
         if (!isFire) state.player.overcharge = Math.min(RULES.overchargeCap, state.player.overcharge + randomInt(state, 5, 10));
         if (victim.hp === 0) emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });
       } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${victim.name}`, 'miss', { targetId: victim.id });
     }
-  } else if (action.id === 'cure') heal(state, events, 'hp', stats.baseHp * 0.3 + stats.healingMagicFixture * 0.4, '治癒');
+  } else if (action.id === 'cure') heal(state, events, 'hp', getCureProfile(state).amount, '治癒');
   else if (action.id === 'scan') {
     target.scanned = true;
     emit(state, events, `探查完成：${target.name}，Lv.${target.level}，HP ${target.hp} / ${target.maxHp}`, 'scan', { targetId: target.id });
@@ -391,7 +401,7 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
         if (reward.ok && !reward.duplicate) {
           const earned=grantExperience(state,reward.xp);
           emit(state,events,`本波完成：+${earned.received||0} EXP，體力 −${reward.staminaCost.toFixed(2)}（候選結算）`,'reward');
-          for(const level of earned.levels||[]) emit(state,events,`升至 Lv.${level.level}；+1 AP${level.masteryPoints?'、+1 Mastery':''}${battle.abilityRules===ABILITY_POLICY.id?'已加入能力資格帳本；不會自動學習或裝配。':'已記錄，能力介面待接入。'}`,'level');
+          for(const level of earned.levels||[]) emit(state,events,`升至 Lv.${level.level}；+1 AP${level.masteryPoints?'、+1 Mastery':''}${battle.abilityRules!=='none-v1'?'已加入能力資格帳本；不會自動學習或裝配。':'已記錄，能力介面待接入。'}`,'level');
         } else if(!reward.ok) emit(state,events,`EXP 結算異常：${reward.error}`,'error');
       }
       if (battle.round === battle.rounds) settle(state, 'victory', events, nowMs);
@@ -446,7 +456,9 @@ export function purchaseAbility(state,id,expectedRank=state.abilities?.purchased
   if(expectedRank!==state.abilities?.purchased?.[id])return failure('能力階級已變更，請重新確認');
   return changeAbility(state,purchaseRank,[id]);
 }
-export function setMajorAbility(state,id,slotIndex){return changeAbility(state,assignMajor,[id,slotIndex]);}
+export function setMajorAbility(state,id,slotIndex){if(ALL_ABILITIES[id]?.slotType!=='major')return failure('此能力不屬於 Major');return changeAbility(state,assignMajor,[id,slotIndex]);}
+export function setSupportiveAbility(state,id,slotIndex){if(ALL_ABILITIES[id]?.slotType!=='supportive')return failure('此能力不屬於 Supportive');return changeAbility(state,assignMajor,[id,slotIndex]);}
+export function clearSupportiveAbility(state,slotIndex){return changeAbility(state,unassignMajor,[slotIndex,'supportive']);}
 export function clearMajorAbility(state,slotIndex){return changeAbility(state,unassignMajor,[slotIndex]);}
 export function resetPurchasedAbility(state,id){return changeAbility(state,resetOwnedAbility,[id]);}
 
@@ -638,7 +650,7 @@ function validState(state,{legacyAudit=false}={}) {
   const battle = state.battle;
   if (battle === null) return true;
   if (!plain(battle) || !['training','arena'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
-  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','abilityRules','restorativeRules','equipmentRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals'].includes(k)))return false;
+  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals'].includes(k)))return false;
   if(!legacyAudit){const exactKeys=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!exactKeys(battle.effects,['defend','focus'])||!exactKeys(battle._regenCarry,['mp','sp'])||!exactKeys(battle.cooldowns,ACTIONS.map(a=>a.id))||battle.finalVitals&&!exactKeys(battle.finalVitals,['hp','mp','sp']))return false;}
   const counts=encounterCounts(battle);
   if (!counts || !integer(battle.round,1,counts.length) || battle.rounds!==counts.length) return false;
@@ -650,9 +662,11 @@ function validState(state,{legacyAudit=false}={}) {
   }
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(battle.vitalRules)||isActive(state)&&battle.vitalRules!==state.vitalRules)return false;
-  if(![ABILITY_POLICY.id,'none-v1'].includes(battle.abilityRules))return false;
+  if(![CURATIVE_POLICY.id,CURATIVE_POLICY.legacy].includes(battle.curativeRules))return false;
+  if(![ABILITY_POLICY.id,ABILITY_POLICY.legacyModel,'none-v1'].includes(battle.abilityRules))return false;
   if(![RESTORATIVE_POLICY.id,RESTORATIVE_POLICY.legacy].includes(battle.restorativeRules))return false;
   if(![GENERATION_POLICY.model,'fixed-arena-fixture-v1'].includes(battle.equipmentRules))return false;
+  if(![ACCURACY_POLICY.id,ACCURACY_POLICY.legacy].includes(battle.accuracyRules)||battle.accuracyRules===ACCURACY_POLICY.id&&battle.offenseRules!==OFFENSE_POLICY.id)return false;
   if(![OFFENSE_POLICY.id,OFFENSE_POLICY.legacy].includes(battle.offenseRules))return false;
   if(![COMBAT_RESOURCE_POLICY.id,COMBAT_RESOURCE_POLICY.legacy].includes(battle.combatRules)||!plain(battle._regenCarry)||!['mp','sp'].every(k=>integer(battle._regenCarry[k],0,REGEN_SCALE-1)))return false;
   if (typeof battle.spiritActive !== 'boolean' || typeof battle._settled !== 'boolean' || battle._settled !== (battle.status !== 'active')) return false;
@@ -694,7 +708,7 @@ function restoreSave(json,recoveryOnly) {
       if (['__proto__', 'prototype', 'constructor'].includes(key)) throw new Error('Unsafe save key');
       return value;
     });
-    const sourceVersion=state?.rulesVersion,oldSchema=state?.schemaVersion===1;
+    const sourceVersion=state?.rulesVersion,oldSchema=state?.schemaVersion===1,hadAbilities=state?.abilities!==undefined;
     if(recoveryOnly&&!oldSchema)return null;
     // Validate old progress before applying the documented rule-version migration.
     const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8', 'persistent-0.91-training-v9', 'persistent-0.91-training-v10', 'persistent-0.91-training-v11', 'persistent-0.91-training-v12'].includes(state?.rulesVersion);
@@ -708,6 +722,7 @@ function restoreSave(json,recoveryOnly) {
       if(state.battle&&state.battle.abilityRules===undefined)state.battle.abilityRules='none-v1';
       if(state.battle&&state.battle.restorativeRules===undefined)state.battle.restorativeRules=RESTORATIVE_POLICY.legacy;
       if(state.battle&&state.battle.equipmentRules===undefined)state.battle.equipmentRules='fixed-arena-fixture-v1';
+      if(state.battle){if(Object.hasOwn(state.battle,'accuracyRules'))return null;state.battle.accuracyRules=ACCURACY_POLICY.legacy;}
       if(state.battle&&state.battle.offenseRules===undefined)state.battle.offenseRules=OFFENSE_POLICY.legacy;
       if(state.battle&&state.battle.combatRules===undefined){state.battle.combatRules=COMBAT_RESOURCE_POLICY.legacy;state.battle._regenCarry={mp:0,sp:0};}
       if (state.battle && !state.battle.kind) {state.battle.kind='training';state.battle.arenaId=null;state.battle.entryDay=null;state.battle.entryLevel=state.player?.level;state.battle.entryStamina=null;for(const enemy of state.battle.enemies||[])if(enemy.powerLevel===undefined)enemy.powerLevel=0;}
@@ -733,6 +748,18 @@ function restoreSave(json,recoveryOnly) {
       }
     }
     if(oldSchema&&!legacy)return null;
+    if(!oldSchema&&['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){
+      if(sourceVersion==='persistent-0.91-training-v13'){
+      if(state.battle&&Object.hasOwn(state.battle,'accuracyRules'))return null;
+      state.rulesVersion=RULES_VERSION;
+      if(state.battle)state.battle.accuracyRules=ACCURACY_POLICY.legacy;
+      }
+      state.rulesVersion=RULES_VERSION;
+    }
+    if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){
+      if(state.battle){if(Object.hasOwn(state.battle,'curativeRules'))return null;state.battle.curativeRules=CURATIVE_POLICY.legacy;}
+      if(hadAbilities){const migrated=migrateLegacyAbilityState(state.abilities,state.player?.level,state.progression?.kind==='experience-ledger');if(!migrated.ok)return null;state.abilities=migrated.abilities;}
+    }
     if(!validState(state,{legacyAudit:oldSchema}))return null;
     if (legacy && !isActive(state)) {
       if (state.battle && !state.battle.finalVitals) state.battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };

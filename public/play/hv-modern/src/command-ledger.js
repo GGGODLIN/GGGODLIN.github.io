@@ -10,7 +10,7 @@ const ledgerKeys = ['model', 'highWater', 'receipts', 'evictedLegacy', 'evictedO
 const payloadKeys = ['battleId', 'actionId', 'targetId', 'result'];
 const oldReceiptKeys = ['id', 'actionId', 'targetId', 'result'];
 const eventRequired = ['id', 'text', 'type'];
-const eventOptional = ['amount', 'critical', 'hp', 'mp', 'sp', 'targetId', 'actor', 'itemId', 'resource', 'recovered'];
+const eventOptional = ['amount', 'critical', 'criticalHits', 'glancing', 'hp', 'mp', 'sp', 'targetId', 'actor', 'itemId', 'resource', 'recovered'];
 const resources = ['hp', 'mp', 'sp'];
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
 const positive = value => Number.isSafeInteger(value) && value > 0;
@@ -56,6 +56,8 @@ function validEvent(event) {
     || !boundedString(event.id) || !boundedString(event.text, 2000) || !boundedString(event.type, 40)) return false;
   if (Object.hasOwn(event, 'amount') && !nonnegative(event.amount)) return false;
   if (Object.hasOwn(event, 'critical') && typeof event.critical !== 'boolean') return false;
+  if (Object.hasOwn(event,'criticalHits') && (!Number.isInteger(event.criticalHits)||event.criticalHits<0||event.criticalHits>9||event.critical!==(event.criticalHits>0)))return false;
+  if (Object.hasOwn(event,'glancing') && (typeof event.glancing!=='boolean'||event.glancing&&event.critical!==false))return false;
   if (!resources.every(key => !Object.hasOwn(event, key) || nonnegative(event[key]))) return false;
   if (!['targetId', 'actor', 'itemId'].every(key => !Object.hasOwn(event, key) || boundedString(event[key]))) return false;
   if (Object.hasOwn(event, 'resource') && !resources.includes(event.resource)) return false;

@@ -1,6 +1,6 @@
-# Early tank ownership and slots
+# Early ability ownership and slots
 
-`src/abilities.js` implements an original, bounded candidate: `early-tanks-candidate-v1`. It maintains purchased ranks, their assignment to slots, and a finite free-reset counter. It does not reproduce a full ability tree or claim exact original-server behavior.
+`src/abilities.js` implements an original, bounded candidate: `early-cure-candidate-v1`. It maintains purchased ranks, their assignment to slots, and a finite free-reset counter. It does not reproduce a full ability tree or claim exact original-server behavior.
 
 ## Source evidence and uncertainty
 
@@ -34,9 +34,9 @@ AP is derived from the current level exactly once. Existing `levelRewards` entri
 
 ```js
 {
-  model: 'early-tanks-candidate-v1',
+  model: 'early-cure-candidate-v1',
   entitlementMode: 'level-candidate',
-  purchased: { hpTank: 0, mpTank: 0, spTank: 0 },
+  purchased: { hpTank: 0, mpTank: 0, spTank: 0, betterCure: 0 },
   majorSlots: [null, null, null, null, null],
   supportiveSlots: [null, null, null, null, null],
   freeSingleResetsUsed: 0
@@ -46,11 +46,11 @@ AP is derived from the current level exactly once. Existing `levelRewards` entri
 `enabled = false` creates the same empty shape with `entitlementMode: 'legacy-disabled'`. Its ownership and reset counter must stay zero, every slot stays empty, summary entitlements are zero, and all changes are blocked. The helper does not silently convert legacy attributes or compensate an old save.
 
 - A purchased rank is an integer 0–2, and every owned rank must satisfy its current level gate
-- Rank costs are cumulative: owning rank 1 accounts for 1 AP; owning rank 2 accounts for 3 AP
+- Rank costs are cumulative: tank rank1 accounts for1AP and rank2 for3AP; Better Cure rank1 accounts for2AP and rank2 for5AP
 - `spentAP` is the sum of purchased rank costs, whether assigned or unassigned
 - `unspentAP = totalAP - spentAP`; overspent saves are invalid
-- Each assignment is a known, currently owned ability identity, present at most once across Major slots
-- Both arrays are distinct and contain exactly five own entries; Supportive entries must remain null
+- Each assignment is a known, currently owned ability identity, present at most once across the correct Major or Supportive family
+- Both arrays are distinct and contain exactly five own entries; Supportive accepts only an owned Better Cure; Major accepts only owned tanks
 - `freeSingleResetsUsed` is a persisted integer 0–10
 
 There is no separately writable AP balance, Mastery balance, fabricated proficiency, reward multiplier, training count, or timestamp. Reloading a valid JSON save preserves purchased ranks, assignment identity, and used resets.
@@ -74,8 +74,8 @@ All state APIs expect the ledger under `state.abilities` and level under `state.
 - `getAbilitySummary(state)`: `{ ok: true, enabled, totalAP, spentAP, unspentAP, masteryPoints, allocatedMasteryPoints: 0, freeSingleResetsRemaining }`, or `{ ok: false, error }`
 - `quoteAbilityPurchase(state, id)`: `{ ok: true, id, fromRank, toRank, cost, minLevel, bonusPercent }`. A known but level-locked or unaffordable next rank returns that metadata with `ok: false` and `error`. A request beyond rank 2 fails with `deferred: true`
 - `purchaseAbilityRank(state, id)`: revalidates the current request, purchases exactly one next rank, and returns the current quote. It does not assign the ability
-- `assignAbility(state, id, slotIndex)`: places the ability in an empty zero-based Major slot 0–4 and returns `{ ok: true, id, slotIndex }`
-- `unassignAbility(state, slotIndex)`: removes its assignment and returns `{ ok: true, id, slotIndex }`; ownership, spent AP, and reset count are unchanged
+- `assignAbility(state, id, slotIndex)`: places the ability in an empty zero-based slot0–4 in its own family and returns `{ ok: true, id, slotIndex }`
+- `unassignAbility(state, slotIndex, slotType = 'major')`: removes its assignment and returns `{ ok: true, id, slotIndex }`; ownership, spent AP, and reset count are unchanged
 - `resetAbility(state, id)`: clears all purchased ranks and any assignment of that ability, refunds its cumulative cost, and consumes one free reset. Success returns `{ ok: true, id, fromRank, toRank: 0, refundedAP, cost: -refundedAP, freeSingleResetsRemaining }`
 - `abilityVitalMultipliers(state)`: read-only factors as described above; has no `ok` wrapper
 
@@ -90,13 +90,13 @@ Read helpers permit a minimal `{ player: { level }, abilities }` state. If `prog
 5. Purchase quotes are detached snapshots, not reserved AP. A subsequent purchase rechecks current gates and affordability. Each successful call purchases the next rank; there is no command-receipt/replay protocol in this bounded module
 6. Strict own enumerable JSON data is required for the ledger and its purchased map. Unknown keys, symbols, accessors, inherited data, sparse/extended slot arrays, invalid ranks, and type coercion are rejected. Inspected getters are never evaluated. JavaScript proxies and adversarial host objects are outside the contract
 
-Only purchased ranks, Major entries, and the reset counter may be written. Successful and failed operations leave player resources, Credits, EXP, stamina, consumables, time, event IDs, and RNG untouched. Saving, UI confirmation, full-game migration, and resource reconciliation belong to the caller.
+Only purchased ranks, matching slot entries, and the reset counter may be written. Successful and failed operations leave player resources, Credits, EXP, stamina, consumables, time, event IDs, and RNG untouched. Saving, UI confirmation, full-game migration, and resource reconciliation belong to the caller.
 
 Client-side validation is not tamper-proof. A coherently rewritten or rolled-back local save can reset its history; this code does not promise server authority.
 
 ## Deferred scope
 
-Further tank ranks, the remainder of the ability tree, actual supportive abilities, Mastery slot expansion, augments, full resets, paid single resets, multiple personas, Ability Boost/Manifest Destiny training, external entitlements, and proficiency-based effects remain deferred. No formula is invented to fill those gaps.
+Further tank ranks, the remainder of the ability tree, remaining supportive abilities, Mastery slot expansion, augments, full resets, paid single resets, multiple personas, Ability Boost/Manifest Destiny training, external entitlements, and proficiency-based effects remain deferred. No formula is invented to fill those gaps.
 
 ## Verification
 
@@ -111,3 +111,11 @@ Engine wrappers use a draft, then reconcile out-of-combat maxima and validate be
 Cure's retained fixture reads baseHp; Focus reads baseMp; the source-based potion module already reads baseHp/baseMp. For this profile, health potion amount376, mana potion43, Cure126 and Focus4 remain unchanged by tanks, before caps and separate natural regeneration.
 
 An exact frozen C14 engine replay preserves prior events/resources/RNG. Integration tests cover ownership-only behavior, assignment/maxima, restoration bases, reset exhaustion, rank gates, AP/Mastery level crossings, active-series locks and legacy rejection. Actual C13a browser exports also migrated with player, inventory, equipment, potions, EXP and activities unchanged.
+
+## C19 Better Cure
+
+[Abilities](https://ehwiki.org/wiki/Abilities#Supportive), observed revision64891, supplies Better Cure rank1 Lv1/cost2/potency70/CD4 and rank2 Lv35/additionalcost3/potency85/CD3. It belongs to Supportive, with five initial green slots. Learning and activation remain distinct. Third and later ranks stay deferred.
+
+`ALL_ABILITIES` adds this definition without changing `TANK_ABILITIES`. `activeCureRank(state)` returns the valid assigned rank or0. Quotes for Cure return `potencyPercent` and `cooldown`, rather than a tank bonus. `validateLegacyAbilityState` checks the exact old three-key ownership map and empty Supportive slots; `migrateLegacyAbilityState` then clones it, adds only betterCure:0, and changes model. It preserves tank ownership, slots and used resets without extra AP.
+
+The engine pins `curativeRules` per series and preserves all earlier active Cure/RNG outcomes. See [CURATIVE](./CURATIVE.md) for the zero-proficiency fixture, unknown base potency, actual healing comparison and rounding boundary. Tank maximum changes never inflate Cure's baseHP input.

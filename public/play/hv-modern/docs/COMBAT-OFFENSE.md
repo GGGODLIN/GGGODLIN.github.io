@@ -26,7 +26,7 @@ The local policy retains fractional bases, uses an inclusive integer roll from 8
 
 The authored encounter has only physical and fire resistance fields. Physical resistance is the general physical mitigation input; general magic mitigation is explicitly zero, and fire resistance is the specific modifier. This does not reconstruct real monster stats. Generic equipment `defense` is not silently reinterpreted as a mitigation percentage.
 
-Player hit chance, an 8% single critical roll, incoming damage, resource maxima, timing and Cure potency remain their separately marked fixtures. Modern multi-critical combat is still unimplemented. Cure keeps its previous `healingMagicFixture` input rather than changing indirectly when the offensive magic base changes.
+C18 new series use the source-supported critical-count sequence with explicit authored opposing-contest inputs; see [COMBAT-ACCURACY](./COMBAT-ACCURACY.md). Older active series keep their8% single critical. Incoming damage, full avoidance, timing and Cure potency retain separate gaps. Cure keeps its previous `healingMagicFixture` input rather than changing indirectly when the offensive magic base changes.
 
 ## Compatibility
 

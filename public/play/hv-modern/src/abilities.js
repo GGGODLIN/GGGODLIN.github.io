@@ -4,9 +4,12 @@
  * See docs/ABILITIES.md for sourced values and explicit prototype decisions.
  */
 
+export const LEGACY_ABILITY_MODEL = 'early-tanks-candidate-v1';
+
 export const ABILITY_POLICY = Object.freeze({
-  id: 'early-tanks-candidate-v1',
-  model: 'early-tanks-candidate-v1',
+  id: 'early-cure-candidate-v1',
+  model: 'early-cure-candidate-v1',
+  legacyModel: LEGACY_ABILITY_MODEL,
   status: 'candidate',
   entitlementMode: 'level-candidate',
   legacyMode: 'legacy-disabled',
@@ -20,6 +23,7 @@ export const ABILITY_POLICY = Object.freeze({
   levelOneAPStatus: 'inferred-initial-point',
   maximumRounding: 'floor-after-applying-tank-multiplier-candidate',
   source: 'https://ehwiki.org/index.php?title=Abilities&oldid=64891',
+  cureSource: 'https://ehwiki.org/wiki/Abilities',
   assignmentSource: 'https://ehwiki.org/index.php?title=Character/Abilities&oldid=64563',
   levelingSource: 'https://ehwiki.org/index.php?title=Leveling_Up&oldid=65211',
 });
@@ -40,7 +44,20 @@ export const TANK_ABILITIES = Object.freeze({
   spTank: tank('spTank', 'SP Tank', 'sp', 40),
 });
 
-const IDS = Object.freeze(Object.keys(TANK_ABILITIES));
+export const ALL_ABILITIES = Object.freeze({
+  ...TANK_ABILITIES,
+  betterCure: Object.freeze({
+    id: 'betterCure', name: 'Better Cure', slotType: 'supportive', furtherRanks: 'deferred',
+    ranks: Object.freeze([
+      Object.freeze({ rank: 1, minLevel: 1, cost: 2, potencyPercent: 70, cooldown: 4 }),
+      Object.freeze({ rank: 2, minLevel: 35, cost: 3, potencyPercent: 85, cooldown: 3 }),
+    ]),
+  }),
+});
+
+const TANK_IDS = Object.freeze(Object.keys(TANK_ABILITIES));
+const IDS = Object.freeze(Object.keys(ALL_ABILITIES));
+const SLOT_TYPES = Object.freeze(['major', 'supportive']);
 const LEDGER_KEYS = Object.freeze([
   'model', 'entitlementMode', 'purchased', 'majorSlots', 'supportiveSlots', 'freeSingleResetsUsed',
 ]);
@@ -48,7 +65,8 @@ const BATTLE_STATUSES = Object.freeze(['active', 'victory', 'defeat', 'fled']);
 const failure = (error, metadata = {}) => ({ ...metadata, ok: false, error });
 const validLevel = (level) => Number.isSafeInteger(level)
   && level >= ABILITY_POLICY.minLevel && level <= ABILITY_POLICY.maxLevel;
-const validSlot = (index) => Number.isSafeInteger(index) && index >= 0 && index < ABILITY_POLICY.majorSlots;
+const validSlot = (index, slotType) => SLOT_TYPES.includes(slotType)
+  && Number.isSafeInteger(index) && index >= 0 && index < ABILITY_POLICY[`${slotType}Slots`];
 
 function isRecord(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -81,8 +99,8 @@ function exactSlotArray(slots, count) {
   return true;
 }
 
-function spentFor(purchased) {
-  return IDS.reduce((sum, id) => sum + TANK_ABILITIES[id].ranks
+function spentFor(purchased, ids = IDS) {
+  return ids.reduce((sum, id) => sum + ALL_ABILITIES[id].ranks
     .slice(0, purchased[id]).reduce((cost, rank) => cost + rank.cost, 0), 0);
 }
 
@@ -96,7 +114,7 @@ export function createAbilityState(enabled = true) {
   return {
     model: ABILITY_POLICY.model,
     entitlementMode: enabled ? ABILITY_POLICY.entitlementMode : ABILITY_POLICY.legacyMode,
-    purchased: { hpTank: 0, mpTank: 0, spTank: 0 },
+    purchased: { hpTank: 0, mpTank: 0, spTank: 0, betterCure: 0 },
     majorSlots: Array(ABILITY_POLICY.majorSlots).fill(null),
     supportiveSlots: Array(ABILITY_POLICY.supportiveSlots).fill(null),
     freeSingleResetsUsed: 0,
@@ -104,33 +122,63 @@ export function createAbilityState(enabled = true) {
 }
 
 /** Strict nested-save validation. No repair, coercion, or unrelated subsystem reads. */
-export function validateAbilityState(abilities, level, enabled = true) {
+function validateLedger(abilities, level, enabled, model, ids) {
   if (typeof enabled !== 'boolean' || !validLevel(level)
     || !exactDataRecord(abilities, LEDGER_KEYS)
-    || abilities.model !== ABILITY_POLICY.model
+    || abilities.model !== model
     || abilities.entitlementMode !== (enabled ? ABILITY_POLICY.entitlementMode : ABILITY_POLICY.legacyMode)
-    || !exactDataRecord(abilities.purchased, IDS)
+    || !exactDataRecord(abilities.purchased, ids)
     || !exactSlotArray(abilities.majorSlots, ABILITY_POLICY.majorSlots)
     || !exactSlotArray(abilities.supportiveSlots, ABILITY_POLICY.supportiveSlots)
     || abilities.majorSlots === abilities.supportiveSlots) return false;
   if (!Number.isSafeInteger(abilities.freeSingleResetsUsed)
     || abilities.freeSingleResetsUsed < 0
     || abilities.freeSingleResetsUsed > ABILITY_POLICY.freeSingleResetAllowance) return false;
-  for (const id of IDS) {
+  for (const id of ids) {
     const rank = abilities.purchased[id];
-    if (!Number.isSafeInteger(rank) || rank < 0 || rank > TANK_ABILITIES[id].ranks.length
-      || (rank > 0 && level < TANK_ABILITIES[id].ranks[rank - 1].minLevel)) return false;
+    if (!Number.isSafeInteger(rank) || rank < 0 || rank > ALL_ABILITIES[id].ranks.length
+      || (rank > 0 && level < ALL_ABILITIES[id].ranks[rank - 1].minLevel)) return false;
   }
-  const spentAP = spentFor(abilities.purchased);
+  const spentAP = spentFor(abilities.purchased, ids);
   if (spentAP > (enabled ? level : 0)) return false;
   const assigned = new Set();
-  for (const id of abilities.majorSlots) {
-    if (id === null) continue;
-    if (!IDS.includes(id) || abilities.purchased[id] === 0 || assigned.has(id)) return false;
-    assigned.add(id);
+  for (const slotType of SLOT_TYPES) {
+    for (const id of abilities[`${slotType}Slots`]) {
+      if (id === null) continue;
+      if (!ids.includes(id) || ALL_ABILITIES[id].slotType !== slotType
+        || abilities.purchased[id] === 0 || assigned.has(id)) return false;
+      assigned.add(id);
+    }
   }
-  if (abilities.supportiveSlots.some((id) => id !== null)) return false;
   return enabled || abilities.freeSingleResetsUsed === 0;
+}
+
+/** Strict current-format validation; an old model requires explicit migration. */
+export function validateAbilityState(abilities, level, enabled = true) {
+  return validateLedger(abilities, level, enabled, ABILITY_POLICY.model, IDS);
+}
+
+/** The old model has exactly three tank keys and no usable Supportive abilities. */
+export function validateLegacyAbilityState(abilities, level, enabled = true) {
+  return validateLedger(abilities, level, enabled, LEGACY_ABILITY_MODEL, TANK_IDS);
+}
+
+/** Validate the entire old ledger before returning an independent current copy. */
+export function migrateLegacyAbilityState(abilities, level, enabled = true) {
+  if (!validateLegacyAbilityState(abilities, level, enabled)) {
+    return failure('舊版能力帳本、角色等級或 AP 配置無效');
+  }
+  return {
+    ok: true,
+    abilities: {
+      model: ABILITY_POLICY.model,
+      entitlementMode: abilities.entitlementMode,
+      purchased: { ...abilities.purchased, betterCure: 0 },
+      majorSlots: [...abilities.majorSlots],
+      supportiveSlots: [...abilities.supportiveSlots],
+      freeSingleResetsUsed: abilities.freeSingleResetsUsed,
+    },
+  };
 }
 
 /** Pure reads accept a minimal state; a supplied progression must match its mode. */
@@ -187,11 +235,13 @@ export function getAbilitySummary(state) {
 function quoteInspected(inspected, id) {
   if (!IDS.includes(id)) return failure('未知能力');
   const fromRank = inspected.abilities.purchased[id];
-  const next = TANK_ABILITIES[id].ranks[fromRank];
+  const next = ALL_ABILITIES[id].ranks[fromRank];
   if (!next) return failure('後續能力階級尚未實作', { id, fromRank, deferred: true });
   const metadata = {
     id, fromRank, toRank: fromRank + 1, cost: next.cost,
-    minLevel: next.minLevel, bonusPercent: next.bonusPercent,
+    minLevel: next.minLevel,
+    ...(ALL_ABILITIES[id].slotType === 'major'
+      ? { bonusPercent: next.bonusPercent } : { potencyPercent: next.potencyPercent, cooldown: next.cooldown }),
   };
   if (inspected.level < next.minLevel) return failure(`此階級需要 Lv.${next.minLevel}`, metadata);
   if (inspected.level - inspected.spentAP < next.cost) return failure('未配置 AP 不足', metadata);
@@ -215,31 +265,35 @@ export function purchaseAbilityRank(state, id) {
   return quote;
 }
 
-/** Assign to a zero-based Major slot. Moving requires an explicit unslot first. */
+/** Assign to the ability's own slot family. Moving requires an explicit unslot first. */
 export function assignAbility(state, id, slotIndex) {
   const inspected = inspectMutation(state);
   if (!inspected.ok) return inspected;
   if (!IDS.includes(id)) return failure('未知能力');
-  if (!validSlot(slotIndex)) return failure('只能使用 0–4 的 Major 槽位');
+  const slotType = ALL_ABILITIES[id].slotType;
+  if (!validSlot(slotIndex, slotType)) return failure(`只能使用 0–4 的 ${slotType} 槽位`);
   const { abilities } = inspected;
+  const slots = abilities[`${slotType}Slots`];
   if (abilities.purchased[id] === 0) return failure('請先購買能力階級');
-  if (abilities.majorSlots.includes(id)) return failure('能力已配置；移動前請先卸下');
-  if (abilities.majorSlots[slotIndex] !== null) return failure('目標 Major 槽位已有能力');
-  if (!writable(abilities.majorSlots, String(slotIndex))) return failure('Major 槽位為唯讀');
-  abilities.majorSlots[slotIndex] = id;
+  if (slots.includes(id)) return failure('能力已配置；移動前請先卸下');
+  if (slots[slotIndex] !== null) return failure(`目標 ${slotType} 槽位已有能力`);
+  if (!writable(slots, String(slotIndex))) return failure(`${slotType} 槽位為唯讀`);
+  slots[slotIndex] = id;
   return { ok: true, id, slotIndex };
 }
 
 /** Unslot without refunding AP, changing ownership, or consuming a reset. */
-export function unassignAbility(state, slotIndex) {
+export function unassignAbility(state, slotIndex, slotType = 'major') {
   const inspected = inspectMutation(state);
   if (!inspected.ok) return inspected;
-  if (!validSlot(slotIndex)) return failure('只能使用 0–4 的 Major 槽位');
+  if (!SLOT_TYPES.includes(slotType)) return failure('未知能力槽類型');
+  if (!validSlot(slotIndex, slotType)) return failure(`只能使用 0–4 的 ${slotType} 槽位`);
   const { abilities } = inspected;
-  const id = abilities.majorSlots[slotIndex];
-  if (id === null) return failure('這個 Major 槽位沒有能力');
-  if (!writable(abilities.majorSlots, String(slotIndex))) return failure('Major 槽位為唯讀');
-  abilities.majorSlots[slotIndex] = null;
+  const slots = abilities[`${slotType}Slots`];
+  const id = slots[slotIndex];
+  if (id === null) return failure(`這個 ${slotType} 槽位沒有能力`);
+  if (!writable(slots, String(slotIndex))) return failure(`${slotType} 槽位為唯讀`);
+  slots[slotIndex] = null;
   return { ok: true, id, slotIndex };
 }
 
@@ -254,14 +308,15 @@ export function resetAbility(state, id) {
   if (abilities.freeSingleResetsUsed >= ABILITY_POLICY.freeSingleResetAllowance) {
     return failure('免費單項重置已用完；付費重置尚未實作');
   }
-  const slotIndex = abilities.majorSlots.indexOf(id);
+  const slots = abilities[`${ALL_ABILITIES[id].slotType}Slots`];
+  const slotIndex = slots.indexOf(id);
   if (!writable(abilities.purchased, id) || !writable(abilities, 'freeSingleResetsUsed')
-    || (slotIndex >= 0 && !writable(abilities.majorSlots, String(slotIndex)))) {
+    || (slotIndex >= 0 && !writable(slots, String(slotIndex)))) {
     return failure('能力重置資料為唯讀');
   }
-  const refundedAP = TANK_ABILITIES[id].ranks.slice(0, fromRank).reduce((sum, rank) => sum + rank.cost, 0);
+  const refundedAP = ALL_ABILITIES[id].ranks.slice(0, fromRank).reduce((sum, rank) => sum + rank.cost, 0);
   abilities.purchased[id] = 0;
-  if (slotIndex >= 0) abilities.majorSlots[slotIndex] = null;
+  if (slotIndex >= 0) slots[slotIndex] = null;
   abilities.freeSingleResetsUsed++;
   return {
     ok: true, id, fromRank, toRank: 0, refundedAP, cost: -refundedAP,
@@ -285,4 +340,12 @@ export function abilityVitalMultipliers(state) {
     factors[ability.pool] = (100 + rank.bonusPercent) / 100;
   }
   return factors;
+}
+
+/** Read-only effective Cure rank. Ownership alone never enables the upgrade. */
+export function activeCureRank(state) {
+  const inspected = inspectState(state);
+  if (!inspected.ok || !inspected.enabled
+    || !inspected.abilities.supportiveSlots.includes('betterCure')) return 0;
+  return inspected.abilities.purchased.betterCure;
 }
