@@ -96,7 +96,7 @@ ES modules，入口 `src/engine.js`：
 - `serializeGame(state)` → JSON string；`restoreGame(json)` → 合法 state 或 null
 - `RULES`、`ACTIONS`、`ATTRIBUTE_KEYS` 供 UI 使用
 
-本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema1 的 training-v1～v12 明示遷移至 schema2／training-v15：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
+本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema1 的 training-v1～v12 明示遷移至 schema2／training-v16：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
 
 ## 驗證
 
@@ -196,3 +196,5 @@ ES modules，入口 `src/engine.js`：
 C18：schema2／training-v13 僅補入原系列的 legacy accuracyRules；不重抽舊結果。新系列的 critical-sequence-candidate-v1 規格與對抗機率樣本邊界見 COMBAT-ACCURACY.md。
 
 C19：schema2／training-v13～v14 舊能力帳本先驗證再新增未學習的 Better Cure；原 AP／Tank／重置次數不變。新系列可使用已裝配的 Supportive Cure 前兩階，來源效力／冷卻與固定熟練度0樣本邊界見 CURATIVE.md；舊系列保留原治療。
+
+C20：增加 grindfest-N 戰鬥身份、bounded-audit-v2 的 Grindfest 零累計分類與空活動紀錄；舊狀態先驗證再擴充，不改既有財物或結果。來源成本、全1,000波與候選怪物／傷害界線見 GRINDFEST.md。歷史仍64筆、指令結果仍128筆、紀事仍100行；不是保存每波無上限明細。

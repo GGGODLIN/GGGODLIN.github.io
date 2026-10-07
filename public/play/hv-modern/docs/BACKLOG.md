@@ -56,9 +56,9 @@
 
 ## 活動、時間與掉落
 
-- [ ] Arena 前三項候選已可玩；其餘 Arena、Random Encounter、Ring of Blood、Grindfest、Item World 保留
-- [ ] 前三項完整波數／敵數／入場資格／次數已接入；難度僅 Normal，原敵方生成及其他活動待補
-- [ ] 體力與跨日已有注入式本機時鐘測試；預付消耗、可信伺服器時間及完整細節待補
+- [ ] Arena 前三項及 Grindfest 完整1,000波已可玩；其餘 Arena、Random Encounter、Ring of Blood、Item World 保留
+- [ ] 前三項 Arena 完整波數／敵數／次數，以及 Grindfest1,000波／預付1體力／5,000通關獎金已接入；難度僅 Normal，Grindfest數量分布／漸進傷害仍候選，一般／水晶掉落及Boss待補
+- [ ] 體力與跨日、Grindfest預付消耗已有注入式本機時鐘測試；Item World全額預付、可信伺服器時間及完整細節待補
 - [ ] RiddleMaster 觸發及已知獎懲；未知倍率不杜撰
 - [ ] 掉落多層判定、容量、材料、裝備與完整獎勵帳本
 - [ ] 成功／敗北／撤退的活動消耗、物品返還與每日重置
@@ -101,3 +101,5 @@ Isekai、Tower、賽季重置、排行、跨季轉移及永久／暫時模式獎
 ## 驗收方法與下一個可交付成果
 
 下一階段先核對共同面板／時間公式與已列衝突，取得少量可信戰鬥樣本。再替換訓練模型中的單一規則，增加對照測試；不要一次把所有 wiki 數值拼入正式規則。每期分別回報：完整需求覆蓋、常數核對、確定性案例、機率誤差、未解關鍵參數。測試通過只表示符合該版本本機規格。
+
+Item World 前置已查到同等級 Crude–Exquisite Soulbind 需100 Soul Fragments；公開購入價每個1,000Credits，但商店供應仍須核對。World Seed 的合法掉落來源有記載，權重／份量未明；不發免費種子或跳過Soulbind、Charm維持成本。

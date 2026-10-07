@@ -47,7 +47,7 @@ function plainArray(value) {
 
 function canonicalBattleId(value) {
   if (typeof value !== 'string') return false;
-  const match = /^(training|arena)-([1-9][0-9]*)$/.exec(value);
+  const match = /^(training|arena|grindfest)-([1-9][0-9]*)$/.exec(value);
   return Boolean(match && match[0] === value && positive(Number(match[2])) && String(Number(match[2])) === match[2]);
 }
 

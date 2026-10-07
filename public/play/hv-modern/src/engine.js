@@ -1,6 +1,8 @@
+import {GRINDFEST_POLICY,createGrindfestState,validateGrindfestState,reserveGrindfest,settleGrindfestRound,settleGrindfestSeries} from './grindfest.js';
+export {previewGrindfest} from './grindfest.js';
 import {CURATIVE_POLICY,cureHealingAmount} from './curative.js';
 import {ACCURACY_POLICY,sampleOutgoingImpact} from './combat-accuracy.js';
-import {AUDIT_POLICY,createAuditState,compactAuditState,validateRetainedHistory} from './audit-history.js';
+import {AUDIT_POLICY,createAuditState,migrateAuditState,compactAuditState,validateRetainedHistory} from './audit-history.js';
 import {createCommandLedger,nextCommandToken as ledgerToken,inspectCommand,appendCommandReceipt,migrateLegacyReceipts,validateCommandLedger,validateCommandEvent} from './command-ledger.js';
 import {createActivityState as createLegacyActivityState,validateActivityState as validateLegacyActivityState} from './compat/arena-schema1.js';
 import {VITAL_POLICY,calculateVitals} from './vitals.js';
@@ -71,7 +73,7 @@ export function createGame(seed = 'vesper-training-01', {vitalRules=VITAL_POLICY
     inventory: clone(STARTER_ITEMS),
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
     potions: { health: 3, mana: 3 }, battle: null,
-    activities: createActivityState(0), levelRewards: [], supplies:createSupplyState(), abilities:createAbilityState(true),
+    activities: createActivityState(0), grindfest:createGrindfestState(), levelRewards: [], supplies:createSupplyState(), abilities:createAbilityState(true),
     audit:createAuditState(), commandLedger:createCommandLedger(), history: [], achievements: { trainingClears: 0 },
     externalBonuses: clone(RULES.externalBonuses),
     _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1,
@@ -90,13 +92,17 @@ function emit(state, events, text, type = 'info', extra = {}) {
   return event;
 }
 function encounterCounts(battle) { return battle.kind === 'arena' ? ARENAS.find((a) => a.id === battle.arenaId)?.roundCounts : [3, 3]; }
+export function grindfestMonsterBounds(round){if(!Number.isInteger(round)||round<1||round>1000)throw new RangeError('Invalid Grindfest round');const max=Math.min(10,3+Math.floor((round-1)/125));return {min:Math.max(1,max-2),max};}
+function currentEnemyCount(battle){return battle.kind==='grindfest'?battle.waveMonsterCount:encounterCounts(battle)?.[battle.round-1];}
+function totalRounds(battle){return battle.kind==='grindfest'?1000:encounterCounts(battle)?.length;}
 function spawnWave(state) {
   const battle = state.battle;
-  const count = encounterCounts(battle)[battle.round - 1];
-  const templates = battle.kind === 'arena' ? Array.from({length:count},(_,i)=>TRAINING_WAVES[(battle.round-1)%2][(i+battle.round-1)%3]) : TRAINING_WAVES[battle.round - 1];
+  if(battle.kind==='grindfest'){const range=grindfestMonsterBounds(battle.round);battle.waveMonsterCount=randomInt(state,range.min,range.max);}
+  const count = currentEnemyCount(battle);
+  const templates = battle.kind !== 'training' ? Array.from({length:count},(_,i)=>TRAINING_WAVES[(battle.round-1)%2][(i+battle.round-1)%3]) : TRAINING_WAVES[battle.round - 1];
   battle.enemies = templates.map((template,index)=>({
     id: `${battle.id}-r${battle.round}-e${index+1}`, name:template.name,title:template.title,kind:template.kind,
-    level:battle.kind==='arena'?battle.entryLevel:template.level,powerLevel:battle.kind==='arena'?100:0,
+    level:battle.kind==='grindfest'?state.player.level:battle.kind==='arena'?battle.entryLevel:template.level,powerLevel:battle.kind==='training'?0:100,
     hp:template.maxHp,maxHp:template.maxHp,scanned:false,resistances:{...template.resistances},attack:template.attack,
   }));
   battle._schedule = battle.enemies.map((enemy,index)=>({id:enemy.id,nextAt:battle.timeUnits+randomInt(state,10,100),interval:templates[index].interval}));
@@ -106,7 +112,7 @@ function spawnWave(state) {
 function startBattleUnsafe(state, options = {}) {
   if (isActive(state)) return failure('演練尚未結束');
   if(!Number.isSafeInteger(state._nextBattle)||state._nextBattle<1||state._nextBattle>=Number.MAX_SAFE_INTEGER)return failure('戰鬥序號無效或已達上限');
-  const kind = options.kind === 'arena' ? 'arena' : 'training';
+  const kind = ['arena','grindfest'].includes(options.kind)?options.kind:'training';
   if(kind==='arena'&&state.inventory.some(i=>i.id===`reward-arena-${state._nextBattle}`))return failure('下一場戰鬥的獎勵識別碼已存在');
   let reservation = null;
   if (kind === 'arena') {
@@ -114,23 +120,25 @@ function startBattleUnsafe(state, options = {}) {
     reservation = reserveArena(state.activities,options.arenaId,state.player.level,options.nowMs,`arena-${state._nextBattle}`);
     if (!reservation.ok) return failure(reservation.error);
   }
+  if(kind==='grindfest'){if(state.progression?.kind!=='experience-ledger')return failure('Grindfest 需要 EXP 帳本角色，舊版演練角色保留原狀');reservation=reserveGrindfest(state.activities,state.grindfest,{battleId:`grindfest-${state._nextBattle}`,nowMs:options.nowMs});if(!reservation.ok)return reservation;}
   const events = [...recoverOutOfCombat(state).events];
   state.battle = {
-    id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:reservation?.definition.rounds||TRAINING_WAVES.length,
+    id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition?.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:kind==='grindfest'?reservation.staminaBefore:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:kind==='grindfest'?1000:reservation?.definition?.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
     vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
-    _schedule: [], _nextTick: 100, logOmitted:0, _settled: false,
+    _schedule: [], _nextTick: 100, logOmitted:0, _settled: false, ...(kind==='grindfest'?{waveMonsterCount:0}:{}),
   };
   spawnWave(state);
-  emit(state, events, kind==='arena'?`${reservation.definition.name} · 第 1 / ${reservation.definition.rounds} 波。採來源波次、原創怪物／PL100 樣本；獎勵取整為候選。`:'裂隙演練開始 · 第 1 / 2 波。怪物與數值為原創訓練樣本，不發放獎勵。', 'round');
+  emit(state, events, kind==='grindfest'?'Grindfest · 第 1 / 1000 波。已支付 1 體力；完整波數／費用／EXP／通關獎勵有來源，怪物與漸進傷害為樣本；一般／水晶掉落待施工。':kind==='arena'?`${reservation.definition.name} · 第 1 / ${reservation.definition.rounds} 波。採來源波次、原創怪物／PL100 樣本；獎勵取整為候選。`:'裂隙演練開始 · 第 1 / 2 波。怪物與數值為原創訓練樣本，不發放獎勵。', 'round');
   return success(events);
 }
 
 export function startBattle(state,options={}){return transactGame(state,draft=>startBattleUnsafe(draft,options));}
 export function nextCommandToken(state){return ledgerToken(state.commandLedger);}
 export function getCommandReceiptsForBattle(state,battleId=state.battle?.id){return state.commandLedger.receipts.filter(r=>r.battleId===battleId).map(clone);}
+export function startGrindfest(state,nowMs=Date.now()){return startBattle(state,{kind:'grindfest',nowMs});}
 export function startArena(state, arenaId, nowMs = Date.now()) { return startBattle(state,{kind:'arena',arenaId,nowMs}); }
 
 export function selectTarget(state, targetId) {
@@ -227,6 +235,8 @@ function settle(state, status, events, nowMs) {
     if(!Number.isSafeInteger(state.player.credits+reward.credits))throw new Error('Credit settlement overflow');
     arenaSettlement={activity,reward};
   }
+  let grindfestSettlement=null;
+  if(battle.kind==='grindfest'){const activity=clone(state.activities),ledger=clone(state.grindfest),reward=settleGrindfestSeries(activity,ledger,{battleId:battle.id,status,nowMs});if(!reward.ok||!Number.isSafeInteger(state.player.credits+reward.credits))throw new Error('Grindfest settlement preflight failed');grindfestSettlement={activity,ledger,reward};}
   battle._settled = true;
   battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };
   battle.status = status;
@@ -236,7 +246,8 @@ function settle(state, status, events, nowMs) {
   if (status === 'victory' && battle.kind === 'training') {
     state.achievements.trainingClears++;
     emit(state, events, '演練完成。已記錄通關；此訓練不發放 EXP、Credits 或掉落。', 'victory');
-  } else if (status === 'victory') emit(state,events,'競技場全波次通關，正在結算首次／重複通關獎勵。','victory');
+  } else if(status==='victory'&&battle.kind==='grindfest')emit(state,events,'Grindfest 1000 波完成，正在結算通關獎勵。','victory');
+  else if (status === 'victory') emit(state,events,'競技場全波次通關，正在結算首次／重複通關獎勵。','victory');
   else if (status === 'defeat') emit(state, events, '你已倒下。演練結束；敗北結果已記錄。', 'defeat');
   else emit(state, events, '已撤離裂隙。沒有獎勵或原版活動次數變更。', 'flee');
   if (battle.kind === 'arena') {
@@ -255,6 +266,7 @@ function settle(state, status, events, nowMs) {
       }
     } else if (!reward.ok) emit(state,events,`獎勵結算異常，未發放：${reward.error}`,'error');
   }
+  if(grindfestSettlement){const {activity,ledger,reward}=grindfestSettlement;state.activities=activity;state.grindfest=ledger;if(!reward.duplicate){state.player.credits+=reward.credits;emit(state,events,`Grindfest 結算：${reward.credits} Credits；已完成波次 EXP 保留，入場體力不退還。`,'reward');}}
   if (state._pendingHandNormalization) {
     state.equipped.offhand = null;
     delete state._pendingHandNormalization;
@@ -274,7 +286,7 @@ function enemyAttack(state, enemy, events, focused, nowMs) {
     return;
   }
   const defended = state.battle.effects.defend > 0;
-  const raw = enemy.attack * (0.9 + random(state) * 0.2);
+  const raw = enemy.attack * (0.9 + random(state) * 0.2) * (state.battle.kind==='grindfest'?(500+4*(state.battle.round-1))/1000:1);
   const damage = Math.max(1, Math.floor(raw * (100 / (100 + stats.defense * 2)) * (defended ? 0.75 : 1)));
   state.player.hp = Math.max(0, state.player.hp - damage);
   emit(state, events, `${enemy.name}造成 ${damage} 點傷害${defended ? '（防禦中）' : ''}`, 'enemy', { actor: enemy.id, amount: damage });
@@ -313,7 +325,7 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
   const inspected=inspectCommand(state.commandLedger,token,actionId,targetId===undefined?undefined:normalizedTarget);
   if(!inspected.ok)return {...inspected,error:commandError(inspected.code)};
   if(inspected.duplicate)return inspected;
-  if (battle?.kind === 'arena' && (!Number.isSafeInteger(nowMs) || nowMs < state.activities.lastRegenAt || !validateActivityState(state.activities))) return failure('本機活動時間或資料無效，未執行行動');
+  if (['arena','grindfest'].includes(battle?.kind) && (!Number.isSafeInteger(nowMs) || nowMs < state.activities.lastRegenAt || !validateActivityState(state.activities))) return failure('本機活動時間或資料無效，未執行行動');
   const action = actionById(actionId);
   const error = actionError(state, action, normalizedTarget);
   if (error) return failure(error);
@@ -396,8 +408,10 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
     }
     if (action.id === 'flee') settle(state, 'fled', events, nowMs);
     else if (battle.enemies.every((enemy) => enemy.hp === 0)) {
-      if (battle.kind === 'arena') {
-        const reward=settleArenaRound(state.activities,{battleId:battle.id,arenaId:battle.arenaId,round:battle.round,monsters:battle.enemies.map(e=>({level:e.level,powerLevel:e.powerLevel})),nowMs});
+      if (['arena','grindfest'].includes(battle.kind)) {
+        const input={battleId:battle.id,arenaId:battle.arenaId,round:battle.round,monsters:battle.enemies.map(e=>({level:e.level,powerLevel:e.powerLevel})),nowMs};
+        const reward=battle.kind==='grindfest'?settleGrindfestRound(state.activities,state.grindfest,{battleId:input.battleId,round:input.round,monsters:input.monsters,nowMs}):settleArenaRound(state.activities,input);
+        if(battle.kind==='grindfest'&&!reward.ok)throw new Error('Grindfest round settlement failed');
         if (reward.ok && !reward.duplicate) {
           const earned=grantExperience(state,reward.xp);
           emit(state,events,`本波完成：+${earned.received||0} EXP，體力 −${reward.staminaCost.toFixed(2)}（候選結算）`,'reward');
@@ -572,8 +586,8 @@ const plain = (value) => value && typeof value === 'object' && !Array.isArray(va
 const safeText = (value, max = 200) => typeof value === 'string' && value.length <= max;
 function canonicalBattleId(id,kind,nextBattle){
   if(typeof id!=='string')return false;
-  const match=/^(training|arena)-([1-9]\d*)$/.exec(id);
-  return Boolean(match&&(!kind||match[1]===kind)&&Number.isSafeInteger(Number(match[2]))&&Number(match[2])<nextBattle);
+  const match=/^(training|arena|grindfest)-([1-9]\d*)$/.exec(id);
+  return Boolean(match&&match[0]===id&&(!kind||match[1]===kind)&&Number.isSafeInteger(Number(match[2]))&&Number(match[2])<nextBattle);
 }
 function validBattleLinks(state){
   const current=state.battle,pending=[];
@@ -587,12 +601,15 @@ function validBattleLinks(state){
     if(pending.length!==1||pending[0].arenaId!==current.arenaId||pending[0].entryDay!==current.entryDay||pending[0].battleId!==null&&pending[0].battleId!==current.id)return false;
     if(state.inventory.some(i=>i.id===`reward-${current.id}`)||state.history.some(h=>h.battleId===current.id))return false;
   }else if(pending.length)return false;
+  const gf=state.grindfest?.current;
+  if(gf){if(gf.lastSettledAt>state.activities.lastRegenAt)return false;if(!canonicalBattleId(gf.battleId,'grindfest',state._nextBattle))return false;if(gf.status==='active'&&(current?.kind!=='grindfest'||current.id!==gf.battleId||current.status!=='active'))return false;}
+  if(current?.kind==='grindfest'){if(!gf||gf.battleId!==current.id||gf.status!==current.status||gf.completedRounds!==(current.status==='victory'||current.phase==='round-complete'?current.round:current.round-1))return false;}
   return true;
 }
 function validState(state,{legacyAudit=false}={}) {
   if (!plain(state) || state.schemaVersion !== (legacyAudit?1:SCHEMA_VERSION) || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(state.vitalRules))return false;
-  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','levelRewards','supplies','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
+  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','grindfest','levelRewards','supplies','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
   if(!legacyAudit){const only=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!only(state.potions,['health','mana'])||!only(state.achievements,['trainingClears'])||!only(state.externalBonuses,Object.keys(RULES.externalBonuses)))return false;if(!Array.isArray(state.levelRewards)||state.levelRewards.length>499||new Set(state.levelRewards.map(r=>r.level)).size!==state.levelRewards.length||state.levelRewards.some(r=>!plain(r)||Object.keys(r).some(k=>!['level','abilityPoints','masteryPoints','status'].includes(k))||r.level>state.player.level||r.status!==undefined&&!safeText(r.status,80)))return false;}
@@ -630,13 +647,13 @@ function validState(state,{legacyAudit=false}={}) {
   if (state._pendingHandNormalization && (!isActive(state) || mainhand.hands !== 2 || state.equipped.offhand === null)) return false;
   const stats = getStats(state);
   if (player.hp > stats.maxHp || player.mp > stats.maxMp || player.sp > stats.maxSp) return false;
-  if(!validateSupplyState(state.supplies))return false;
+  if(!validateSupplyState(state.supplies)||!validateGrindfestState(state.grindfest))return false;
   if (!plain(state.potions) || !integer(state.potions.health, 0, 999999) || !integer(state.potions.mana, 0, 999999)) return false;
   if (!plain(state.externalBonuses) || Object.entries(RULES.externalBonuses).some(([key, value]) => state.externalBonuses[key] !== value)) return false;
   if (!(legacyAudit?validateLegacyActivityState:validateActivityState)(state.activities) || !Array.isArray(state.levelRewards) || !state.levelRewards.every(r=>plain(r)&&integer(r.level,2,500)&&r.abilityPoints===1&&r.masteryPoints===(r.level%10===0?1:0))) return false;
   if (!plain(state.achievements) || !integer(state.achievements.trainingClears) || !Array.isArray(state.history)) return false;
   const statuses = ['active', 'victory', 'defeat', 'fled'];
-  if (!state.history.every((entry) => plain(entry) && safeText(entry.battleId) && statuses.slice(1).includes(entry.status) && integer(entry.turns) && integer(entry.rounds, 1, 6))) return false;
+  if (!state.history.every((entry) => plain(entry) && safeText(entry.battleId) && statuses.slice(1).includes(entry.status) && integer(entry.turns) && integer(entry.rounds, 1, entry.kind==='grindfest'?1000:6))) return false;
   if(legacyAudit){if(state.history.filter((entry)=>entry.status==='victory'&&(!entry.kind||entry.kind==='training')).length!==state.achievements.trainingClears)return false;}else if(!validateRetainedHistory(state))return false;
   const validEvent = (event) => plain(event) && safeText(event.id) && safeText(event.text, 2000) && safeText(event.type, 40)
     && (event.amount===undefined||integer(event.amount))
@@ -649,11 +666,12 @@ function validState(state,{legacyAudit=false}={}) {
   if(!validBattleLinks(state))return false;
   const battle = state.battle;
   if (battle === null) return true;
-  if (!plain(battle) || !['training','arena'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
-  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals'].includes(k)))return false;
+  if (!plain(battle) || !['training','arena','grindfest'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
+  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals','waveMonsterCount'].includes(k)))return false;
   if(!legacyAudit){const exactKeys=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!exactKeys(battle.effects,['defend','focus'])||!exactKeys(battle._regenCarry,['mp','sp'])||!exactKeys(battle.cooldowns,ACTIONS.map(a=>a.id))||battle.finalVitals&&!exactKeys(battle.finalVitals,['hp','mp','sp']))return false;}
-  const counts=encounterCounts(battle);
-  if (!counts || !integer(battle.round,1,counts.length) || battle.rounds!==counts.length) return false;
+  const rounds=totalRounds(battle),count=currentEnemyCount(battle);
+  if(!rounds||!integer(battle.round,1,rounds)||battle.rounds!==rounds)return false;
+  if(battle.kind==='grindfest'){const range=grindfestMonsterBounds(battle.round);if(!integer(count,range.min,range.max)||battle.arenaId!==null||battle.entryDay!==null||!integer(battle.entryLevel,1,500)||battle.entryStamina!==state.grindfest.current?.entryStamina)return false;}else if(battle.waveMonsterCount!==undefined)return false;
   if(battle.kind==='arena'){
     const attempt=state.activities.attempts[battle.arenaId]?.[battle.entryDay];
     if(!attempt || attempt.battleId!==null&&attempt.battleId!==battle.id || attempt.status!==(battle.status==='active'?'reserved':battle.status) || !integer(battle.entryLevel,1,500))return false;
@@ -674,14 +692,14 @@ function validState(state,{legacyAudit=false}={}) {
   if (battle.finalVitals !== undefined && (!plain(battle.finalVitals) || !['hp', 'mp', 'sp'].every((key) => integer(battle.finalVitals[key])))) return false;
   if (!plain(battle.effects) || !['defend', 'focus'].every((key) => integer(battle.effects[key], 0, 2))) return false;
   if (!plain(battle.cooldowns) || !ACTIONS.every((action) => integer(battle.cooldowns[action.id], 0, 1000))) return false;
-  if (!Array.isArray(battle.enemies) || battle.enemies.length !== counts[battle.round-1] || !Array.isArray(battle._schedule) || battle._schedule.length !== counts[battle.round-1]) return false;
-  if (new Set(battle.enemies.map((enemy) => enemy.id)).size !== counts[battle.round-1]) return false;
+  if (!Array.isArray(battle.enemies) || battle.enemies.length !== count || !Array.isArray(battle._schedule) || battle._schedule.length !== count) return false;
+  if (new Set(battle.enemies.map((enemy) => enemy.id)).size !== count) return false;
   for (const enemy of battle.enemies) {
     if(!legacyAudit&&Object.keys(enemy).some(k=>!['id','name','title','kind','level','powerLevel','hp','maxHp','scanned','resistances','attack'].includes(k)))return false;
     if (!plain(enemy) || !safeText(enemy.id) || !safeText(enemy.name) || !safeText(enemy.title) || !['wolf', 'golem', 'wraith'].includes(enemy.kind)) return false;
     // Only PL0 training and PL100 Arena fixtures are produced by this prototype.
     // This is an import contract, not a claim about the original game's PL cap.
-    if(!integer(enemy.powerLevel,0,100)||enemy.powerLevel!==(battle.kind==='arena'?100:0))return false;
+    if(!integer(enemy.powerLevel,0,100)||enemy.powerLevel!==(battle.kind==='training'?0:100))return false;
     if (!integer(enemy.level, 1) || !integer(enemy.maxHp, 1) || !integer(enemy.hp, 0, enemy.maxHp) || !integer(enemy.attack, 0) || typeof enemy.scanned !== 'boolean') return false;
     if(!legacyAudit&&Object.keys(enemy.resistances).some(k=>!['physical','fire'].includes(k)))return false;
     if (!plain(enemy.resistances) || !['fire', 'physical'].every((key) => Number.isFinite(enemy.resistances[key]) && enemy.resistances[key] >= -1 && enemy.resistances[key] <= 1)) return false;
@@ -748,6 +766,7 @@ function restoreSave(json,recoveryOnly) {
       }
     }
     if(oldSchema&&!legacy)return null;
+    if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15'].includes(sourceVersion)){if(state.grindfest!==undefined)return null;state.grindfest=createGrindfestState();if(!oldSchema){state.audit=migrateAuditState(state.audit);if(!state.audit)return null;}state.rulesVersion=RULES_VERSION;}
     if(!oldSchema&&['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){
       if(sourceVersion==='persistent-0.91-training-v13'){
       if(state.battle&&Object.hasOwn(state.battle,'accuracyRules'))return null;
