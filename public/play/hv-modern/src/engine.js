@@ -95,7 +95,9 @@ function spawnWave(state) {
 
 export function startBattle(state, options = {}) {
   if (isActive(state)) return failure('演練尚未結束');
+  if(!Number.isSafeInteger(state._nextBattle)||state._nextBattle<1||state._nextBattle>=Number.MAX_SAFE_INTEGER)return failure('戰鬥序號無效或已達上限');
   const kind = options.kind === 'arena' ? 'arena' : 'training';
+  if(kind==='arena'&&state.inventory.some(i=>i.id===`reward-arena-${state._nextBattle}`))return failure('下一場戰鬥的獎勵識別碼已存在');
   let reservation = null;
   if (kind === 'arena') {
     if (state.progression?.kind !== 'experience-ledger') return failure('既有演練角色保留原狀；需建立 EXP 帳本新角色才可進入獎勵競技場');
@@ -192,6 +194,20 @@ function heal(state, events, resource, amount, source) {
 function settle(state, status, events, nowMs) {
   const battle = state.battle;
   if (battle._settled) return;
+  // Prepare all fallible Arena settlement/loot work before committing any reward.
+  let arenaSettlement=null,preparedItem=null;
+  if(battle.kind==='arena'){
+    const activity=clone(state.activities);
+    const reward=settleArenaSeries(activity,{battleId:battle.id,arenaId:battle.arenaId,status,entryDay:battle.entryDay,nowMs});
+    if(!reward.ok)throw new Error('Arena settlement preflight failed');
+    if(!reward.duplicate&&(reward.pendingGuaranteedEquipment||reward.equipmentDropCount>0)&&state.inventory.filter(i=>i.container!=='storage').length<500){
+      if(battle.equipmentRules===GENERATION_POLICY.model)preparedItem=generateEquipment({templates:STARTER_ITEMS,id:`reward-${battle.id}`,level:state.player.level,rng:()=>random(state)});
+      else {const base=STARTER_ITEMS[randomInt(state,0,STARTER_ITEMS.length-1)];preparedItem=clone(base);preparedItem.id=`reward-${battle.id}`;preparedItem.origin='arena-fixture';preparedItem.level=EQUIPMENT_QUALITIES.indexOf(preparedItem.quality)>=4?state.player.level:null;}
+      if(state.inventory.some(i=>i.id===preparedItem.id))throw new Error('Duplicate reward identity');
+    }
+    if(!Number.isSafeInteger(state.player.credits+reward.credits))throw new Error('Credit settlement overflow');
+    arenaSettlement={activity,reward};
+  }
   battle._settled = true;
   battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };
   battle.status = status;
@@ -205,16 +221,15 @@ function settle(state, status, events, nowMs) {
   else if (status === 'defeat') emit(state, events, '你已倒下。演練結束；敗北結果已記錄。', 'defeat');
   else emit(state, events, '已撤離裂隙。沒有獎勵或原版活動次數變更。', 'flee');
   if (battle.kind === 'arena') {
-    const reward = settleArenaSeries(state.activities,{battleId:battle.id,arenaId:battle.arenaId,status,entryDay:battle.entryDay,nowMs});
+    const {activity,reward}=arenaSettlement;
+    Object.assign(state.activities,activity);
     if (reward.ok && !reward.duplicate) {
       state.player.credits += reward.credits;
       emit(state,events,`競技場結算：${reward.credits} Credits${reward.firstClear?'（首次通關）':''}；本日入場次數已使用。`,'reward');
       if (reward.pendingGuaranteedEquipment || reward.equipmentDropCount > 0) {
         if (state.inventory.filter(i=>i.container!=='storage').length>=500) emit(state,events,'隨身裝備已達 500 件；本次通關裝備依容量規則丟棄。','reward');
         else {
-          let item;
-          if(battle.equipmentRules===GENERATION_POLICY.model)item=generateEquipment({templates:STARTER_ITEMS,id:`reward-${battle.id}`,level:state.player.level,rng:()=>random(state)});
-          else {const base=STARTER_ITEMS[randomInt(state,0,STARTER_ITEMS.length-1)];item=clone(base);item.id=`reward-${battle.id}`;item.origin='arena-fixture';item.level=EQUIPMENT_QUALITIES.indexOf(item.quality)>=4?state.player.level:null;}
+          const item=preparedItem;
           state.inventory.push(item);
           emit(state,events,`獲得 ${item.name}（${item.generation?item.quality+' · 逐項品質 roll；權重與數值投影為樣本':'原創固定樣本池；非原版生成權重'}）`,'reward',{itemId:item.id});
         }
@@ -272,7 +287,7 @@ function advanceTime(state, units, events, focused, nowMs, suppressRegen=false) 
 }
 
 /** Accepted commands are atomic synchronous mutations; rejected commands leave state byte-for-byte unchanged. */
-export function performAction(state, actionId, targetId, commandId, nowMs = Date.now()) {
+function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.now()) {
   const battle = state.battle;
   const normalizedTarget = targetId ?? battle?.targetId ?? null;
   if (commandId !== undefined && (typeof commandId !== 'string' || commandId.length < 1 || commandId.length > 200)) return failure('無效的指令識別碼');
@@ -387,6 +402,22 @@ export function performAction(state, actionId, targetId, commandId, nowMs = Date
   return result;
 }
 
+/** Arena actions commit only after the complete draft, including rewards, is valid. */
+export function performAction(state,actionId,targetId,commandId,nowMs=Date.now()){
+  if(state.battle?.kind!=='arena')return performActionUnsafe(state,actionId,targetId,commandId,nowMs);
+  try{
+    if(!validState(state))return failure('競技場存檔或戰鬥識別資料無效，未執行行動');
+    const draft=clone(state),result=performActionUnsafe(draft,actionId,targetId,commandId,nowMs);
+    if(!result.ok||result.duplicate)return result;
+    if(!validState(draft))return failure('競技場結算驗證未通過，未變更進度');
+    const removed=Object.keys(state).filter(key=>!Object.hasOwn(draft,key));
+    if(!Object.keys(draft).every(key=>Object.getOwnPropertyDescriptor(state,key)?.writable===true)||!removed.every(key=>Object.getOwnPropertyDescriptor(state,key)?.configurable===true))return failure('競技場資料為唯讀，未變更進度');
+    for(const key of removed)delete state[key];
+    Object.assign(state,draft);
+    return result;
+  }catch{return failure('競技場結算未完成，原進度已保留');}
+}
+
 /** Explicit non-combat-command wave continuation; no time, upkeep or cooldown decrement. */
 export function continueRound(state) {
   const battle = state.battle;
@@ -472,6 +503,25 @@ export function rest(state) { return recoverOutOfCombat(state); }
 const integer = (value, min = 0, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(value) && value >= min && value <= max;
 const plain = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const safeText = (value, max = 200) => typeof value === 'string' && value.length <= max;
+function canonicalBattleId(id,kind,nextBattle){
+  if(typeof id!=='string')return false;
+  const match=/^(training|arena)-([1-9]\d*)$/.exec(id);
+  return Boolean(match&&(!kind||match[1]===kind)&&Number.isSafeInteger(Number(match[2]))&&Number(match[2])<nextBattle);
+}
+function validBattleLinks(state){
+  const current=state.battle,pending=[];
+  if(current&&(!canonicalBattleId(current.id,current.kind,state._nextBattle)||Number(current.id.split('-')[1])!==state._nextBattle-1))return false;
+  if(!state.history.every(h=>canonicalBattleId(h.battleId,h.kind||'training',state._nextBattle))||new Set(state.history.map(h=>h.battleId)).size!==state.history.length)return false;
+  for(const [arenaId,days]of Object.entries(state.activities.attempts))for(const attempt of Object.values(days)){
+    if(attempt.battleId!==null&&!canonicalBattleId(attempt.battleId,'arena',state._nextBattle))return false;
+    if(attempt.status==='reserved')pending.push({arenaId,...attempt});
+  }
+  if(current?.status==='active'&&current.kind==='arena'){
+    if(pending.length!==1||pending[0].arenaId!==current.arenaId||pending[0].entryDay!==current.entryDay||pending[0].battleId!==null&&pending[0].battleId!==current.id)return false;
+    if(state.inventory.some(i=>i.id===`reward-${current.id}`)||state.history.some(h=>h.battleId===current.id))return false;
+  }else if(pending.length)return false;
+  return true;
+}
 function validState(state) {
   if (!plain(state) || state.schemaVersion !== SCHEMA_VERSION || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
@@ -516,6 +566,7 @@ function validState(state) {
   const validEvent = (event) => plain(event) && safeText(event.id) && safeText(event.text, 2000) && safeText(event.type, 40);
   const validReceipt = (receipt) => plain(receipt) && safeText(receipt.id) && actionById(receipt.actionId) && (receipt.targetId === null || safeText(receipt.targetId)) && receipt.result?.ok === true && Array.isArray(receipt.result.events) && receipt.result.events.every(validEvent);
   if (!Array.isArray(state._commandReceipts) || !state._commandReceipts.every(validReceipt) || new Set(state._commandReceipts.map((receipt) => receipt.id)).size !== state._commandReceipts.length) return false;
+  if(!validBattleLinks(state))return false;
   const battle = state.battle;
   if (battle === null) return true;
   if (!plain(battle) || !['training','arena'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
