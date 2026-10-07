@@ -1,3 +1,6 @@
+import {AUDIT_POLICY,createAuditState,compactAuditState,validateRetainedHistory} from './audit-history.js';
+import {createCommandLedger,nextCommandToken as ledgerToken,inspectCommand,appendCommandReceipt,migrateLegacyReceipts,validateCommandLedger,validateCommandEvent} from './command-ledger.js';
+import {createActivityState as createLegacyActivityState,validateActivityState as validateLegacyActivityState} from './compat/arena-schema1.js';
 import {VITAL_POLICY,calculateVitals} from './vitals.js';
 import {ABILITY_POLICY,createAbilityState,validateAbilityState,abilityVitalMultipliers,purchaseAbilityRank as purchaseRank,assignAbility as assignMajor,unassignAbility as unassignMajor,resetAbility as resetOwnedAbility} from './abilities.js';
 import {createSupplyState,validateSupplyState} from './supplies.js';
@@ -6,12 +9,12 @@ import {GENERATION_POLICY,generateEquipment,validateGeneratedEquipment} from './
 import {OFFENSE_POLICY,publishedOffense,outgoingDamage} from './combat-offense.js';
 import {COMBAT_RESOURCE_POLICY,SPELL_RESOURCES,REGEN_SCALE,spellManaCost,naturalRegenRates,recoverWholeUnits} from './combat-resources.js';
 import {setEquipmentProtection,equipmentActionPermission,getContainerCounts} from './armory.js';
-import {ARENAS,createActivityState,validateActivityState,previewActivities,reserveArena,settleArenaRound,settleArenaSeries} from './arena.js';
+import {ARENAS,createActivityState,validateActivityState,migrateActivityState,previewActivities,reserveArena,settleArenaRound,settleArenaSeries} from './arena.js';
 import {grantExperience,experienceThreshold,experienceLevel} from './leveling.js';
 import {createExperienceLedger,validateExperienceLedger,quoteAttributeChange,applyAttributeChange,LEVEL_20_REFERENCE} from './progression.js';
-import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, EQUIPMENT_QUALITIES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
+import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, MAX_LEGACY_RECOVERY_BYTES, EQUIPMENT_QUALITIES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
 export {ARENAS,previewActivities} from './arena.js';
-export { RULES, ACTIONS, ATTRIBUTE_KEYS, MAX_SAVE_BYTES } from './data.js';
+export { RULES, ACTIONS, ATTRIBUTE_KEYS, MAX_SAVE_BYTES, MAX_LEGACY_RECOVERY_BYTES } from './data.js';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -67,9 +70,9 @@ export function createGame(seed = 'vesper-training-01', {vitalRules=VITAL_POLICY
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
     potions: { health: 3, mana: 3 }, battle: null,
     activities: createActivityState(0), levelRewards: [], supplies:createSupplyState(), abilities:createAbilityState(true),
-    history: [], achievements: { trainingClears: 0 },
+    audit:createAuditState(), commandLedger:createCommandLedger(), history: [], achievements: { trainingClears: 0 },
     externalBonuses: clone(RULES.externalBonuses),
-    _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1, _commandReceipts: [],
+    _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1,
   };
   state.progression = createExperienceLedger(state.player.attributes, state.player.xp);
   for (const id of Object.values(state.equipped)) state.inventory.find((item) => item.id === id).level = state.player.level;
@@ -98,7 +101,7 @@ function spawnWave(state) {
   battle.targetId=battle.enemies[0].id;
 }
 
-export function startBattle(state, options = {}) {
+function startBattleUnsafe(state, options = {}) {
   if (isActive(state)) return failure('演練尚未結束');
   if(!Number.isSafeInteger(state._nextBattle)||state._nextBattle<1||state._nextBattle>=Number.MAX_SAFE_INTEGER)return failure('戰鬥序號無效或已達上限');
   const kind = options.kind === 'arena' ? 'arena' : 'training';
@@ -106,7 +109,7 @@ export function startBattle(state, options = {}) {
   let reservation = null;
   if (kind === 'arena') {
     if (state.progression?.kind !== 'experience-ledger') return failure('既有演練角色保留原狀；需建立 EXP 帳本新角色才可進入獎勵競技場');
-    reservation = reserveArena(state.activities,options.arenaId,state.player.level,options.nowMs);
+    reservation = reserveArena(state.activities,options.arenaId,state.player.level,options.nowMs,`arena-${state._nextBattle}`);
     if (!reservation.ok) return failure(reservation.error);
   }
   const events = [...recoverOutOfCombat(state).events];
@@ -116,13 +119,16 @@ export function startBattle(state, options = {}) {
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
     vitalRules:state.vitalRules, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
-    _schedule: [], _nextTick: 100, _receipts: [], _settled: false,
+    _schedule: [], _nextTick: 100, logOmitted:0, _settled: false,
   };
   spawnWave(state);
   emit(state, events, kind==='arena'?`${reservation.definition.name} · 第 1 / ${reservation.definition.rounds} 波。採來源波次、原創怪物／PL100 樣本；獎勵取整為候選。`:'裂隙演練開始 · 第 1 / 2 波。怪物與數值為原創訓練樣本，不發放獎勵。', 'round');
   return success(events);
 }
 
+export function startBattle(state,options={}){return transactGame(state,draft=>startBattleUnsafe(draft,options));}
+export function nextCommandToken(state){return ledgerToken(state.commandLedger);}
+export function getCommandReceiptsForBattle(state,battleId=state.battle?.id){return state.commandLedger.receipts.filter(r=>r.battleId===battleId).map(clone);}
 export function startArena(state, arenaId, nowMs = Date.now()) { return startBattle(state,{kind:'arena',arenaId,nowMs}); }
 
 export function selectTarget(state, targetId) {
@@ -296,17 +302,14 @@ function advanceTime(state, units, events, focused, nowMs, suppressRegen=false) 
 function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.now()) {
   const battle = state.battle;
   const normalizedTarget = targetId ?? battle?.targetId ?? null;
-  if (commandId !== undefined && (typeof commandId !== 'string' || commandId.length < 1 || commandId.length > 200)) return failure('無效的指令識別碼');
-  const prior = commandId && state._commandReceipts.find((receipt) => receipt.id === commandId);
-  if (prior) {
-    if (prior.actionId !== actionId || prior.targetId !== (targetId ?? prior.targetId)) return failure('指令識別碼已用於不同的行動');
-    return { ...clone(prior.result), duplicate: true };
-  }
+  const token=commandId===undefined?nextCommandToken(state):commandId;
+  const inspected=inspectCommand(state.commandLedger,token,actionId,targetId===undefined?undefined:normalizedTarget);
+  if(!inspected.ok)return {...inspected,error:commandError(inspected.code)};
+  if(inspected.duplicate)return inspected;
   if (battle?.kind === 'arena' && (!Number.isSafeInteger(nowMs) || nowMs < state.activities.lastRegenAt || !validateActivityState(state.activities))) return failure('本機活動時間或資料無效，未執行行動');
   const action = actionById(actionId);
   const error = actionError(state, action, normalizedTarget);
   if (error) return failure(error);
-  const id = commandId ?? `${battle.id}:local:${battle.turn + 1}`;
   const events = [];
   const stats = getStats(state);
   const mpCost = manaCost(state, action);
@@ -402,26 +405,28 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
     if (battle.status === 'active' && !battle.enemies.some((enemy) => enemy.id === battle.targetId && enemy.hp > 0)) battle.targetId = battle.enemies.find((enemy) => enemy.hp > 0)?.id ?? null;
   }
   const result = success(events);
-  const receipt = { id, actionId, targetId: normalizedTarget, result: clone(result) };
-  battle._receipts.push(receipt);
-  state._commandReceipts.push(clone(receipt));
-  return result;
+  const recorded=appendCommandReceipt(state.commandLedger,token,{battleId:battle.id,actionId,targetId:normalizedTarget,result});
+  return recorded.ok?result:{...recorded,error:commandError(recorded.code)};
 }
 
-/** Arena actions commit only after the complete draft, including rewards, is valid. */
+function commandError(code){return ({'receipt-expired':'此指令已處理，但結果已超過保留期；不會再次執行','legacy-command-retired':'此舊指令結果已退役；新行動需要新版序號，請重新整理介面','command-payload-conflict':'此指令序號已用於不同動作或目標','command-sequence-gap':'指令序號不連續，未執行','invalid-command-token':'指令序號格式無效','invalid-command-payload':'未知動作或目標格式無效','invalid-command-ledger':'指令帳本無效','receipt-too-large':'本次指令紀錄超過安全容量，原進度保留'})[code]||'指令未完成，原進度保留';}
+/** All size-growing battle transitions validate and fit before replacing the live state. */
+function commitDraft(state,draft){
+  const compacted=compactAuditState(draft);
+  if(!compacted.ok||!validState(draft)||new TextEncoder().encode(serializeGame(draft)).byteLength>MAX_SAVE_BYTES)return false;
+  const removed=Object.keys(state).filter(key=>!Object.hasOwn(draft,key));
+  if(!Object.keys(draft).every(key=>Object.getOwnPropertyDescriptor(state,key)?.writable===true)||!removed.every(key=>Object.getOwnPropertyDescriptor(state,key)?.configurable===true))return false;
+  for(const key of removed)delete state[key];Object.assign(state,draft);return true;
+}
+function transactGame(state,operation){try{
+  if(!validState(state))return failure('存檔或戰鬥資料無效，未變更進度');
+  const draft=clone(state),result=operation(draft);
+  if(!result.ok||result.duplicate)return result;
+  if(!commitDraft(state,draft))return failure('結算或保存容量驗證未通過，原進度保留');
+  return result;
+}catch{return failure('結算未完成，原進度保留');}}
 export function performAction(state,actionId,targetId,commandId,nowMs=Date.now()){
-  if(state.battle?.kind!=='arena')return performActionUnsafe(state,actionId,targetId,commandId,nowMs);
-  try{
-    if(!validState(state))return failure('競技場存檔或戰鬥識別資料無效，未執行行動');
-    const draft=clone(state),result=performActionUnsafe(draft,actionId,targetId,commandId,nowMs);
-    if(!result.ok||result.duplicate)return result;
-    if(!validState(draft))return failure('競技場結算驗證未通過，未變更進度');
-    const removed=Object.keys(state).filter(key=>!Object.hasOwn(draft,key));
-    if(!Object.keys(draft).every(key=>Object.getOwnPropertyDescriptor(state,key)?.writable===true)||!removed.every(key=>Object.getOwnPropertyDescriptor(state,key)?.configurable===true))return failure('競技場資料為唯讀，未變更進度');
-    for(const key of removed)delete state[key];
-    Object.assign(state,draft);
-    return result;
-  }catch{return failure('競技場結算未完成，原進度已保留');}
+  return transactGame(state,draft=>performActionUnsafe(draft,actionId,targetId,commandId,nowMs));
 }
 
 /** Ability ownership and assignment are distinct; changes reconcile outside maxima only. */
@@ -467,7 +472,7 @@ export function upgradeVitalModel(state,expectedModel=VITAL_POLICY.legacy){
 }
 
 /** Explicit non-combat-command wave continuation; no time, upkeep or cooldown decrement. */
-export function continueRound(state) {
+function continueRoundUnsafe(state) {
   const battle = state.battle;
   if (!isActive(state) || battle.phase !== 'round-complete' || battle.round >= battle.rounds) return failure('目前沒有等待繼續的波次');
   if (!battle.enemies.every((enemy) => enemy.hp === 0)) return failure('本波仍有存活敵人');
@@ -478,6 +483,8 @@ export function continueRound(state) {
   emit(state, events, `第 ${battle.round} / ${battle.rounds} 波 · 保留資源、冷卻與經過時間`, 'round');
   return success(events);
 }
+
+export function continueRound(state){return transactGame(state,continueRoundUnsafe);}
 
 export function getEquipmentEligibility(state, itemId) {
   if (isActive(state)) return { ok: false, error: '戰鬥中不能更換裝備', unequipIds: [] };
@@ -570,12 +577,15 @@ function validBattleLinks(state){
   }else if(pending.length)return false;
   return true;
 }
-function validState(state) {
-  if (!plain(state) || state.schemaVersion !== SCHEMA_VERSION || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
+function validState(state,{legacyAudit=false}={}) {
+  if (!plain(state) || state.schemaVersion !== (legacyAudit?1:SCHEMA_VERSION) || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(state.vitalRules))return false;
+  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','levelRewards','supplies','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
+  if(!legacyAudit){const only=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!only(state.potions,['health','mana'])||!only(state.achievements,['trainingClears'])||!only(state.externalBonuses,Object.keys(RULES.externalBonuses)))return false;if(!Array.isArray(state.levelRewards)||state.levelRewards.length>499||new Set(state.levelRewards.map(r=>r.level)).size!==state.levelRewards.length||state.levelRewards.some(r=>!plain(r)||Object.keys(r).some(k=>!['level','abilityPoints','masteryPoints','status'].includes(k))||r.level>state.player.level||r.status!==undefined&&!safeText(r.status,80)))return false;}
   const player = state.player;
+  if(!legacyAudit&&Object.keys(player).some(k=>!['name','level','xp','xpNext','attributePoints','attributes','hp','mp','sp','overcharge','credits'].includes(k)))return false;
   if (!plain(state.progression)) return false;
   if (state.progression.kind === 'experience-ledger') {
     if (!validateExperienceLedger(player.attributes, state.progression) || state.progression.earned !== player.xp || player.attributePoints !== 0) return false;
@@ -591,6 +601,7 @@ function validState(state) {
     if (!safeText(item.id) || !/^[a-z0-9][a-z0-9-]{0,199}$/.test(item.id) || !original || typeof item.locked !== 'boolean') return false;
     if(item.origin==='quality-roll-fixture'){if(!validateGeneratedEquipment(item,STARTER_ITEMS))return false;}
     else {
+      if(!legacyAudit&&Object.keys(item).some(k=>!Object.hasOwn(original,k)))return false;
       if(!['starter-fixture','arena-fixture'].includes(item.origin) || item.generation!==undefined || (item.origin==='starter-fixture'&&item.id!==item.templateId) || (item.origin==='arena-fixture'&&!/^reward-arena-[1-9]\d*$/.test(item.id)))return false;
       if(Object.keys(original).some((key)=>!['id','origin','locked','protected','pinned','container','level'].includes(key)&&item[key]!==original[key]))return false;
     }
@@ -610,11 +621,11 @@ function validState(state) {
   if(!validateSupplyState(state.supplies))return false;
   if (!plain(state.potions) || !integer(state.potions.health, 0, 999999) || !integer(state.potions.mana, 0, 999999)) return false;
   if (!plain(state.externalBonuses) || Object.entries(RULES.externalBonuses).some(([key, value]) => state.externalBonuses[key] !== value)) return false;
-  if (!validateActivityState(state.activities) || !Array.isArray(state.levelRewards) || !state.levelRewards.every(r=>plain(r)&&integer(r.level,2,500)&&r.abilityPoints===1&&r.masteryPoints===(r.level%10===0?1:0))) return false;
+  if (!(legacyAudit?validateLegacyActivityState:validateActivityState)(state.activities) || !Array.isArray(state.levelRewards) || !state.levelRewards.every(r=>plain(r)&&integer(r.level,2,500)&&r.abilityPoints===1&&r.masteryPoints===(r.level%10===0?1:0))) return false;
   if (!plain(state.achievements) || !integer(state.achievements.trainingClears) || !Array.isArray(state.history)) return false;
   const statuses = ['active', 'victory', 'defeat', 'fled'];
   if (!state.history.every((entry) => plain(entry) && safeText(entry.battleId) && statuses.slice(1).includes(entry.status) && integer(entry.turns) && integer(entry.rounds, 1, 6))) return false;
-  if (state.history.filter((entry) => entry.status === 'victory' && (!entry.kind || entry.kind==='training')).length !== state.achievements.trainingClears) return false;
+  if(legacyAudit){if(state.history.filter((entry)=>entry.status==='victory'&&(!entry.kind||entry.kind==='training')).length!==state.achievements.trainingClears)return false;}else if(!validateRetainedHistory(state))return false;
   const validEvent = (event) => plain(event) && safeText(event.id) && safeText(event.text, 2000) && safeText(event.type, 40)
     && (event.amount===undefined||integer(event.amount))
     && (event.critical===undefined||typeof event.critical==='boolean')
@@ -622,11 +633,13 @@ function validState(state) {
     && ['targetId','actor','itemId'].every(key=>event[key]===undefined||safeText(event[key]))
     && (event.resource===undefined||['hp','mp','sp'].includes(event.resource));
   const validReceipt = (receipt) => plain(receipt) && safeText(receipt.id) && actionById(receipt.actionId) && (receipt.targetId === null || safeText(receipt.targetId)) && receipt.result?.ok === true && Array.isArray(receipt.result.events) && receipt.result.events.every(validEvent);
-  if (!Array.isArray(state._commandReceipts) || !state._commandReceipts.every(validReceipt) || new Set(state._commandReceipts.map((receipt) => receipt.id)).size !== state._commandReceipts.length) return false;
+  if(legacyAudit&&(!Array.isArray(state._commandReceipts)||!state._commandReceipts.every(validReceipt)||new Set(state._commandReceipts.map(receipt=>receipt.id)).size!==state._commandReceipts.length))return false;
   if(!validBattleLinks(state))return false;
   const battle = state.battle;
   if (battle === null) return true;
   if (!plain(battle) || !['training','arena'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
+  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','abilityRules','restorativeRules','equipmentRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals'].includes(k)))return false;
+  if(!legacyAudit){const exactKeys=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!exactKeys(battle.effects,['defend','focus'])||!exactKeys(battle._regenCarry,['mp','sp'])||!exactKeys(battle.cooldowns,ACTIONS.map(a=>a.id))||battle.finalVitals&&!exactKeys(battle.finalVitals,['hp','mp','sp']))return false;}
   const counts=encounterCounts(battle);
   if (!counts || !integer(battle.round,1,counts.length) || battle.rounds!==counts.length) return false;
   if(battle.kind==='arena'){
@@ -650,41 +663,47 @@ function validState(state) {
   if (!Array.isArray(battle.enemies) || battle.enemies.length !== counts[battle.round-1] || !Array.isArray(battle._schedule) || battle._schedule.length !== counts[battle.round-1]) return false;
   if (new Set(battle.enemies.map((enemy) => enemy.id)).size !== counts[battle.round-1]) return false;
   for (const enemy of battle.enemies) {
+    if(!legacyAudit&&Object.keys(enemy).some(k=>!['id','name','title','kind','level','powerLevel','hp','maxHp','scanned','resistances','attack'].includes(k)))return false;
     if (!plain(enemy) || !safeText(enemy.id) || !safeText(enemy.name) || !safeText(enemy.title) || !['wolf', 'golem', 'wraith'].includes(enemy.kind)) return false;
     // Only PL0 training and PL100 Arena fixtures are produced by this prototype.
     // This is an import contract, not a claim about the original game's PL cap.
     if(!integer(enemy.powerLevel,0,100)||enemy.powerLevel!==(battle.kind==='arena'?100:0))return false;
     if (!integer(enemy.level, 1) || !integer(enemy.maxHp, 1) || !integer(enemy.hp, 0, enemy.maxHp) || !integer(enemy.attack, 0) || typeof enemy.scanned !== 'boolean') return false;
+    if(!legacyAudit&&Object.keys(enemy.resistances).some(k=>!['physical','fire'].includes(k)))return false;
     if (!plain(enemy.resistances) || !['fire', 'physical'].every((key) => Number.isFinite(enemy.resistances[key]) && enemy.resistances[key] >= -1 && enemy.resistances[key] <= 1)) return false;
     const schedule = battle._schedule.filter((entry) => entry.id === enemy.id);
+    if(!legacyAudit&&schedule.some(entry=>Object.keys(entry).length!==3||Object.keys(entry).some(k=>!['id','nextAt','interval'].includes(k))))return false;
     if (schedule.length !== 1 || !integer(schedule[0].nextAt) || !integer(schedule[0].interval, 1) || (enemy.hp > 0 && schedule[0].nextAt < battle.timeUnits)) return false;
   }
   if (battle.targetId !== null && !battle.enemies.some((enemy) => enemy.id === battle.targetId)) return false;
   if (battle.phase === 'round-complete' && (battle.status !== 'active' || battle.round >= battle.rounds || battle.enemies.some((enemy) => enemy.hp > 0) || battle.targetId !== null)) return false;
   if (battle.status === 'active' && battle.phase === 'combat' && !battle.enemies.some((enemy) => enemy.hp > 0)) return false;
   if (battle.status === 'victory' && (battle.round !== battle.rounds || battle.enemies.some((enemy) => enemy.hp > 0))) return false;
-  if (!Array.isArray(battle.log) || !battle.log.every(validEvent) || !Array.isArray(battle._receipts)) return false;
-  if (new Set(battle._receipts.map((receipt) => receipt.id)).size !== battle._receipts.length) return false;
-  if (!battle._receipts.every(validReceipt)) return false;
-  if (!battle._receipts.every((receipt) => state._commandReceipts.some((global) => global.id === receipt.id && JSON.stringify(global) === JSON.stringify(receipt)))) return false;
+  if(!Array.isArray(battle.log)||!battle.log.every(legacyAudit?validEvent:validateCommandEvent))return false;
+  if(legacyAudit){if(!Array.isArray(battle._receipts)||new Set(battle._receipts.map(r=>r.id)).size!==battle._receipts.length||!battle._receipts.every(validReceipt))return false;const oldReceipts=new Map(state._commandReceipts.map(r=>[r.id,JSON.stringify(r)]));if(!battle._receipts.every(r=>oldReceipts.get(r.id)===JSON.stringify(r)))return false;}else if(battle._receipts!==undefined)return false;
   return true;
 }
 export function serializeGame(state) { return JSON.stringify(state); }
-export function restoreGame(json) {
+export function restoreGame(json){return restoreSave(json,false);}
+export function recoverLegacyGame(json){return restoreSave(json,true);}
+function restoreSave(json,recoveryOnly) {
   try {
-    if (typeof json !== 'string' || json.length > MAX_SAVE_BYTES || new TextEncoder().encode(json).byteLength > MAX_SAVE_BYTES) return null;
+    const limit=recoveryOnly?MAX_LEGACY_RECOVERY_BYTES:MAX_SAVE_BYTES;
+    if(typeof json!=='string'||json.length>limit||new TextEncoder().encode(json).byteLength>limit)return null;
     const state = JSON.parse(json, (key, value) => {
       if (['__proto__', 'prototype', 'constructor'].includes(key)) throw new Error('Unsafe save key');
       return value;
     });
+    const sourceVersion=state?.rulesVersion,oldSchema=state?.schemaVersion===1;
+    if(recoveryOnly&&!oldSchema)return null;
     // Validate old progress before applying the documented rule-version migration.
-    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8', 'persistent-0.91-training-v9', 'persistent-0.91-training-v10', 'persistent-0.91-training-v11'].includes(state?.rulesVersion);
-    if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8', 'persistent-0.91-training-v9', 'persistent-0.91-training-v10', 'persistent-0.91-training-v11', 'persistent-0.91-training-v12'].includes(state?.rulesVersion);
+    if (oldSchema && legacy) {
       state.rulesVersion = RULES_VERSION;
       if(state.vitalRules===undefined)state.vitalRules=VITAL_POLICY.legacy;
       if(state.battle&&state.battle.vitalRules===undefined)state.battle.vitalRules=state.vitalRules;
       if(state.supplies===undefined)state.supplies=createSupplyState();
-      if (state.activities === undefined) state.activities=createActivityState(0);
+      if (state.activities === undefined) state.activities=createLegacyActivityState(0);
       if (state.levelRewards === undefined) state.levelRewards=[];
       if(state.battle&&state.battle.abilityRules===undefined)state.battle.abilityRules='none-v1';
       if(state.battle&&state.battle.restorativeRules===undefined)state.battle.restorativeRules=RESTORATIVE_POLICY.legacy;
@@ -713,12 +732,22 @@ export function restoreGame(json) {
         else state.equipped.offhand = null;
       }
     }
-    if (!validState(state)) return null;
+    if(oldSchema&&!legacy)return null;
+    if(!validState(state,{legacyAudit:oldSchema}))return null;
     if (legacy && !isActive(state)) {
       if (state.battle && !state.battle.finalVitals) state.battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };
       const recovery = recoverOutOfCombat(state);
       if (state.battle) state.battle.log.push(...recovery.events);
     }
+    if(oldSchema){
+      if(state.audit!==undefined||state.commandLedger!==undefined)return null;
+      const commands=migrateLegacyReceipts(state._commandReceipts,state.battle?.id??null,state.battle?._receipts.map(r=>r.id)??[]),activities=migrateActivityState(state.activities,state.battle);
+      if(!commands||!activities)return null;
+      state.commandLedger=commands;state.activities=activities;state.audit=createAuditState(sourceVersion);state.schemaVersion=SCHEMA_VERSION;
+      delete state._commandReceipts;if(state.battle){delete state.battle._receipts;state.battle.logOmitted=0;}
+      if(!compactAuditState(state).ok)return null;
+    }
+    if(!validState(state)||new TextEncoder().encode(serializeGame(state)).byteLength>MAX_SAVE_BYTES)return null;
     return state;
   } catch { return null; }
 }

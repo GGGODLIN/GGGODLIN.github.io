@@ -1,17 +1,15 @@
+// Frozen schema1 activity implementation from checkpoint16a, for migration validation and legacy regression tests.
 /**
  * Bounded, local early-Arena candidate. No player/EXP-ledger, combat, storage,
  * random, or global-clock side effects. See docs/ARENA.md for source boundaries.
  */
-
-import { validateActivityState as validateSchema1Activity } from './compat/arena-schema1.js';
 
 const arenaSource = 'https://ehwiki.org/index.php?title=Arena&oldid=64924';
 const staminaSource = 'https://ehwiki.org/index.php?title=Stamina&oldid=65230';
 const experienceSource = 'https://ehwiki.org/index.php?title=Experience_Points&oldid=65116';
 const dawnSource = 'https://ehwiki.org/index.php?title=Dawn_of_a_New_Day&oldid=59286';
 const HOUR = 3_600_000;
-const RETENTION_MODEL = 'bounded-arena-v1';
-const STATE_KEYS = ['stamina', 'lastRegenAt', 'attempts', 'clears', 'settledRounds', 'settledSeries', 'retentionModel', 'archivedClears', 'currentBattleId'];
+const STATE_KEYS = ['stamina', 'lastRegenAt', 'attempts', 'clears', 'settledRounds', 'settledSeries'];
 const ATTEMPT_KEYS = ['entryDay', 'enteredAt', 'battleId', 'status'];
 const ROUND_KEYS = ['battleId', 'arenaId', 'entryDay', 'round', 'xp', 'staminaCost', 'staminaBefore', 'staminaAfter', 'staminaStatus', 'settledAt'];
 const SERIES_KEYS = ['battleId', 'arenaId', 'entryDay', 'status', 'credits', 'firstClear', 'staminaAtSettlement', 'settledAt'];
@@ -51,9 +49,7 @@ const safeAmount = (n) => Number.isSafeInteger(n) && n >= 0;
 // An explicit local format boundary keeps UTC day keys four-digit ISO years.
 const validTime = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 253402300799999;
 const validLevel = (n) => Number.isSafeInteger(n) && n >= 1 && n <= 500;
-const battleOrdinal = (id) => typeof id === 'string' && /^arena-[1-9]\d*$/.test(id) &&
-  Number.isSafeInteger(Number(id.slice(6))) ? Number(id.slice(6)) : null;
-const validId = (id) => battleOrdinal(id) !== null;
+const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 200;
 const validStamina = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 99;
 const failure = (code, error) => Object.freeze({ ok: false, code, error });
 const roundStamina = (n) => Math.round(n * 1e9) / 1e9;
@@ -64,10 +60,7 @@ function dataRecord(value, keys) {
   if (prototype !== Object.prototype && prototype !== null) return false;
   const names = Reflect.ownKeys(value);
   if (keys && (names.length !== keys.length || !keys.every((key) => names.includes(key)))) return false;
-  return names.every((key) => {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    return typeof key === 'string' && descriptor.enumerable && Object.hasOwn(descriptor, 'value');
-  });
+  return names.every((key) => typeof key === 'string' && Object.hasOwn(Object.getOwnPropertyDescriptor(value, key), 'value'));
 }
 function dataArray(value) {
   return Array.isArray(value) && Reflect.ownKeys(value).length === value.length + 1 &&
@@ -91,124 +84,74 @@ export function utcDay(nowMs) {
 
 export function createActivityState(nowMs) {
   utcDay(nowMs);
-  return { stamina: 99, lastRegenAt: nowMs, attempts: {}, clears: {}, settledRounds: [], settledSeries: [],
-    retentionModel: RETENTION_MODEL, archivedClears: {}, currentBattleId: null };
+  return { stamina: 99, lastRegenAt: nowMs, attempts: {}, clears: {}, settledRounds: [], settledSeries: [] };
 }
 
-/** Strict bounded JSON-data validation, including every retained audit link. */
+/** Strict read-only JSON-data validation, including reservation/receipt links. */
 export function validateActivityState(activity) {
-  if (!dataRecord(activity, STATE_KEYS) || activity.retentionModel !== RETENTION_MODEL ||
-      !validStamina(activity.stamina) || !validTime(activity.lastRegenAt) ||
-      !dataRecord(activity.attempts) || !dataRecord(activity.clears) || !dataRecord(activity.archivedClears) ||
-      !dataArray(activity.settledRounds) || !dataArray(activity.settledSeries) ||
-      activity.settledRounds.length > Math.max(...ARENAS.map((arena) => arena.rounds)) ||
-      activity.settledSeries.length > 1) return false;
-  if (activity.currentBattleId === null) return Object.keys(activity.attempts).length === 0 &&
-    Object.keys(activity.clears).length === 0 && Object.keys(activity.archivedClears).length === 0 &&
-    activity.settledRounds.length === 0 && activity.settledSeries.length === 0;
-  const currentOrdinal = battleOrdinal(activity.currentBattleId);
-  if (currentOrdinal === null) return false;
+  if (!dataRecord(activity, STATE_KEYS) || !validStamina(activity.stamina) || !validTime(activity.lastRegenAt) ||
+      !dataRecord(activity.attempts) || !dataRecord(activity.clears) ||
+      !dataArray(activity.settledRounds) || !dataArray(activity.settledSeries)) return false;
   const attemptByBattle = new Map();
   let pending = 0;
   for (const [arenaId, days] of Object.entries(activity.attempts)) {
-    if (!findArena(arenaId) || !dataRecord(days) || Object.keys(days).length !== 1) return false;
+    if (!findArena(arenaId) || !dataRecord(days)) return false;
     for (const [day, attempt] of Object.entries(days)) {
       if (!validDay(day) || !dataRecord(attempt, ATTEMPT_KEYS) || attempt.entryDay !== day ||
           !validTime(attempt.enteredAt) || attempt.enteredAt > activity.lastRegenAt || utcDay(attempt.enteredAt) !== day ||
-          !['reserved', ...TERMINAL].includes(attempt.status) || !validId(attempt.battleId) ||
-          battleOrdinal(attempt.battleId) > currentOrdinal || attemptByBattle.has(attempt.battleId)) return false;
-      if (attempt.status === 'reserved') {
-        if (attempt.battleId !== activity.currentBattleId) return false;
-        pending++;
+          !['reserved', ...TERMINAL].includes(attempt.status)) return false;
+      if (attempt.status === 'reserved') pending++;
+      if (attempt.battleId === null) { if (attempt.status !== 'reserved') return false; }
+      else {
+        if (!validId(attempt.battleId) || attemptByBattle.has(attempt.battleId)) return false;
+        attemptByBattle.set(attempt.battleId, { arenaId, ...attempt });
       }
-      attemptByBattle.set(attempt.battleId, { arenaId, ...attempt });
     }
   }
-  const currentAttempt = attemptByBattle.get(activity.currentBattleId);
-  if (!currentAttempt || pending > 1 || [...attemptByBattle.values()].some((attempt) =>
-      attempt.enteredAt > currentAttempt.enteredAt)) return false;
-  const arena = findArena(currentAttempt.arenaId);
-  const rounds = activity.settledRounds;
-  for (let index = 0; index < rounds.length; index++) {
-    const receipt = rounds[index];
-    if (!dataRecord(receipt, ROUND_KEYS) || receipt.battleId !== activity.currentBattleId ||
-        receipt.arenaId !== currentAttempt.arenaId || receipt.entryDay !== currentAttempt.entryDay ||
-        receipt.round !== index + 1 || receipt.round > arena.rounds ||
-        !safeAmount(receipt.xp) || !validTime(receipt.settledAt) ||
-        receipt.settledAt < (rounds[index - 1]?.settledAt ?? currentAttempt.enteredAt) ||
-        receipt.settledAt > activity.lastRegenAt || !validStamina(receipt.staminaBefore) ||
-        !validStamina(receipt.staminaAfter) || receipt.staminaStatus !== staminaStatus(receipt.staminaBefore)) return false;
+  if (pending > 1) return false;
+  const roundKeys = new Set(); const roundsByBattle = new Map();
+  for (const receipt of activity.settledRounds) {
+    if (!dataRecord(receipt, ROUND_KEYS)) return false;
+    const attempt = attemptByBattle.get(receipt.battleId); const arena = findArena(receipt.arenaId);
+    if (!attempt || !arena || attempt.arenaId !== receipt.arenaId || attempt.entryDay !== receipt.entryDay ||
+        !Number.isSafeInteger(receipt.round) || receipt.round < 1 || receipt.round > arena.rounds ||
+        !safeAmount(receipt.xp) || !validTime(receipt.settledAt) || receipt.settledAt < attempt.enteredAt || receipt.settledAt > activity.lastRegenAt ||
+        !validStamina(receipt.staminaBefore) || !validStamina(receipt.staminaAfter) ||
+        receipt.staminaStatus !== staminaStatus(receipt.staminaBefore)) return false;
     const expectedCost = Math.min(receipt.staminaBefore, receipt.staminaBefore >= 60 ? 0.03 : 0.02);
     if (receipt.staminaCost !== roundStamina(expectedCost) ||
         receipt.staminaAfter !== roundStamina(receipt.staminaBefore - expectedCost) ||
         (receipt.staminaBefore < 1 && receipt.xp !== 0)) return false;
+    const key = JSON.stringify([receipt.battleId, receipt.round]);
+    const prior = roundsByBattle.get(receipt.battleId) || [];
+    if (roundKeys.has(key) || receipt.round !== prior.length + 1 ||
+        (prior.length && prior.at(-1).settledAt > receipt.settledAt)) return false;
+    roundKeys.add(key); prior.push(receipt); roundsByBattle.set(receipt.battleId, prior);
   }
-  const terminal = activity.settledSeries[0];
-  if ((currentAttempt.status !== 'reserved') !== (activity.settledSeries.length === 1)) return false;
-  if (activity.settledSeries.length === 1) {
-    if (!dataRecord(terminal, SERIES_KEYS) || terminal.battleId !== activity.currentBattleId ||
-        terminal.arenaId !== currentAttempt.arenaId || terminal.entryDay !== currentAttempt.entryDay ||
-        terminal.status !== currentAttempt.status || !TERMINAL.includes(terminal.status) ||
-        !safeAmount(terminal.credits) || typeof terminal.firstClear !== 'boolean' ||
-        !validStamina(terminal.staminaAtSettlement) || !validTime(terminal.settledAt) ||
-        terminal.settledAt < (rounds.at(-1)?.settledAt ?? currentAttempt.enteredAt) ||
-        terminal.settledAt > activity.lastRegenAt) return false;
-    if (terminal.status === 'victory') {
-      if (rounds.length !== arena.rounds || terminal.firstClear !== !activity.archivedClears[arena.id]) return false;
-      const expected = terminal.staminaAtSettlement < 1 ? 0 : terminal.firstClear ? arena.firstCredits : arena.repeatCredits;
-      if (terminal.credits !== expected) return false;
-    } else if (terminal.credits !== 0 || terminal.firstClear || rounds.length === arena.rounds) return false;
+  const seriesIds = new Set(); const clearCounts = {};
+  for (const receipt of activity.settledSeries) {
+    if (!dataRecord(receipt, SERIES_KEYS)) return false;
+    const attempt = attemptByBattle.get(receipt.battleId); const arena = findArena(receipt.arenaId);
+    const rounds = roundsByBattle.get(receipt.battleId) || [];
+    if (!attempt || !arena || attempt.arenaId !== receipt.arenaId || attempt.entryDay !== receipt.entryDay ||
+        attempt.status !== receipt.status || !TERMINAL.includes(receipt.status) || seriesIds.has(receipt.battleId) ||
+        !safeAmount(receipt.credits) || typeof receipt.firstClear !== 'boolean' ||
+        !validStamina(receipt.staminaAtSettlement) || !validTime(receipt.settledAt) ||
+        receipt.settledAt < (rounds.at(-1)?.settledAt ?? attempt.enteredAt) || receipt.settledAt > activity.lastRegenAt) return false;
+    if (receipt.status === 'victory') {
+      if (rounds.length !== arena.rounds || receipt.firstClear !== !clearCounts[arena.id]) return false;
+      const expected = receipt.staminaAtSettlement < 1 ? 0 : receipt.firstClear ? arena.firstCredits : arena.repeatCredits;
+      if (receipt.credits !== expected) return false;
+      clearCounts[arena.id] = (clearCounts[arena.id] || 0) + 1;
+    } else if (receipt.credits !== 0 || receipt.firstClear || rounds.length === arena.rounds) return false;
+    seriesIds.add(receipt.battleId);
   }
-  for (const counters of [activity.clears, activity.archivedClears]) {
-    if (!Object.entries(counters).every(([arenaId, count]) => findArena(arenaId) && safeAmount(count) && count > 0 &&
-        Object.hasOwn(activity.attempts, arenaId))) return false;
+  for (const [battleId, attempt] of attemptByBattle) {
+    if ((attempt.status !== 'reserved') !== seriesIds.has(battleId)) return false;
   }
-  for (const definition of ARENAS) {
-    const archived = activity.archivedClears[definition.id] || 0;
-    const retained = terminal?.arenaId === definition.id && terminal.status === 'victory' ? 1 : 0;
-    const total = archived + retained;
-    if (!safeAmount(total) || (activity.clears[definition.id] || 0) !== total) return false;
-    const attempt = Object.values(activity.attempts[definition.id] || {})[0];
-    if (attempt?.status === 'victory' && attempt.battleId !== activity.currentBattleId && archived < 1) return false;
-  }
-  return true;
-}
-
-/** Validate the complete frozen schema1 history before discarding any receipt. */
-export function migrateActivityState(oldActivity, currentBattle = null) {
-  if (!validateSchema1Activity(oldActivity)) return null;
-  const pending = openAttempts(oldActivity)[0];
-  const latest = oldActivity.settledSeries.at(-1);
-  let currentBattleId = pending?.battleId ?? latest?.battleId ?? null;
-  if (pending) {
-    if (currentBattle !== null) {
-      if (!dataRecord(currentBattle) || !['id', 'kind', 'arenaId', 'entryDay', 'status'].every((key) => Object.hasOwn(currentBattle, key)) ||
-          !validId(currentBattle.id) || currentBattle.kind !== 'arena' || currentBattle.status !== 'active' ||
-          currentBattle.arenaId !== pending.arenaId || currentBattle.entryDay !== pending.entryDay ||
-          (pending.battleId !== null && pending.battleId !== currentBattle.id)) return null;
-      currentBattleId = currentBattle.id;
-    } else if (pending.battleId === null) return null;
-  }
-  if (currentBattleId !== null && !validId(currentBattleId)) return null;
-  const attempts = {};
-  for (const [arenaId, days] of Object.entries(oldActivity.attempts)) {
-    const entries = Object.entries(days).sort(([a], [b]) => a.localeCompare(b));
-    if (!entries.length) continue;
-    const [day, attempt] = entries.at(-1);
-    attempts[arenaId] = { [day]: { ...attempt, battleId: attempt.status === 'reserved' ? currentBattleId : attempt.battleId } };
-  }
-  const settledRounds = oldActivity.settledRounds.filter((receipt) => receipt.battleId === currentBattleId).map((receipt) => ({ ...receipt }));
-  const settledSeries = oldActivity.settledSeries.filter((receipt) => receipt.battleId === currentBattleId).map((receipt) => ({ ...receipt }));
-  const archivedClears = { ...oldActivity.clears };
-  const retained = settledSeries[0];
-  if (retained?.status === 'victory') {
-    archivedClears[retained.arenaId]--;
-    if (archivedClears[retained.arenaId] === 0) delete archivedClears[retained.arenaId];
-  }
-  const result = { stamina: oldActivity.stamina, lastRegenAt: oldActivity.lastRegenAt,
-    attempts, clears: { ...oldActivity.clears }, settledRounds, settledSeries,
-    retentionModel: RETENTION_MODEL, archivedClears, currentBattleId };
-  return validateActivityState(result) ? result : null;
+  if (Object.keys(activity.clears).length !== Object.keys(clearCounts).length) return false;
+  return Object.entries(activity.clears).every(([arenaId, count]) =>
+    findArena(arenaId) && safeAmount(count) && count > 0 && count === clearCounts[arenaId]);
 }
 
 export function staminaStatus(stamina) {
@@ -225,10 +168,7 @@ function commit(activity, next, keys) {
   if (!keys.every((key) => Object.getOwnPropertyDescriptor(activity, key)?.writable === true)) {
     return failure('read-only', '活動資料為唯讀，未套用任何變更');
   }
-  const candidate = { ...activity };
-  for (const key of keys) candidate[key] = next[key];
-  if (!validateActivityState(candidate)) return failure('invalid-state', '變更後的活動資料無效，未套用任何變更');
-  for (const key of keys) activity[key] = candidate[key];
+  for (const key of keys) activity[key] = next[key];
   return null;
 }
 
@@ -276,26 +216,16 @@ export function previewActivities(activity, playerLevel, nowMs) {
 }
 
 /** Entry spends the UTC day's attempt even when the later outcome is a loss. */
-export function reserveArena(activity, arenaId, playerLevel, nowMs, battleId) {
+export function reserveArena(activity, arenaId, playerLevel, nowMs) {
   const arena = findArena(arenaId);
   if (!arena) return failure('unknown-arena', '未知的競技場挑戰');
   const view = previewActivities(activity, playerLevel, nowMs).find((entry) => entry.id === arenaId);
   if (!view.eligible) return failure(view.code, view.reason);
-  if (!validId(battleId) || (activity.currentBattleId !== null && battleOrdinal(battleId) <= battleOrdinal(activity.currentBattleId))) {
-    return failure('invalid-battle', '新的競技場戰鬥識別碼必須是較新的 arena-N');
-  }
   const projected = regeneration(activity, nowMs);
   const attempts = structuredClone(activity.attempts);
-  attempts[arenaId] = { [view.entryDay]: { entryDay: view.entryDay, enteredAt: nowMs, battleId, status: 'reserved' } };
-  const archivedClears = { ...activity.archivedClears };
-  const terminal = activity.settledSeries[0];
-  if (terminal?.status === 'victory') {
-    const count = (archivedClears[terminal.arenaId] || 0) + 1;
-    if (!safeAmount(count)) return failure('clear-overflow', '通關次數超出安全整數範圍');
-    archivedClears[terminal.arenaId] = count;
-  }
-  const next = { ...projected, attempts, archivedClears, currentBattleId: battleId, settledRounds: [], settledSeries: [] };
-  const blocked = commit(activity, next, ['stamina', 'lastRegenAt', 'attempts', 'archivedClears', 'currentBattleId', 'settledRounds', 'settledSeries']);
+  attempts[arenaId] ||= {};
+  attempts[arenaId][view.entryDay] = { entryDay: view.entryDay, enteredAt: nowMs, battleId: null, status: 'reserved' };
+  const blocked = commit(activity, { ...projected, attempts }, ['stamina', 'lastRegenAt', 'attempts']);
   return blocked || Object.freeze({ ok: true, entryDay: view.entryDay, definition: arena, stamina: activity.stamina });
 }
 
@@ -319,11 +249,13 @@ function settlementInput(activity, battleId, arenaId, nowMs) {
   if (!validateActivityState(activity)) return failure('invalid-state', '活動資料無效');
   if (!validId(battleId) || !findArena(arenaId)) return failure('invalid-battle', '競技場戰鬥識別資料無效');
   if (!validTime(nowMs)) return failure('invalid-time', '時間無效');
-  if (battleId !== activity.currentBattleId) return failure('stale-battle', '競技場戰鬥已過期或不是目前挑戰');
   return null;
 }
 function reservationFor(activity, battleId, arenaId) {
-  return openAttempts(activity).find((entry) => entry.arenaId === arenaId && entry.battleId === battleId) || null;
+  const reserved = openAttempts(activity).find((entry) => entry.arenaId === arenaId && (entry.battleId === null || entry.battleId === battleId));
+  const usedElsewhere = Object.entries(activity.attempts).some(([id, days]) => Object.values(days).some((attempt) =>
+    attempt.battleId === battleId && (id !== arenaId || attempt.status !== 'reserved')));
+  return reserved && !usedElsewhere ? reserved : null;
 }
 
 /** Call only after a won round; defeated/fled current rounds get no receipt. */
@@ -383,11 +315,7 @@ export function settleArenaSeries(activity, { battleId, arenaId, status, entryDa
   const attempts = structuredClone(activity.attempts);
   attempts[arenaId][entryDay] = { ...attempts[arenaId][entryDay], battleId, status };
   const clears = { ...activity.clears };
-  if (status === 'victory') {
-    const count = (clears[arenaId] || 0) + 1;
-    if (!safeAmount(count)) return failure('clear-overflow', '通關次數超出安全整數範圍');
-    clears[arenaId] = count;
-  }
+  if (status === 'victory') clears[arenaId] = (clears[arenaId] || 0) + 1;
   const next = { ...projected, attempts, clears, settledSeries: [...activity.settledSeries, receipt] };
   const blocked = commit(activity, next, ['stamina', 'lastRegenAt', 'attempts', 'clears', 'settledSeries']);
   return blocked || Object.freeze({ ...receipt, ok: true, duplicate: false, xp: 0, staminaCost: 0,
