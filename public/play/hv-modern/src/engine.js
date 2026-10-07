@@ -1,3 +1,5 @@
+import {VITAL_POLICY,calculateVitals} from './vitals.js';
+import {ABILITY_POLICY,createAbilityState,validateAbilityState,abilityVitalMultipliers,purchaseAbilityRank as purchaseRank,assignAbility as assignMajor,unassignAbility as unassignMajor,resetAbility as resetOwnedAbility} from './abilities.js';
 import {createSupplyState,validateSupplyState} from './supplies.js';
 import {RESTORATIVE_POLICY,restorativeAmount} from './restoratives.js';
 import {GENERATION_POLICY,generateEquipment,validateGeneratedEquipment} from './equipment-generation.js';
@@ -5,7 +7,7 @@ import {OFFENSE_POLICY,publishedOffense,outgoingDamage} from './combat-offense.j
 import {COMBAT_RESOURCE_POLICY,SPELL_RESOURCES,REGEN_SCALE,spellManaCost,naturalRegenRates,recoverWholeUnits} from './combat-resources.js';
 import {setEquipmentProtection,equipmentActionPermission,getContainerCounts} from './armory.js';
 import {ARENAS,createActivityState,validateActivityState,previewActivities,reserveArena,settleArenaRound,settleArenaSeries} from './arena.js';
-import {grantExperience,experienceThreshold} from './leveling.js';
+import {grantExperience,experienceThreshold,experienceLevel} from './leveling.js';
 import {createExperienceLedger,validateExperienceLedger,quoteAttributeChange,applyAttributeChange,LEVEL_20_REFERENCE} from './progression.js';
 import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, EQUIPMENT_QUALITIES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
 export {ARENAS,previewActivities} from './arena.js';
@@ -32,7 +34,7 @@ function random(state) {
 }
 function randomInt(state, min, max) { return min + Math.floor(random(state) * (max - min + 1)); }
 
-/** Outgoing bases use a published candidate; maxima, accuracy and generic defense remain authored. */
+/** Vital and outgoing models are versioned separately; accuracy and generic defense remain authored. */
 export function getStats(state) {
   const { str, dex, agi, end, int, wis } = state.player.attributes;
   const gear = Object.values(state.equipped).map((id) => state.inventory.find((item) => item.id === id)).filter(Boolean);
@@ -40,14 +42,11 @@ export function getStats(state) {
   const burden = total('burden');
   const legacyOffense=isActive(state)&&state.battle.offenseRules===OFFENSE_POLICY.legacy;
   const offense=publishedOffense(state.player.attributes,total('attack'),total('magic'));
+  const vitalMultipliers=isActive(state)&&state.battle.abilityRules==='none-v1'?{hp:1,mp:1,sp:1}:abilityVitalMultipliers(state);
+  const vitals=calculateVitals({level:state.player.level,attributes:state.player.attributes,model:isActive(state)?state.battle.vitalRules:state.vitalRules,multipliers:vitalMultipliers});
   const speed = Math.round(clamp((agi / state.player.level - 1) * 10, 0, 10) * clamp((130 - burden) / 90, 0, 1) * 100) / 100;
   return {
-    baseHp: Math.floor(150 + end * 9 + state.player.level * 5),
-    baseMp: Math.floor(30 + int * 2 + wis * 2),
-    baseSp: Math.floor(10 + wis * 0.75),
-    maxHp: Math.floor(150 + end * 9 + state.player.level * 5),
-    maxMp: Math.floor(30 + int * 2 + wis * 2),
-    maxSp: Math.floor(10 + wis * 0.75),
+    ...vitals,
     attack: legacyOffense?Math.floor(8 + str * 1.4 + dex * 0.5 + total('attack')):offense.attack,
     magic: legacyOffense?Math.floor(5 + int * 1.6 + wis * 0.4 + total('magic')):offense.magic,
     healingMagicFixture: Math.floor(5 + int * 1.6 + wis * 0.4 + total('magic')),
@@ -57,16 +56,17 @@ export function getStats(state) {
   };
 }
 
-export function createGame(seed = 'vesper-training-01') {
+export function createGame(seed = 'vesper-training-01', {vitalRules=VITAL_POLICY.id}={}) {
+  if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(vitalRules))throw new RangeError('Unknown vital model');
   const state = {
-    schemaVersion: SCHEMA_VERSION, rulesVersion: RULES_VERSION, mode: 'Persistent',
+    schemaVersion: SCHEMA_VERSION, rulesVersion: RULES_VERSION, mode: 'Persistent', vitalRules,
     player: { name: '旅者', level: LEVEL_20_REFERENCE.level, xp: LEVEL_20_REFERENCE.earnedThreshold, xpNext: LEVEL_20_REFERENCE.nextEarnedThreshold, attributePoints: 0,
       attributes: { str: 14, dex: 14, agi: 14, end: 14, int: 14, wis: 14 },
       hp: 0, mp: 0, sp: 0, overcharge: 0, credits: 0 },
     inventory: clone(STARTER_ITEMS),
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
     potions: { health: 3, mana: 3 }, battle: null,
-    activities: createActivityState(0), levelRewards: [], supplies:createSupplyState(),
+    activities: createActivityState(0), levelRewards: [], supplies:createSupplyState(), abilities:createAbilityState(true),
     history: [], achievements: { trainingClears: 0 },
     externalBonuses: clone(RULES.externalBonuses),
     _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1, _commandReceipts: [],
@@ -114,7 +114,7 @@ export function startBattle(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:reservation?.definition.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
-    restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
+    vitalRules:state.vitalRules, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, _receipts: [], _settled: false,
   };
@@ -352,7 +352,7 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
         if (victim.hp === 0) emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });
       } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${victim.name}`, 'miss', { targetId: victim.id });
     }
-  } else if (action.id === 'cure') heal(state, events, 'hp', stats.maxHp * 0.3 + stats.healingMagicFixture * 0.4, '治癒');
+  } else if (action.id === 'cure') heal(state, events, 'hp', stats.baseHp * 0.3 + stats.healingMagicFixture * 0.4, '治癒');
   else if (action.id === 'scan') {
     target.scanned = true;
     emit(state, events, `探查完成：${target.name}，Lv.${target.level}，HP ${target.hp} / ${target.maxHp}`, 'scan', { targetId: target.id });
@@ -363,7 +363,7 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
     battle.effects.focus = 2;
     if (state.player.overcharge >= 25) {
       state.player.overcharge -= 25;
-      heal(state, events, 'mp', stats.maxMp * 0.05, '專注');
+      heal(state, events, 'mp', stats.baseMp * 0.05, '專注');
     }
     emit(state, events, '專注：下次行動的法術命中提高；下次行動無法閃避', 'status');
   } else if (action.id === 'spirit') {
@@ -388,7 +388,7 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
         if (reward.ok && !reward.duplicate) {
           const earned=grantExperience(state,reward.xp);
           emit(state,events,`本波完成：+${earned.received||0} EXP，體力 −${reward.staminaCost.toFixed(2)}（候選結算）`,'reward');
-          for(const level of earned.levels||[]) emit(state,events,`升至 Lv.${level.level}；+1 AP${level.masteryPoints?'、+1 Mastery':''}已記錄，能力介面待接入。`,'level');
+          for(const level of earned.levels||[]) emit(state,events,`升至 Lv.${level.level}；+1 AP${level.masteryPoints?'、+1 Mastery':''}${battle.abilityRules===ABILITY_POLICY.id?'已加入能力資格帳本；不會自動學習或裝配。':'已記錄，能力介面待接入。'}`,'level');
         } else if(!reward.ok) emit(state,events,`EXP 結算異常：${reward.error}`,'error');
       }
       if (battle.round === battle.rounds) settle(state, 'victory', events, nowMs);
@@ -422,6 +422,48 @@ export function performAction(state,actionId,targetId,commandId,nowMs=Date.now()
     Object.assign(state,draft);
     return result;
   }catch{return failure('競技場結算未完成，原進度已保留');}
+}
+
+/** Ability ownership and assignment are distinct; changes reconcile outside maxima only. */
+function changeAbility(state,operation,args){
+  try{
+    if(!validState(state))return failure('角色或能力資料無效');
+    const draft=clone(state),result=operation(draft,...args);
+    if(!result.ok)return result;
+    const recovery=recoverOutOfCombat(draft);
+    if(!recovery.ok||!validState(draft))return failure('能力變更驗證未通過，原進度保留');
+    if(!Object.keys(draft).every(key=>Object.getOwnPropertyDescriptor(state,key)?.writable===true))return failure('能力資料為唯讀，原進度保留');
+    Object.assign(state,draft);
+    return {...result,events:recovery.events};
+  }catch{return failure('能力变更未完成，原進度保留');}
+}
+export function purchaseAbility(state,id,expectedRank=state.abilities?.purchased?.[id]){
+  if(expectedRank!==state.abilities?.purchased?.[id])return failure('能力階級已變更，請重新確認');
+  return changeAbility(state,purchaseRank,[id]);
+}
+export function setMajorAbility(state,id,slotIndex){return changeAbility(state,assignMajor,[id,slotIndex]);}
+export function clearMajorAbility(state,slotIndex){return changeAbility(state,unassignMajor,[slotIndex]);}
+export function resetPurchasedAbility(state,id){return changeAbility(state,resetOwnedAbility,[id]);}
+
+/** Existing profiles retain their original resource model until this explicit outside-combat opt-in. */
+export function getVitalUpgradeQuote(state){
+  try{
+    if(!validState(state))return failure('角色或資源模型資料無效');
+    if(isActive(state))return failure('戰鬥系列尚未結束，不能更換資源模型');
+    if(state.vitalRules!==VITAL_POLICY.legacy)return failure('目前已採來源資源候選式');
+    const before=getStats(state),preview=clone(state);preview.vitalRules=VITAL_POLICY.id;
+    return {ok:true,fromModel:state.vitalRules,toModel:VITAL_POLICY.id,before,after:getStats(preview)};
+  }catch{return failure('無法建立資源模型預覽');}
+}
+export function upgradeVitalModel(state,expectedModel=VITAL_POLICY.legacy){
+  const quote=getVitalUpgradeQuote(state);
+  if(!quote.ok)return quote;
+  if(expectedModel!==state.vitalRules)return failure('資源模型已變更，請重新確認');
+  const draft=clone(state);draft.vitalRules=VITAL_POLICY.id;
+  const recovery=recoverOutOfCombat(draft);
+  if(!recovery.ok||!validState(draft)||!Object.keys(draft).every(key=>Object.getOwnPropertyDescriptor(state,key)?.writable===true))return failure('資源模型變更未完成，原進度保留');
+  Object.assign(state,draft);
+  return {ok:true,events:recovery.events,fromModel:quote.fromModel,toModel:quote.toModel};
 }
 
 /** Explicit non-combat-command wave continuation; no time, upkeep or cooldown decrement. */
@@ -530,6 +572,7 @@ function validBattleLinks(state){
 }
 function validState(state) {
   if (!plain(state) || state.schemaVersion !== SCHEMA_VERSION || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
+  if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(state.vitalRules))return false;
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
   const player = state.player;
@@ -537,6 +580,8 @@ function validState(state) {
   if (state.progression.kind === 'experience-ledger') {
     if (!validateExperienceLedger(player.attributes, state.progression) || state.progression.earned !== player.xp || player.attributePoints !== 0) return false;
   } else if (state.progression.kind !== 'legacy-fixture' || Object.keys(state.progression).length !== 1) return false;
+  if(!validateAbilityState(state.abilities,player.level,state.progression.kind==='experience-ledger'))return false;
+  if(state.progression.kind==='experience-ledger'&&(experienceLevel(player.xp)!==player.level||player.xpNext!==experienceThreshold(Math.min(500,player.level+1))))return false;
   if (!integer(player.level, 1, 500) || !ATTRIBUTE_KEYS.every((key) => integer(player.attributes[key], 1, 100000))) return false;
   if (!['hp', 'mp', 'sp', 'xp', 'credits', 'attributePoints'].every((key) => integer(player[key])) || !integer(player.xpNext, 1) || !integer(player.overcharge, 0, 250)) return false;
   if (!Array.isArray(state.inventory) || state.inventory.length < 1 || state.inventory.length > 1000 || !plain(state.equipped)) return false;
@@ -591,6 +636,8 @@ function validState(state) {
     if(completed!==(battle.status==='victory'||battle.phase==='round-complete'?battle.round:battle.round-1))return false;
   }
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
+  if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(battle.vitalRules)||isActive(state)&&battle.vitalRules!==state.vitalRules)return false;
+  if(![ABILITY_POLICY.id,'none-v1'].includes(battle.abilityRules))return false;
   if(![RESTORATIVE_POLICY.id,RESTORATIVE_POLICY.legacy].includes(battle.restorativeRules))return false;
   if(![GENERATION_POLICY.model,'fixed-arena-fixture-v1'].includes(battle.equipmentRules))return false;
   if(![OFFENSE_POLICY.id,OFFENSE_POLICY.legacy].includes(battle.offenseRules))return false;
@@ -631,18 +678,22 @@ export function restoreGame(json) {
       return value;
     });
     // Validate old progress before applying the documented rule-version migration.
-    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8', 'persistent-0.91-training-v9'].includes(state?.rulesVersion);
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8', 'persistent-0.91-training-v9', 'persistent-0.91-training-v10', 'persistent-0.91-training-v11'].includes(state?.rulesVersion);
     if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
       state.rulesVersion = RULES_VERSION;
+      if(state.vitalRules===undefined)state.vitalRules=VITAL_POLICY.legacy;
+      if(state.battle&&state.battle.vitalRules===undefined)state.battle.vitalRules=state.vitalRules;
       if(state.supplies===undefined)state.supplies=createSupplyState();
       if (state.activities === undefined) state.activities=createActivityState(0);
       if (state.levelRewards === undefined) state.levelRewards=[];
+      if(state.battle&&state.battle.abilityRules===undefined)state.battle.abilityRules='none-v1';
       if(state.battle&&state.battle.restorativeRules===undefined)state.battle.restorativeRules=RESTORATIVE_POLICY.legacy;
       if(state.battle&&state.battle.equipmentRules===undefined)state.battle.equipmentRules='fixed-arena-fixture-v1';
       if(state.battle&&state.battle.offenseRules===undefined)state.battle.offenseRules=OFFENSE_POLICY.legacy;
       if(state.battle&&state.battle.combatRules===undefined){state.battle.combatRules=COMBAT_RESOURCE_POLICY.legacy;state.battle._regenCarry={mp:0,sp:0};}
       if (state.battle && !state.battle.kind) {state.battle.kind='training';state.battle.arenaId=null;state.battle.entryDay=null;state.battle.entryLevel=state.player?.level;state.battle.entryStamina=null;for(const enemy of state.battle.enemies||[])if(enemy.powerLevel===undefined)enemy.powerLevel=0;}
       if (state.progression === undefined) state.progression = { kind: 'legacy-fixture' };
+      if(state.abilities===undefined)state.abilities=createAbilityState(state.progression.kind==='experience-ledger');
       if (state.battle && state.battle.phase === undefined) state.battle.phase = 'combat';
       if (Array.isArray(state.inventory)) for (const item of state.inventory) {
         const original = STARTER_ITEMS.find((entry) => entry.id === (item?.templateId||item?.id));

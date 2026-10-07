@@ -2,7 +2,7 @@
 export const SCHEMA_VERSION = 1;
 export const MAX_SAVE_BYTES = 5_000_000;
 export const EQUIPMENT_QUALITIES = Object.freeze(['Crude','Fair','Average','Superior','Exquisite','Magnificent','Legendary','Peerless','Peerless+','Ultimate']);
-export const RULES_VERSION = 'persistent-0.91-training-v10';
+export const RULES_VERSION = 'persistent-0.91-training-v12';
 export const ATTRIBUTE_KEYS = Object.freeze(['str', 'dex', 'agi', 'end', 'int', 'wis']);
 export const RULES = Object.freeze({
   version: RULES_VERSION,
@@ -21,6 +21,7 @@ export const RULES = Object.freeze({
     recovery: 'https://ehwiki.org/index.php?title=Battles&oldid=64927#Recovering',
     equipment: 'https://ehwiki.org/index.php?title=Equipment_Basics&oldid=65026',
     allocation: 'https://ehwiki.org/index.php?title=Character_Stats&oldid=65166#Experience_Point_Allocation',
+    vitals: 'https://ehwiki.org/index.php?title=Character_Stats&oldid=65166#Vitals',
   },
   provisional: ['角色衍生公式', '裝備及怪物數值', '傷害與命中抽樣', '法術消耗取整與部分技能冷卻', '敵方排程與結算順序', 'Spirit Stance 的 turn / round 解讀'],
   externalBonuses: Object.freeze({ hath: 0, gp: 0, donation: 0, forum: 0, isekaiAttributes: 0, tower: 0, rewardMultiplier: 1, externalEligibility: false }),
