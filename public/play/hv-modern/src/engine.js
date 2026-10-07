@@ -1,4 +1,5 @@
-import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
+import {createExperienceLedger,validateExperienceLedger,quoteAttributeChange,applyAttributeChange,LEVEL_20_REFERENCE} from './progression.js';
+import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, EQUIPMENT_QUALITIES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
 export { RULES, ACTIONS, ATTRIBUTE_KEYS, MAX_SAVE_BYTES } from './data.js';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -44,8 +45,8 @@ export function getStats(state) {
 export function createGame(seed = 'vesper-training-01') {
   const state = {
     schemaVersion: SCHEMA_VERSION, rulesVersion: RULES_VERSION, mode: 'Persistent',
-    player: { name: '旅者', level: 20, xp: 0, xpNext: 1000, attributePoints: 3,
-      attributes: { str: 24, dex: 22, agi: 24, end: 26, int: 22, wis: 24 },
+    player: { name: '旅者', level: LEVEL_20_REFERENCE.level, xp: LEVEL_20_REFERENCE.earnedThreshold, xpNext: LEVEL_20_REFERENCE.nextEarnedThreshold, attributePoints: 0,
+      attributes: { str: 14, dex: 14, agi: 14, end: 14, int: 14, wis: 14 },
       hp: 0, mp: 0, sp: 0, overcharge: 0, credits: 0 },
     inventory: clone(STARTER_ITEMS),
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
@@ -54,6 +55,8 @@ export function createGame(seed = 'vesper-training-01') {
     externalBonuses: clone(RULES.externalBonuses),
     _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1, _commandReceipts: [],
   };
+  state.progression = createExperienceLedger(state.player.attributes, state.player.xp);
+  for (const id of Object.values(state.equipped)) state.inventory.find((item) => item.id === id).level = state.player.level;
   const stats = getStats(state);
   Object.assign(state.player, { hp: stats.maxHp, mp: stats.maxMp, sp: stats.maxSp });
   return state;
@@ -172,6 +175,11 @@ function settle(state, status, events) {
     emit(state, events, '演練完成。已記錄通關；此訓練不發放 EXP、Credits 或掉落。', 'victory');
   } else if (status === 'defeat') emit(state, events, '你已倒下。演練結束；敗北結果已記錄。', 'defeat');
   else emit(state, events, '已撤離裂隙。沒有獎勵或原版活動次數變更。', 'flee');
+  if (state._pendingHandNormalization) {
+    state.equipped.offhand = null;
+    delete state._pendingHandNormalization;
+    emit(state, events, '舊存檔的雙手法杖／副手組合已於戰鬥結束後校正；副手物品仍在庫存。', 'equipment');
+  }
   const recovery = recoverOutOfCombat(state);
   events.push(...recovery.events);
   battle.log.push(...recovery.events);
@@ -328,17 +336,37 @@ export function continueRound(state) {
   return success(events);
 }
 
-export function equipItem(state, itemId) {
-  if (isActive(state)) return failure('戰鬥中不能更換裝備');
+export function getEquipmentEligibility(state, itemId) {
+  if (isActive(state)) return { ok: false, error: '戰鬥中不能更換裝備', unequipIds: [] };
   const item = state.inventory.find((entry) => entry.id === itemId);
-  if (!item) return failure('找不到這件裝備');
-  if (state.equipped[item.slot] === item.id) return failure('這件裝備已穿戴');
+  if (!item) return { ok: false, error: '找不到這件裝備', unequipIds: [] };
+  if (item.level !== null && item.level > state.player.level) return { ok: false, error: `裝備等級 ${item.level} 高於角色等級 ${state.player.level}`, unequipIds: [] };
+  if (state.equipped[item.slot] === item.id) return { ok: false, error: '這件裝備已穿戴', unequipIds: [] };
+  const mainhand = state.inventory.find((entry) => entry.id === state.equipped.weapon);
+  if (item.slot === 'offhand' && mainhand?.hands === 2) return { ok: false, error: '目前主手是雙手武器；請先改用單手武器', unequipIds: [] };
+  return { ok: true, error: '', unequipIds: item.slot === 'weapon' && item.hands === 2 && state.equipped.offhand ? [state.equipped.offhand] : [] };
+}
+export function equipItem(state, itemId) {
+  const eligibility = getEquipmentEligibility(state, itemId);
+  if (!eligibility.ok) return failure(eligibility.error);
+  const item = state.inventory.find((entry) => entry.id === itemId);
+  const events = [];
+  for (const id of eligibility.unequipIds) {
+    state.equipped.offhand = null;
+    const offhand = state.inventory.find((entry) => entry.id === id);
+    events.push({ id: `event-${state._nextEvent++}`, text: `雙手武器需占用雙手；已卸下${offhand.name}，物品仍保留在庫存`, type: 'equipment' });
+  }
+  if (item.level === null) {
+    item.level = state.player.level;
+    events.push({ id: `event-${state._nextEvent++}`, text: `${item.name}首次裝備，等級固定為 ${item.level}；之後不隨角色自動提升`, type: 'equipment' });
+  }
   state.equipped[item.slot] = item.id;
   const stats = getStats(state);
   state.player.hp = Math.min(state.player.hp, stats.maxHp);
   state.player.mp = Math.min(state.player.mp, stats.maxMp);
   state.player.sp = Math.min(state.player.sp, stats.maxSp);
-  return success([{ id: `event-${state._nextEvent++}`, text: `已裝備${item.name}`, type: 'equipment' }, ...recoverOutOfCombat(state).events]);
+  events.push({ id: `event-${state._nextEvent++}`, text: `已裝備${item.name}`, type: 'equipment' }, ...recoverOutOfCombat(state).events);
+  return success(events);
 }
 export function setItemProtected(state, itemId, locked) {
   if (typeof locked !== 'boolean') return failure('保護標記格式錯誤');
@@ -347,10 +375,22 @@ export function setItemProtected(state, itemId, locked) {
   item.locked = locked;
   return success();
 }
-export function spendAttribute(state, key) {
+export function getAttributeQuote(state, key, delta = 1) {
+  if (state.progression?.kind === 'experience-ledger') return quoteAttributeChange(state.player.attributes, key, delta, state.progression.unspent);
+  if (delta !== 1) return { ok: false, error: '舊版演練角色保留原本加點方式；EXP 配置適用新角色' };
+  if (!ATTRIBUTE_KEYS.includes(key)) return { ok: false, error: '未知的屬性' };
+  return state.player.attributePoints > 0 ? { ok: true, cost: 1, from: state.player.attributes[key], to: state.player.attributes[key] + 1 } : { ok: false, error: '沒有可配置的舊版演練屬性點' };
+}
+export function spendAttribute(state, key, delta = 1) {
   if (isActive(state)) return failure('戰鬥中不能配置屬性');
-  if (!ATTRIBUTE_KEYS.includes(key)) return failure('未知的屬性');
-  if (state.player.attributePoints < 1) return failure('沒有可配置的演練屬性點');
+  if (state.progression?.kind === 'experience-ledger') {
+    const result = applyAttributeChange(state.player.attributes, state.progression, key, delta);
+    if (!result.ok) return failure(result.error);
+    const recovery = recoverOutOfCombat(state);
+    return { ...result, events: recovery.events };
+  }
+  const quote = getAttributeQuote(state, key, delta);
+  if (!quote.ok) return failure(quote.error);
   state.player.attributePoints--;
   state.player.attributes[key]++;
   return recoverOutOfCombat(state);
@@ -374,15 +414,25 @@ function validState(state) {
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
   const player = state.player;
+  if (!plain(state.progression)) return false;
+  if (state.progression.kind === 'experience-ledger') {
+    if (!validateExperienceLedger(player.attributes, state.progression) || state.progression.earned !== player.xp || player.attributePoints !== 0) return false;
+  } else if (state.progression.kind !== 'legacy-fixture' || Object.keys(state.progression).length !== 1) return false;
   if (!integer(player.level, 1, 500) || !ATTRIBUTE_KEYS.every((key) => integer(player.attributes[key], 1, 100000))) return false;
   if (!['hp', 'mp', 'sp', 'xp', 'credits', 'attributePoints'].every((key) => integer(player[key])) || !integer(player.xpNext, 1) || !integer(player.overcharge, 0, 250)) return false;
   if (!Array.isArray(state.inventory) || state.inventory.length !== STARTER_ITEMS.length || !plain(state.equipped)) return false;
   if (new Set(state.inventory.map((item) => item.id)).size !== state.inventory.length) return false;
   for (const item of state.inventory) {
     const original = STARTER_ITEMS.find((entry) => entry.id === item.id);
-    if (!original || typeof item.locked !== 'boolean' || Object.keys(original).some((key) => key !== 'locked' && item[key] !== original[key])) return false;
+    if (!original || typeof item.locked !== 'boolean' || Object.keys(original).some((key) => !['locked','level'].includes(key) && item[key] !== original[key])) return false;
+    if (item.level !== null && !integer(item.level, 1, 500)) return false;
+    if (item.level === null && (EQUIPMENT_QUALITIES.indexOf(item.quality) >= 4 || Object.values(state.equipped).includes(item.id))) return false;
   }
-  if (!['weapon', 'body', 'offhand'].every((slot) => state.inventory.some((item) => item.id === state.equipped[slot] && item.slot === slot))) return false;
+  if (Object.keys(state.equipped).length !== 3 || !['weapon', 'body', 'offhand'].every((slot) => slot === 'offhand' && state.equipped[slot] === null || state.inventory.some((item) => item.id === state.equipped[slot] && item.slot === slot))) return false;
+  const mainhand = state.inventory.find((item) => item.id === state.equipped.weapon);
+  if (state._pendingHandNormalization !== undefined && state._pendingHandNormalization !== true) return false;
+  if (mainhand.hands === 2 && state.equipped.offhand !== null && !(state._pendingHandNormalization && isActive(state))) return false;
+  if (state._pendingHandNormalization && (!isActive(state) || mainhand.hands !== 2 || state.equipped.offhand === null)) return false;
   const stats = getStats(state);
   if (player.hp > stats.maxHp || player.mp > stats.maxMp || player.sp > stats.maxSp) return false;
   if (!plain(state.potions) || !integer(state.potions.health, 0, 999999) || !integer(state.potions.mana, 0, 999999)) return false;
@@ -431,10 +481,22 @@ export function restoreGame(json) {
       return value;
     });
     // Validate old progress before applying the documented rule-version migration.
-    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2'].includes(state?.rulesVersion);
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4'].includes(state?.rulesVersion);
     if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
       state.rulesVersion = RULES_VERSION;
+      if (state.progression === undefined) state.progression = { kind: 'legacy-fixture' };
       if (state.battle && state.battle.phase === undefined) state.battle.phase = 'combat';
+      if (Array.isArray(state.inventory)) for (const item of state.inventory) {
+        const original = STARTER_ITEMS.find((entry) => entry.id === item?.id);
+        if (original && item.hands === undefined) item.hands = original.hands;
+        if (original && item.level === undefined) item.level = state.player?.level;
+        if (original?.quality === 'Average' && item.quality === 'Fine') item.quality = 'Average';
+      }
+      // Known legacy staff/shield pair: remove only a verified existing offhand, never an unknown ID.
+      if (state.equipped?.weapon === 'staff-ember' && state.inventory?.some((item) => item.id === state.equipped.offhand && item.slot === 'offhand' && STARTER_ITEMS.some((base) => base.id === item.id))) {
+        if (isActive(state)) state._pendingHandNormalization = true;
+        else state.equipped.offhand = null;
+      }
     }
     if (!validState(state)) return null;
     if (legacy && !isActive(state)) {

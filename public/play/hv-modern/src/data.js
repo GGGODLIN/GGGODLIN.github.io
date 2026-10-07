@@ -1,7 +1,8 @@
 /** Original training fixtures. Numeric balance is NOT an official HV arena. */
 export const SCHEMA_VERSION = 1;
 export const MAX_SAVE_BYTES = 5_000_000;
-export const RULES_VERSION = 'persistent-0.91-training-v3';
+export const EQUIPMENT_QUALITIES = Object.freeze(['Crude','Fair','Average','Superior','Exquisite','Magnificent','Legendary','Peerless','Peerless+','Ultimate']);
+export const RULES_VERSION = 'persistent-0.91-training-v5';
 export const ATTRIBUTE_KEYS = Object.freeze(['str', 'dex', 'agi', 'end', 'int', 'wis']);
 export const RULES = Object.freeze({
   version: RULES_VERSION,
@@ -18,20 +19,22 @@ export const RULES = Object.freeze({
     baseline: 'https://ehwiki.org/wiki/HentaiVerse',
     rounds: 'https://ehwiki.org/index.php?title=Battles&oldid=64927#Victory',
     recovery: 'https://ehwiki.org/index.php?title=Battles&oldid=64927#Recovering',
+    equipment: 'https://ehwiki.org/index.php?title=Equipment_Basics&oldid=65026',
+    allocation: 'https://ehwiki.org/index.php?title=Character_Stats&oldid=65166#Experience_Point_Allocation',
   },
   provisional: ['角色衍生公式', '裝備及怪物數值', '傷害與命中抽樣', '法術消耗及冷卻', '敵方排程與結算順序', 'Spirit Stance 的 turn / round 解讀'],
   externalBonuses: Object.freeze({ hath: 0, gp: 0, donation: 0, forum: 0, isekaiAttributes: 0, tower: 0, rewardMultiplier: 1, externalEligibility: false }),
 });
 
-const item = (id, name, slot, quality, attack, magic, defense, burden, description) => ({ id, name, slot, quality, attack, magic, defense, burden, description, locked: false, bound: false, iwLevel: 0, forgeLevel: 0 });
+const item = (id, name, slot, quality, attack, magic, defense, burden, description) => ({ id, name, slot, quality, attack, magic, defense, burden, description, level: ['Crude','Fair','Average','Superior'].includes(quality) ? null : 20, hands: slot === 'weapon' ? id.startsWith('staff-') ? 2 : 1 : 0, locked: false, bound: false, iwLevel: 0, forgeLevel: 0 });
 export const STARTER_ITEMS = Object.freeze([
   item('blade-dawn', '曙光長刃', 'weapon', 'Superior', 29, 2, 0, 7, '原創演練長刃。偏重物理攻擊；裝備模板與數值皆為暫定樣本。'),
   item('staff-ember', '餘燼法杖', 'weapon', 'Exquisite', 8, 35, 0, 3, '原創演練法杖。提高魔力；尚未套用完整法杖熟練度與流派機制。'),
-  item('blade-dusk', '暮色短劍', 'weapon', 'Fine', 23, 5, 0, 1, '原創演練短劍。輕量替代選項；不含未驗證的隱藏詞綴。'),
+  item('blade-dusk', '暮色短劍', 'weapon', 'Average', 23, 5, 0, 1, '原創演練短劍。輕量替代選項；不含未驗證的隱藏詞綴。'),
   item('coat-traveler', '旅者輕甲', 'body', 'Superior', 0, 0, 16, 8, '原創演練輕甲。只驗證目前三槽樣本的配裝比較流程。'),
   item('robe-tide', '潮汐法袍', 'body', 'Exquisite', 0, 12, 8, 2, '原創演練法袍。以防禦換取魔力；完整護甲件數與能力條件尚待施工。'),
   item('plate-sentinel', '哨衛重甲', 'body', 'Superior', 0, 0, 26, 30, '原創演練重甲。較高防禦與負重；負重公式屬暫定模型。'),
-  item('shield-ash', '灰木圓盾', 'offhand', 'Fine', 0, 0, 11, 5, '原創演練盾。只提供樣本防禦，格擋與反擊尚未實作。'),
+  item('shield-ash', '灰木圓盾', 'offhand', 'Average', 0, 0, 11, 5, '原創演練盾。只提供樣本防禦，格擋與反擊尚未實作。'),
 ]);
 
 export const TRAINING_WAVES = Object.freeze([

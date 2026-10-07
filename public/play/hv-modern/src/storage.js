@@ -8,7 +8,7 @@ export function loadLocalSave(storage){
     const raw=storage.getItem(SAVE_KEY);
     if(!raw)return {game:createGame(),warning:'',preserveOriginal:false,source:'fresh'};
     const game=restoreGame(raw);
-    if(game)return {game,warning:JSON.parse(raw).rulesVersion!==game.rulesVersion?'已升級存檔：清波需確認繼續；戰外生命／魔力／靈力即時恢復':'',preserveOriginal:false,source:'primary'};
+    if(game)return {game,warning:JSON.parse(raw).rulesVersion!==game.rulesVersion?'已升級規則存檔；舊角色屬性與點數保留，EXP 帳本適用新角色。舊戰鬥配裝保留至該場結束':'',preserveOriginal:false,source:'primary'};
     const backup=storage.getItem(BACKUP_KEY),recovered=backup?restoreGame(backup):null;
     if(recovered)return {game:recovered,warning:'主存檔無法讀取，已載入上一份本機備份',preserveOriginal:false,source:'backup'};
     return {game:createGame(),warning:'舊存檔格式無法讀取。未覆寫原檔，請先匯出原始存檔',preserveOriginal:true,source:'unreadable'};
