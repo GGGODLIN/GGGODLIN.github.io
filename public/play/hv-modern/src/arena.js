@@ -300,7 +300,8 @@ export function reserveArena(activity, arenaId, playerLevel, nowMs, battleId) {
 }
 
 /** Normal difficulty, Arena 1x, external contributions zero. No reward writes. */
-export function calculateRoundExperience(monsters, stamina) {
+export function calculateRoundExperience(monsters, stamina, trainingRank = 0) {
+  if(!Number.isSafeInteger(trainingRank)||trainingRank<0||trainingRank>300)return failure('invalid-training','訓練加成格式無效');
   if (!dataArray(monsters) || monsters.length < 1 || monsters.length > 3 ||
       monsters.some((monster) => !dataRecord(monster) || !Object.hasOwn(monster, 'level') ||
         !Object.hasOwn(monster, 'powerLevel') || !Number.isSafeInteger(monster.level) ||
@@ -309,7 +310,7 @@ export function calculateRoundExperience(monsters, stamina) {
   }
   const multiplier = stamina >= 60 ? 2 : stamina >= 1 ? 1 : 0;
   const rawXp = monsters.reduce((sum, monster) => sum +
-    (3 + Math.min(300, Math.max(1, monster.level)) ** 1.193 / 6) * (1 + monster.powerLevel / 500) * multiplier, 0);
+    (3 + Math.min(300, Math.max(1, monster.level)) ** 1.193 / 6) * (1 + monster.powerLevel / 500) * multiplier, 0) * (1 + trainingRank / 100);
   const xp = Math.ceil(rawXp);
   if (!safeAmount(xp)) return failure('xp-overflow', '本輪 EXP 超出安全整數範圍');
   return Object.freeze({ ok: true, xp, rawXp, multiplier, roundingPolicy: ARENA_POLICY.xpRoundingPolicy });
@@ -327,7 +328,8 @@ function reservationFor(activity, battleId, arenaId) {
 }
 
 /** Call only after a won round; defeated/fled current rounds get no receipt. */
-export function settleArenaRound(activity, { battleId, arenaId, round, monsters, nowMs } = {}) {
+export function settleArenaRound(activity, { battleId, arenaId, round, monsters, nowMs } = {}, trainingRank = 0) {
+  if(!Number.isSafeInteger(trainingRank)||trainingRank<0||trainingRank>300)return failure('invalid-training','訓練加成格式無效');
   const invalid = settlementInput(activity, battleId, arenaId, nowMs);
   if (invalid) return invalid;
   const arena = findArena(arenaId);
@@ -344,7 +346,7 @@ export function settleArenaRound(activity, { battleId, arenaId, round, monsters,
   if (round !== previous.length + 1 || nowMs < (previous.at(-1)?.settledAt ?? 0)) return failure('round-order', '必須依序結算每一回合');
   if (!dataArray(monsters) || monsters.length !== arena.roundCounts[round - 1]) return failure('monster-count', '怪物數量與來源記載的完整回合不符');
   const projected = regeneration(activity, nowMs);
-  const experience = calculateRoundExperience(monsters, projected.stamina);
+  const experience = calculateRoundExperience(monsters, projected.stamina, trainingRank);
   if (!experience.ok) return experience;
   const cost = Math.min(projected.stamina, projected.stamina >= 60 ? 0.03 : 0.02);
   const receipt = { battleId, arenaId, entryDay: attempt.entryDay, round, xp: experience.xp,

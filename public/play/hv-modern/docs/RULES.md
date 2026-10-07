@@ -96,7 +96,7 @@ ES modules，入口 `src/engine.js`：
 - `serializeGame(state)` → JSON string；`restoreGame(json)` → 合法 state 或 null
 - `RULES`、`ACTIONS`、`ATTRIBUTE_KEYS` 供 UI 使用
 
-本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema1 的 training-v1～v12 明示遷移至 schema2／training-v17：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
+本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema1 的 training-v1～v12 明示遷移至 schema2／training-v18：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
 
 ## 驗證
 
@@ -200,3 +200,5 @@ C19：schema2／training-v13～v14 舊能力帳本先驗證再新增未學習的
 C20：增加 grindfest-N 戰鬥身份、bounded-audit-v2 的 Grindfest 零累計分類與空活動紀錄；舊狀態先驗證再擴充，不改既有財物或結果。來源成本、全1,000波與候選怪物／傷害界線見 GRINDFEST.md。歷史仍64筆、指令結果仍128筆、紀事仍100行；不是保存每波無上限明細。
 
 C21：soulbinding帳本以實際Credits購買1,000C碎片，100枚綁定支援武器。原始錨點／roll不變；效果採legacy-relative-weapon-v1，持續物攻／魔攻縮放與舊式factor限制見SOULBIND.md。舊檔新增空帳本，不補金錢／材料／效果。
+
+C22：Adept Learner付費、3600000ms真實時鐘與完成登記採TRAINING.md規格；新系列在原始EXP乘1+rank/100後才sum-ceil，舊系列none-v1/rank0不重算。訓練不直接發EXP／AP／Credits。Cost與未登記取消／戰後生效有明示候選。

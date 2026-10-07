@@ -1,3 +1,5 @@
+import {TRAINING_POLICY,createTrainingState,validateTrainingState,startAdeptTraining as startTraining,cancelAdeptTraining as cancelTraining,visitTraining as collectTraining} from './training.js';
+export {getTrainingView,quoteAdeptTraining} from './training.js';
 import {createSoulbindingState,validateSoulbindingState,effectiveEquipmentStats,purchaseSoulFragments as purchaseFragments,bindWeapon as bindSoulWeapon} from './soulbinding.js';
 export {SOULBIND_POLICY,quoteSoulFragmentPurchase,quoteWeaponSoulbind} from './soulbinding.js';
 import {GRINDFEST_POLICY,createGrindfestState,validateGrindfestState,reserveGrindfest,settleGrindfestRound,settleGrindfestSeries} from './grindfest.js';
@@ -75,7 +77,7 @@ export function createGame(seed = 'vesper-training-01', {vitalRules=VITAL_POLICY
     inventory: clone(STARTER_ITEMS),
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
     potions: { health: 3, mana: 3 }, battle: null,
-    activities: createActivityState(0), grindfest:createGrindfestState(), levelRewards: [], supplies:createSupplyState(), soulbinding:createSoulbindingState(), abilities:createAbilityState(true),
+    activities: createActivityState(0), grindfest:createGrindfestState(), levelRewards: [], supplies:createSupplyState(), soulbinding:createSoulbindingState(), training:createTrainingState(), abilities:createAbilityState(true),
     audit:createAuditState(), commandLedger:createCommandLedger(), history: [], achievements: { trainingClears: 0 },
     externalBonuses: clone(RULES.externalBonuses),
     _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1,
@@ -128,7 +130,7 @@ function startBattleUnsafe(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition?.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:kind==='grindfest'?reservation.staminaBefore:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:kind==='grindfest'?1000:reservation?.definition?.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
-    vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
+    trainingRules:TRAINING_POLICY.battleModel, adeptRankAtEntry:state.training.adeptRank, vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, logOmitted:0, _settled: false, ...(kind==='grindfest'?{waveMonsterCount:0}:{}),
   };
@@ -412,11 +414,12 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
     else if (battle.enemies.every((enemy) => enemy.hp === 0)) {
       if (['arena','grindfest'].includes(battle.kind)) {
         const input={battleId:battle.id,arenaId:battle.arenaId,round:battle.round,monsters:battle.enemies.map(e=>({level:e.level,powerLevel:e.powerLevel})),nowMs};
-        const reward=battle.kind==='grindfest'?settleGrindfestRound(state.activities,state.grindfest,{battleId:input.battleId,round:input.round,monsters:input.monsters,nowMs}):settleArenaRound(state.activities,input);
+        const trainingRank=battle.trainingRules===TRAINING_POLICY.battleModel?battle.adeptRankAtEntry:0;
+        const reward=battle.kind==='grindfest'?settleGrindfestRound(state.activities,state.grindfest,{battleId:input.battleId,round:input.round,monsters:input.monsters,nowMs},trainingRank):settleArenaRound(state.activities,input,trainingRank);
         if(battle.kind==='grindfest'&&!reward.ok)throw new Error('Grindfest round settlement failed');
         if (reward.ok && !reward.duplicate) {
           const earned=grantExperience(state,reward.xp);
-          emit(state,events,`本波完成：+${earned.received||0} EXP，體力 −${reward.staminaCost.toFixed(2)}（候選結算）`,'reward');
+          emit(state,events,`本波完成：+${earned.received||0} EXP，體力 −${reward.staminaCost.toFixed(2)}（候選結算）${trainingRank?` · Adept +${trainingRank}%`:""}`,'reward');
           for(const level of earned.levels||[]) emit(state,events,`升至 Lv.${level.level}；+1 AP${level.masteryPoints?'、+1 Mastery':''}${battle.abilityRules!=='none-v1'?'已加入能力資格帳本；不會自動學習或裝配。':'已記錄，能力介面待接入。'}`,'level');
         } else if(!reward.ok) emit(state,events,`EXP 結算異常：${reward.error}`,'error');
       }
@@ -454,6 +457,11 @@ function transactGame(state,operation){try{
 export function performAction(state,actionId,targetId,commandId,nowMs=Date.now()){
   return transactGame(state,draft=>performActionUnsafe(draft,actionId,targetId,commandId,nowMs));
 }
+
+/** Wall-clock training is collected only by explicitly visiting its out-of-combat screen. */
+export function startAdeptTraining(state,nowMs=Date.now(),expectedRevision=state.training?.revision){return transactGame(state,draft=>({...startTraining(draft,nowMs,expectedRevision),events:[]}));}
+export function cancelAdeptTraining(state,nowMs=Date.now(),expectedRevision=state.training?.revision){return transactGame(state,draft=>({...cancelTraining(draft,nowMs,expectedRevision),events:[]}));}
+export function visitTraining(state,nowMs=Date.now()){return transactGame(state,draft=>({...collectTraining(draft,nowMs),events:[]}));}
 
 /** View copies derive bound weapon stats; stored anchors and quality rolls never change. */
 export function getEffectiveEquipment(state,itemOrId){const id=typeof itemOrId==='string'?itemOrId:itemOrId?.id,item=state.inventory.find(i=>i.id===id);if(!item)return null;return {...item,...effectiveEquipmentStats(item,state.player.level,state.soulbinding?.bindings?.[item.id])};}
@@ -616,7 +624,7 @@ function validBattleLinks(state){
 function validState(state,{legacyAudit=false}={}) {
   if (!plain(state) || state.schemaVersion !== (legacyAudit?1:SCHEMA_VERSION) || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(state.vitalRules))return false;
-  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','grindfest','levelRewards','supplies','soulbinding','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
+  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','grindfest','levelRewards','supplies','soulbinding','training','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
   if(!legacyAudit){const only=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!only(state.potions,['health','mana'])||!only(state.achievements,['trainingClears'])||!only(state.externalBonuses,Object.keys(RULES.externalBonuses)))return false;if(!Array.isArray(state.levelRewards)||state.levelRewards.length>499||new Set(state.levelRewards.map(r=>r.level)).size!==state.levelRewards.length||state.levelRewards.some(r=>!plain(r)||Object.keys(r).some(k=>!['level','abilityPoints','masteryPoints','status'].includes(k))||r.level>state.player.level||r.status!==undefined&&!safeText(r.status,80)))return false;}
@@ -655,7 +663,8 @@ function validState(state,{legacyAudit=false}={}) {
   if(!validateSoulbindingState(state.soulbinding,state.inventory,player.level))return false;
   const stats = getStats(state);
   if (player.hp > stats.maxHp || player.mp > stats.maxMp || player.sp > stats.maxSp) return false;
-  if(!validateSupplyState(state.supplies)||!validateGrindfestState(state.grindfest))return false;
+  if(!validateSupplyState(state.supplies)||!validateGrindfestState(state.grindfest)||!validateTrainingState(state.training))return false;
+  if(state.progression.kind==='legacy-fixture'&&state.training.revision!==0)return false;
   if (!plain(state.potions) || !integer(state.potions.health, 0, 999999) || !integer(state.potions.mana, 0, 999999)) return false;
   if (!plain(state.externalBonuses) || Object.entries(RULES.externalBonuses).some(([key, value]) => state.externalBonuses[key] !== value)) return false;
   if (!(legacyAudit?validateLegacyActivityState:validateActivityState)(state.activities) || !Array.isArray(state.levelRewards) || !state.levelRewards.every(r=>plain(r)&&integer(r.level,2,500)&&r.abilityPoints===1&&r.masteryPoints===(r.level%10===0?1:0))) return false;
@@ -675,7 +684,7 @@ function validState(state,{legacyAudit=false}={}) {
   const battle = state.battle;
   if (battle === null) return true;
   if (!plain(battle) || !['training','arena','grindfest'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
-  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals','waveMonsterCount'].includes(k)))return false;
+  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','trainingRules','adeptRankAtEntry','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals','waveMonsterCount'].includes(k)))return false;
   if(!legacyAudit){const exactKeys=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!exactKeys(battle.effects,['defend','focus'])||!exactKeys(battle._regenCarry,['mp','sp'])||!exactKeys(battle.cooldowns,ACTIONS.map(a=>a.id))||battle.finalVitals&&!exactKeys(battle.finalVitals,['hp','mp','sp']))return false;}
   const rounds=totalRounds(battle),count=currentEnemyCount(battle);
   if(!rounds||!integer(battle.round,1,rounds)||battle.rounds!==rounds)return false;
@@ -688,6 +697,7 @@ function validState(state,{legacyAudit=false}={}) {
   }
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(battle.vitalRules)||isActive(state)&&battle.vitalRules!==state.vitalRules)return false;
+  if(![TRAINING_POLICY.battleModel,'none-v1'].includes(battle.trainingRules)||!integer(battle.adeptRankAtEntry,0,state.training.adeptRank)||battle.trainingRules==='none-v1'&&battle.adeptRankAtEntry!==0||battle.trainingRules===TRAINING_POLICY.battleModel&&isActive(state)&&battle.adeptRankAtEntry!==state.training.adeptRank)return false;
   if(![CURATIVE_POLICY.id,CURATIVE_POLICY.legacy].includes(battle.curativeRules))return false;
   if(![ABILITY_POLICY.id,ABILITY_POLICY.legacyModel,'none-v1'].includes(battle.abilityRules))return false;
   if(![RESTORATIVE_POLICY.id,RESTORATIVE_POLICY.legacy].includes(battle.restorativeRules))return false;
@@ -774,6 +784,7 @@ function restoreSave(json,recoveryOnly) {
       }
     }
     if(oldSchema&&!legacy)return null;
+    if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15','persistent-0.91-training-v16','persistent-0.91-training-v17'].includes(sourceVersion)){if(state.training!==undefined)return null;state.training=createTrainingState();if(state.battle){if(Object.hasOwn(state.battle,'trainingRules')||Object.hasOwn(state.battle,'adeptRankAtEntry'))return null;state.battle.trainingRules='none-v1';state.battle.adeptRankAtEntry=0;}state.rulesVersion=RULES_VERSION;}
     if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15','persistent-0.91-training-v16'].includes(sourceVersion)){if(state.soulbinding!==undefined)return null;state.soulbinding=createSoulbindingState();state.rulesVersion=RULES_VERSION;}
     if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15'].includes(sourceVersion)){if(state.grindfest!==undefined)return null;state.grindfest=createGrindfestState();if(!oldSchema){state.audit=migrateAuditState(state.audit);if(!state.audit)return null;}state.rulesVersion=RULES_VERSION;}
     if(!oldSchema&&['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){

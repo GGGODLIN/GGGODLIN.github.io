@@ -205,17 +205,18 @@ function settlementInput(activity, state, command, keys) {
   if (hasReservedArena(activity)) return failure('arena-in-progress', '競技場挑戰進行中，不能結算 Grindfest');
   return null;
 }
-function experience(monsters, stamina) {
+function experience(monsters, stamina, trainingRank) {
   const multiplier = stamina >= 60 ? 2 : stamina >= 1 ? 1 : 0;
   const rawXp = monsters.reduce((sum, monster) => sum +
-    (3 + Math.min(300, Math.max(1, monster.level)) ** 1.193 / 6) * (1 + monster.powerLevel / 500) * multiplier, 0);
+    (3 + Math.min(300, Math.max(1, monster.level)) ** 1.193 / 6) * (1 + monster.powerLevel / 500) * multiplier, 0) * (1 + trainingRank / 100);
   const xp = Math.ceil(rawXp);
   if (!safeAmount(xp)) return failure('xp-overflow', '本輪 EXP 超出安全整數範圍');
   return { ok: true, xp };
 }
 
 /** Only won rounds settle; one retained receipt provides bounded retry safety. */
-export function settleGrindfestRound(activity, state, command = {}) {
+export function settleGrindfestRound(activity, state, command = {}, trainingRank = 0) {
+  if(!Number.isSafeInteger(trainingRank)||trainingRank<0||trainingRank>300)return failure('invalid-training','訓練加成格式無效');
   const invalid = settlementInput(activity, state, command, ROUND_COMMAND_KEYS);
   if (invalid) return invalid;
   const { battleId, round, monsters, nowMs } = command;
@@ -231,7 +232,7 @@ export function settleGrindfestRound(activity, state, command = {}) {
   if (round !== current.completedRounds + 1) return failure('round-order', '必須依序結算每一回合');
   const projected = project(activity, nowMs, true);
   if (!projected.ok) return projected;
-  const reward = experience(monsters, projected.activity.stamina);
+  const reward = experience(monsters, projected.activity.stamina, trainingRank);
   if (!reward.ok) return reward;
   const totalXp = current.xpAwarded + reward.xp;
   if (!safeAmount(totalXp)) return failure('xp-overflow', '累積 EXP 超出安全整數範圍');

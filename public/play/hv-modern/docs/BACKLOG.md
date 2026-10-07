@@ -79,7 +79,7 @@
 - [ ] NPC 生命藥水來源與價格已接入；其餘 Bazaar／NPC 規則與有限供應仍待核對，不杜撰市場價或替代玩家供需
 - [ ] 玩家 Market：撮合、價階、費用、獨立餘額、部分成交、守恆
 - [ ] MoogleMail／CoD：附件、成本、收取、轉移一致性
-- [ ] Training、Shrine、Lottery 的成本、條件、時間与獎勵來源
+- [ ] Adept Learner 的付費1小時研習／完成登記／前置取消退款與EXP倍率已接入；其餘Training、Shrine、Lottery成本／條件／來源仍待補
 - [ ] Monster Lab、玩家怪物池與材料循環
 - [ ] 遊戲內 Hath Perks、收藏、活動獎勵、稱號與合法來源
 - [ ] GP／彩票入口：獨立合法 GP 來源未確認前停用；不用 Credits 或免費票替代
@@ -105,3 +105,5 @@ Isekai、Tower、賽季重置、排行、跨季轉移及永久／暫時模式獎
 Item World 前置已查到同等級 Crude–Exquisite Soulbind 需100 Soul Fragments；公開購入價每個1,000Credits，商店綠色無限供應已於15:12UTC雲端公開頁核對。World Seed 的合法掉落來源有記載，權重／份量未明；不發免費種子或跳過Soulbind、Charm維持成本。
 
 已可用的NPC碎片購入與武器綁定保留原始品質roll及錨點。縮放factor沿用明示舊式候選，仍須驗證0.91；不是只改標記，也不據此發World Seeds。
+
+Adept價格採公開round公式；末階／總成本與表格有1／2Credits差異，已明示候選而非偷偷校正。到期未登記取消與戰中啟用邊界採保守本機政策，見TRAINING.md。
