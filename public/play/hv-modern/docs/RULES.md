@@ -1,6 +1,6 @@
 # VESPER 暮界紀行：規則與驗證紀錄
 
-日期：2026-10-07。引擎版本：`persistent-0.91-training-v6`。存檔 schema：1。
+日期：2026-10-07。引擎版本：`persistent-0.91-training-v5`。存檔 schema：1。
 
 ## 範圍與誠實標示
 
@@ -92,7 +92,7 @@ ES modules，入口 `src/engine.js`：
 - `serializeGame(state)` → JSON string；`restoreGame(json)` → 合法 state 或 null
 - `RULES`、`ACTIONS`、`ATTRIBUTE_KEYS` 供 UI 使用
 
-本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema 1 明示支援 training-v1/v2/v3/v4/v5 → training-v6：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
+本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema 1 明示支援 training-v1/v2/v3/v4 → training-v5：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
 
 ## 驗證
 
@@ -125,11 +125,3 @@ ES modules，入口 `src/engine.js`：
 ## EXP 配置增量（Checkpoint 09）
 
 公開屬性 EXP 曲線與集中式候選政策的來源、公式、數值和取整限制詳見 [PROGRESSION.md](./PROGRESSION.md)。新建角色以 Lv.20、9,193 起始 EXP、每項 14 配置，已分配 6,540、可用 2,653；這是內部一致的明示起始設定，不是演練戰鬥獎勵。既有角色不補發 EXP、不降屬性、不把原三點換成任意貨幣；保留 legacy-fixture 分支與剩餘點數。完整 EXP 獲取、升級與掉落仍未實作。
-
-## 首三項競技場與升級（Checkpoint 10）
-
-[ARENA.md](./ARENA.md) 分開來源規則與候選細節：完整波次／總敵數、前序清關、每日一次且敗北照計、UTC 入場日期、體力與獎勵帳本。EXP 按公開式逐波計算，取整仍標不確定；怪物本體與 PL100 是原創樣本。首次／重複通關 Credits 採表列數字，保證一件裝備目前採七模板原創固定樣本池等機率抽取，不冒充原版裝備權重／品質生成。隨機怪物掉落、Token、RiddleMaster 仍未完成。
-
-[Leveling Up 修訂65211](https://ehwiki.org/index.php?title=Leveling_Up&oldid=65211#Formula) 的曲線以累計最近整數候選政策計算（Lv1 明示0），與 Level Table 的1/2/3/20/21/30/100/500錨點相符；仍不宣稱原服取整已驗證。每次升級的 AP 與十級 Mastery 資格先記錄，能力系統未完成前不提供虛假效果。
-
-訓練仍不發 EXP、Credits 或裝備；Arena 與訓練的結算路徑獨立。動畫開關不再改變最低輸入間隔；UI採250ms保守間隔，符合 Action Speed 公開的每秒不超過4次上限，但不是原服節流算法的重建。
