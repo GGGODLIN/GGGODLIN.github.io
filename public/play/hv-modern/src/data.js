@@ -1,6 +1,7 @@
 /** Original training fixtures. Numeric balance is NOT an official HV arena. */
 export const SCHEMA_VERSION = 1;
-export const RULES_VERSION = 'persistent-0.91-training-v1';
+export const MAX_SAVE_BYTES = 5_000_000;
+export const RULES_VERSION = 'persistent-0.91-training-v3';
 export const ATTRIBUTE_KEYS = Object.freeze(['str', 'dex', 'agi', 'end', 'int', 'wis']);
 export const RULES = Object.freeze({
   version: RULES_VERSION,
@@ -15,8 +16,10 @@ export const RULES = Object.freeze({
     spirit: 'https://ehwiki.org/index.php?title=Spirit_Stance&oldid=65231',
     overcharge: 'https://ehwiki.org/wiki/Overcharge',
     baseline: 'https://ehwiki.org/wiki/HentaiVerse',
+    rounds: 'https://ehwiki.org/index.php?title=Battles&oldid=64927#Victory',
+    recovery: 'https://ehwiki.org/index.php?title=Battles&oldid=64927#Recovering',
   },
-  provisional: ['角色衍生公式', '裝備及怪物數值', '傷害與命中抽樣', '法術消耗及冷卻', '敵方排程與結算順序', 'Spirit Stance 的 turn / round 解讀', '營地恢復'],
+  provisional: ['角色衍生公式', '裝備及怪物數值', '傷害與命中抽樣', '法術消耗及冷卻', '敵方排程與結算順序', 'Spirit Stance 的 turn / round 解讀'],
   externalBonuses: Object.freeze({ hath: 0, gp: 0, donation: 0, forum: 0, isekaiAttributes: 0, tower: 0, rewardMultiplier: 1, externalEligibility: false }),
 });
 

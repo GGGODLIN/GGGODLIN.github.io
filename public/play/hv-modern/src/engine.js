@@ -1,5 +1,5 @@
-import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
-export { RULES, ACTIONS, ATTRIBUTE_KEYS } from './data.js';
+import { ACTIONS, ATTRIBUTE_KEYS, RULES, RULES_VERSION, SCHEMA_VERSION, MAX_SAVE_BYTES, STARTER_ITEMS, TRAINING_WAVES } from './data.js';
+export { RULES, ACTIONS, ATTRIBUTE_KEYS, MAX_SAVE_BYTES } from './data.js';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -81,10 +81,9 @@ function spawnWave(state) {
 }
 export function startBattle(state) {
   if (isActive(state)) return failure('演練尚未結束');
-  if (state.player.hp <= 0) return failure('生命不足，請先在營地恢復');
-  const events = [];
+  const events = [...recoverOutOfCombat(state).events];
   state.battle = {
-    id: `training-${state._nextBattle++}`, status: 'active', round: 1, rounds: TRAINING_WAVES.length,
+    id: `training-${state._nextBattle++}`, status: 'active', phase: 'combat', round: 1, rounds: TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
     spiritActive: false, effects: { defend: 0, focus: 0 },
@@ -121,6 +120,7 @@ function manaCost(state, action) {
 function actionError(state, action, targetId) {
   if (!isActive(state)) return '目前沒有進行中的演練';
   if (!action) return '未知的行動';
+  if (state.battle.phase === 'round-complete') return '本波已完成，請確認繼續下一波';
   if (state.player.hp <= 0) return '角色已倒下';
   if (state.battle.cooldowns[action.id] > 0) return `尚需 ${state.battle.cooldowns[action.id]} 個${action.item ? '道具或一般' : '非道具'}行動冷卻`;
   if (action.target) {
@@ -162,6 +162,7 @@ function settle(state, status, events) {
   const battle = state.battle;
   if (battle._settled) return;
   battle._settled = true;
+  battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };
   battle.status = status;
   battle.spiritActive = false;
   battle.effects = { defend: 0, focus: 0 };
@@ -169,8 +170,11 @@ function settle(state, status, events) {
   if (status === 'victory') {
     state.achievements.trainingClears++;
     emit(state, events, '演練完成。已記錄通關；此訓練不發放 EXP、Credits 或掉落。', 'victory');
-  } else if (status === 'defeat') emit(state, events, '你已倒下。演練結束，可回營地恢復。', 'defeat');
+  } else if (status === 'defeat') emit(state, events, '你已倒下。演練結束；敗北結果已記錄。', 'defeat');
   else emit(state, events, '已撤離裂隙。沒有獎勵或原版活動次數變更。', 'flee');
+  const recovery = recoverOutOfCombat(state);
+  events.push(...recovery.events);
+  battle.log.push(...recovery.events);
 }
 
 function enemyAttack(state, enemy, events, focused) {
@@ -296,9 +300,9 @@ export function performAction(state, actionId, targetId, commandId) {
     else if (battle.enemies.every((enemy) => enemy.hp === 0)) {
       if (battle.round === battle.rounds) settle(state, 'victory', events);
       else {
-        battle.round++;
-        spawnWave(state);
-        emit(state, events, `第 ${battle.round} / ${battle.rounds} 波 · 保留資源與冷卻`, 'round');
+        battle.phase = 'round-complete';
+        battle.targetId = null;
+        emit(state, events, `第 ${battle.round} / ${battle.rounds} 波已完成。確認「繼續」後才進入下一波。`, 'round');
       }
     }
     // Selection is a UI convenience; no action is submitted against the new selection.
@@ -311,6 +315,19 @@ export function performAction(state, actionId, targetId, commandId) {
   return result;
 }
 
+/** Explicit non-combat-command wave continuation; no time, upkeep or cooldown decrement. */
+export function continueRound(state) {
+  const battle = state.battle;
+  if (!isActive(state) || battle.phase !== 'round-complete' || battle.round >= battle.rounds) return failure('目前沒有等待繼續的波次');
+  if (!battle.enemies.every((enemy) => enemy.hp === 0)) return failure('本波仍有存活敵人');
+  const events = [];
+  battle.round++;
+  battle.phase = 'combat';
+  spawnWave(state);
+  emit(state, events, `第 ${battle.round} / ${battle.rounds} 波 · 保留資源、冷卻與經過時間`, 'round');
+  return success(events);
+}
+
 export function equipItem(state, itemId) {
   if (isActive(state)) return failure('戰鬥中不能更換裝備');
   const item = state.inventory.find((entry) => entry.id === itemId);
@@ -321,7 +338,7 @@ export function equipItem(state, itemId) {
   state.player.hp = Math.min(state.player.hp, stats.maxHp);
   state.player.mp = Math.min(state.player.mp, stats.maxMp);
   state.player.sp = Math.min(state.player.sp, stats.maxSp);
-  return success([{ id: `event-${state._nextEvent++}`, text: `已裝備${item.name}`, type: 'equipment' }]);
+  return success([{ id: `event-${state._nextEvent++}`, text: `已裝備${item.name}`, type: 'equipment' }, ...recoverOutOfCombat(state).events]);
 }
 export function setItemProtected(state, itemId, locked) {
   if (typeof locked !== 'boolean') return failure('保護標記格式錯誤');
@@ -336,14 +353,18 @@ export function spendAttribute(state, key) {
   if (state.player.attributePoints < 1) return failure('沒有可配置的演練屬性點');
   state.player.attributePoints--;
   state.player.attributes[key]++;
-  return success();
+  return recoverOutOfCombat(state);
 }
-export function rest(state) {
-  if (isActive(state)) return failure('請先結束或撤離演練');
+/** Public 0.91-era statement: outside combat HP/MP/SP recover immediately. No OC/items/rewards inferred. */
+export function recoverOutOfCombat(state) {
+  if (isActive(state)) return failure('戰鬥系列尚未結束，不能進行戰外恢復');
   const stats = getStats(state);
-  Object.assign(state.player, { hp: stats.maxHp, mp: stats.maxMp, sp: stats.maxSp, overcharge: 0 });
-  return success([{ id: `event-${state._nextEvent++}`, text: '營地恢復完成（原創訓練工具）；藥水數量不變。', type: 'heal' }]);
+  const recovered = { hp: stats.maxHp - state.player.hp, mp: stats.maxMp - state.player.mp, sp: stats.maxSp - state.player.sp };
+  if (Object.values(recovered).every((amount) => amount === 0)) return success();
+  Object.assign(state.player, { hp: stats.maxHp, mp: stats.maxMp, sp: stats.maxSp });
+  return success([{ id: `event-${state._nextEvent++}`, text: '戰鬥系列已結束：生命、魔力、靈力即時回滿。藥水及 OC 不變。', type: 'recovery', recovered }]);
 }
+export function rest(state) { return recoverOutOfCombat(state); }
 
 const integer = (value, min = 0, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(value) && value >= min && value <= max;
 const plain = (value) => value && typeof value === 'object' && !Array.isArray(value);
@@ -375,10 +396,11 @@ function validState(state) {
   if (!Array.isArray(state._commandReceipts) || !state._commandReceipts.every(validReceipt) || new Set(state._commandReceipts.map((receipt) => receipt.id)).size !== state._commandReceipts.length) return false;
   const battle = state.battle;
   if (battle === null) return true;
-  if (!plain(battle) || !safeText(battle.id) || !statuses.includes(battle.status) || !integer(battle.round, 1, 2) || battle.rounds !== 2) return false;
+  if (!plain(battle) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status) || !integer(battle.round, 1, 2) || battle.rounds !== 2) return false;
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
   if (typeof battle.spiritActive !== 'boolean' || typeof battle._settled !== 'boolean' || battle._settled !== (battle.status !== 'active')) return false;
   if (battle.status === 'active' && player.hp === 0) return false;
+  if (battle.finalVitals !== undefined && (!plain(battle.finalVitals) || !['hp', 'mp', 'sp'].every((key) => integer(battle.finalVitals[key])))) return false;
   if (!plain(battle.effects) || !['defend', 'focus'].every((key) => integer(battle.effects[key], 0, 2))) return false;
   if (!plain(battle.cooldowns) || !ACTIONS.every((action) => integer(battle.cooldowns[action.id], 0, 1000))) return false;
   if (!Array.isArray(battle.enemies) || battle.enemies.length !== 3 || !Array.isArray(battle._schedule) || battle._schedule.length !== 3) return false;
@@ -391,7 +413,8 @@ function validState(state) {
     if (schedule.length !== 1 || !integer(schedule[0].nextAt) || !integer(schedule[0].interval, 1) || (enemy.hp > 0 && schedule[0].nextAt < battle.timeUnits)) return false;
   }
   if (battle.targetId !== null && !battle.enemies.some((enemy) => enemy.id === battle.targetId)) return false;
-  if (battle.status === 'active' && !battle.enemies.some((enemy) => enemy.hp > 0)) return false;
+  if (battle.phase === 'round-complete' && (battle.status !== 'active' || battle.round >= battle.rounds || battle.enemies.some((enemy) => enemy.hp > 0) || battle.targetId !== null)) return false;
+  if (battle.status === 'active' && battle.phase === 'combat' && !battle.enemies.some((enemy) => enemy.hp > 0)) return false;
   if (battle.status === 'victory' && (battle.round !== 2 || battle.enemies.some((enemy) => enemy.hp > 0))) return false;
   if (!Array.isArray(battle.log) || !battle.log.every(validEvent) || !Array.isArray(battle._receipts)) return false;
   if (new Set(battle._receipts.map((receipt) => receipt.id)).size !== battle._receipts.length) return false;
@@ -402,11 +425,23 @@ function validState(state) {
 export function serializeGame(state) { return JSON.stringify(state); }
 export function restoreGame(json) {
   try {
-    if (typeof json !== 'string' || json.length > 5000000) return null;
+    if (typeof json !== 'string' || json.length > MAX_SAVE_BYTES || new TextEncoder().encode(json).byteLength > MAX_SAVE_BYTES) return null;
     const state = JSON.parse(json, (key, value) => {
       if (['__proto__', 'prototype', 'constructor'].includes(key)) throw new Error('Unsafe save key');
       return value;
     });
-    return validState(state) ? state : null;
+    // Validate old progress before applying the documented rule-version migration.
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2'].includes(state?.rulesVersion);
+    if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
+      state.rulesVersion = RULES_VERSION;
+      if (state.battle && state.battle.phase === undefined) state.battle.phase = 'combat';
+    }
+    if (!validState(state)) return null;
+    if (legacy && !isActive(state)) {
+      if (state.battle && !state.battle.finalVitals) state.battle.finalVitals = { hp: state.player.hp, mp: state.player.mp, sp: state.player.sp };
+      const recovery = recoverOutOfCombat(state);
+      if (state.battle) state.battle.log.push(...recovery.events);
+    }
+    return state;
   } catch { return null; }
 }
