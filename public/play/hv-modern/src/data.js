@@ -2,7 +2,7 @@
 export const SCHEMA_VERSION = 1;
 export const MAX_SAVE_BYTES = 5_000_000;
 export const EQUIPMENT_QUALITIES = Object.freeze(['Crude','Fair','Average','Superior','Exquisite','Magnificent','Legendary','Peerless','Peerless+','Ultimate']);
-export const RULES_VERSION = 'persistent-0.91-training-v9';
+export const RULES_VERSION = 'persistent-0.91-training-v10';
 export const ATTRIBUTE_KEYS = Object.freeze(['str', 'dex', 'agi', 'end', 'int', 'wis']);
 export const RULES = Object.freeze({
   version: RULES_VERSION,

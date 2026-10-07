@@ -1,6 +1,6 @@
 # VESPER 暮界紀行：規則與驗證紀錄
 
-日期：2026-10-07。引擎版本：`persistent-0.91-training-v9`。存檔 schema：1。
+日期：2026-10-07。引擎版本：`persistent-0.91-training-v10`。存檔 schema：1。
 
 ## 範圍與誠實標示
 
@@ -34,7 +34,7 @@ EHWiki 是社群文件；2026-10-07 讀取到的頁面不代表每個段落都�
 | INFO-01 | Scan 概念有來源 | 未 Scan 只提供名稱、造型和生命比例；精確生命、等級、抗性與攻擊值經 `getEnemyView` 在 Scan 後才回傳。任何情況都不回傳未來招式或隱藏排程 | 前後欄位比較、抗性物件隔離 |
 | SKILL-01 | Defend 回血有版本衝突 | 保留 25% 傷害降低、本次及下次玩家行動。10% / 25% base HP 的回血衝突未解，因此本原型明示省略回血與相應 OC 消耗；不任選一個當成正式值 | 防禦不暗扣 OC／回血 |
 | SKILL-02 | 公開明述；戰鬥判定簡化 | Focus 在足夠 OC 時扣 25，恢復 5% 基礎 MP。保留次回合命中改善及無法閃避；完整格擋／招架／抵抗尚未實作 | 恢復與資源保守測試 |
-| SKILL-03 | 來源表格與明示候選，舊系列固定政策 | 新系列 Fire 6% level／CD0／3目標、Cure 20% level／CD5；Spirit ×0.75，最終 ceil。舊系列保留 6MP／CD2、10MP／CD3。藥水 CD4 仍為樣本 | COMBAT-RESOURCES、原子性、舊場重播 |
+| SKILL-03 | 來源表格與明示候選，舊系列固定政策 | 新系列 Fire 6% level／CD0／3目標、Cure 20% level／CD5；Spirit ×0.75，最終 ceil。舊系列保留 6MP／CD2、10MP／CD3。新系列藥水 CD40、舊系列 CD4 相容 | COMBAT-RESOURCES、原子性、舊場重播 |
 | COMBAT-01 | 部分公開公式，取整／敵方仍為樣本 | 新系列採公開對數攻擊基值、Fire ×4、80–120 整數百分比 roll；1.5 基礎暴擊倍率。命中／8% 單次暴擊機率、怪物與防禦仍是樣本；未實作多重暴擊 | COMBAT-OFFENSE、分層向量、實際 C12 重播 |
 | CMD-01 | 現代化可靠性 | 接受的 `commandId` 在整份存檔中只執行一次；同 ID 不同動作／目標拒絕。重送回傳已完成事件與 `duplicate: true`；UI 不应再次播放。所有失敗不變更 turn、RNG、冷卻或資源 | 當場／跨波／跨遭遇／重載重送 |
 | CHAR-01 | 公開公式 + 明示候選取整／帳本 | 新角色以 9,193 起始 EXP、六項 14 建立守恆帳本；按公開指數曲線，使用集中式累計 ceil 差額。支援 ±1/10/100 配置與對稱返還，不能在戰鬥中修改；累計 EXP 與等級不被花費。取整、返還對称性、上下限與 lifetime 模型均未原服核對 | 成本向量、批量一致、回退守恆、資金不足原子拒絕、舊角色不重配 |
@@ -61,7 +61,7 @@ EHWiki 是社群文件；2026-10-07 讀取到的頁面不代表每個段落都�
 - 普攻 base = attack × Spirit 倍率；火焰 base = magic × 1.7
 - 玩家傷害 = floor(base × [0.9, 1.1) 浮動 × (1 − 抗性) × 暴擊倍率)，至少 1
 - 敵方傷害 = floor(attack × [0.9, 1.1) 浮動 × 100/(100 + defense×2) × 防禦倍率)，至少 1
-- Cure 回復 floor(maxHP×0.3 + magic×0.4)；HP 藥水回復 floor(maxHP×0.5)；MP 藥水回復 floor(maxMP×0.4)，皆封頂
+- Cure 回復 floor(maxHP×0.3 + magic×0.4)；舊系列 HP 藥水回復 floor(maxHP×0.5)、MP 藥水 floor(maxMP×0.4)；C14 新系列改用下面的 baseHp100%／baseMp50%，皆封頂
 
 這些公式只用於操作驗證，不能拿來宣稱原站傷害符合。Xorshift32 是本專案自選測試 RNG，不是原服 RNG。敵方攻擊命中 90%；玩家處於前一行動的 Focus 效果時為 100%。敵方目前沒有暴擊、技能、MP/SP、狀態或公開的下一步意圖。
 
@@ -94,7 +94,7 @@ ES modules，入口 `src/engine.js`：
 - `serializeGame(state)` → JSON string；`restoreGame(json)` → 合法 state 或 null
 - `RULES`、`ACTIONS`、`ATTRIBUTE_KEYS` 供 UI 使用
 
-本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema 1 明示支援 training-v1～v8 → training-v9：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
+本機存檔不是防作弊或權威多人服務；讀取驗證只防損坏與未支援結構，不能證明玩家未修改存檔。underscore 欄位是實作狀態，含未公開排程，不應渲染成免費戰術資訊。schema 1 明示支援 training-v1～v9 → training-v10：先驗證舊資料；保留進行中的資源與過往結果，缺少 phase 時補 combat。已結束系列依新採用的戰外恢復規則回滿三資源，並保留原來的 finalVitals；不補道具、不重發獎勵。其他未知版本仍拒絕。超過 5,000,000 UTF-8 bytes 的存檔拒絕載入。未做網路帳號、跨裝置同步、伺服器權威結算或原站資料存取。
 
 ## 驗證
 
@@ -153,3 +153,13 @@ ES modules，入口 `src/engine.js`：
 | MIGRATE-13 | 本地相容契約 | active 舊系列保留輸出與固定掉落政策直到結束；舊物品數值、身分與整理標記不重写。下一場切換新政策 | 真實 C12a 原始碼產生的連續指令／獎勵 fixture |
 
 公式與限制分別見 [COMBAT-OFFENSE.md](./COMBAT-OFFENSE.md) 與 [EQUIPMENT-GENERATION.md](./EQUIPMENT-GENERATION.md)。沒有完整部位、詞綴、Forge／IW／Fusion 或熟練度效果的完成宣稱；既有原創素材不變。
+
+## 藥水與 NPC 補給（Checkpoint 14）
+
+| ID | 狀態／來源 | 本版採用與限制 | 驗收 |
+|---|---|---|---|
+| ITEM-01 | Items 65165、Character Menu 64958；公開比例／CD，取整候選 | 新系列生命藥水為 100% baseHp、魔力藥水 50% baseMp，40 行動冷卻；零内部時間。base 與 max 明確分離；舊系列保留原效果 | 精確 C13 重播、上限、零時間／RNG、40 次邊界、跨波／存檔 |
+| SHOP-01 | Bazaar 64945；明述 NPC 生命補給／價格 | 生命藥水每瓶 50 Credits，單次最多 99,999；原型保存上限 999,999。只有此已知常備 NPC 商品開放；無市場庫存、折扣、出售或魔力補給杜撰 | Arena 收益→確認購買→消耗、資金與數量守恆、取消／失敗原子性 |
+| SHOP-02 | 本機可靠性政策 | 單調購買 revision 與最近收據；精確最近重試 no-op，更舊或異參數拒絕；不累積無界歷史。戰鬥／波次等待禁止購買；遷移只加空帳本 | 重送、重載、舊存檔原進度／錢包不變 |
+
+[RESTORATIVES.md](./RESTORATIVES.md) 與 [SUPPLIES.md](./SUPPLIES.md) 記錄來源及候選邊界。道具配置槽、其他藥劑、完整商店與玩家供需仍在完整施工清單；沒有提供任何原站外部補償。
