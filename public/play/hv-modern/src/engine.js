@@ -1,3 +1,5 @@
+import {createSoulbindingState,validateSoulbindingState,effectiveEquipmentStats,purchaseSoulFragments as purchaseFragments,bindWeapon as bindSoulWeapon} from './soulbinding.js';
+export {SOULBIND_POLICY,quoteSoulFragmentPurchase,quoteWeaponSoulbind} from './soulbinding.js';
 import {GRINDFEST_POLICY,createGrindfestState,validateGrindfestState,reserveGrindfest,settleGrindfestRound,settleGrindfestSeries} from './grindfest.js';
 export {previewGrindfest} from './grindfest.js';
 import {CURATIVE_POLICY,cureHealingAmount} from './curative.js';
@@ -44,7 +46,7 @@ function randomInt(state, min, max) { return min + Math.floor(random(state) * (m
 /** Vital and outgoing models are versioned separately; accuracy and generic defense remain authored. */
 export function getStats(state) {
   const { str, dex, agi, end, int, wis } = state.player.attributes;
-  const gear = Object.values(state.equipped).map((id) => state.inventory.find((item) => item.id === id)).filter(Boolean);
+  const gear = Object.values(state.equipped).map((id) => state.inventory.find((item) => item.id === id)).filter(Boolean).map(item=>item.bound?effectiveEquipmentStats(item,state.player.level,state.soulbinding?.bindings?.[item.id]):item);
   const total = (key) => gear.reduce((sum, item) => sum + item[key], 0);
   const burden = total('burden');
   const legacyOffense=isActive(state)&&state.battle.offenseRules===OFFENSE_POLICY.legacy;
@@ -73,7 +75,7 @@ export function createGame(seed = 'vesper-training-01', {vitalRules=VITAL_POLICY
     inventory: clone(STARTER_ITEMS),
     equipped: { weapon: 'blade-dawn', body: 'coat-traveler', offhand: 'shield-ash' },
     potions: { health: 3, mana: 3 }, battle: null,
-    activities: createActivityState(0), grindfest:createGrindfestState(), levelRewards: [], supplies:createSupplyState(), abilities:createAbilityState(true),
+    activities: createActivityState(0), grindfest:createGrindfestState(), levelRewards: [], supplies:createSupplyState(), soulbinding:createSoulbindingState(), abilities:createAbilityState(true),
     audit:createAuditState(), commandLedger:createCommandLedger(), history: [], achievements: { trainingClears: 0 },
     externalBonuses: clone(RULES.externalBonuses),
     _rng: seedNumber(seed), _nextBattle: 1, _nextEvent: 1,
@@ -453,6 +455,11 @@ export function performAction(state,actionId,targetId,commandId,nowMs=Date.now()
   return transactGame(state,draft=>performActionUnsafe(draft,actionId,targetId,commandId,nowMs));
 }
 
+/** View copies derive bound weapon stats; stored anchors and quality rolls never change. */
+export function getEffectiveEquipment(state,itemOrId){const id=typeof itemOrId==='string'?itemOrId:itemOrId?.id,item=state.inventory.find(i=>i.id===id);if(!item)return null;return {...item,...effectiveEquipmentStats(item,state.player.level,state.soulbinding?.bindings?.[item.id])};}
+export function purchaseSoulFragments(state,quantity,expectedRevision){return transactGame(state,draft=>{const result=purchaseFragments(draft,quantity,expectedRevision);return {...result,events:[]};});}
+export function bindWeapon(state,itemId,expectedRevision){return transactGame(state,draft=>{const result=bindSoulWeapon(draft,itemId,expectedRevision);if(!result.ok)return {...result,events:[]};return {...result,events:result.duplicate?[]:recoverOutOfCombat(draft).events};});}
+
 /** Ability ownership and assignment are distinct; changes reconcile outside maxima only. */
 function changeAbility(state,operation,args){
   try{
@@ -609,7 +616,7 @@ function validBattleLinks(state){
 function validState(state,{legacyAudit=false}={}) {
   if (!plain(state) || state.schemaVersion !== (legacyAudit?1:SCHEMA_VERSION) || state.rulesVersion !== RULES_VERSION || state.mode !== 'Persistent') return false;
   if(![VITAL_POLICY.id,VITAL_POLICY.legacy].includes(state.vitalRules))return false;
-  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','grindfest','levelRewards','supplies','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
+  if(!legacyAudit){const keys=['schemaVersion','rulesVersion','mode','vitalRules','player','inventory','equipped','potions','battle','activities','grindfest','levelRewards','supplies','soulbinding','abilities','audit','commandLedger','history','achievements','externalBonuses','_rng','_nextBattle','_nextEvent','progression','_pendingHandNormalization'];if(Object.keys(state).some(k=>!keys.includes(k))||!validateCommandLedger(state.commandLedger))return false;}
   if (!integer(state._rng, 1, 0xffffffff) || !integer(state._nextBattle, 1) || !integer(state._nextEvent, 1)) return false;
   if (!plain(state.player) || !plain(state.player.attributes) || !safeText(state.player.name, 80)) return false;
   if(!legacyAudit){const only=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!only(state.potions,['health','mana'])||!only(state.achievements,['trainingClears'])||!only(state.externalBonuses,Object.keys(RULES.externalBonuses)))return false;if(!Array.isArray(state.levelRewards)||state.levelRewards.length>499||new Set(state.levelRewards.map(r=>r.level)).size!==state.levelRewards.length||state.levelRewards.some(r=>!plain(r)||Object.keys(r).some(k=>!['level','abilityPoints','masteryPoints','status'].includes(k))||r.level>state.player.level||r.status!==undefined&&!safeText(r.status,80)))return false;}
@@ -628,11 +635,11 @@ function validState(state,{legacyAudit=false}={}) {
   for (const item of state.inventory) {
     const original = STARTER_ITEMS.find((entry) => entry.id === item.templateId);
     if (!safeText(item.id) || !/^[a-z0-9][a-z0-9-]{0,199}$/.test(item.id) || !original || typeof item.locked !== 'boolean') return false;
-    if(item.origin==='quality-roll-fixture'){if(!validateGeneratedEquipment(item,STARTER_ITEMS))return false;}
+    if(item.origin==='quality-roll-fixture'){if(!validateGeneratedEquipment(item,STARTER_ITEMS,{allowBound:Boolean(state.soulbinding?.bindings?.[item.id])}))return false;}
     else {
       if(!legacyAudit&&Object.keys(item).some(k=>!Object.hasOwn(original,k)))return false;
       if(!['starter-fixture','arena-fixture'].includes(item.origin) || item.generation!==undefined || (item.origin==='starter-fixture'&&item.id!==item.templateId) || (item.origin==='arena-fixture'&&!/^reward-arena-[1-9]\d*$/.test(item.id)))return false;
-      if(Object.keys(original).some((key)=>!['id','origin','locked','protected','pinned','container','level'].includes(key)&&item[key]!==original[key]))return false;
+      if(Object.keys(original).some((key)=>!['id','origin','locked','protected','pinned','container','level','bound'].includes(key)&&item[key]!==original[key]))return false;
     }
     if(!['inventory','storage'].includes(item.container)||typeof item.protected!=='boolean'||typeof item.pinned!=='boolean'||item.protected&&item.locked)return false;
     if(item.container==='storage'&&Object.values(state.equipped).includes(item.id))return false;
@@ -645,6 +652,7 @@ function validState(state,{legacyAudit=false}={}) {
   if (state._pendingHandNormalization !== undefined && state._pendingHandNormalization !== true) return false;
   if (mainhand.hands === 2 && state.equipped.offhand !== null && !(state._pendingHandNormalization && isActive(state))) return false;
   if (state._pendingHandNormalization && (!isActive(state) || mainhand.hands !== 2 || state.equipped.offhand === null)) return false;
+  if(!validateSoulbindingState(state.soulbinding,state.inventory,player.level))return false;
   const stats = getStats(state);
   if (player.hp > stats.maxHp || player.mp > stats.maxMp || player.sp > stats.maxSp) return false;
   if(!validateSupplyState(state.supplies)||!validateGrindfestState(state.grindfest))return false;
@@ -766,6 +774,7 @@ function restoreSave(json,recoveryOnly) {
       }
     }
     if(oldSchema&&!legacy)return null;
+    if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15','persistent-0.91-training-v16'].includes(sourceVersion)){if(state.soulbinding!==undefined)return null;state.soulbinding=createSoulbindingState();state.rulesVersion=RULES_VERSION;}
     if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15'].includes(sourceVersion)){if(state.grindfest!==undefined)return null;state.grindfest=createGrindfestState();if(!oldSchema){state.audit=migrateAuditState(state.audit);if(!state.audit)return null;}state.rulesVersion=RULES_VERSION;}
     if(!oldSchema&&['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){
       if(sourceVersion==='persistent-0.91-training-v13'){

@@ -68,7 +68,7 @@
 
 - [ ] 完整部位、模板、品質到 Peerless+／Ultimate、詞綴、roll、縮放
 - [ ] 容量、保護／鎖定、裝備組合、綁定與交易資格
-- [ ] Soulbind 成本／限制、Item World、Forge 等級與材料
+- [ ] 武器 Soulbind 的100碎片成本／候選持續縮放已接入；完整品質／超等級成本、護甲縮放、Item World、Forge 等級與材料仍待補
 - [ ] Charms 點數與附加、Pouches、磨耗、耐久、能量、維修
 - [ ] Persistent Stat Fusion 模板限制、材料、上限溢出、品質變化
 - [ ] 拆解返還、遺骸／核心、Credit 替代條件與守恆
@@ -102,4 +102,6 @@ Isekai、Tower、賽季重置、排行、跨季轉移及永久／暫時模式獎
 
 下一階段先核對共同面板／時間公式與已列衝突，取得少量可信戰鬥樣本。再替換訓練模型中的單一規則，增加對照測試；不要一次把所有 wiki 數值拼入正式規則。每期分別回報：完整需求覆蓋、常數核對、確定性案例、機率誤差、未解關鍵參數。測試通過只表示符合該版本本機規格。
 
-Item World 前置已查到同等級 Crude–Exquisite Soulbind 需100 Soul Fragments；公開購入價每個1,000Credits，但商店供應仍須核對。World Seed 的合法掉落來源有記載，權重／份量未明；不發免費種子或跳過Soulbind、Charm維持成本。
+Item World 前置已查到同等級 Crude–Exquisite Soulbind 需100 Soul Fragments；公開購入價每個1,000Credits，商店綠色無限供應已於15:12UTC雲端公開頁核對。World Seed 的合法掉落來源有記載，權重／份量未明；不發免費種子或跳過Soulbind、Charm維持成本。
+
+已可用的NPC碎片購入與武器綁定保留原始品質roll及錨點。縮放factor沿用明示舊式候選，仍須驗證0.91；不是只改標記，也不據此發World Seeds。

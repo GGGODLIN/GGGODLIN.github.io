@@ -30,7 +30,7 @@ const ITEM_KEYS = Object.freeze([...TEMPLATE_KEYS, 'generation']);
 const GENERATION_KEYS = Object.freeze(['model', 'rolls', 'meanRoll', 'distribution']);
 const MUTABLE_OR_GENERATED = new Set([
   'id', 'templateId', 'origin', 'quality', 'attack', 'magic', 'defense', 'burden',
-  'level', 'container', 'pinned', 'protected', 'locked',
+  'level', 'container', 'pinned', 'protected', 'locked', 'bound',
 ]);
 const MAX_ANCHOR = Math.floor(Number.MAX_SAFE_INTEGER / 2);
 
@@ -131,10 +131,11 @@ export function generateEquipment(options) {
  * Container/protection values and equip-level eligibility belong to the engine.
  * Low-quality gear may have its level assigned later by first equip.
  */
-export function validateGeneratedEquipment(item, templates) {
+export function validateGeneratedEquipment(item, templates, {allowBound=false}={}) {
   try {
+    if (typeof allowBound!=='boolean'||!allowBound&&item?.bound)return false;
     if (!exactKeys(item, ITEM_KEYS) || !validTemplates(templates)
-      || item.origin !== 'quality-roll-fixture' || !rewardIdValid(item.id)
+      || typeof item.bound!=='boolean' || item.origin !== 'quality-roll-fixture' || !rewardIdValid(item.id)
       || !Object.hasOwn(GENERATION_POLICY.qualityWeights, item.quality)) return false;
     const base = templates.find((entry) => entry.id === item.templateId);
     if (!base || TEMPLATE_KEYS.some((key) => !MUTABLE_OR_GENERATED.has(key) && item[key] !== base[key])) return false;

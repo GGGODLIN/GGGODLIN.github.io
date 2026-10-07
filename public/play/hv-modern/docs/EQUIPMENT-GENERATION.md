@@ -99,3 +99,5 @@ validator 不接受 `starter-fixture` 或舊 `arena-fixture`，也不將其遷�
 - 危險鍵、原型、accessor、未知 metadata、越界 roll、錯誤投影、舊 origin 和非法 RNG 拒絕
 
 上述只驗證本文件的候選模型，不宣稱原服同 seed、同品質、同面板或同等級結果。
+
+C21 paid binding changes only the bound flag and, for an unassigned weapon, its assigned reference level. Projection anchors and roll metadata remain immutable. The generated-item validator rejects bound changes by default; the full engine enables that field only alongside a separately validated one-to-one paid-binding record. Effective view/combat stats come from the declared legacy-relative candidate, not regenerated quality rolls.
