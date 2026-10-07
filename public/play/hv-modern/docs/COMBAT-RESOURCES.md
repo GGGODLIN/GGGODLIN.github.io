@@ -12,7 +12,7 @@ Source: [Spells, revision 65260](https://ehwiki.org/index.php?title=Spells&oldid
 - The same source still has an older Fire example using 5. That discrepancy remains recorded; selecting table 6 is a candidate choice, not a claim of official server confirmation
 - Coalesced Mana and Channeling factors are supported by the pure cost function but not bestowed by the game
 
-The existing authored Cure potency, magic-damage multiplier, hit/critical rolls, resource maxima and enemy stats remain provisional. Updating cost does not validate those other systems. Fire independently tests each target; current encounter rosters contain at most three enemies. Primary-first ordering is an explicit candidate implementation, not a reconstructed hidden target-selection algorithm.
+Cure potency, hit/critical rolls, resource maxima and enemy stats remain provisional. C13 separately replaces outgoing magic base/multiplier through its versioned candidate; see COMBAT-OFFENSE.md. Updating cost does not validate those other systems. Fire independently tests each target; current encounter rosters contain at most three enemies. Primary-first ordering is an explicit candidate implementation, not a reconstructed hidden target-selection algorithm.
 
 ## Tick-based natural recovery
 

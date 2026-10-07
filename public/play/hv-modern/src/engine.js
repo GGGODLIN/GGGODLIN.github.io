@@ -1,3 +1,5 @@
+import {GENERATION_POLICY,generateEquipment,validateGeneratedEquipment} from './equipment-generation.js';
+import {OFFENSE_POLICY,publishedOffense,outgoingDamage} from './combat-offense.js';
 import {COMBAT_RESOURCE_POLICY,SPELL_RESOURCES,REGEN_SCALE,spellManaCost,naturalRegenRates,recoverWholeUnits} from './combat-resources.js';
 import {setEquipmentProtection,equipmentActionPermission,getContainerCounts} from './armory.js';
 import {ARENAS,createActivityState,validateActivityState,previewActivities,reserveArena,settleArenaRound,settleArenaSeries} from './arena.js';
@@ -28,19 +30,22 @@ function random(state) {
 }
 function randomInt(state, min, max) { return min + Math.floor(random(state) * (max - min + 1)); }
 
-/** All derived-stat formulas below are authored training formulas, not recovered server formulas. */
+/** Outgoing bases use a published candidate; maxima, accuracy and generic defense remain authored. */
 export function getStats(state) {
   const { str, dex, agi, end, int, wis } = state.player.attributes;
   const gear = Object.values(state.equipped).map((id) => state.inventory.find((item) => item.id === id)).filter(Boolean);
   const total = (key) => gear.reduce((sum, item) => sum + item[key], 0);
   const burden = total('burden');
+  const legacyOffense=isActive(state)&&state.battle.offenseRules===OFFENSE_POLICY.legacy;
+  const offense=publishedOffense(state.player.attributes,total('attack'),total('magic'));
   const speed = Math.round(clamp((agi / state.player.level - 1) * 10, 0, 10) * clamp((130 - burden) / 90, 0, 1) * 100) / 100;
   return {
     maxHp: Math.floor(150 + end * 9 + state.player.level * 5),
     maxMp: Math.floor(30 + int * 2 + wis * 2),
     maxSp: Math.floor(10 + wis * 0.75),
-    attack: Math.floor(8 + str * 1.4 + dex * 0.5 + total('attack')),
-    magic: Math.floor(5 + int * 1.6 + wis * 0.4 + total('magic')),
+    attack: legacyOffense?Math.floor(8 + str * 1.4 + dex * 0.5 + total('attack')):offense.attack,
+    magic: legacyOffense?Math.floor(5 + int * 1.6 + wis * 0.4 + total('magic')):offense.magic,
+    healingMagicFixture: Math.floor(5 + int * 1.6 + wis * 0.4 + total('magic')),
     defense: Math.floor(end * 0.3 + total('defense')),
     accuracy: Math.round(clamp(88 + dex * 0.25, 88, 98) * 10) / 10,
     speed, burden,
@@ -102,7 +107,7 @@ export function startBattle(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:reservation?.definition.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
-    combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
+    equipmentRules: GENERATION_POLICY.model, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, _receipts: [], _settled: false,
   };
@@ -167,7 +172,7 @@ export function listAvailableActions(state) {
     const reason = actionError(state, action, state.battle?.targetId);
     const cost = action.item ? `${state.potions[action.item]} 瓶 · 0 時間` : action.mana ? `${manaCost(state, action)} MP` : action.id === 'spirit' ? state.battle?.spiritActive ? '關閉架式' : '50 OC 門檻' : '無消耗';
     return { id: action.id, name: action.name, icon: action.icon, cost,
-      description: modernResources(state)&&SPELL_RESOURCES[action.id]?`${action.id==='fire'?'火焰：至多 3 目標，分別命中判定。':'治癒：恢復量仍為暫定模型。'}消耗 ceil(等級 × ${SPELL_RESOURCES[action.id].baseCost}%)，目前 ${manaCost(state,action)} MP；冷卻 ${actionCooldown(state,action)} 個非道具行動。能力／裝備修正尚未接入。`:!modernResources(state)&&SPELL_RESOURCES[action.id]?`本場沿用舊版固定消耗／冷卻；${action.description}`:action.description, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
+      description: modernResources(state)&&SPELL_RESOURCES[action.id]?`${action.id==='fire'?'火焰：至多 3 目標，分別命中判定。':'治癒：恢復量仍為暫定模型。'}消耗 ceil(等級 × ${SPELL_RESOURCES[action.id].baseCost}% × ${effectiveSpirit(state)?'0.75 靈動折扣':'1（無靈動折扣）'})，目前 ${manaCost(state,action)} MP；冷卻 ${actionCooldown(state,action)} 個非道具行動。能力／裝備修正尚未接入。`:!modernResources(state)&&SPELL_RESOURCES[action.id]?`本場沿用舊版固定消耗／冷卻；${action.description}`:action.description, disabled: Boolean(reason), reason: reason || '', cooldown: state.battle?.cooldowns[action.id] || 0 };
   });
 }
 
@@ -207,10 +212,11 @@ function settle(state, status, events, nowMs) {
       if (reward.pendingGuaranteedEquipment || reward.equipmentDropCount > 0) {
         if (state.inventory.filter(i=>i.container!=='storage').length>=500) emit(state,events,'隨身裝備已達 500 件；本次通關裝備依容量規則丟棄。','reward');
         else {
-          const base=STARTER_ITEMS[randomInt(state,0,STARTER_ITEMS.length-1)];
-          const item=clone(base);item.id=`reward-${battle.id}`;item.origin='arena-fixture';item.level=EQUIPMENT_QUALITIES.indexOf(item.quality)>=4?state.player.level:null;
+          let item;
+          if(battle.equipmentRules===GENERATION_POLICY.model)item=generateEquipment({templates:STARTER_ITEMS,id:`reward-${battle.id}`,level:state.player.level,rng:()=>random(state)});
+          else {const base=STARTER_ITEMS[randomInt(state,0,STARTER_ITEMS.length-1)];item=clone(base);item.id=`reward-${battle.id}`;item.origin='arena-fixture';item.level=EQUIPMENT_QUALITIES.indexOf(item.quality)>=4?state.player.level:null;}
           state.inventory.push(item);
-          emit(state,events,`獲得 ${item.name}（原創固定樣本池；非原版生成權重）`,'reward',{itemId:item.id});
+          emit(state,events,`獲得 ${item.name}（${item.generation?item.quality+' · 逐項品質 roll；權重與數值投影為樣本':'原創固定樣本池；非原版生成權重'}）`,'reward',{itemId:item.id});
         }
       }
     } else if (!reward.ok) emit(state,events,`獎勵結算異常，未發放：${reward.error}`,'error');
@@ -311,16 +317,21 @@ export function performAction(state, actionId, targetId, commandId, nowMs = Date
       const accuracy = isFire ? clamp(stats.accuracy * (focused ? 2 : 1), 0, 100) : stats.accuracy;
       if (random(state) * 100 < accuracy) {
         const critical = random(state) < 0.08;
-        const base = isFire ? stats.magic * 1.7 : stats.attack * (spirit ? 2 : 1);
-        const mitigation = victim.resistances[isFire ? 'fire' : 'physical'];
-        const damage = Math.max(1, Math.floor(base * (0.9 + random(state) * 0.2) * (1 - mitigation) * (critical ? 1.5 : 1)));
+        let damage;
+        if(battle.offenseRules===OFFENSE_POLICY.id){
+          damage=outgoingDamage({base:isFire?stats.magic:stats.attack,kind:isFire?'fire':'physical',rollPercent:randomInt(state,80,120),critical,spiritStance:spirit,generalMitigation:isFire?0:victim.resistances.physical,specificMitigation:isFire?victim.resistances.fire:0});
+        }else{
+          const base = isFire ? stats.magic * 1.7 : stats.attack * (spirit ? 2 : 1);
+          const mitigation = victim.resistances[isFire ? 'fire' : 'physical'];
+          damage = Math.max(1, Math.floor(base * (0.9 + random(state) * 0.2) * (1 - mitigation) * (critical ? 1.5 : 1)));
+        }
         victim.hp = Math.max(0, victim.hp - damage);
         emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${victim.name}：${damage}${critical ? '（暴擊）' : ''}`, isFire ? 'magic' : 'attack', { targetId: victim.id, amount: damage, critical });
         if (!isFire) state.player.overcharge = Math.min(RULES.overchargeCap, state.player.overcharge + randomInt(state, 5, 10));
         if (victim.hp === 0) emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });
       } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${victim.name}`, 'miss', { targetId: victim.id });
     }
-  } else if (action.id === 'cure') heal(state, events, 'hp', stats.maxHp * 0.3 + stats.magic * 0.4, '治癒');
+  } else if (action.id === 'cure') heal(state, events, 'hp', stats.maxHp * 0.3 + stats.healingMagicFixture * 0.4, '治癒');
   else if (action.id === 'scan') {
     target.scanned = true;
     emit(state, events, `探查完成：${target.name}，Lv.${target.level}，HP ${target.hp} / ${target.maxHp}`, 'scan', { targetId: target.id });
@@ -476,8 +487,12 @@ function validState(state) {
   if (new Set(state.inventory.map((item) => item.id)).size !== state.inventory.length) return false;
   for (const item of state.inventory) {
     const original = STARTER_ITEMS.find((entry) => entry.id === item.templateId);
-    if (!safeText(item.id) || !/^[a-z0-9][a-z0-9-]{0,199}$/.test(item.id) || (item.origin !== 'starter-fixture' && item.origin !== 'arena-fixture') || (item.origin === 'starter-fixture' && item.id !== item.templateId) || (item.origin === 'arena-fixture' && !/^reward-arena-[1-9]\d*$/.test(item.id))) return false;
-    if (!original || typeof item.locked !== 'boolean' || Object.keys(original).some((key) => !['id','origin','locked','protected','pinned','container','level'].includes(key) && item[key] !== original[key])) return false;
+    if (!safeText(item.id) || !/^[a-z0-9][a-z0-9-]{0,199}$/.test(item.id) || !original || typeof item.locked !== 'boolean') return false;
+    if(item.origin==='quality-roll-fixture'){if(!validateGeneratedEquipment(item,STARTER_ITEMS))return false;}
+    else {
+      if(!['starter-fixture','arena-fixture'].includes(item.origin) || item.generation!==undefined || (item.origin==='starter-fixture'&&item.id!==item.templateId) || (item.origin==='arena-fixture'&&!/^reward-arena-[1-9]\d*$/.test(item.id)))return false;
+      if(Object.keys(original).some((key)=>!['id','origin','locked','protected','pinned','container','level'].includes(key)&&item[key]!==original[key]))return false;
+    }
     if(!['inventory','storage'].includes(item.container)||typeof item.protected!=='boolean'||typeof item.pinned!=='boolean'||item.protected&&item.locked)return false;
     if(item.container==='storage'&&Object.values(state.equipped).includes(item.id))return false;
     if (item.level !== null && !integer(item.level, 1, 500)) return false;
@@ -513,6 +528,8 @@ function validState(state) {
     if(completed!==(battle.status==='victory'||battle.phase==='round-complete'?battle.round:battle.round-1))return false;
   }
   if (!integer(battle.turn) || !integer(battle.ticks) || !integer(battle.timeUnits) || battle.ticks !== Math.floor(battle.timeUnits / 100) || battle._nextTick !== (battle.ticks + 1) * 100) return false;
+  if(![GENERATION_POLICY.model,'fixed-arena-fixture-v1'].includes(battle.equipmentRules))return false;
+  if(![OFFENSE_POLICY.id,OFFENSE_POLICY.legacy].includes(battle.offenseRules))return false;
   if(![COMBAT_RESOURCE_POLICY.id,COMBAT_RESOURCE_POLICY.legacy].includes(battle.combatRules)||!plain(battle._regenCarry)||!['mp','sp'].every(k=>integer(battle._regenCarry[k],0,REGEN_SCALE-1)))return false;
   if (typeof battle.spiritActive !== 'boolean' || typeof battle._settled !== 'boolean' || battle._settled !== (battle.status !== 'active')) return false;
   if (battle.status === 'active' && player.hp === 0) return false;
@@ -547,11 +564,13 @@ export function restoreGame(json) {
       return value;
     });
     // Validate old progress before applying the documented rule-version migration.
-    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7'].includes(state?.rulesVersion);
+    const legacy = ['persistent-0.91-training-v1', 'persistent-0.91-training-v2', 'persistent-0.91-training-v3', 'persistent-0.91-training-v4', 'persistent-0.91-training-v5', 'persistent-0.91-training-v6', 'persistent-0.91-training-v7', 'persistent-0.91-training-v8'].includes(state?.rulesVersion);
     if (state?.schemaVersion === SCHEMA_VERSION && legacy) {
       state.rulesVersion = RULES_VERSION;
       if (state.activities === undefined) state.activities=createActivityState(0);
       if (state.levelRewards === undefined) state.levelRewards=[];
+      if(state.battle&&state.battle.equipmentRules===undefined)state.battle.equipmentRules='fixed-arena-fixture-v1';
+      if(state.battle&&state.battle.offenseRules===undefined)state.battle.offenseRules=OFFENSE_POLICY.legacy;
       if(state.battle&&state.battle.combatRules===undefined){state.battle.combatRules=COMBAT_RESOURCE_POLICY.legacy;state.battle._regenCarry={mp:0,sp:0};}
       if (state.battle && !state.battle.kind) {state.battle.kind='training';state.battle.arenaId=null;state.battle.entryDay=null;state.battle.entryLevel=state.player?.level;state.battle.entryStamina=null;for(const enemy of state.battle.enemies||[])if(enemy.powerLevel===undefined)enemy.powerLevel=0;}
       if (state.progression === undefined) state.progression = { kind: 'legacy-fixture' };
