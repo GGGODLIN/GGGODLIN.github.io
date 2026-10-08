@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "buildAlgorithm": "vesper-whole-release-graph-v1",
-  "releaseId": "ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038",
-  "base": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/",
+  "releaseId": "f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e",
+  "base": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/",
   "publicationPolicy": {
     "retainPreviouslyPublishedReleaseDirectories": true,
     "retainLegacyTopLevelGraph": true,
@@ -35,7 +35,7 @@
       "sourcePath": "docs/ABILITIES.md",
       "sourceBytes": 18156,
       "sourceSha256": "71427982db461b55f953ab9897ced6f6d90600b67b539e734d11fc6b9ce711f3",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITIES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITIES.md",
       "deployedBytes": 18156,
       "deployedSha256": "71427982db461b55f953ab9897ced6f6d90600b67b539e734d11fc6b9ce711f3",
       "transform": "copy"
@@ -44,7 +44,7 @@
       "sourcePath": "docs/ABILITY-BOOST.md",
       "sourceBytes": 4496,
       "sourceSha256": "9fdc68578ae399512696b722a8557767b74842c67dbf77560a7f34ebc1d0de67",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-BOOST.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-BOOST.md",
       "deployedBytes": 4496,
       "deployedSha256": "9fdc68578ae399512696b722a8557767b74842c67dbf77560a7f34ebc1d0de67",
       "transform": "copy"
@@ -53,7 +53,7 @@
       "sourcePath": "docs/ABILITY-SLOT-PICKER.md",
       "sourceBytes": 4065,
       "sourceSha256": "1b9523769277729ccab132e0f6a488ea2ba430343f6a15d9fbc3101ed90e58cb",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-SLOT-PICKER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-SLOT-PICKER.md",
       "deployedBytes": 4065,
       "deployedSha256": "1b9523769277729ccab132e0f6a488ea2ba430343f6a15d9fbc3101ed90e58cb",
       "transform": "copy"
@@ -62,7 +62,7 @@
       "sourcePath": "docs/ARENA-RETENTION.md",
       "sourceBytes": 8441,
       "sourceSha256": "9ce02ac6debfd21b210d9642e669d35f4018f46fd005b38af76c112c46cd7bff",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA-RETENTION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA-RETENTION.md",
       "deployedBytes": 8441,
       "deployedSha256": "9ce02ac6debfd21b210d9642e669d35f4018f46fd005b38af76c112c46cd7bff",
       "transform": "copy"
@@ -71,7 +71,7 @@
       "sourcePath": "docs/ARENA.md",
       "sourceBytes": 9924,
       "sourceSha256": "37a512715810603ecf6b8c0120f976afab74dba8a39a04ccd6a71a4c40df2a6d",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA.md",
       "deployedBytes": 9924,
       "deployedSha256": "37a512715810603ecf6b8c0120f976afab74dba8a39a04ccd6a71a4c40df2a6d",
       "transform": "copy"
@@ -80,7 +80,7 @@
       "sourcePath": "docs/ARMORY-FOCUS-INTEGRATION.md",
       "sourceBytes": 3176,
       "sourceSha256": "18f2ee80189499455df04dbef912e3fae55aad2c81f865f497005b0a52d5470f",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARMORY-FOCUS-INTEGRATION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARMORY-FOCUS-INTEGRATION.md",
       "deployedBytes": 3176,
       "deployedSha256": "18f2ee80189499455df04dbef912e3fae55aad2c81f865f497005b0a52d5470f",
       "transform": "copy"
@@ -89,7 +89,7 @@
       "sourcePath": "docs/ARMORY-ORGANIZATION.md",
       "sourceBytes": 8427,
       "sourceSha256": "9c7eb225e0c664f883ddec06406f59e40b6a55339b0cecd87fe0094f1cd5d0a3",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARMORY-ORGANIZATION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARMORY-ORGANIZATION.md",
       "deployedBytes": 8427,
       "deployedSha256": "9c7eb225e0c664f883ddec06406f59e40b6a55339b0cecd87fe0094f1cd5d0a3",
       "transform": "copy"
@@ -98,7 +98,7 @@
       "sourcePath": "docs/ARMORY-VISIBLE-SELECTION.md",
       "sourceBytes": 3798,
       "sourceSha256": "04f5ffff51a12ae31c4a2bd49b9206eb5f2164b61c9035e7025dfe0507c8fe3e",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARMORY-VISIBLE-SELECTION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARMORY-VISIBLE-SELECTION.md",
       "deployedBytes": 3798,
       "deployedSha256": "04f5ffff51a12ae31c4a2bd49b9206eb5f2164b61c9035e7025dfe0507c8fe3e",
       "transform": "copy"
@@ -107,25 +107,25 @@
       "sourcePath": "docs/AUDIT-RETENTION.md",
       "sourceBytes": 6206,
       "sourceSha256": "68f512ed4fed743a04ec95cbc4454bb9e15fc1862d70248cd3fa543407710093",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/AUDIT-RETENTION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/AUDIT-RETENTION.md",
       "deployedBytes": 6206,
       "deployedSha256": "68f512ed4fed743a04ec95cbc4454bb9e15fc1862d70248cd3fa543407710093",
       "transform": "copy"
     },
     {
       "sourcePath": "docs/BACKLOG.md",
-      "sourceBytes": 10317,
-      "sourceSha256": "f34bcafba0026c0a82496e9da257ee59aa33f4455529c0aa5a271baac46661ed",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/BACKLOG.md",
-      "deployedBytes": 10317,
-      "deployedSha256": "f34bcafba0026c0a82496e9da257ee59aa33f4455529c0aa5a271baac46661ed",
+      "sourceBytes": 10619,
+      "sourceSha256": "06f21c1e3c912e1f2a877d9e32cc0cb8ce62af7d5d0a7fc39cc0013eb7820e1d",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/BACKLOG.md",
+      "deployedBytes": 10619,
+      "deployedSha256": "06f21c1e3c912e1f2a877d9e32cc0cb8ce62af7d5d0a7fc39cc0013eb7820e1d",
       "transform": "copy"
     },
     {
       "sourcePath": "docs/CHECKPOINT-01.md",
       "sourceBytes": 2181,
       "sourceSha256": "3637db4e87103e4cf5c73951999993cb70c9646f5bb8c0bbf8a5182085110906",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-01.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-01.md",
       "deployedBytes": 2181,
       "deployedSha256": "3637db4e87103e4cf5c73951999993cb70c9646f5bb8c0bbf8a5182085110906",
       "transform": "copy"
@@ -134,7 +134,7 @@
       "sourcePath": "docs/CHECKPOINT-02.md",
       "sourceBytes": 1440,
       "sourceSha256": "d25f5f5e09d14bf3e51190108d37ffef0d5a777ec5ba885966df84f4f65f1e18",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-02.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-02.md",
       "deployedBytes": 1440,
       "deployedSha256": "d25f5f5e09d14bf3e51190108d37ffef0d5a777ec5ba885966df84f4f65f1e18",
       "transform": "copy"
@@ -143,7 +143,7 @@
       "sourcePath": "docs/CHECKPOINT-03.md",
       "sourceBytes": 1807,
       "sourceSha256": "48e9f6a895aa36c07d00455f9c0017860f6cc1ba0e07dc3513a38116e4773b34",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-03.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-03.md",
       "deployedBytes": 1807,
       "deployedSha256": "48e9f6a895aa36c07d00455f9c0017860f6cc1ba0e07dc3513a38116e4773b34",
       "transform": "copy"
@@ -152,7 +152,7 @@
       "sourcePath": "docs/CHECKPOINT-04.md",
       "sourceBytes": 1825,
       "sourceSha256": "7c4ad941e58a8c18902c2a41f7b10d0d425f6fc20283be585ca083ae82252470",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-04.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-04.md",
       "deployedBytes": 1825,
       "deployedSha256": "7c4ad941e58a8c18902c2a41f7b10d0d425f6fc20283be585ca083ae82252470",
       "transform": "copy"
@@ -161,7 +161,7 @@
       "sourcePath": "docs/CHECKPOINT-05.md",
       "sourceBytes": 1654,
       "sourceSha256": "d4c4d5e38e86d9a74ba5051b5545bf1ad6ebf95780ac2585af6bebfde3465358",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-05.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-05.md",
       "deployedBytes": 1654,
       "deployedSha256": "d4c4d5e38e86d9a74ba5051b5545bf1ad6ebf95780ac2585af6bebfde3465358",
       "transform": "copy"
@@ -170,7 +170,7 @@
       "sourcePath": "docs/CHECKPOINT-06.md",
       "sourceBytes": 1341,
       "sourceSha256": "0ed168a30bc18e0d622e931e045ca1265db6789b99599effbd7bbfa2b6d4e0f1",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-06.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-06.md",
       "deployedBytes": 1341,
       "deployedSha256": "0ed168a30bc18e0d622e931e045ca1265db6789b99599effbd7bbfa2b6d4e0f1",
       "transform": "copy"
@@ -179,7 +179,7 @@
       "sourcePath": "docs/CHECKPOINT-07.md",
       "sourceBytes": 671,
       "sourceSha256": "653573b277fd6e265c5466506f0e33779028d3d3f067fca9a81978d57f861ce5",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-07.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-07.md",
       "deployedBytes": 671,
       "deployedSha256": "653573b277fd6e265c5466506f0e33779028d3d3f067fca9a81978d57f861ce5",
       "transform": "copy"
@@ -188,7 +188,7 @@
       "sourcePath": "docs/CHECKPOINT-08.md",
       "sourceBytes": 1487,
       "sourceSha256": "d7f025fa8804698017530408093d2e41190d0bd543460493b8de169c8b177057",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-08.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-08.md",
       "deployedBytes": 1487,
       "deployedSha256": "d7f025fa8804698017530408093d2e41190d0bd543460493b8de169c8b177057",
       "transform": "copy"
@@ -197,7 +197,7 @@
       "sourcePath": "docs/CHECKPOINT-09.md",
       "sourceBytes": 2247,
       "sourceSha256": "80a9f7820698ee45d2e4bd2eb72e0f7683964ef11dfc4fae4b6718d775889634",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-09.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-09.md",
       "deployedBytes": 2247,
       "deployedSha256": "80a9f7820698ee45d2e4bd2eb72e0f7683964ef11dfc4fae4b6718d775889634",
       "transform": "copy"
@@ -206,7 +206,7 @@
       "sourcePath": "docs/CHECKPOINT-10.md",
       "sourceBytes": 2754,
       "sourceSha256": "ffc4affca42e7508a9e621ed2a0510d067e126c2d6ade426f4b8a8f4866e8faa",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-10.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-10.md",
       "deployedBytes": 2754,
       "deployedSha256": "ffc4affca42e7508a9e621ed2a0510d067e126c2d6ade426f4b8a8f4866e8faa",
       "transform": "copy"
@@ -215,7 +215,7 @@
       "sourcePath": "docs/CHECKPOINT-10A.md",
       "sourceBytes": 680,
       "sourceSha256": "674c40ecb1a14d0581d464654b7d5e084503765fa6919baaf9e3b205945394ba",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-10A.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-10A.md",
       "deployedBytes": 680,
       "deployedSha256": "674c40ecb1a14d0581d464654b7d5e084503765fa6919baaf9e3b205945394ba",
       "transform": "copy"
@@ -224,7 +224,7 @@
       "sourcePath": "docs/CHECKPOINT-11.md",
       "sourceBytes": 1226,
       "sourceSha256": "668cc26b9d0f4ffcb4bf01413994a8a0d1c92dc810fe83bdcfb424b670e0b06f",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-11.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-11.md",
       "deployedBytes": 1226,
       "deployedSha256": "668cc26b9d0f4ffcb4bf01413994a8a0d1c92dc810fe83bdcfb424b670e0b06f",
       "transform": "copy"
@@ -233,7 +233,7 @@
       "sourcePath": "docs/CHECKPOINT-12.md",
       "sourceBytes": 1360,
       "sourceSha256": "d1c0b2ddb8503e38bda3d765867afbcc3fa1a8647ecba514559fad8d2e568034",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-12.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-12.md",
       "deployedBytes": 1360,
       "deployedSha256": "d1c0b2ddb8503e38bda3d765867afbcc3fa1a8647ecba514559fad8d2e568034",
       "transform": "copy"
@@ -242,7 +242,7 @@
       "sourcePath": "docs/CHECKPOINT-13.md",
       "sourceBytes": 2502,
       "sourceSha256": "bbea1d27f0491eaa3ee8df28f9c2d51e53d22047010373ecf81211e176d9f5e9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-13.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-13.md",
       "deployedBytes": 2502,
       "deployedSha256": "bbea1d27f0491eaa3ee8df28f9c2d51e53d22047010373ecf81211e176d9f5e9",
       "transform": "copy"
@@ -251,7 +251,7 @@
       "sourcePath": "docs/CHECKPOINT-13A.md",
       "sourceBytes": 1517,
       "sourceSha256": "a7e08b0c4c629c831f5d0f464f13d91eddb650035c49fdc99024d1c389ea3423",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-13A.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-13A.md",
       "deployedBytes": 1517,
       "deployedSha256": "a7e08b0c4c629c831f5d0f464f13d91eddb650035c49fdc99024d1c389ea3423",
       "transform": "copy"
@@ -260,7 +260,7 @@
       "sourcePath": "docs/CHECKPOINT-14.md",
       "sourceBytes": 1945,
       "sourceSha256": "34cdd6c986c9ac8051fe1f7402db83a757ea6433d873f000f5e04b04df3a47bd",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-14.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-14.md",
       "deployedBytes": 1945,
       "deployedSha256": "34cdd6c986c9ac8051fe1f7402db83a757ea6433d873f000f5e04b04df3a47bd",
       "transform": "copy"
@@ -269,7 +269,7 @@
       "sourcePath": "docs/CHECKPOINT-14A.md",
       "sourceBytes": 1738,
       "sourceSha256": "4ec84fa01ebb9ab9c12d482590439cab7ea72d96fbb49356c312ee0727edcd45",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-14A.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-14A.md",
       "deployedBytes": 1738,
       "deployedSha256": "4ec84fa01ebb9ab9c12d482590439cab7ea72d96fbb49356c312ee0727edcd45",
       "transform": "copy"
@@ -278,7 +278,7 @@
       "sourcePath": "docs/CHECKPOINT-15.md",
       "sourceBytes": 2059,
       "sourceSha256": "a9d60c30ff963b5fe761280bbeb887b4748e9ec931683f08c3f0bb910ebc7916",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-15.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-15.md",
       "deployedBytes": 2059,
       "deployedSha256": "a9d60c30ff963b5fe761280bbeb887b4748e9ec931683f08c3f0bb910ebc7916",
       "transform": "copy"
@@ -287,7 +287,7 @@
       "sourcePath": "docs/CHECKPOINT-16.md",
       "sourceBytes": 1701,
       "sourceSha256": "87c75a09081436a121aa463aa5692676e248f621c160e8ef4ae7a4b6458de163",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-16.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-16.md",
       "deployedBytes": 1701,
       "deployedSha256": "87c75a09081436a121aa463aa5692676e248f621c160e8ef4ae7a4b6458de163",
       "transform": "copy"
@@ -296,7 +296,7 @@
       "sourcePath": "docs/CHECKPOINT-17.md",
       "sourceBytes": 2417,
       "sourceSha256": "41ca4302aabbfbbe13af3376652d707008ff11a6bde340d6e75e2b17ad5e7f9c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-17.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-17.md",
       "deployedBytes": 2417,
       "deployedSha256": "41ca4302aabbfbbe13af3376652d707008ff11a6bde340d6e75e2b17ad5e7f9c",
       "transform": "copy"
@@ -305,7 +305,7 @@
       "sourcePath": "docs/CHECKPOINT-17a.md",
       "sourceBytes": 1017,
       "sourceSha256": "31e4819be7d1870a40bb27723c6fa13d721a681bbda7dbae7fdf173ba700314c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-17a.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-17a.md",
       "deployedBytes": 1017,
       "deployedSha256": "31e4819be7d1870a40bb27723c6fa13d721a681bbda7dbae7fdf173ba700314c",
       "transform": "copy"
@@ -314,7 +314,7 @@
       "sourcePath": "docs/CHECKPOINT-18.md",
       "sourceBytes": 1300,
       "sourceSha256": "565bdb3cd117c50ab54228fdb70bbaa02d292cc7bcf104e252306ccca5b3eeb6",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-18.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-18.md",
       "deployedBytes": 1300,
       "deployedSha256": "565bdb3cd117c50ab54228fdb70bbaa02d292cc7bcf104e252306ccca5b3eeb6",
       "transform": "copy"
@@ -323,7 +323,7 @@
       "sourcePath": "docs/CHECKPOINT-19.md",
       "sourceBytes": 1388,
       "sourceSha256": "13eed2f9c172a20095710d76467b1d88d375d4a1375816c1108be557f0b731e9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-19.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-19.md",
       "deployedBytes": 1388,
       "deployedSha256": "13eed2f9c172a20095710d76467b1d88d375d4a1375816c1108be557f0b731e9",
       "transform": "copy"
@@ -332,7 +332,7 @@
       "sourcePath": "docs/CHECKPOINT-20.md",
       "sourceBytes": 1643,
       "sourceSha256": "5f648c0cf305a4abee0168a596f7eea8ff18f7239179b12ea32f7d4b16b84966",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-20.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-20.md",
       "deployedBytes": 1643,
       "deployedSha256": "5f648c0cf305a4abee0168a596f7eea8ff18f7239179b12ea32f7d4b16b84966",
       "transform": "copy"
@@ -341,7 +341,7 @@
       "sourcePath": "docs/CHECKPOINT-21.md",
       "sourceBytes": 2064,
       "sourceSha256": "a61bd78e1804f738e0c3160c978eb3ed4a93572ae98a9eee47d8bd8ed82c4dfc",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-21.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-21.md",
       "deployedBytes": 2064,
       "deployedSha256": "a61bd78e1804f738e0c3160c978eb3ed4a93572ae98a9eee47d8bd8ed82c4dfc",
       "transform": "copy"
@@ -350,7 +350,7 @@
       "sourcePath": "docs/CHECKPOINT-22.md",
       "sourceBytes": 1563,
       "sourceSha256": "16a477a7a3fcc00e388a8103f70b66abe0b954c13a1a1a680ee8543251de43ae",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-22.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-22.md",
       "deployedBytes": 1563,
       "deployedSha256": "16a477a7a3fcc00e388a8103f70b66abe0b954c13a1a1a680ee8543251de43ae",
       "transform": "copy"
@@ -359,7 +359,7 @@
       "sourcePath": "docs/CHECKPOINT-22a.md",
       "sourceBytes": 1379,
       "sourceSha256": "536f2290b1bb5362462956e9fb8da492dec51726e8f320a26e1fe3a970e7ae47",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CHECKPOINT-22a.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CHECKPOINT-22a.md",
       "deployedBytes": 1379,
       "deployedSha256": "536f2290b1bb5362462956e9fb8da492dec51726e8f320a26e1fe3a970e7ae47",
       "transform": "copy"
@@ -368,7 +368,7 @@
       "sourcePath": "docs/COMBAT-ACCURACY.md",
       "sourceBytes": 3909,
       "sourceSha256": "7cded82709e312bcef69a0bdab7c98d8ff832cfbca1672b1cd0599a10f9732dd",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-ACCURACY.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-ACCURACY.md",
       "deployedBytes": 3909,
       "deployedSha256": "7cded82709e312bcef69a0bdab7c98d8ff832cfbca1672b1cd0599a10f9732dd",
       "transform": "copy"
@@ -377,7 +377,7 @@
       "sourcePath": "docs/COMBAT-OFFENSE.md",
       "sourceBytes": 3857,
       "sourceSha256": "e456014704db430c6f46dd1cdddbc460eae4cc984f2024c6fc9d868e666be047",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-OFFENSE.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-OFFENSE.md",
       "deployedBytes": 3857,
       "deployedSha256": "e456014704db430c6f46dd1cdddbc460eae4cc984f2024c6fc9d868e666be047",
       "transform": "copy"
@@ -386,7 +386,7 @@
       "sourcePath": "docs/COMBAT-RESOURCES.md",
       "sourceBytes": 3514,
       "sourceSha256": "e5d018a77a91cf81e44561948155eccbba2b714063facae9597e27b5137cd668",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-RESOURCES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-RESOURCES.md",
       "deployedBytes": 3514,
       "deployedSha256": "e5d018a77a91cf81e44561948155eccbba2b714063facae9597e27b5137cd668",
       "transform": "copy"
@@ -395,7 +395,7 @@
       "sourcePath": "docs/COMMAND-LEDGER.md",
       "sourceBytes": 10930,
       "sourceSha256": "2ab8d3916894981feecc838fb3f2ea007a7a6a680fc120164809a6ce3c4f3c09",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMMAND-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMMAND-LEDGER.md",
       "deployedBytes": 10930,
       "deployedSha256": "2ab8d3916894981feecc838fb3f2ea007a7a6a680fc120164809a6ce3c4f3c09",
       "transform": "copy"
@@ -404,7 +404,7 @@
       "sourcePath": "docs/COMPLETE-CURE.md",
       "sourceBytes": 5576,
       "sourceSha256": "b2a7bc5968f90542bdc6b0b822c78ec649f99d61c512ee3b4200f0317a739053",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMPLETE-CURE.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMPLETE-CURE.md",
       "deployedBytes": 5576,
       "deployedSha256": "b2a7bc5968f90542bdc6b0b822c78ec649f99d61c512ee3b4200f0317a739053",
       "transform": "copy"
@@ -413,7 +413,7 @@
       "sourcePath": "docs/COMPLETE-TANKS.md",
       "sourceBytes": 4311,
       "sourceSha256": "2ab1926c8d5f6e8a1f5d14b1ed3be73c384fb678926dc30ade1e884d9b6c9d48",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMPLETE-TANKS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMPLETE-TANKS.md",
       "deployedBytes": 4311,
       "deployedSha256": "2ab1926c8d5f6e8a1f5d14b1ed3be73c384fb678926dc30ade1e884d9b6c9d48",
       "transform": "copy"
@@ -422,7 +422,7 @@
       "sourcePath": "docs/CONFLAGRATION.md",
       "sourceBytes": 5205,
       "sourceSha256": "d42e15c2beb9337daa643f3057cce927b44471329e5eeb5eadd1138d9c9e65e0",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CONFLAGRATION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CONFLAGRATION.md",
       "deployedBytes": 5205,
       "deployedSha256": "d42e15c2beb9337daa643f3057cce927b44471329e5eeb5eadd1138d9c9e65e0",
       "transform": "copy"
@@ -431,7 +431,7 @@
       "sourcePath": "docs/CURATIVE.md",
       "sourceBytes": 3655,
       "sourceSha256": "f6ad0100647b410228f909b16b81d3db33e6ff9000cd02b6d46f17d7e2b089d5",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CURATIVE.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CURATIVE.md",
       "deployedBytes": 3655,
       "deployedSha256": "f6ad0100647b410228f909b16b81d3db33e6ff9000cd02b6d46f17d7e2b089d5",
       "transform": "copy"
@@ -440,7 +440,7 @@
       "sourcePath": "docs/EQUIPMENT-GENERATION.md",
       "sourceBytes": 8473,
       "sourceSha256": "def0cecd13e62ec2937931a1dfff208740cb483ad6134a64c4969aec384547f0",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/EQUIPMENT-GENERATION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/EQUIPMENT-GENERATION.md",
       "deployedBytes": 8473,
       "deployedSha256": "def0cecd13e62ec2937931a1dfff208740cb483ad6134a64c4969aec384547f0",
       "transform": "copy"
@@ -449,7 +449,7 @@
       "sourcePath": "docs/FIRE-PREVIEW.md",
       "sourceBytes": 3949,
       "sourceSha256": "e8a52c543a271dc8be6fcfc5ee260a79d7e450c491dc59620d66e50d1b2ee9cf",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FIRE-PREVIEW.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FIRE-PREVIEW.md",
       "deployedBytes": 3949,
       "deployedSha256": "e8a52c543a271dc8be6fcfc5ee260a79d7e450c491dc59620d66e50d1b2ee9cf",
       "transform": "copy"
@@ -458,7 +458,7 @@
       "sourcePath": "docs/FULL-ABILITY-BOOST.md",
       "sourceBytes": 4321,
       "sourceSha256": "0f407e373594a8d1204b37a7f29d7da9eb1746d69320afdb7a3e90f80f52ec0c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md",
       "deployedBytes": 4321,
       "deployedSha256": "0f407e373594a8d1204b37a7f29d7da9eb1746d69320afdb7a3e90f80f52ec0c",
       "transform": "copy"
@@ -467,7 +467,7 @@
       "sourcePath": "docs/GRINDFEST-LEDGER.md",
       "sourceBytes": 11073,
       "sourceSha256": "1b0c8f812af35a3c78cffbc348b5945757f29c6e1c4c161998beb175b74ab541",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST-LEDGER.md",
       "deployedBytes": 11073,
       "deployedSha256": "1b0c8f812af35a3c78cffbc348b5945757f29c6e1c4c161998beb175b74ab541",
       "transform": "copy"
@@ -476,7 +476,7 @@
       "sourcePath": "docs/GRINDFEST.md",
       "sourceBytes": 5259,
       "sourceSha256": "c03c9d668e1dd7f392d2f83a2f9a1aeb3faeddb94a43cd49a476154b0802099c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST.md",
       "deployedBytes": 5259,
       "deployedSha256": "c03c9d668e1dd7f392d2f83a2f9a1aeb3faeddb94a43cd49a476154b0802099c",
       "transform": "copy"
@@ -485,7 +485,7 @@
       "sourcePath": "docs/MANIFEST-DESTINY.md",
       "sourceBytes": 7849,
       "sourceSha256": "d946f55294879150c640a04459ea60f15c10011c0e02a01979671e44bc4d0afa",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md",
       "deployedBytes": 7849,
       "deployedSha256": "d946f55294879150c640a04459ea60f15c10011c0e02a01979671e44bc4d0afa",
       "transform": "copy"
@@ -494,7 +494,7 @@
       "sourcePath": "docs/MANIFEST-REGRESSION-ADAPTATIONS.md",
       "sourceBytes": 2500,
       "sourceSha256": "3b678f253648c21d42014405412f71b038bb343a470283b58e06441b0fa61e95",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-REGRESSION-ADAPTATIONS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-REGRESSION-ADAPTATIONS.md",
       "deployedBytes": 2500,
       "deployedSha256": "3b678f253648c21d42014405412f71b038bb343a470283b58e06441b0fa61e95",
       "transform": "copy"
@@ -503,7 +503,7 @@
       "sourcePath": "docs/MASTERY-SLOTS.md",
       "sourceBytes": 6051,
       "sourceSha256": "797524e8eb5efc801918b706371cf084ee74269266bdd9a74d6cbf3be9b1ef6f",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MASTERY-SLOTS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MASTERY-SLOTS.md",
       "deployedBytes": 6051,
       "deployedSha256": "797524e8eb5efc801918b706371cf084ee74269266bdd9a74d6cbf3be9b1ef6f",
       "transform": "copy"
@@ -512,7 +512,7 @@
       "sourcePath": "docs/NARROW-FOCUS-INSETS.md",
       "sourceBytes": 4152,
       "sourceSha256": "888697f2e8ffb1ae686a1fb95dbbffdefaba48de7121061a305677fe442deeeb",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/NARROW-FOCUS-INSETS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/NARROW-FOCUS-INSETS.md",
       "deployedBytes": 4152,
       "deployedSha256": "888697f2e8ffb1ae686a1fb95dbbffdefaba48de7121061a305677fe442deeeb",
       "transform": "copy"
@@ -521,7 +521,7 @@
       "sourcePath": "docs/ORDINARY-ARENAS.md",
       "sourceBytes": 5424,
       "sourceSha256": "8582d7479c0e081b6ddd939c5ec4301fbb800692e9363aecfcc126c973500fc4",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ORDINARY-ARENAS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ORDINARY-ARENAS.md",
       "deployedBytes": 5424,
       "deployedSha256": "8582d7479c0e081b6ddd939c5ec4301fbb800692e9363aecfcc126c973500fc4",
       "transform": "copy"
@@ -530,7 +530,7 @@
       "sourcePath": "docs/POTION-ABILITIES.md",
       "sourceBytes": 6410,
       "sourceSha256": "df2b7caca881c1814180c9f21789c8883dd9232f77c12244abac883f1165aebc",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/POTION-ABILITIES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/POTION-ABILITIES.md",
       "deployedBytes": 6410,
       "deployedSha256": "df2b7caca881c1814180c9f21789c8883dd9232f77c12244abac883f1165aebc",
       "transform": "copy"
@@ -539,7 +539,7 @@
       "sourcePath": "docs/PROGRESSION.md",
       "sourceBytes": 7556,
       "sourceSha256": "6362fac4fe42a46b9d58e23aff03013f979acc26920192a8d4ade0391004ce82",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/PROGRESSION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/PROGRESSION.md",
       "deployedBytes": 7556,
       "deployedSha256": "6362fac4fe42a46b9d58e23aff03013f979acc26920192a8d4ade0391004ce82",
       "transform": "copy"
@@ -548,7 +548,7 @@
       "sourcePath": "docs/PROTECTED-PROGRESSION.md",
       "sourceBytes": 2929,
       "sourceSha256": "1c630a2a4f295d50aeccdf41ed777f8527361ef74afc9052a4cd67059e83b577",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/PROTECTED-PROGRESSION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/PROTECTED-PROGRESSION.md",
       "deployedBytes": 2929,
       "deployedSha256": "1c630a2a4f295d50aeccdf41ed777f8527361ef74afc9052a4cd67059e83b577",
       "transform": "copy"
@@ -557,7 +557,7 @@
       "sourcePath": "docs/READABILITY.md",
       "sourceBytes": 4984,
       "sourceSha256": "1c476bd65d4c56c5f006c74dea4ab7e06d00bcb8fdebc28a33402617eb908ae9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/READABILITY.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/READABILITY.md",
       "deployedBytes": 4984,
       "deployedSha256": "1c476bd65d4c56c5f006c74dea4ab7e06d00bcb8fdebc28a33402617eb908ae9",
       "transform": "copy"
@@ -566,7 +566,7 @@
       "sourcePath": "docs/RELEASE-DEPLOYMENT.md",
       "sourceBytes": 8276,
       "sourceSha256": "fecbad7366d4593d1380d407674a5c3ee7456f1d7c9e8cb9ad187a6a37d27b6a",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RELEASE-DEPLOYMENT.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RELEASE-DEPLOYMENT.md",
       "deployedBytes": 8276,
       "deployedSha256": "fecbad7366d4593d1380d407674a5c3ee7456f1d7c9e8cb9ad187a6a37d27b6a",
       "transform": "copy"
@@ -575,7 +575,7 @@
       "sourcePath": "docs/RESTORATIVES.md",
       "sourceBytes": 2889,
       "sourceSha256": "8cb1d2f676d7a8b299d2f303e30d437e7302d23ae9d3d712a498c9637b9878b1",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RESTORATIVES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RESTORATIVES.md",
       "deployedBytes": 2889,
       "deployedSha256": "8cb1d2f676d7a8b299d2f303e30d437e7302d23ae9d3d712a498c9637b9878b1",
       "transform": "copy"
@@ -584,7 +584,7 @@
       "sourcePath": "docs/RULES.md",
       "sourceBytes": 25714,
       "sourceSha256": "5f4e820a66e54e4b97cd1fc16aa76791668385dadc9707c55b5c37116a512fe7",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RULES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RULES.md",
       "deployedBytes": 25714,
       "deployedSha256": "5f4e820a66e54e4b97cd1fc16aa76791668385dadc9707c55b5c37116a512fe7",
       "transform": "copy"
@@ -593,7 +593,7 @@
       "sourcePath": "docs/SAVE-OWNERSHIP.md",
       "sourceBytes": 5400,
       "sourceSha256": "21c9ba5d50141c44a267fa9343d55355e69e1bfce018e30a067579d821849e65",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SAVE-OWNERSHIP.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SAVE-OWNERSHIP.md",
       "deployedBytes": 5400,
       "deployedSha256": "21c9ba5d50141c44a267fa9343d55355e69e1bfce018e30a067579d821849e65",
       "transform": "copy"
@@ -602,16 +602,34 @@
       "sourcePath": "docs/SEARING-SKIN.md",
       "sourceBytes": 4529,
       "sourceSha256": "77b39c9dd34147f556b3140aa7085b73cf0842cbf0723398c83d97edf4c687a1",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SEARING-SKIN.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SEARING-SKIN.md",
       "deployedBytes": 4529,
       "deployedSha256": "77b39c9dd34147f556b3140aa7085b73cf0842cbf0723398c83d97edf4c687a1",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SORCERY-REGRESSION-ADAPTATIONS.md",
+      "sourceBytes": 2716,
+      "sourceSha256": "dc3cd405d5f776abfb9b384faf7eb516d469c2252a5469aa05559be5b2e85e1a",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SORCERY-REGRESSION-ADAPTATIONS.md",
+      "deployedBytes": 2716,
+      "deployedSha256": "dc3cd405d5f776abfb9b384faf7eb516d469c2252a5469aa05559be5b2e85e1a",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SORCERY.md",
+      "sourceBytes": 5334,
+      "sourceSha256": "e89c726ece3a78aa4de8103b50e69cb287e269441548bccfa2347b21976dd7c6",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SORCERY.md",
+      "deployedBytes": 5334,
+      "deployedSha256": "e89c726ece3a78aa4de8103b50e69cb287e269441548bccfa2347b21976dd7c6",
       "transform": "copy"
     },
     {
       "sourcePath": "docs/SOULBIND-LEDGER.md",
       "sourceBytes": 12243,
       "sourceSha256": "3febc85fd6023160bfcc2ff72a01850ad537603212e1a7a95547340ae7b3cf9e",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND-LEDGER.md",
       "deployedBytes": 12243,
       "deployedSha256": "3febc85fd6023160bfcc2ff72a01850ad537603212e1a7a95547340ae7b3cf9e",
       "transform": "copy"
@@ -620,7 +638,7 @@
       "sourcePath": "docs/SOULBIND.md",
       "sourceBytes": 4832,
       "sourceSha256": "131fcf7f530584013b39492d509bd8db489983698aa268dc6f83fa4f6f19419d",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND.md",
       "deployedBytes": 4832,
       "deployedSha256": "131fcf7f530584013b39492d509bd8db489983698aa268dc6f83fa4f6f19419d",
       "transform": "copy"
@@ -629,7 +647,7 @@
       "sourcePath": "docs/SPIRIT-POTION.md",
       "sourceBytes": 6834,
       "sourceSha256": "cdb59e80889859f19139593fe41b36c7e365e9fc2f214daf5e8f27db5e2bfd99",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SPIRIT-POTION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SPIRIT-POTION.md",
       "deployedBytes": 6834,
       "deployedSha256": "cdb59e80889859f19139593fe41b36c7e365e9fc2f214daf5e8f27db5e2bfd99",
       "transform": "copy"
@@ -638,7 +656,7 @@
       "sourcePath": "docs/SUPPLIES.md",
       "sourceBytes": 9503,
       "sourceSha256": "3952703522d9b4116706e4c157767b2a2f014d60f93e8d8b835d0a30b6f8c58b",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SUPPLIES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SUPPLIES.md",
       "deployedBytes": 9503,
       "deployedSha256": "3952703522d9b4116706e4c157767b2a2f014d60f93e8d8b835d0a30b6f8c58b",
       "transform": "copy"
@@ -647,7 +665,7 @@
       "sourcePath": "docs/TRAINING-LEDGER.md",
       "sourceBytes": 11964,
       "sourceSha256": "035e781655c8b1bc087bd3eebccb801c50f83084d4088c92868d2596ce74079e",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING-LEDGER.md",
       "deployedBytes": 11964,
       "deployedSha256": "035e781655c8b1bc087bd3eebccb801c50f83084d4088c92868d2596ce74079e",
       "transform": "copy"
@@ -656,7 +674,7 @@
       "sourcePath": "docs/TRAINING-UI.md",
       "sourceBytes": 2958,
       "sourceSha256": "c6f8cac75308e01e170393ffb75c546af712e3d05b63c5ef06b6fcc0c2b5e0ff",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING-UI.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING-UI.md",
       "deployedBytes": 2958,
       "deployedSha256": "c6f8cac75308e01e170393ffb75c546af712e3d05b63c5ef06b6fcc0c2b5e0ff",
       "transform": "copy"
@@ -665,7 +683,7 @@
       "sourcePath": "docs/TRAINING.md",
       "sourceBytes": 4584,
       "sourceSha256": "8d4bc191f6439dcc1351dc005ad62e3beaac88ee0ab6022b02d8c18f905722db",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING.md",
       "deployedBytes": 4584,
       "deployedSha256": "8d4bc191f6439dcc1351dc005ad62e3beaac88ee0ab6022b02d8c18f905722db",
       "transform": "copy"
@@ -674,7 +692,7 @@
       "sourcePath": "docs/VITALS.md",
       "sourceBytes": 7685,
       "sourceSha256": "abb5f316712c24f70e5fc0b3299a288b8155a9fed867acd08df19c48a4c0b21c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/VITALS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/VITALS.md",
       "deployedBytes": 7685,
       "deployedSha256": "abb5f316712c24f70e5fc0b3299a288b8155a9fed867acd08df19c48a4c0b21c",
       "transform": "copy"
@@ -685,14 +703,14 @@
       "sourceSha256": "d4b46bca46fe6e6891751153e4af9c62d1ba0577701390766848e69426d7b739",
       "deployedPath": "index.html",
       "deployedBytes": 944,
-      "deployedSha256": "284ec98531dca4b0a6630d43fb3bca6c37d8e49ddffdfb1a4c992a2319d83874",
+      "deployedSha256": "d23304c4663062171ffae7709e93dab60d0d898f32540062d1bceb85e833d72d",
       "transform": "root-entry"
     },
     {
       "sourcePath": "public/assets/ART-PROVENANCE.txt",
       "sourceBytes": 1601,
       "sourceSha256": "8caa92ca2cbfda0182580c0ce7f231d7040242c215496a936d768d0e55d36fcc",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/ART-PROVENANCE.txt",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/ART-PROVENANCE.txt",
       "deployedBytes": 1601,
       "deployedSha256": "8caa92ca2cbfda0182580c0ce7f231d7040242c215496a936d768d0e55d36fcc",
       "transform": "copy"
@@ -701,7 +719,7 @@
       "sourcePath": "public/assets/mark.svg",
       "sourceBytes": 231,
       "sourceSha256": "5c77ea5ab492bb31f6da15812f0fec81cba084453d7405942c12d1e3a769578b",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/mark.svg",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/mark.svg",
       "deployedBytes": 231,
       "deployedSha256": "5c77ea5ab492bb31f6da15812f0fec81cba084453d7405942c12d1e3a769578b",
       "transform": "copy"
@@ -710,7 +728,7 @@
       "sourcePath": "public/assets/twilight-arena.png",
       "sourceBytes": 2727980,
       "sourceSha256": "d7e0bfe687bf3cb67ef2a72604fa52e452d372eee982319f686252a0c9e16c1b",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/twilight-arena.png",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/twilight-arena.png",
       "deployedBytes": 2727980,
       "deployedSha256": "d7e0bfe687bf3cb67ef2a72604fa52e452d372eee982319f686252a0c9e16c1b",
       "transform": "copy"
@@ -719,34 +737,34 @@
       "sourcePath": "public/assets/twilight-enemies.png",
       "sourceBytes": 2555436,
       "sourceSha256": "d1c3b0a714d21d6b84962e9f05c2d13f2bc781159b37f061818d5b68c4e9c7ef",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/twilight-enemies.png",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/twilight-enemies.png",
       "deployedBytes": 2555436,
       "deployedSha256": "d1c3b0a714d21d6b84962e9f05c2d13f2bc781159b37f061818d5b68c4e9c7ef",
       "transform": "copy"
     },
     {
       "sourcePath": "src/abilities.js",
-      "sourceBytes": 32722,
-      "sourceSha256": "fb21fc561a90f037326c964a73a41f9296d5616a59b777bebc809332cc379c21",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/abilities.js",
-      "deployedBytes": 32722,
-      "deployedSha256": "fb21fc561a90f037326c964a73a41f9296d5616a59b777bebc809332cc379c21",
+      "sourceBytes": 35318,
+      "sourceSha256": "b0dee834c4a9ba196b9bc4b0834825c6234880b7b4dc135cabf4a5414452904c",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/abilities.js",
+      "deployedBytes": 35318,
+      "deployedSha256": "b0dee834c4a9ba196b9bc4b0834825c6234880b7b4dc135cabf4a5414452904c",
       "transform": "copy"
     },
     {
       "sourcePath": "src/app.js",
-      "sourceBytes": 166474,
-      "sourceSha256": "fdee5020241f4563bea488a5268c6d99e69dd34584ae32830bcc0e8a515e59bc",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/app.js",
-      "deployedBytes": 166474,
-      "deployedSha256": "fdee5020241f4563bea488a5268c6d99e69dd34584ae32830bcc0e8a515e59bc",
+      "sourceBytes": 170165,
+      "sourceSha256": "ef6020f6c1fb19d1f1ba86a285aa7a3e3936e33b980c3ab0da27bd986580e276",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/app.js",
+      "deployedBytes": 170165,
+      "deployedSha256": "ef6020f6c1fb19d1f1ba86a285aa7a3e3936e33b980c3ab0da27bd986580e276",
       "transform": "copy"
     },
     {
       "sourcePath": "src/arena.js",
       "sourceBytes": 27927,
       "sourceSha256": "7e3e58ede623f8d9d04f714160dd2c564e4de3ab2cd8121fa3ea4dee8b0c40c9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/arena.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/arena.js",
       "deployedBytes": 27927,
       "deployedSha256": "7e3e58ede623f8d9d04f714160dd2c564e4de3ab2cd8121fa3ea4dee8b0c40c9",
       "transform": "copy"
@@ -755,7 +773,7 @@
       "sourcePath": "src/armory.js",
       "sourceBytes": 7806,
       "sourceSha256": "0e86dc3b11dac2f7635e46d0cb71b5894bf966bd44b2234425d4d9c050d6ae69",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/armory.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/armory.js",
       "deployedBytes": 7806,
       "deployedSha256": "0e86dc3b11dac2f7635e46d0cb71b5894bf966bd44b2234425d4d9c050d6ae69",
       "transform": "copy"
@@ -764,7 +782,7 @@
       "sourcePath": "src/art.js",
       "sourceBytes": 4387,
       "sourceSha256": "fafe4f2984b7d204e5bb75696ddbbbfed17f29f3021c0a1ceed0c580ec5870f0",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/art.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/art.js",
       "deployedBytes": 4387,
       "deployedSha256": "fafe4f2984b7d204e5bb75696ddbbbfed17f29f3021c0a1ceed0c580ec5870f0",
       "transform": "copy"
@@ -773,7 +791,7 @@
       "sourcePath": "src/audit-history.js",
       "sourceBytes": 6682,
       "sourceSha256": "380cc36b0cb2b294fb2487b3c5f74f1e766ccb6ab7a8cd2c87a23e929e18af9a",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/audit-history.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/audit-history.js",
       "deployedBytes": 6682,
       "deployedSha256": "380cc36b0cb2b294fb2487b3c5f74f1e766ccb6ab7a8cd2c87a23e929e18af9a",
       "transform": "copy"
@@ -782,25 +800,25 @@
       "sourcePath": "src/combat-accuracy.js",
       "sourceBytes": 1746,
       "sourceSha256": "87b4698e9b89b0a693d4750a5ac3f5d95c9ddb3c081229679dd4edcae67edd94",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-accuracy.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-accuracy.js",
       "deployedBytes": 1746,
       "deployedSha256": "87b4698e9b89b0a693d4750a5ac3f5d95c9ddb3c081229679dd4edcae67edd94",
       "transform": "copy"
     },
     {
       "sourcePath": "src/combat-offense.js",
-      "sourceBytes": 2085,
-      "sourceSha256": "f62d7e77fe733ba2bcbc3b56758cb1c5cedfe430559811e6f17de1f5b8dfa654",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-offense.js",
-      "deployedBytes": 2085,
-      "deployedSha256": "f62d7e77fe733ba2bcbc3b56758cb1c5cedfe430559811e6f17de1f5b8dfa654",
+      "sourceBytes": 2310,
+      "sourceSha256": "f7e4b128805ff36360707a351df4f1b281a6a00aa0bfa458bf110e6b51727ec4",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-offense.js",
+      "deployedBytes": 2310,
+      "deployedSha256": "f7e4b128805ff36360707a351df4f1b281a6a00aa0bfa458bf110e6b51727ec4",
       "transform": "copy"
     },
     {
       "sourcePath": "src/combat-resources.js",
       "sourceBytes": 2624,
       "sourceSha256": "330796df36e3d2644354e5a5cdaa920b8b72262aceb15a36a4095b694743da51",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-resources.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-resources.js",
       "deployedBytes": 2624,
       "deployedSha256": "330796df36e3d2644354e5a5cdaa920b8b72262aceb15a36a4095b694743da51",
       "transform": "copy"
@@ -809,7 +827,7 @@
       "sourcePath": "src/command-ledger.js",
       "sourceBytes": 12626,
       "sourceSha256": "d1e7b279e7c589155ffba7244e450c7cf696b82e28297485a8732360f7a277d9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/command-ledger.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/command-ledger.js",
       "deployedBytes": 12626,
       "deployedSha256": "d1e7b279e7c589155ffba7244e450c7cf696b82e28297485a8732360f7a277d9",
       "transform": "copy"
@@ -818,7 +836,7 @@
       "sourcePath": "src/compat/arena-schema1.js",
       "sourceBytes": 21794,
       "sourceSha256": "cc6261c10308697f8ccb7862989d9d24590fe2c93e76cc0a966658722e259329",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/arena-schema1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/arena-schema1.js",
       "deployedBytes": 21794,
       "deployedSha256": "cc6261c10308697f8ccb7862989d9d24590fe2c93e76cc0a966658722e259329",
       "transform": "copy"
@@ -827,7 +845,7 @@
       "sourcePath": "src/compat/training-adept-v1.js",
       "sourceBytes": 6373,
       "sourceSha256": "ca205f467fea1522be2a7ed8344f5d5c020317cc47709f0557717a5a5c14f200",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-adept-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-adept-v1.js",
       "deployedBytes": 6373,
       "deployedSha256": "ca205f467fea1522be2a7ed8344f5d5c020317cc47709f0557717a5a5c14f200",
       "transform": "copy"
@@ -836,7 +854,7 @@
       "sourcePath": "src/compat/training-level-capped-v1.js",
       "sourceBytes": 23855,
       "sourceSha256": "bb82cd8ac3bacc2c1fb479b1f94401afe4e41702f2042c7850c8870cd82d7651",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-level-capped-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-level-capped-v1.js",
       "deployedBytes": 23855,
       "deployedSha256": "bb82cd8ac3bacc2c1fb479b1f94401afe4e41702f2042c7850c8870cd82d7651",
       "transform": "copy"
@@ -845,7 +863,7 @@
       "sourcePath": "src/compat/training-shared-v1.js",
       "sourceBytes": 7299,
       "sourceSha256": "ece4283ddb2047c5d3c4a56ab83927e7a5cca392e80450f775ff8644a854e72e",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-shared-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-shared-v1.js",
       "deployedBytes": 7299,
       "deployedSha256": "ece4283ddb2047c5d3c4a56ab83927e7a5cca392e80450f775ff8644a854e72e",
       "transform": "copy"
@@ -854,7 +872,7 @@
       "sourcePath": "src/curative.js",
       "sourceBytes": 1614,
       "sourceSha256": "7407c554d77b5bf8d45deb478ad79736ceaa7d8f4a8ffaf418262bb258d1a3f4",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/curative.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/curative.js",
       "deployedBytes": 1614,
       "deployedSha256": "7407c554d77b5bf8d45deb478ad79736ceaa7d8f4a8ffaf418262bb258d1a3f4",
       "transform": "copy"
@@ -862,26 +880,26 @@
     {
       "sourcePath": "src/data.js",
       "sourceBytes": 7034,
-      "sourceSha256": "7f8550727941abd4630d26839c04d5e0638d93979ce226b15524dcaf03169c05",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/data.js",
+      "sourceSha256": "5eef5ce726e926a573b243936c0afd94d99985de29c85a2a174d11ff877f112b",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/data.js",
       "deployedBytes": 7034,
-      "deployedSha256": "7f8550727941abd4630d26839c04d5e0638d93979ce226b15524dcaf03169c05",
+      "deployedSha256": "5eef5ce726e926a573b243936c0afd94d99985de29c85a2a174d11ff877f112b",
       "transform": "copy"
     },
     {
       "sourcePath": "src/engine.js",
-      "sourceBytes": 88503,
-      "sourceSha256": "350511a5dba2e3b7e9addc41e1192651dbee3af57877a0995ac74ca4776adfd6",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/engine.js",
-      "deployedBytes": 88503,
-      "deployedSha256": "350511a5dba2e3b7e9addc41e1192651dbee3af57877a0995ac74ca4776adfd6",
+      "sourceBytes": 91137,
+      "sourceSha256": "f676de05fa4cd89cca53796ca62700abef505553d0436cf58b9916d000cef26d",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/engine.js",
+      "deployedBytes": 91137,
+      "deployedSha256": "f676de05fa4cd89cca53796ca62700abef505553d0436cf58b9916d000cef26d",
       "transform": "copy"
     },
     {
       "sourcePath": "src/equipment-generation.js",
       "sourceBytes": 9118,
       "sourceSha256": "5aa4ed74f0d97578418c6d408fb674ba7525ae45c2344c6ae9f6979b6ae20c48",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/equipment-generation.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/equipment-generation.js",
       "deployedBytes": 9118,
       "deployedSha256": "5aa4ed74f0d97578418c6d408fb674ba7525ae45c2344c6ae9f6979b6ae20c48",
       "transform": "copy"
@@ -890,7 +908,7 @@
       "sourcePath": "src/grindfest.js",
       "sourceBytes": 18043,
       "sourceSha256": "834b993c713e5023dc6ed4a639342342f6318f79e9ca3110b03a281ccb1f3ce4",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/grindfest.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/grindfest.js",
       "deployedBytes": 18043,
       "deployedSha256": "834b993c713e5023dc6ed4a639342342f6318f79e9ca3110b03a281ccb1f3ce4",
       "transform": "copy"
@@ -899,7 +917,7 @@
       "sourcePath": "src/keyboard.js",
       "sourceBytes": 2673,
       "sourceSha256": "497557a94dc1ff73e7f1e0d9cf26adf971aaa9c8e732e2c2016521a20d6511a9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/keyboard.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/keyboard.js",
       "deployedBytes": 2673,
       "deployedSha256": "497557a94dc1ff73e7f1e0d9cf26adf971aaa9c8e732e2c2016521a20d6511a9",
       "transform": "copy"
@@ -908,7 +926,7 @@
       "sourcePath": "src/leveling.js",
       "sourceBytes": 2231,
       "sourceSha256": "3a3fde81ae47685cad12b44dba273c211a9e901dba42850666a94541d7bf5086",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/leveling.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/leveling.js",
       "deployedBytes": 2231,
       "deployedSha256": "3a3fde81ae47685cad12b44dba273c211a9e901dba42850666a94541d7bf5086",
       "transform": "copy"
@@ -917,7 +935,7 @@
       "sourcePath": "src/navigation.js",
       "sourceBytes": 600,
       "sourceSha256": "40ed88ae31fd143c579f524d301af7b2804c4dd6f0df841328eba03d17ed020c",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/navigation.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/navigation.js",
       "deployedBytes": 600,
       "deployedSha256": "40ed88ae31fd143c579f524d301af7b2804c4dd6f0df841328eba03d17ed020c",
       "transform": "copy"
@@ -926,7 +944,7 @@
       "sourcePath": "src/progression.js",
       "sourceBytes": 6686,
       "sourceSha256": "ad31dc8c6bf8d86b79381b0274e0fd8739b7d6989a1cf9d59ccecbc311e277a9",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/progression.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/progression.js",
       "deployedBytes": 6686,
       "deployedSha256": "ad31dc8c6bf8d86b79381b0274e0fd8739b7d6989a1cf9d59ccecbc311e277a9",
       "transform": "copy"
@@ -935,16 +953,16 @@
       "sourcePath": "src/release.js",
       "sourceBytes": 152,
       "sourceSha256": "5bc3bf31d0b635d4d8190a8ee6641f54fe6702593a71c3a4990881d78d28b20a",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/release.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/release.js",
       "deployedBytes": 272,
-      "deployedSha256": "8539f26f466ba48aa083ac8ae937a074afb4233012b93664dbf2f671e328965e",
+      "deployedSha256": "8186ed7537d15e20c19e363acb81b4323ff42b041146cf0709e9127846d3b0d4",
       "transform": "release-metadata"
     },
     {
       "sourcePath": "src/restoratives.js",
       "sourceBytes": 3196,
       "sourceSha256": "8b16f9a1e896b4cc777fd85af93266bcdbe504a4dca6f239cf06529e4a3ea25f",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/restoratives.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/restoratives.js",
       "deployedBytes": 3196,
       "deployedSha256": "8b16f9a1e896b4cc777fd85af93266bcdbe504a4dca6f239cf06529e4a3ea25f",
       "transform": "copy"
@@ -953,7 +971,7 @@
       "sourcePath": "src/save-owner.js",
       "sourceBytes": 4250,
       "sourceSha256": "fad16178908746788c22e647ce3ca76ce6b1394b30ed77cb170908d4cc3cf8de",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/save-owner.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/save-owner.js",
       "deployedBytes": 4250,
       "deployedSha256": "fad16178908746788c22e647ce3ca76ce6b1394b30ed77cb170908d4cc3cf8de",
       "transform": "copy"
@@ -962,7 +980,7 @@
       "sourcePath": "src/searing.js",
       "sourceBytes": 5984,
       "sourceSha256": "423a81c59b1d7e8eb77859248266c81e96766ef9ce8dd0acdf331ef52182533a",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/searing.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/searing.js",
       "deployedBytes": 5984,
       "deployedSha256": "423a81c59b1d7e8eb77859248266c81e96766ef9ce8dd0acdf331ef52182533a",
       "transform": "copy"
@@ -971,7 +989,7 @@
       "sourcePath": "src/soulbinding.js",
       "sourceBytes": 19128,
       "sourceSha256": "0b7921339e6ce28a4ae414cd946594819a02958723d9bd7304fb88f48d439fb1",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/soulbinding.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/soulbinding.js",
       "deployedBytes": 19128,
       "deployedSha256": "0b7921339e6ce28a4ae414cd946594819a02958723d9bd7304fb88f48d439fb1",
       "transform": "copy"
@@ -980,7 +998,7 @@
       "sourcePath": "src/storage.js",
       "sourceBytes": 6509,
       "sourceSha256": "9f0658a422798b36bacd291ac0f949c66dccecf4de5c4758faf6d74501244ade",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/storage.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/storage.js",
       "deployedBytes": 6509,
       "deployedSha256": "9f0658a422798b36bacd291ac0f949c66dccecf4de5c4758faf6d74501244ade",
       "transform": "copy"
@@ -989,7 +1007,7 @@
       "sourcePath": "src/supplies.js",
       "sourceBytes": 12675,
       "sourceSha256": "692fdcad7f375c3223845bd111ddfd126fc20d9850ee0327cb5198732ccbd20b",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/supplies.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/supplies.js",
       "deployedBytes": 12675,
       "deployedSha256": "692fdcad7f375c3223845bd111ddfd126fc20d9850ee0327cb5198732ccbd20b",
       "transform": "copy"
@@ -998,7 +1016,7 @@
       "sourcePath": "src/training.js",
       "sourceBytes": 29557,
       "sourceSha256": "6b851d939699cd230a2522bf8058fc146d67b8ffeae4808ebb8e176bcc62d0e5",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/training.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/training.js",
       "deployedBytes": 29557,
       "deployedSha256": "6b851d939699cd230a2522bf8058fc146d67b8ffeae4808ebb8e176bcc62d0e5",
       "transform": "copy"
@@ -1007,7 +1025,7 @@
       "sourcePath": "src/vitals.js",
       "sourceBytes": 6105,
       "sourceSha256": "1a1d1afcd69a79584d9608faa453f951f3f9b3cf9f3b213c3da268fee8b1488f",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/vitals.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/vitals.js",
       "deployedBytes": 6105,
       "deployedSha256": "1a1d1afcd69a79584d9608faa453f951f3f9b3cf9f3b213c3da268fee8b1488f",
       "transform": "copy"
@@ -1016,7 +1034,7 @@
       "sourcePath": "styles.css",
       "sourceBytes": 79948,
       "sourceSha256": "4de2507074da13916ea00fa541fec485834c8523fe578801c66cd44179e44295",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/styles.css",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/styles.css",
       "deployedBytes": 79948,
       "deployedSha256": "4de2507074da13916ea00fa541fec485834c8523fe578801c66cd44179e44295",
       "transform": "copy"
@@ -1025,417 +1043,417 @@
   "entrypoints": [
     {
       "kind": "icon",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/mark.svg",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/mark.svg"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/mark.svg",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/mark.svg"
     },
     {
       "kind": "stylesheet",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/styles.css",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/styles.css"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/styles.css",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/styles.css"
     },
     {
       "kind": "module",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/app.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/app.js"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/app.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/app.js"
     }
   ],
   "moduleGraph": [
     {
       "sourcePath": "src/abilities.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/abilities.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/abilities.js",
       "imports": [
         {
           "specifier": "./training.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/training.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/training.js"
         }
       ]
     },
     {
       "sourcePath": "src/app.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/app.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/app.js",
       "imports": [
         {
           "specifier": "./abilities.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/abilities.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/abilities.js"
         },
         {
           "specifier": "./armory.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/armory.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/armory.js"
         },
         {
           "specifier": "./art.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/art.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/art.js"
         },
         {
           "specifier": "./combat-resources.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-resources.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-resources.js"
         },
         {
           "specifier": "./curative.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/curative.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/curative.js"
         },
         {
           "specifier": "./engine.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/engine.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/engine.js"
         },
         {
           "specifier": "./equipment-generation.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/equipment-generation.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/equipment-generation.js"
         },
         {
           "specifier": "./grindfest.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/grindfest.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/grindfest.js"
         },
         {
           "specifier": "./keyboard.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/keyboard.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/keyboard.js"
         },
         {
           "specifier": "./leveling.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/leveling.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/leveling.js"
         },
         {
           "specifier": "./navigation.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/navigation.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/navigation.js"
         },
         {
           "specifier": "./release.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/release.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/release.js"
         },
         {
           "specifier": "./restoratives.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/restoratives.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/restoratives.js"
         },
         {
           "specifier": "./save-owner.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/save-owner.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/save-owner.js"
         },
         {
           "specifier": "./soulbinding.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/soulbinding.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/soulbinding.js"
         },
         {
           "specifier": "./storage.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/storage.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/storage.js"
         },
         {
           "specifier": "./supplies.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/supplies.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/supplies.js"
         },
         {
           "specifier": "./training.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/training.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/training.js"
         },
         {
           "specifier": "./vitals.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/vitals.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/vitals.js"
         }
       ]
     },
     {
       "sourcePath": "src/arena.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/arena.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/arena.js",
       "imports": [
         {
           "specifier": "./compat/arena-schema1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/arena-schema1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/arena-schema1.js"
         }
       ]
     },
     {
       "sourcePath": "src/armory.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/armory.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/armory.js",
       "imports": []
     },
     {
       "sourcePath": "src/art.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/art.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/art.js",
       "imports": []
     },
     {
       "sourcePath": "src/audit-history.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/audit-history.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/audit-history.js",
       "imports": [
         {
           "specifier": "./arena.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/arena.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/arena.js"
         },
         {
           "specifier": "./command-ledger.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/command-ledger.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/command-ledger.js"
         }
       ]
     },
     {
       "sourcePath": "src/combat-accuracy.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-accuracy.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-accuracy.js",
       "imports": []
     },
     {
       "sourcePath": "src/combat-offense.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-offense.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-offense.js",
       "imports": []
     },
     {
       "sourcePath": "src/combat-resources.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-resources.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-resources.js",
       "imports": []
     },
     {
       "sourcePath": "src/command-ledger.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/command-ledger.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/command-ledger.js",
       "imports": [
         {
           "specifier": "./data.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/data.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/data.js"
         }
       ]
     },
     {
       "sourcePath": "src/compat/arena-schema1.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/arena-schema1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/arena-schema1.js",
       "imports": []
     },
     {
       "sourcePath": "src/compat/training-adept-v1.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-adept-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-adept-v1.js",
       "imports": []
     },
     {
       "sourcePath": "src/compat/training-level-capped-v1.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-level-capped-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-level-capped-v1.js",
       "imports": [
         {
           "specifier": "./training-adept-v1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-adept-v1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-adept-v1.js"
         },
         {
           "specifier": "./training-shared-v1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-shared-v1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-shared-v1.js"
         }
       ]
     },
     {
       "sourcePath": "src/compat/training-shared-v1.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-shared-v1.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-shared-v1.js",
       "imports": []
     },
     {
       "sourcePath": "src/curative.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/curative.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/curative.js",
       "imports": []
     },
     {
       "sourcePath": "src/data.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/data.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/data.js",
       "imports": []
     },
     {
       "sourcePath": "src/engine.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/engine.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/engine.js",
       "imports": [
         {
           "specifier": "./abilities.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/abilities.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/abilities.js"
         },
         {
           "specifier": "./arena.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/arena.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/arena.js"
         },
         {
           "specifier": "./armory.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/armory.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/armory.js"
         },
         {
           "specifier": "./audit-history.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/audit-history.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/audit-history.js"
         },
         {
           "specifier": "./combat-accuracy.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-accuracy.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-accuracy.js"
         },
         {
           "specifier": "./combat-offense.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-offense.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-offense.js"
         },
         {
           "specifier": "./combat-resources.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/combat-resources.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/combat-resources.js"
         },
         {
           "specifier": "./command-ledger.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/command-ledger.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/command-ledger.js"
         },
         {
           "specifier": "./compat/arena-schema1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/arena-schema1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/arena-schema1.js"
         },
         {
           "specifier": "./curative.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/curative.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/curative.js"
         },
         {
           "specifier": "./data.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/data.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/data.js"
         },
         {
           "specifier": "./equipment-generation.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/equipment-generation.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/equipment-generation.js"
         },
         {
           "specifier": "./grindfest.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/grindfest.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/grindfest.js"
         },
         {
           "specifier": "./leveling.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/leveling.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/leveling.js"
         },
         {
           "specifier": "./progression.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/progression.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/progression.js"
         },
         {
           "specifier": "./restoratives.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/restoratives.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/restoratives.js"
         },
         {
           "specifier": "./searing.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/searing.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/searing.js"
         },
         {
           "specifier": "./soulbinding.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/soulbinding.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/soulbinding.js"
         },
         {
           "specifier": "./supplies.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/supplies.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/supplies.js"
         },
         {
           "specifier": "./training.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/training.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/training.js"
         },
         {
           "specifier": "./vitals.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/vitals.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/vitals.js"
         }
       ]
     },
     {
       "sourcePath": "src/equipment-generation.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/equipment-generation.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/equipment-generation.js",
       "imports": []
     },
     {
       "sourcePath": "src/grindfest.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/grindfest.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/grindfest.js",
       "imports": [
         {
           "specifier": "./arena.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/arena.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/arena.js"
         }
       ]
     },
     {
       "sourcePath": "src/keyboard.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/keyboard.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/keyboard.js",
       "imports": []
     },
     {
       "sourcePath": "src/leveling.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/leveling.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/leveling.js",
       "imports": [
         {
           "specifier": "./progression.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/progression.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/progression.js"
         }
       ]
     },
     {
       "sourcePath": "src/navigation.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/navigation.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/navigation.js",
       "imports": []
     },
     {
       "sourcePath": "src/progression.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/progression.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/progression.js",
       "imports": []
     },
     {
       "sourcePath": "src/release.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/release.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/release.js",
       "imports": []
     },
     {
       "sourcePath": "src/restoratives.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/restoratives.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/restoratives.js",
       "imports": []
     },
     {
       "sourcePath": "src/save-owner.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/save-owner.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/save-owner.js",
       "imports": []
     },
     {
       "sourcePath": "src/searing.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/searing.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/searing.js",
       "imports": []
     },
     {
       "sourcePath": "src/soulbinding.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/soulbinding.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/soulbinding.js",
       "imports": []
     },
     {
       "sourcePath": "src/storage.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/storage.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/storage.js",
       "imports": [
         {
           "specifier": "./engine.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/engine.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/engine.js"
         },
         {
           "specifier": "./save-owner.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/save-owner.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/save-owner.js"
         }
       ]
     },
     {
       "sourcePath": "src/supplies.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/supplies.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/supplies.js",
       "imports": []
     },
     {
       "sourcePath": "src/training.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/training.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/training.js",
       "imports": [
         {
           "specifier": "./compat/training-adept-v1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-adept-v1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-adept-v1.js"
         },
         {
           "specifier": "./compat/training-level-capped-v1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-level-capped-v1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-level-capped-v1.js"
         },
         {
           "specifier": "./compat/training-shared-v1.js",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/compat/training-shared-v1.js"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/compat/training-shared-v1.js"
         }
       ]
     },
     {
       "sourcePath": "src/vitals.js",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/src/vitals.js",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/src/vitals.js",
       "imports": []
     }
   ],
   "cssReferences": [
     {
       "sourcePath": "styles.css",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/styles.css",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/styles.css",
       "references": [
         {
           "url": "./public/assets/twilight-arena.png",
-          "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/twilight-arena.png"
+          "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/twilight-arena.png"
         }
       ]
     }
@@ -1443,345 +1461,345 @@
   "runtimeReferences": [
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/twilight-enemies.png",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/public/assets/twilight-enemies.png"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/twilight-enemies.png",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/public/assets/twilight-enemies.png"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/EQUIPMENT-GENERATION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/EQUIPMENT-GENERATION.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/EQUIPMENT-GENERATION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/EQUIPMENT-GENERATION.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND-LEDGER.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND-LEDGER.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SOULBIND-LEDGER.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SOULBIND-LEDGER.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING-LEDGER.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING-LEDGER.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING-LEDGER.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/VITALS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/VITALS.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/VITALS.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/VITALS.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITIES.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITIES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITIES.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/PROGRESSION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/PROGRESSION.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/PROGRESSION.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/PROGRESSION.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RULES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RULES.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RULES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RULES.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RULES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RULES.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RULES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RULES.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/BACKLOG.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/BACKLOG.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/BACKLOG.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/BACKLOG.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA.md"
     },
     {
       "sourcePath": "src/app.js",
-      "url": "./releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SUPPLIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SUPPLIES.md"
+      "url": "./releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SUPPLIES.md",
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SUPPLIES.md"
     }
   ],
   "documentReferences": [
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "COMPLETE-TANKS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMPLETE-TANKS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMPLETE-TANKS.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "MANIFEST-DESTINY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "MASTERY-SLOTS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MASTERY-SLOTS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MASTERY-SLOTS.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "./CURATIVE.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/CURATIVE.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/CURATIVE.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "COMPLETE-TANKS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMPLETE-TANKS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMPLETE-TANKS.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "FULL-ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "COMPLETE-CURE.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMPLETE-CURE.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMPLETE-CURE.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "POTION-ABILITIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/POTION-ABILITIES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/POTION-ABILITIES.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "MASTERY-SLOTS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MASTERY-SLOTS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MASTERY-SLOTS.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "SPIRIT-POTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SPIRIT-POTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SPIRIT-POTION.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "MANIFEST-DESTINY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md"
     },
     {
       "sourcePath": "docs/ABILITIES.md",
       "url": "ABILITY-SLOT-PICKER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-SLOT-PICKER.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-SLOT-PICKER.md"
     },
     {
       "sourcePath": "docs/ABILITY-BOOST.md",
       "url": "FULL-ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/ABILITY-SLOT-PICKER.md",
       "url": "NARROW-FOCUS-INSETS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/NARROW-FOCUS-INSETS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/NARROW-FOCUS-INSETS.md"
     },
     {
       "sourcePath": "docs/ARENA-RETENTION.md",
       "url": "ARENA.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA.md"
     },
     {
       "sourcePath": "docs/ARENA.md",
       "url": "ORDINARY-ARENAS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ORDINARY-ARENAS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ORDINARY-ARENAS.md"
     },
     {
       "sourcePath": "docs/ARMORY-ORGANIZATION.md",
       "url": "ARMORY-VISIBLE-SELECTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARMORY-VISIBLE-SELECTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARMORY-VISIBLE-SELECTION.md"
     },
     {
       "sourcePath": "docs/CHECKPOINT-18.md",
       "url": "./COMBAT-ACCURACY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-ACCURACY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-ACCURACY.md"
     },
     {
       "sourcePath": "docs/COMBAT-OFFENSE.md",
       "url": "./COMBAT-ACCURACY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-ACCURACY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-ACCURACY.md"
     },
     {
       "sourcePath": "docs/COMPLETE-TANKS.md",
       "url": "FULL-ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/CONFLAGRATION.md",
       "url": "MASTERY-SLOTS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MASTERY-SLOTS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MASTERY-SLOTS.md"
     },
     {
       "sourcePath": "docs/FIRE-PREVIEW.md",
       "url": "ABILITY-SLOT-PICKER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-SLOT-PICKER.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-SLOT-PICKER.md"
     },
     {
       "sourcePath": "docs/GRINDFEST.md",
       "url": "./GRINDFEST-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/GRINDFEST-LEDGER.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/GRINDFEST-LEDGER.md"
     },
     {
       "sourcePath": "docs/MASTERY-SLOTS.md",
       "url": "MANIFEST-DESTINY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md"
     },
     {
       "sourcePath": "docs/POTION-ABILITIES.md",
       "url": "SPIRIT-POTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SPIRIT-POTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SPIRIT-POTION.md"
     },
     {
       "sourcePath": "docs/RELEASE-DEPLOYMENT.md",
       "url": "SAVE-OWNERSHIP.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SAVE-OWNERSHIP.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SAVE-OWNERSHIP.md"
     },
     {
       "sourcePath": "docs/RESTORATIVES.md",
       "url": "POTION-ABILITIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/POTION-ABILITIES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/POTION-ABILITIES.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./VITALS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/VITALS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/VITALS.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./COMBAT-OFFENSE.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-OFFENSE.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-OFFENSE.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./BACKLOG.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/BACKLOG.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/BACKLOG.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./PROGRESSION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/PROGRESSION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/PROGRESSION.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./ARENA.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./ARMORY-ORGANIZATION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARMORY-ORGANIZATION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARMORY-ORGANIZATION.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./COMBAT-RESOURCES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-RESOURCES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-RESOURCES.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./COMBAT-OFFENSE.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMBAT-OFFENSE.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMBAT-OFFENSE.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./EQUIPMENT-GENERATION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/EQUIPMENT-GENERATION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/EQUIPMENT-GENERATION.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./RESTORATIVES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/RESTORATIVES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/RESTORATIVES.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./SUPPLIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SUPPLIES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SUPPLIES.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./ABILITIES.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITIES.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITIES.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./VITALS.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/VITALS.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/VITALS.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./AUDIT-RETENTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/AUDIT-RETENTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/AUDIT-RETENTION.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./COMMAND-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/COMMAND-LEDGER.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/COMMAND-LEDGER.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "./ARENA-RETENTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ARENA-RETENTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ARENA-RETENTION.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "SEARING-SKIN.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SEARING-SKIN.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SEARING-SKIN.md"
     },
     {
       "sourcePath": "docs/RULES.md",
       "url": "SPIRIT-POTION.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/SPIRIT-POTION.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/SPIRIT-POTION.md"
     },
     {
       "sourcePath": "docs/TRAINING-LEDGER.md",
       "url": "ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/TRAINING-LEDGER.md",
       "url": "FULL-ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/TRAINING-LEDGER.md",
       "url": "MANIFEST-DESTINY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md"
     },
     {
       "sourcePath": "docs/TRAINING-LEDGER.md",
       "url": "ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/TRAINING.md",
       "url": "FULL-ABILITY-BOOST.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/FULL-ABILITY-BOOST.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/FULL-ABILITY-BOOST.md"
     },
     {
       "sourcePath": "docs/TRAINING.md",
       "url": "MANIFEST-DESTINY.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/MANIFEST-DESTINY.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/MANIFEST-DESTINY.md"
     },
     {
       "sourcePath": "docs/TRAINING.md",
       "url": "./TRAINING-LEDGER.md",
-      "deployedPath": "releases/ee5bcdd693b982f547378d91e3ada95abb545d99f166c77333caeba9a69e8038/docs/TRAINING-LEDGER.md"
+      "deployedPath": "releases/f876b01b3e33a87011b9940f4ec2d345eecfd87a2df0ffa9c7bb5d580ffd767e/docs/TRAINING-LEDGER.md"
     }
   ]
 }
