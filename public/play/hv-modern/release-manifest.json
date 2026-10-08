@@ -1,0 +1,1393 @@
+{
+  "schemaVersion": 1,
+  "buildAlgorithm": "vesper-whole-release-graph-v1",
+  "releaseId": "a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32",
+  "base": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/",
+  "publicationPolicy": {
+    "retainPreviouslyPublishedReleaseDirectories": true,
+    "retainLegacyTopLevelGraph": true,
+    "legacyTopLevelPaths": [
+      "src/",
+      "styles.css",
+      "public/",
+      "docs/"
+    ],
+    "replaceRootEntryAfterReleaseFiles": true,
+    "replaceOnlyCurrentRootFiles": [
+      "index.html",
+      "release-manifest.json"
+    ]
+  },
+  "generator": [
+    {
+      "path": "scripts/build.mjs",
+      "bytes": 268,
+      "sha256": "4e355dd010e59f7272aab014ffa2f370a50a030deca68b2ac208c10edbf9e81c"
+    },
+    {
+      "path": "scripts/release-build.mjs",
+      "bytes": 12273,
+      "sha256": "fee539367fa5126e56dc8b318aac156bae6fc984f6ec5adf7246d8d015feab39"
+    }
+  ],
+  "files": [
+    {
+      "sourcePath": "docs/ABILITIES.md",
+      "sourceBytes": 14393,
+      "sourceSha256": "3ab79169c752d853a53892144e38300ee75c87f6a43d981f6b28483b101cd54d",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITIES.md",
+      "deployedBytes": 14393,
+      "deployedSha256": "3ab79169c752d853a53892144e38300ee75c87f6a43d981f6b28483b101cd54d",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/ABILITY-BOOST.md",
+      "sourceBytes": 4304,
+      "sourceSha256": "9b8b70a47424f4d0126a1407a156185fdeee2b77fe8aa050cd9298e22e898305",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITY-BOOST.md",
+      "deployedBytes": 4304,
+      "deployedSha256": "9b8b70a47424f4d0126a1407a156185fdeee2b77fe8aa050cd9298e22e898305",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/ARENA-RETENTION.md",
+      "sourceBytes": 8441,
+      "sourceSha256": "9ce02ac6debfd21b210d9642e669d35f4018f46fd005b38af76c112c46cd7bff",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA-RETENTION.md",
+      "deployedBytes": 8441,
+      "deployedSha256": "9ce02ac6debfd21b210d9642e669d35f4018f46fd005b38af76c112c46cd7bff",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/ARENA.md",
+      "sourceBytes": 9797,
+      "sourceSha256": "53b839949547061dcaf0d47a010b445e1ab14f9763205fd7ea01ee1d95d3cce4",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA.md",
+      "deployedBytes": 9797,
+      "deployedSha256": "53b839949547061dcaf0d47a010b445e1ab14f9763205fd7ea01ee1d95d3cce4",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/ARMORY-ORGANIZATION.md",
+      "sourceBytes": 8127,
+      "sourceSha256": "00f76391cfe17dcba41f67fc4ee27df4f4cf5037daf721cfa4e5f15bf6fe741e",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARMORY-ORGANIZATION.md",
+      "deployedBytes": 8127,
+      "deployedSha256": "00f76391cfe17dcba41f67fc4ee27df4f4cf5037daf721cfa4e5f15bf6fe741e",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/AUDIT-RETENTION.md",
+      "sourceBytes": 6206,
+      "sourceSha256": "68f512ed4fed743a04ec95cbc4454bb9e15fc1862d70248cd3fa543407710093",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/AUDIT-RETENTION.md",
+      "deployedBytes": 6206,
+      "deployedSha256": "68f512ed4fed743a04ec95cbc4454bb9e15fc1862d70248cd3fa543407710093",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/BACKLOG.md",
+      "sourceBytes": 8669,
+      "sourceSha256": "0755061f08dc70964f851eb3a661fae7d90b049fa069c778318071215bc4b55e",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/BACKLOG.md",
+      "deployedBytes": 8669,
+      "deployedSha256": "0755061f08dc70964f851eb3a661fae7d90b049fa069c778318071215bc4b55e",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-01.md",
+      "sourceBytes": 2181,
+      "sourceSha256": "3637db4e87103e4cf5c73951999993cb70c9646f5bb8c0bbf8a5182085110906",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-01.md",
+      "deployedBytes": 2181,
+      "deployedSha256": "3637db4e87103e4cf5c73951999993cb70c9646f5bb8c0bbf8a5182085110906",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-02.md",
+      "sourceBytes": 1440,
+      "sourceSha256": "d25f5f5e09d14bf3e51190108d37ffef0d5a777ec5ba885966df84f4f65f1e18",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-02.md",
+      "deployedBytes": 1440,
+      "deployedSha256": "d25f5f5e09d14bf3e51190108d37ffef0d5a777ec5ba885966df84f4f65f1e18",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-03.md",
+      "sourceBytes": 1807,
+      "sourceSha256": "48e9f6a895aa36c07d00455f9c0017860f6cc1ba0e07dc3513a38116e4773b34",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-03.md",
+      "deployedBytes": 1807,
+      "deployedSha256": "48e9f6a895aa36c07d00455f9c0017860f6cc1ba0e07dc3513a38116e4773b34",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-04.md",
+      "sourceBytes": 1825,
+      "sourceSha256": "7c4ad941e58a8c18902c2a41f7b10d0d425f6fc20283be585ca083ae82252470",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-04.md",
+      "deployedBytes": 1825,
+      "deployedSha256": "7c4ad941e58a8c18902c2a41f7b10d0d425f6fc20283be585ca083ae82252470",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-05.md",
+      "sourceBytes": 1654,
+      "sourceSha256": "d4c4d5e38e86d9a74ba5051b5545bf1ad6ebf95780ac2585af6bebfde3465358",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-05.md",
+      "deployedBytes": 1654,
+      "deployedSha256": "d4c4d5e38e86d9a74ba5051b5545bf1ad6ebf95780ac2585af6bebfde3465358",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-06.md",
+      "sourceBytes": 1341,
+      "sourceSha256": "0ed168a30bc18e0d622e931e045ca1265db6789b99599effbd7bbfa2b6d4e0f1",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-06.md",
+      "deployedBytes": 1341,
+      "deployedSha256": "0ed168a30bc18e0d622e931e045ca1265db6789b99599effbd7bbfa2b6d4e0f1",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-07.md",
+      "sourceBytes": 671,
+      "sourceSha256": "653573b277fd6e265c5466506f0e33779028d3d3f067fca9a81978d57f861ce5",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-07.md",
+      "deployedBytes": 671,
+      "deployedSha256": "653573b277fd6e265c5466506f0e33779028d3d3f067fca9a81978d57f861ce5",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-08.md",
+      "sourceBytes": 1487,
+      "sourceSha256": "d7f025fa8804698017530408093d2e41190d0bd543460493b8de169c8b177057",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-08.md",
+      "deployedBytes": 1487,
+      "deployedSha256": "d7f025fa8804698017530408093d2e41190d0bd543460493b8de169c8b177057",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-09.md",
+      "sourceBytes": 2247,
+      "sourceSha256": "80a9f7820698ee45d2e4bd2eb72e0f7683964ef11dfc4fae4b6718d775889634",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-09.md",
+      "deployedBytes": 2247,
+      "deployedSha256": "80a9f7820698ee45d2e4bd2eb72e0f7683964ef11dfc4fae4b6718d775889634",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-10.md",
+      "sourceBytes": 2754,
+      "sourceSha256": "ffc4affca42e7508a9e621ed2a0510d067e126c2d6ade426f4b8a8f4866e8faa",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-10.md",
+      "deployedBytes": 2754,
+      "deployedSha256": "ffc4affca42e7508a9e621ed2a0510d067e126c2d6ade426f4b8a8f4866e8faa",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-10A.md",
+      "sourceBytes": 680,
+      "sourceSha256": "674c40ecb1a14d0581d464654b7d5e084503765fa6919baaf9e3b205945394ba",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-10A.md",
+      "deployedBytes": 680,
+      "deployedSha256": "674c40ecb1a14d0581d464654b7d5e084503765fa6919baaf9e3b205945394ba",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-11.md",
+      "sourceBytes": 1226,
+      "sourceSha256": "668cc26b9d0f4ffcb4bf01413994a8a0d1c92dc810fe83bdcfb424b670e0b06f",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-11.md",
+      "deployedBytes": 1226,
+      "deployedSha256": "668cc26b9d0f4ffcb4bf01413994a8a0d1c92dc810fe83bdcfb424b670e0b06f",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-12.md",
+      "sourceBytes": 1360,
+      "sourceSha256": "d1c0b2ddb8503e38bda3d765867afbcc3fa1a8647ecba514559fad8d2e568034",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-12.md",
+      "deployedBytes": 1360,
+      "deployedSha256": "d1c0b2ddb8503e38bda3d765867afbcc3fa1a8647ecba514559fad8d2e568034",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-13.md",
+      "sourceBytes": 2502,
+      "sourceSha256": "bbea1d27f0491eaa3ee8df28f9c2d51e53d22047010373ecf81211e176d9f5e9",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-13.md",
+      "deployedBytes": 2502,
+      "deployedSha256": "bbea1d27f0491eaa3ee8df28f9c2d51e53d22047010373ecf81211e176d9f5e9",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-13A.md",
+      "sourceBytes": 1517,
+      "sourceSha256": "a7e08b0c4c629c831f5d0f464f13d91eddb650035c49fdc99024d1c389ea3423",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-13A.md",
+      "deployedBytes": 1517,
+      "deployedSha256": "a7e08b0c4c629c831f5d0f464f13d91eddb650035c49fdc99024d1c389ea3423",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-14.md",
+      "sourceBytes": 1945,
+      "sourceSha256": "34cdd6c986c9ac8051fe1f7402db83a757ea6433d873f000f5e04b04df3a47bd",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-14.md",
+      "deployedBytes": 1945,
+      "deployedSha256": "34cdd6c986c9ac8051fe1f7402db83a757ea6433d873f000f5e04b04df3a47bd",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-14A.md",
+      "sourceBytes": 1738,
+      "sourceSha256": "4ec84fa01ebb9ab9c12d482590439cab7ea72d96fbb49356c312ee0727edcd45",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-14A.md",
+      "deployedBytes": 1738,
+      "deployedSha256": "4ec84fa01ebb9ab9c12d482590439cab7ea72d96fbb49356c312ee0727edcd45",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-15.md",
+      "sourceBytes": 2059,
+      "sourceSha256": "a9d60c30ff963b5fe761280bbeb887b4748e9ec931683f08c3f0bb910ebc7916",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-15.md",
+      "deployedBytes": 2059,
+      "deployedSha256": "a9d60c30ff963b5fe761280bbeb887b4748e9ec931683f08c3f0bb910ebc7916",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-16.md",
+      "sourceBytes": 1701,
+      "sourceSha256": "87c75a09081436a121aa463aa5692676e248f621c160e8ef4ae7a4b6458de163",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-16.md",
+      "deployedBytes": 1701,
+      "deployedSha256": "87c75a09081436a121aa463aa5692676e248f621c160e8ef4ae7a4b6458de163",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-17.md",
+      "sourceBytes": 2417,
+      "sourceSha256": "41ca4302aabbfbbe13af3376652d707008ff11a6bde340d6e75e2b17ad5e7f9c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-17.md",
+      "deployedBytes": 2417,
+      "deployedSha256": "41ca4302aabbfbbe13af3376652d707008ff11a6bde340d6e75e2b17ad5e7f9c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-17a.md",
+      "sourceBytes": 1017,
+      "sourceSha256": "31e4819be7d1870a40bb27723c6fa13d721a681bbda7dbae7fdf173ba700314c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-17a.md",
+      "deployedBytes": 1017,
+      "deployedSha256": "31e4819be7d1870a40bb27723c6fa13d721a681bbda7dbae7fdf173ba700314c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-18.md",
+      "sourceBytes": 1300,
+      "sourceSha256": "565bdb3cd117c50ab54228fdb70bbaa02d292cc7bcf104e252306ccca5b3eeb6",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-18.md",
+      "deployedBytes": 1300,
+      "deployedSha256": "565bdb3cd117c50ab54228fdb70bbaa02d292cc7bcf104e252306ccca5b3eeb6",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-19.md",
+      "sourceBytes": 1388,
+      "sourceSha256": "13eed2f9c172a20095710d76467b1d88d375d4a1375816c1108be557f0b731e9",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-19.md",
+      "deployedBytes": 1388,
+      "deployedSha256": "13eed2f9c172a20095710d76467b1d88d375d4a1375816c1108be557f0b731e9",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-20.md",
+      "sourceBytes": 1643,
+      "sourceSha256": "5f648c0cf305a4abee0168a596f7eea8ff18f7239179b12ea32f7d4b16b84966",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-20.md",
+      "deployedBytes": 1643,
+      "deployedSha256": "5f648c0cf305a4abee0168a596f7eea8ff18f7239179b12ea32f7d4b16b84966",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-21.md",
+      "sourceBytes": 2064,
+      "sourceSha256": "a61bd78e1804f738e0c3160c978eb3ed4a93572ae98a9eee47d8bd8ed82c4dfc",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-21.md",
+      "deployedBytes": 2064,
+      "deployedSha256": "a61bd78e1804f738e0c3160c978eb3ed4a93572ae98a9eee47d8bd8ed82c4dfc",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-22.md",
+      "sourceBytes": 1563,
+      "sourceSha256": "16a477a7a3fcc00e388a8103f70b66abe0b954c13a1a1a680ee8543251de43ae",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-22.md",
+      "deployedBytes": 1563,
+      "deployedSha256": "16a477a7a3fcc00e388a8103f70b66abe0b954c13a1a1a680ee8543251de43ae",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-22a.md",
+      "sourceBytes": 1379,
+      "sourceSha256": "536f2290b1bb5362462956e9fb8da492dec51726e8f320a26e1fe3a970e7ae47",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CHECKPOINT-22a.md",
+      "deployedBytes": 1379,
+      "deployedSha256": "536f2290b1bb5362462956e9fb8da492dec51726e8f320a26e1fe3a970e7ae47",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/COMBAT-ACCURACY.md",
+      "sourceBytes": 3909,
+      "sourceSha256": "7cded82709e312bcef69a0bdab7c98d8ff832cfbca1672b1cd0599a10f9732dd",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-ACCURACY.md",
+      "deployedBytes": 3909,
+      "deployedSha256": "7cded82709e312bcef69a0bdab7c98d8ff832cfbca1672b1cd0599a10f9732dd",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/COMBAT-OFFENSE.md",
+      "sourceBytes": 3857,
+      "sourceSha256": "e456014704db430c6f46dd1cdddbc460eae4cc984f2024c6fc9d868e666be047",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-OFFENSE.md",
+      "deployedBytes": 3857,
+      "deployedSha256": "e456014704db430c6f46dd1cdddbc460eae4cc984f2024c6fc9d868e666be047",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/COMBAT-RESOURCES.md",
+      "sourceBytes": 3412,
+      "sourceSha256": "fe8563d3846e762aec9db50c0a3fcfac1703267a3823b6e88b0570ebe8f79e42",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-RESOURCES.md",
+      "deployedBytes": 3412,
+      "deployedSha256": "fe8563d3846e762aec9db50c0a3fcfac1703267a3823b6e88b0570ebe8f79e42",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/COMMAND-LEDGER.md",
+      "sourceBytes": 10930,
+      "sourceSha256": "2ab8d3916894981feecc838fb3f2ea007a7a6a680fc120164809a6ce3c4f3c09",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMMAND-LEDGER.md",
+      "deployedBytes": 10930,
+      "deployedSha256": "2ab8d3916894981feecc838fb3f2ea007a7a6a680fc120164809a6ce3c4f3c09",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/CURATIVE.md",
+      "sourceBytes": 3571,
+      "sourceSha256": "7d923f568475f64842705285eb906b3b1e58de26ff9ed5291dcb780e58c1ec7a",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CURATIVE.md",
+      "deployedBytes": 3571,
+      "deployedSha256": "7d923f568475f64842705285eb906b3b1e58de26ff9ed5291dcb780e58c1ec7a",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/EQUIPMENT-GENERATION.md",
+      "sourceBytes": 8473,
+      "sourceSha256": "def0cecd13e62ec2937931a1dfff208740cb483ad6134a64c4969aec384547f0",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/EQUIPMENT-GENERATION.md",
+      "deployedBytes": 8473,
+      "deployedSha256": "def0cecd13e62ec2937931a1dfff208740cb483ad6134a64c4969aec384547f0",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/GRINDFEST-LEDGER.md",
+      "sourceBytes": 11073,
+      "sourceSha256": "1b0c8f812af35a3c78cffbc348b5945757f29c6e1c4c161998beb175b74ab541",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST-LEDGER.md",
+      "deployedBytes": 11073,
+      "deployedSha256": "1b0c8f812af35a3c78cffbc348b5945757f29c6e1c4c161998beb175b74ab541",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/GRINDFEST.md",
+      "sourceBytes": 5259,
+      "sourceSha256": "c03c9d668e1dd7f392d2f83a2f9a1aeb3faeddb94a43cd49a476154b0802099c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST.md",
+      "deployedBytes": 5259,
+      "deployedSha256": "c03c9d668e1dd7f392d2f83a2f9a1aeb3faeddb94a43cd49a476154b0802099c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/PROGRESSION.md",
+      "sourceBytes": 7556,
+      "sourceSha256": "6362fac4fe42a46b9d58e23aff03013f979acc26920192a8d4ade0391004ce82",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/PROGRESSION.md",
+      "deployedBytes": 7556,
+      "deployedSha256": "6362fac4fe42a46b9d58e23aff03013f979acc26920192a8d4ade0391004ce82",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/RELEASE-DEPLOYMENT.md",
+      "sourceBytes": 5442,
+      "sourceSha256": "0d100acc0b45c97114fae2e5c3c93b87dac022f678153622f54c59782840638f",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RELEASE-DEPLOYMENT.md",
+      "deployedBytes": 5442,
+      "deployedSha256": "0d100acc0b45c97114fae2e5c3c93b87dac022f678153622f54c59782840638f",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/RESTORATIVES.md",
+      "sourceBytes": 2567,
+      "sourceSha256": "af4374faf100118b2a4f606525d62a095c9b365a66932eef650d79974bd297bf",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RESTORATIVES.md",
+      "deployedBytes": 2567,
+      "deployedSha256": "af4374faf100118b2a4f606525d62a095c9b365a66932eef650d79974bd297bf",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "sourceBytes": 25274,
+      "sourceSha256": "82108396c73e7a779f9dd36d06cf944ab687d28d6615615306581efb5ecd27fa",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RULES.md",
+      "deployedBytes": 25274,
+      "deployedSha256": "82108396c73e7a779f9dd36d06cf944ab687d28d6615615306581efb5ecd27fa",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SEARING-SKIN.md",
+      "sourceBytes": 4529,
+      "sourceSha256": "77b39c9dd34147f556b3140aa7085b73cf0842cbf0723398c83d97edf4c687a1",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SEARING-SKIN.md",
+      "deployedBytes": 4529,
+      "deployedSha256": "77b39c9dd34147f556b3140aa7085b73cf0842cbf0723398c83d97edf4c687a1",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SOULBIND-LEDGER.md",
+      "sourceBytes": 12243,
+      "sourceSha256": "3febc85fd6023160bfcc2ff72a01850ad537603212e1a7a95547340ae7b3cf9e",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND-LEDGER.md",
+      "deployedBytes": 12243,
+      "deployedSha256": "3febc85fd6023160bfcc2ff72a01850ad537603212e1a7a95547340ae7b3cf9e",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SOULBIND.md",
+      "sourceBytes": 4832,
+      "sourceSha256": "131fcf7f530584013b39492d509bd8db489983698aa268dc6f83fa4f6f19419d",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND.md",
+      "deployedBytes": 4832,
+      "deployedSha256": "131fcf7f530584013b39492d509bd8db489983698aa268dc6f83fa4f6f19419d",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/SUPPLIES.md",
+      "sourceBytes": 7233,
+      "sourceSha256": "446936f9f565f5a598228b5c83ed847cb8f25e0c922a6fee975a0526bc27fe7b",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SUPPLIES.md",
+      "deployedBytes": 7233,
+      "deployedSha256": "446936f9f565f5a598228b5c83ed847cb8f25e0c922a6fee975a0526bc27fe7b",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/TRAINING-LEDGER.md",
+      "sourceBytes": 11854,
+      "sourceSha256": "ac499bbef0243c26499284b65f597811fe06e0851ee299c052915ad5e69dc53a",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/TRAINING-LEDGER.md",
+      "deployedBytes": 11854,
+      "deployedSha256": "ac499bbef0243c26499284b65f597811fe06e0851ee299c052915ad5e69dc53a",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/TRAINING.md",
+      "sourceBytes": 4520,
+      "sourceSha256": "cb377fd85c958eb894c7668f7f0b75fe7b4962ca9a1adf8871f1892aef0ddaa6",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/TRAINING.md",
+      "deployedBytes": 4520,
+      "deployedSha256": "cb377fd85c958eb894c7668f7f0b75fe7b4962ca9a1adf8871f1892aef0ddaa6",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "docs/VITALS.md",
+      "sourceBytes": 7685,
+      "sourceSha256": "abb5f316712c24f70e5fc0b3299a288b8155a9fed867acd08df19c48a4c0b21c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/VITALS.md",
+      "deployedBytes": 7685,
+      "deployedSha256": "abb5f316712c24f70e5fc0b3299a288b8155a9fed867acd08df19c48a4c0b21c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "index.html",
+      "sourceBytes": 619,
+      "sourceSha256": "d4b46bca46fe6e6891751153e4af9c62d1ba0577701390766848e69426d7b739",
+      "deployedPath": "index.html",
+      "deployedBytes": 944,
+      "deployedSha256": "534fa0edb072e9c245a33415279850b108d506ecf97a4524a574ffd195831369",
+      "transform": "root-entry"
+    },
+    {
+      "sourcePath": "public/assets/ART-PROVENANCE.txt",
+      "sourceBytes": 1601,
+      "sourceSha256": "8caa92ca2cbfda0182580c0ce7f231d7040242c215496a936d768d0e55d36fcc",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/ART-PROVENANCE.txt",
+      "deployedBytes": 1601,
+      "deployedSha256": "8caa92ca2cbfda0182580c0ce7f231d7040242c215496a936d768d0e55d36fcc",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "public/assets/mark.svg",
+      "sourceBytes": 231,
+      "sourceSha256": "5c77ea5ab492bb31f6da15812f0fec81cba084453d7405942c12d1e3a769578b",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/mark.svg",
+      "deployedBytes": 231,
+      "deployedSha256": "5c77ea5ab492bb31f6da15812f0fec81cba084453d7405942c12d1e3a769578b",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "public/assets/twilight-arena.png",
+      "sourceBytes": 2727980,
+      "sourceSha256": "d7e0bfe687bf3cb67ef2a72604fa52e452d372eee982319f686252a0c9e16c1b",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/twilight-arena.png",
+      "deployedBytes": 2727980,
+      "deployedSha256": "d7e0bfe687bf3cb67ef2a72604fa52e452d372eee982319f686252a0c9e16c1b",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "public/assets/twilight-enemies.png",
+      "sourceBytes": 2555436,
+      "sourceSha256": "d1c3b0a714d21d6b84962e9f05c2d13f2bc781159b37f061818d5b68c4e9c7ef",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/twilight-enemies.png",
+      "deployedBytes": 2555436,
+      "deployedSha256": "d1c3b0a714d21d6b84962e9f05c2d13f2bc781159b37f061818d5b68c4e9c7ef",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/abilities.js",
+      "sourceBytes": 16707,
+      "sourceSha256": "0bf471e03d5d088f6dd75e3ad0b5ebbc23bfa53ff97f4015532d645688afde78",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/abilities.js",
+      "deployedBytes": 16707,
+      "deployedSha256": "0bf471e03d5d088f6dd75e3ad0b5ebbc23bfa53ff97f4015532d645688afde78",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "sourceBytes": 119640,
+      "sourceSha256": "2ca290a98a5c074cb5046f28501368b6927a3080edc0beaf9a989602ce23adb6",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/app.js",
+      "deployedBytes": 119640,
+      "deployedSha256": "2ca290a98a5c074cb5046f28501368b6927a3080edc0beaf9a989602ce23adb6",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/arena.js",
+      "sourceBytes": 26535,
+      "sourceSha256": "09624cf9b40c5d5183f0a7153050e1ce0d1ac0d6148ae3cbccd9e5ee30b1c5eb",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/arena.js",
+      "deployedBytes": 26535,
+      "deployedSha256": "09624cf9b40c5d5183f0a7153050e1ce0d1ac0d6148ae3cbccd9e5ee30b1c5eb",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/armory.js",
+      "sourceBytes": 7806,
+      "sourceSha256": "0e86dc3b11dac2f7635e46d0cb71b5894bf966bd44b2234425d4d9c050d6ae69",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/armory.js",
+      "deployedBytes": 7806,
+      "deployedSha256": "0e86dc3b11dac2f7635e46d0cb71b5894bf966bd44b2234425d4d9c050d6ae69",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/art.js",
+      "sourceBytes": 4387,
+      "sourceSha256": "fafe4f2984b7d204e5bb75696ddbbbfed17f29f3021c0a1ceed0c580ec5870f0",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/art.js",
+      "deployedBytes": 4387,
+      "deployedSha256": "fafe4f2984b7d204e5bb75696ddbbbfed17f29f3021c0a1ceed0c580ec5870f0",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/audit-history.js",
+      "sourceBytes": 6589,
+      "sourceSha256": "82ad27d82a78daaf614a30b63032d39259f5a475043d50d847441e12467ffcf7",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/audit-history.js",
+      "deployedBytes": 6589,
+      "deployedSha256": "82ad27d82a78daaf614a30b63032d39259f5a475043d50d847441e12467ffcf7",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/combat-accuracy.js",
+      "sourceBytes": 1746,
+      "sourceSha256": "87b4698e9b89b0a693d4750a5ac3f5d95c9ddb3c081229679dd4edcae67edd94",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-accuracy.js",
+      "deployedBytes": 1746,
+      "deployedSha256": "87b4698e9b89b0a693d4750a5ac3f5d95c9ddb3c081229679dd4edcae67edd94",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/combat-offense.js",
+      "sourceBytes": 2085,
+      "sourceSha256": "f62d7e77fe733ba2bcbc3b56758cb1c5cedfe430559811e6f17de1f5b8dfa654",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-offense.js",
+      "deployedBytes": 2085,
+      "deployedSha256": "f62d7e77fe733ba2bcbc3b56758cb1c5cedfe430559811e6f17de1f5b8dfa654",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/combat-resources.js",
+      "sourceBytes": 2574,
+      "sourceSha256": "d5407f6701965f852bae3212542766ca843e1db18fc76a7a64e620c27c86bec1",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-resources.js",
+      "deployedBytes": 2574,
+      "deployedSha256": "d5407f6701965f852bae3212542766ca843e1db18fc76a7a64e620c27c86bec1",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/command-ledger.js",
+      "sourceBytes": 12626,
+      "sourceSha256": "d1e7b279e7c589155ffba7244e450c7cf696b82e28297485a8732360f7a277d9",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/command-ledger.js",
+      "deployedBytes": 12626,
+      "deployedSha256": "d1e7b279e7c589155ffba7244e450c7cf696b82e28297485a8732360f7a277d9",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/compat/arena-schema1.js",
+      "sourceBytes": 21794,
+      "sourceSha256": "cc6261c10308697f8ccb7862989d9d24590fe2c93e76cc0a966658722e259329",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/arena-schema1.js",
+      "deployedBytes": 21794,
+      "deployedSha256": "cc6261c10308697f8ccb7862989d9d24590fe2c93e76cc0a966658722e259329",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/compat/training-adept-v1.js",
+      "sourceBytes": 6373,
+      "sourceSha256": "ca205f467fea1522be2a7ed8344f5d5c020317cc47709f0557717a5a5c14f200",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/training-adept-v1.js",
+      "deployedBytes": 6373,
+      "deployedSha256": "ca205f467fea1522be2a7ed8344f5d5c020317cc47709f0557717a5a5c14f200",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/curative.js",
+      "sourceBytes": 1614,
+      "sourceSha256": "7407c554d77b5bf8d45deb478ad79736ceaa7d8f4a8ffaf418262bb258d1a3f4",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/curative.js",
+      "deployedBytes": 1614,
+      "deployedSha256": "7407c554d77b5bf8d45deb478ad79736ceaa7d8f4a8ffaf418262bb258d1a3f4",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/data.js",
+      "sourceBytes": 6807,
+      "sourceSha256": "13ae4f2dcc71fa2e448113d129992e92d6236b1123432beec6cc9930eace9713",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/data.js",
+      "deployedBytes": 6807,
+      "deployedSha256": "13ae4f2dcc71fa2e448113d129992e92d6236b1123432beec6cc9930eace9713",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/engine.js",
+      "sourceBytes": 75806,
+      "sourceSha256": "35a76cc5ca98f7c395b24654300c041ba732c674f80089a32850d5833065d26c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/engine.js",
+      "deployedBytes": 75806,
+      "deployedSha256": "35a76cc5ca98f7c395b24654300c041ba732c674f80089a32850d5833065d26c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/equipment-generation.js",
+      "sourceBytes": 9118,
+      "sourceSha256": "5aa4ed74f0d97578418c6d408fb674ba7525ae45c2344c6ae9f6979b6ae20c48",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/equipment-generation.js",
+      "deployedBytes": 9118,
+      "deployedSha256": "5aa4ed74f0d97578418c6d408fb674ba7525ae45c2344c6ae9f6979b6ae20c48",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/grindfest.js",
+      "sourceBytes": 18043,
+      "sourceSha256": "834b993c713e5023dc6ed4a639342342f6318f79e9ca3110b03a281ccb1f3ce4",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/grindfest.js",
+      "deployedBytes": 18043,
+      "deployedSha256": "834b993c713e5023dc6ed4a639342342f6318f79e9ca3110b03a281ccb1f3ce4",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/leveling.js",
+      "sourceBytes": 2231,
+      "sourceSha256": "3a3fde81ae47685cad12b44dba273c211a9e901dba42850666a94541d7bf5086",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/leveling.js",
+      "deployedBytes": 2231,
+      "deployedSha256": "3a3fde81ae47685cad12b44dba273c211a9e901dba42850666a94541d7bf5086",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/navigation.js",
+      "sourceBytes": 600,
+      "sourceSha256": "40ed88ae31fd143c579f524d301af7b2804c4dd6f0df841328eba03d17ed020c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/navigation.js",
+      "deployedBytes": 600,
+      "deployedSha256": "40ed88ae31fd143c579f524d301af7b2804c4dd6f0df841328eba03d17ed020c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/progression.js",
+      "sourceBytes": 6686,
+      "sourceSha256": "ad31dc8c6bf8d86b79381b0274e0fd8739b7d6989a1cf9d59ccecbc311e277a9",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/progression.js",
+      "deployedBytes": 6686,
+      "deployedSha256": "ad31dc8c6bf8d86b79381b0274e0fd8739b7d6989a1cf9d59ccecbc311e277a9",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/release.js",
+      "sourceBytes": 152,
+      "sourceSha256": "5bc3bf31d0b635d4d8190a8ee6641f54fe6702593a71c3a4990881d78d28b20a",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/release.js",
+      "deployedBytes": 272,
+      "deployedSha256": "afe946222d1175d01b58f94aa33a7fb7c4558f2bbfb5910bda3217262af0039a",
+      "transform": "release-metadata"
+    },
+    {
+      "sourcePath": "src/restoratives.js",
+      "sourceBytes": 1042,
+      "sourceSha256": "4a1c6a7c814df8996a9e20a01f3ea5f50f2e50208369702a1e511e228dec84f3",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/restoratives.js",
+      "deployedBytes": 1042,
+      "deployedSha256": "4a1c6a7c814df8996a9e20a01f3ea5f50f2e50208369702a1e511e228dec84f3",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/searing.js",
+      "sourceBytes": 5984,
+      "sourceSha256": "423a81c59b1d7e8eb77859248266c81e96766ef9ce8dd0acdf331ef52182533a",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/searing.js",
+      "deployedBytes": 5984,
+      "deployedSha256": "423a81c59b1d7e8eb77859248266c81e96766ef9ce8dd0acdf331ef52182533a",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/soulbinding.js",
+      "sourceBytes": 19128,
+      "sourceSha256": "0b7921339e6ce28a4ae414cd946594819a02958723d9bd7304fb88f48d439fb1",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/soulbinding.js",
+      "deployedBytes": 19128,
+      "deployedSha256": "0b7921339e6ce28a4ae414cd946594819a02958723d9bd7304fb88f48d439fb1",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/storage.js",
+      "sourceBytes": 3294,
+      "sourceSha256": "4ecaba696f54d6d42d2c20473288593cfc481b02f788c6b74af0ea1d0c357663",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/storage.js",
+      "deployedBytes": 3294,
+      "deployedSha256": "4ecaba696f54d6d42d2c20473288593cfc481b02f788c6b74af0ea1d0c357663",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/supplies.js",
+      "sourceBytes": 6529,
+      "sourceSha256": "c05b22393db7d67234d8a5dad7be359769bf24a427bc959f64da717e33f43943",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/supplies.js",
+      "deployedBytes": 6529,
+      "deployedSha256": "c05b22393db7d67234d8a5dad7be359769bf24a427bc959f64da717e33f43943",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/training.js",
+      "sourceBytes": 21783,
+      "sourceSha256": "c451ef9e39c7840d44188c0b22b8e1ea605cf7f2e70d1d8958fbf4201ce64a0c",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/training.js",
+      "deployedBytes": 21783,
+      "deployedSha256": "c451ef9e39c7840d44188c0b22b8e1ea605cf7f2e70d1d8958fbf4201ce64a0c",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "src/vitals.js",
+      "sourceBytes": 5451,
+      "sourceSha256": "befdea377ba120fa2b00ee9fb959aa22197d176c1842cf0adb5e09da6feb5116",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/vitals.js",
+      "deployedBytes": 5451,
+      "deployedSha256": "befdea377ba120fa2b00ee9fb959aa22197d176c1842cf0adb5e09da6feb5116",
+      "transform": "copy"
+    },
+    {
+      "sourcePath": "styles.css",
+      "sourceBytes": 67786,
+      "sourceSha256": "aa120c964d24bfc008da589532879fdc14b804ad74d47ddce40f49910574c8c9",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/styles.css",
+      "deployedBytes": 67786,
+      "deployedSha256": "aa120c964d24bfc008da589532879fdc14b804ad74d47ddce40f49910574c8c9",
+      "transform": "copy"
+    }
+  ],
+  "entrypoints": [
+    {
+      "kind": "icon",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/mark.svg",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/mark.svg"
+    },
+    {
+      "kind": "stylesheet",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/styles.css",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/styles.css"
+    },
+    {
+      "kind": "module",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/app.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/app.js"
+    }
+  ],
+  "moduleGraph": [
+    {
+      "sourcePath": "src/abilities.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/abilities.js",
+      "imports": [
+        {
+          "specifier": "./training.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/training.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/app.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/app.js",
+      "imports": [
+        {
+          "specifier": "./abilities.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/abilities.js"
+        },
+        {
+          "specifier": "./armory.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/armory.js"
+        },
+        {
+          "specifier": "./art.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/art.js"
+        },
+        {
+          "specifier": "./combat-resources.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-resources.js"
+        },
+        {
+          "specifier": "./curative.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/curative.js"
+        },
+        {
+          "specifier": "./engine.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/engine.js"
+        },
+        {
+          "specifier": "./equipment-generation.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/equipment-generation.js"
+        },
+        {
+          "specifier": "./grindfest.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/grindfest.js"
+        },
+        {
+          "specifier": "./leveling.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/leveling.js"
+        },
+        {
+          "specifier": "./navigation.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/navigation.js"
+        },
+        {
+          "specifier": "./release.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/release.js"
+        },
+        {
+          "specifier": "./soulbinding.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/soulbinding.js"
+        },
+        {
+          "specifier": "./storage.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/storage.js"
+        },
+        {
+          "specifier": "./supplies.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/supplies.js"
+        },
+        {
+          "specifier": "./training.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/training.js"
+        },
+        {
+          "specifier": "./vitals.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/vitals.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/arena.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/arena.js",
+      "imports": [
+        {
+          "specifier": "./compat/arena-schema1.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/arena-schema1.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/armory.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/armory.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/art.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/art.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/audit-history.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/audit-history.js",
+      "imports": [
+        {
+          "specifier": "./command-ledger.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/command-ledger.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/combat-accuracy.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-accuracy.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/combat-offense.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-offense.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/combat-resources.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-resources.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/command-ledger.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/command-ledger.js",
+      "imports": [
+        {
+          "specifier": "./data.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/data.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/compat/arena-schema1.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/arena-schema1.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/compat/training-adept-v1.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/training-adept-v1.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/curative.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/curative.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/data.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/data.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/engine.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/engine.js",
+      "imports": [
+        {
+          "specifier": "./abilities.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/abilities.js"
+        },
+        {
+          "specifier": "./arena.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/arena.js"
+        },
+        {
+          "specifier": "./armory.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/armory.js"
+        },
+        {
+          "specifier": "./audit-history.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/audit-history.js"
+        },
+        {
+          "specifier": "./combat-accuracy.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-accuracy.js"
+        },
+        {
+          "specifier": "./combat-offense.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-offense.js"
+        },
+        {
+          "specifier": "./combat-resources.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/combat-resources.js"
+        },
+        {
+          "specifier": "./command-ledger.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/command-ledger.js"
+        },
+        {
+          "specifier": "./compat/arena-schema1.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/arena-schema1.js"
+        },
+        {
+          "specifier": "./curative.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/curative.js"
+        },
+        {
+          "specifier": "./data.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/data.js"
+        },
+        {
+          "specifier": "./equipment-generation.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/equipment-generation.js"
+        },
+        {
+          "specifier": "./grindfest.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/grindfest.js"
+        },
+        {
+          "specifier": "./leveling.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/leveling.js"
+        },
+        {
+          "specifier": "./progression.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/progression.js"
+        },
+        {
+          "specifier": "./restoratives.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/restoratives.js"
+        },
+        {
+          "specifier": "./searing.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/searing.js"
+        },
+        {
+          "specifier": "./soulbinding.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/soulbinding.js"
+        },
+        {
+          "specifier": "./supplies.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/supplies.js"
+        },
+        {
+          "specifier": "./training.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/training.js"
+        },
+        {
+          "specifier": "./vitals.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/vitals.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/equipment-generation.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/equipment-generation.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/grindfest.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/grindfest.js",
+      "imports": [
+        {
+          "specifier": "./arena.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/arena.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/leveling.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/leveling.js",
+      "imports": [
+        {
+          "specifier": "./progression.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/progression.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/navigation.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/navigation.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/progression.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/progression.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/release.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/release.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/restoratives.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/restoratives.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/searing.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/searing.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/soulbinding.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/soulbinding.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/storage.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/storage.js",
+      "imports": [
+        {
+          "specifier": "./engine.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/engine.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/supplies.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/supplies.js",
+      "imports": []
+    },
+    {
+      "sourcePath": "src/training.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/training.js",
+      "imports": [
+        {
+          "specifier": "./compat/training-adept-v1.js",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/compat/training-adept-v1.js"
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/vitals.js",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/src/vitals.js",
+      "imports": []
+    }
+  ],
+  "cssReferences": [
+    {
+      "sourcePath": "styles.css",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/styles.css",
+      "references": [
+        {
+          "url": "./public/assets/twilight-arena.png",
+          "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/twilight-arena.png"
+        }
+      ]
+    }
+  ],
+  "runtimeReferences": [
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/twilight-enemies.png",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/public/assets/twilight-enemies.png"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/EQUIPMENT-GENERATION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/EQUIPMENT-GENERATION.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND-LEDGER.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SOULBIND-LEDGER.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/TRAINING-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/TRAINING-LEDGER.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/VITALS.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/VITALS.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITIES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITIES.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/PROGRESSION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/PROGRESSION.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RULES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RULES.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RULES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RULES.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/BACKLOG.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/BACKLOG.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA.md"
+    },
+    {
+      "sourcePath": "src/app.js",
+      "url": "./releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SUPPLIES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SUPPLIES.md"
+    }
+  ],
+  "documentReferences": [
+    {
+      "sourcePath": "docs/ABILITIES.md",
+      "url": "./CURATIVE.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/CURATIVE.md"
+    },
+    {
+      "sourcePath": "docs/ABILITIES.md",
+      "url": "ABILITY-BOOST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITY-BOOST.md"
+    },
+    {
+      "sourcePath": "docs/ARENA-RETENTION.md",
+      "url": "ARENA.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA.md"
+    },
+    {
+      "sourcePath": "docs/CHECKPOINT-18.md",
+      "url": "./COMBAT-ACCURACY.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-ACCURACY.md"
+    },
+    {
+      "sourcePath": "docs/COMBAT-OFFENSE.md",
+      "url": "./COMBAT-ACCURACY.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-ACCURACY.md"
+    },
+    {
+      "sourcePath": "docs/GRINDFEST.md",
+      "url": "./GRINDFEST-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/GRINDFEST-LEDGER.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./VITALS.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/VITALS.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./COMBAT-OFFENSE.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-OFFENSE.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./BACKLOG.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/BACKLOG.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./PROGRESSION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/PROGRESSION.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./ARENA.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./ARMORY-ORGANIZATION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARMORY-ORGANIZATION.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./COMBAT-RESOURCES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-RESOURCES.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./COMBAT-OFFENSE.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMBAT-OFFENSE.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./EQUIPMENT-GENERATION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/EQUIPMENT-GENERATION.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./RESTORATIVES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/RESTORATIVES.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./SUPPLIES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SUPPLIES.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./ABILITIES.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITIES.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./VITALS.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/VITALS.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./AUDIT-RETENTION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/AUDIT-RETENTION.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./COMMAND-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/COMMAND-LEDGER.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "./ARENA-RETENTION.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ARENA-RETENTION.md"
+    },
+    {
+      "sourcePath": "docs/RULES.md",
+      "url": "SEARING-SKIN.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/SEARING-SKIN.md"
+    },
+    {
+      "sourcePath": "docs/TRAINING-LEDGER.md",
+      "url": "ABILITY-BOOST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITY-BOOST.md"
+    },
+    {
+      "sourcePath": "docs/TRAINING-LEDGER.md",
+      "url": "ABILITY-BOOST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITY-BOOST.md"
+    },
+    {
+      "sourcePath": "docs/TRAINING.md",
+      "url": "ABILITY-BOOST.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/ABILITY-BOOST.md"
+    },
+    {
+      "sourcePath": "docs/TRAINING.md",
+      "url": "./TRAINING-LEDGER.md",
+      "deployedPath": "releases/a3d8b46acd4aef40140703d9474a3a40c71f6eea6b7648a53c703ef4d160ca32/docs/TRAINING-LEDGER.md"
+    }
+  ]
+}
