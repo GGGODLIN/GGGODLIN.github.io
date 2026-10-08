@@ -202,3 +202,7 @@ C20：增加 grindfest-N 戰鬥身份、bounded-audit-v2 的 Grindfest 零累計
 C21：soulbinding帳本以實際Credits購買1,000C碎片，100枚綁定支援武器。原始錨點／roll不變；效果採legacy-relative-weapon-v1，持續物攻／魔攻縮放與舊式factor限制見SOULBIND.md。舊檔新增空帳本，不補金錢／材料／效果。
 
 C22：Adept Learner付費、3600000ms真實時鐘與完成登記採TRAINING.md規格；新系列在原始EXP乘1+rank/100後才sum-ceil，舊系列none-v1/rank0不重算。訓練不直接發EXP／AP／Credits。Cost與未登記取消／戰後生效有明示候選。
+
+## Newly reconstructed Fire status checkpoint
+
+`persistent-0.91-training-v19` adds the bounded [Searing Skin candidate](SEARING-SKIN.md). Public evidence and local proc/refresh/tick/rounding choices remain separate. Every old active series keeps `none-v1` and its RNG; Cold interaction and explosions are deferred.

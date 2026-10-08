@@ -1,3 +1,4 @@
+import {SEARING_POLICY,rollSearing,createSearingEffect,validateSearingEffects,expiredSearingIds,searingDamageFactor} from './searing.js';
 import {TRAINING_POLICY,createTrainingState,validateTrainingState,startAdeptTraining as startTraining,cancelAdeptTraining as cancelTraining,visitTraining as collectTraining} from './training.js';
 export {getTrainingView,quoteAdeptTraining} from './training.js';
 import {createSoulbindingState,validateSoulbindingState,effectiveEquipmentStats,purchaseSoulFragments as purchaseFragments,bindWeapon as bindSoulWeapon} from './soulbinding.js';
@@ -101,6 +102,7 @@ function currentEnemyCount(battle){return battle.kind==='grindfest'?battle.waveM
 function totalRounds(battle){return battle.kind==='grindfest'?1000:encounterCounts(battle)?.length;}
 function spawnWave(state) {
   const battle = state.battle;
+  battle.enemyEffects = {};
   if(battle.kind==='grindfest'){const range=grindfestMonsterBounds(battle.round);battle.waveMonsterCount=randomInt(state,range.min,range.max);}
   const count = currentEnemyCount(battle);
   const templates = battle.kind !== 'training' ? Array.from({length:count},(_,i)=>TRAINING_WAVES[(battle.round-1)%2][(i+battle.round-1)%3]) : TRAINING_WAVES[battle.round - 1];
@@ -130,7 +132,7 @@ function startBattleUnsafe(state, options = {}) {
     id: `${kind}-${state._nextBattle++}`, kind, arenaId:reservation?.definition?.id||null, entryDay:reservation?.entryDay||null, entryLevel:state.player.level, entryStamina:kind==='grindfest'?reservation.staminaBefore:reservation?.stamina??null, status: 'active', phase: 'combat', round: 1, rounds:kind==='grindfest'?1000:reservation?.definition?.rounds||TRAINING_WAVES.length,
     turn: 0, ticks: 0, timeUnits: 0, targetId: null, enemies: [], log: [],
     cooldowns: Object.fromEntries(ACTIONS.map((action) => [action.id, 0])),
-    trainingRules:TRAINING_POLICY.battleModel, adeptRankAtEntry:state.training.adeptRank, vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
+    statusRules:SEARING_POLICY.id, enemyEffects:{}, trainingRules:TRAINING_POLICY.battleModel, adeptRankAtEntry:state.training.adeptRank, vitalRules:state.vitalRules, curativeRules:CURATIVE_POLICY.id, abilityRules:ABILITY_POLICY.id, restorativeRules: RESTORATIVE_POLICY.id, equipmentRules: GENERATION_POLICY.model, accuracyRules:ACCURACY_POLICY.id, offenseRules: OFFENSE_POLICY.id, combatRules: COMBAT_RESOURCE_POLICY.id, _regenCarry: {mp:0,sp:0},
     spiritActive: false, effects: { defend: 0, focus: 0 },
     _schedule: [], _nextTick: 100, logOmitted:0, _settled: false, ...(kind==='grindfest'?{waveMonsterCount:0}:{}),
   };
@@ -160,6 +162,14 @@ export function getEnemyView(enemy) {
   if (enemy.scanned) Object.assign(view, { level: enemy.level, hp: enemy.hp, maxHp: enemy.maxHp,
     resistances: { ...enemy.resistances }, attack: enemy.attack, powerLevel:enemy.powerLevel });
   return view;
+}
+
+/** Only already-applied status is public, independent of Scan-only enemy stats. */
+export function getEnemyEffects(state,enemyId){
+  const battle=state.battle,effect=battle?.enemyEffects?.[enemyId];
+  if(!battle||battle.status!=='active'||battle.statusRules!==SEARING_POLICY.id||!effect||!battle.enemies.some(e=>e.id===enemyId&&e.hp>0))return [];
+  const ticks=effect.expiresAtTick-battle.ticks;
+  return Number.isSafeInteger(ticks)&&ticks>0&&ticks<=SEARING_POLICY.durationTicks?[{id:'searing-skin',name:'灼熱肌膚',ticks,damageReductionPercent:10}]:[];
 }
 
 function effectiveSpirit(state) {
@@ -246,6 +256,7 @@ function settle(state, status, events, nowMs) {
   battle.status = status;
   battle.spiritActive = false;
   battle.effects = { defend: 0, focus: 0 };
+  battle.enemyEffects = {};
   state.history.push({ battleId: battle.id, status, turns: battle.turn, rounds: battle.round, kind:battle.kind, arenaId:battle.arenaId });
   if (status === 'victory' && battle.kind === 'training') {
     state.achievements.trainingClears++;
@@ -291,7 +302,7 @@ function enemyAttack(state, enemy, events, focused, nowMs) {
   }
   const defended = state.battle.effects.defend > 0;
   const raw = enemy.attack * (0.9 + random(state) * 0.2) * (state.battle.kind==='grindfest'?(500+4*(state.battle.round-1))/1000:1);
-  const damage = Math.max(1, Math.floor(raw * (100 / (100 + stats.defense * 2)) * (defended ? 0.75 : 1)));
+  const damage = Math.max(1, Math.floor(raw * (100 / (100 + stats.defense * 2)) * (defended ? 0.75 : 1) * searingDamageFactor(state.battle.enemyEffects,enemy.id,state.battle.ticks)));
   state.player.hp = Math.max(0, state.player.hp - damage);
   emit(state, events, `${enemy.name}造成 ${damage} 點傷害${defended ? '（防禦中）' : ''}`, 'enemy', { actor: enemy.id, amount: damage });
   if (state.player.hp === 0) settle(state, 'defeat', events, nowMs);
@@ -311,6 +322,7 @@ function advanceTime(state, units, events, focused, nowMs, suppressRegen=false) 
     if (battle._nextTick <= (due?.nextAt ?? Infinity)) {
       battle.ticks++;
       battle._nextTick += RULES.tickUnits;
+      for(const id of expiredSearingIds(battle.enemyEffects,battle.ticks)){delete battle.enemyEffects[id];const enemy=battle.enemies.find(e=>e.id===id);emit(state,events,`${enemy.name}的灼熱肌膚已消退`,'status',{targetId:id});}
       if(modernResources(state)&&!suppressRegen)naturalTick(state,events);
     } else {
       due.nextAt += due.interval;
@@ -378,7 +390,8 @@ function performActionUnsafe(state, actionId, targetId, commandId, nowMs = Date.
         victim.hp = Math.max(0, victim.hp - damage);
         emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}命中${victim.name}：${damage}${modern&&impact.glancing?'（擦傷 ×0.5）':critical?modern?'（'+criticalHits+' 重暴擊）':'（暴擊）':''}`, isFire ? 'magic' : 'attack', { targetId: victim.id, amount: damage, critical, ...(modern?{criticalHits,glancing:impact.glancing}:{}) });
         if (!isFire) state.player.overcharge = Math.min(RULES.overchargeCap, state.player.overcharge + randomInt(state, 5, 10));
-        if (victim.hp === 0) emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });
+        if (victim.hp === 0){delete battle.enemyEffects[victim.id];emit(state, events, `${victim.name}已被擊倒`, 'kill', { targetId: victim.id });}
+        else if(isFire&&battle.statusRules===SEARING_POLICY.id&&rollSearing(random(state))){const refresh=Object.hasOwn(battle.enemyEffects,victim.id);battle.enemyEffects[victim.id]=createSearingEffect(battle.ticks);emit(state,events,`${victim.name}${refresh?'的灼熱肌膚已刷新':'受到灼熱肌膚'}：傷害降低 10%，持續 3 tick（候選規則）`,'status',{targetId:victim.id});}
       } else emit(state, events, `${isFire ? '烈焰衝擊' : '普通攻擊'}未命中${victim.name}`, 'miss', { targetId: victim.id });
     }
   } else if (action.id === 'cure') heal(state, events, 'hp', getCureProfile(state).amount, '治癒');
@@ -684,7 +697,7 @@ function validState(state,{legacyAudit=false}={}) {
   const battle = state.battle;
   if (battle === null) return true;
   if (!plain(battle) || !['training','arena','grindfest'].includes(battle.kind) || !['combat', 'round-complete'].includes(battle.phase) || !safeText(battle.id) || !statuses.includes(battle.status)) return false;
-  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','trainingRules','adeptRankAtEntry','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals','waveMonsterCount'].includes(k)))return false;
+  if(!legacyAudit&&Object.keys(battle).some(k=>!['id','kind','arenaId','entryDay','entryLevel','entryStamina','status','phase','round','rounds','turn','ticks','timeUnits','targetId','enemies','log','cooldowns','statusRules','enemyEffects','trainingRules','adeptRankAtEntry','vitalRules','curativeRules','abilityRules','restorativeRules','equipmentRules','accuracyRules','offenseRules','combatRules','_regenCarry','spiritActive','effects','_schedule','_nextTick','logOmitted','_settled','finalVitals','waveMonsterCount'].includes(k)))return false;
   if(!legacyAudit){const exactKeys=(v,keys)=>plain(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));if(!exactKeys(battle.effects,['defend','focus'])||!exactKeys(battle._regenCarry,['mp','sp'])||!exactKeys(battle.cooldowns,ACTIONS.map(a=>a.id))||battle.finalVitals&&!exactKeys(battle.finalVitals,['hp','mp','sp']))return false;}
   const rounds=totalRounds(battle),count=currentEnemyCount(battle);
   if(!rounds||!integer(battle.round,1,rounds)||battle.rounds!==rounds)return false;
@@ -711,6 +724,7 @@ function validState(state,{legacyAudit=false}={}) {
   if (!plain(battle.effects) || !['defend', 'focus'].every((key) => integer(battle.effects[key], 0, 2))) return false;
   if (!plain(battle.cooldowns) || !ACTIONS.every((action) => integer(battle.cooldowns[action.id], 0, 1000))) return false;
   if (!Array.isArray(battle.enemies) || battle.enemies.length !== count || !Array.isArray(battle._schedule) || battle._schedule.length !== count) return false;
+  if(![SEARING_POLICY.id,SEARING_POLICY.legacy].includes(battle.statusRules)||!validateSearingEffects(battle.enemyEffects,battle.enemies,battle.ticks,battle.statusRules===SEARING_POLICY.id,battle.status==='active'))return false;
   if (new Set(battle.enemies.map((enemy) => enemy.id)).size !== count) return false;
   for (const enemy of battle.enemies) {
     if(!legacyAudit&&Object.keys(enemy).some(k=>!['id','name','title','kind','level','powerLevel','hp','maxHp','scanned','resistances','attack'].includes(k)))return false;
@@ -798,6 +812,10 @@ function restoreSave(json,recoveryOnly) {
     if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14'].includes(sourceVersion)){
       if(state.battle){if(Object.hasOwn(state.battle,'curativeRules'))return null;state.battle.curativeRules=CURATIVE_POLICY.legacy;}
       if(hadAbilities){const migrated=migrateLegacyAbilityState(state.abilities,state.player?.level,state.progression?.kind==='experience-ledger');if(!migrated.ok)return null;state.abilities=migrated.abilities;}
+    }
+    if(legacy||['persistent-0.91-training-v13','persistent-0.91-training-v14','persistent-0.91-training-v15','persistent-0.91-training-v16','persistent-0.91-training-v17','persistent-0.91-training-v18'].includes(sourceVersion)){
+      if(state.battle){if(Object.hasOwn(state.battle,'statusRules')||Object.hasOwn(state.battle,'enemyEffects'))return null;state.battle.statusRules=SEARING_POLICY.legacy;state.battle.enemyEffects={};}
+      state.rulesVersion=RULES_VERSION;
     }
     if(!validState(state,{legacyAudit:oldSchema}))return null;
     if (legacy && !isActive(state)) {
