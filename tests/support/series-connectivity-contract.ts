@@ -93,6 +93,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     members: [
       "gpt-in-cc-performance",
       "gpt-review-tunnel-vision",
+      "gpt-sha256",
       "sol-overimplementation",
     ],
     validConnectors: ["gpt"],

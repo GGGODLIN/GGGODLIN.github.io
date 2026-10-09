@@ -23,6 +23,7 @@ const exactTagCases = {
     "checker-layoff",
     "compact-guard",
     "dcg-safety-lock",
+    "gpt-sha256",
     "hook-watchdog",
     "inline-the-rules",
     "local-llm-hook-judge",
