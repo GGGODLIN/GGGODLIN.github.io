@@ -32,7 +32,12 @@ const exactTagCases = {
     "rule-ladder",
     "sem-blast-radius",
   ],
-  skill: ["matt-philosophy", "prose-exams", "workflow-vs-skill"],
+  skill: [
+    "consent-provenance",
+    "matt-philosophy",
+    "prose-exams",
+    "workflow-vs-skill",
+  ],
   subagent: [
     "exit-0-illusion",
     "measure-revealed-adoption",

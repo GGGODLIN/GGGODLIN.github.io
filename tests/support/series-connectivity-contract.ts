@@ -157,6 +157,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     title: "review 需要停止線，不能把每條疑慮都做成新需求",
     minimumCommonConcept: "review finding 與推演風險不是自動的實作需求；原始驗收、最小修正、範圍交還與具名不修理由共同構成停止條件。",
     members: [
+      "consent-provenance",
       "gpt-review-tunnel-vision",
       "sol-overimplementation",
     ],
