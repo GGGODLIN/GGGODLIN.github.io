@@ -45,19 +45,6 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 - 兩類都**同步 fold 回該篇 `posts/<slug>-MATERIAL.md`**，Phase 2 voice 版只從校正後 MATERIAL 寫，**永不讀純 AI 校稿稿**
 - 純 AI 版保留當 Phase 3 對照標本，維持原樣不回溯套修正
 
-## 支語檢查 gate（固化）
-
-material-first-writing **Phase 4 外審後、Phase 6 收斂前**加一道支語檢查——抓中國大陸用語味道。這跟上面「反晶晶體 HARD GATE」是**不同維度**的中文品質閘：反晶晶體只管「該翻沒翻的英文詞」、支語 gate 管「中國用語 vs 台灣用語」（檔次→等級、視頻→影片）。反晶晶體那道靠自律會洩漏，支語 gate 改用工具決定性檢測補這個弱點。
-
-- **時機**：對 Phase 5 拍板的那一版（單一稿）跑，不是 N 版都跑。外審修正套回後、收斂前
-- **怎麼跑**：main session 接續執行 `tools/zhtw-check.sh <該版 md>` → lint（[sysprog21/zhtw-mcp](https://github.com/sysprog21/zhtw-mcp)、教育部標準、1100+ 詞彙規則）→ render 命中報告網頁 → 開瀏覽器本地 review
-- **人在迴圈、不 auto-fix**：報告網頁分兩區。**「中國用語」區**（cross_strait / 字形 / 大小寫）是支語核心、逐筆人工確認改不改；**「翻譯腔」區**（AI 句式：定語堆疊、的的不休）是 advisory 第二維度、可改可整段忽略。命中是「候選」不是「判決」
-- **預設不過濾、誤判 review 時略過**：report 忠實呈現 zhtw-mcp 所有命中，**不預設任何白名單 / borrow 詞**（用套件原本設定）。誤判（如「轉發」被建議成「轉寄」，但轉發台灣通用、本 blog 拿它當術語）review 時人工略過即可
-- **之後要自訂過濾 / 借詞（user 自己慢慢加、非預設）**：建 repo root `.zhtw-mcp.toml`（lint 從 cwd 往上探測）。誤判白名單填 `ignore_terms`、借詞填 `overrides` 指向的 JSON（schema_version 3、`spelling[]`）。**坑**：zhtw CLI lint 不吃 `ignore_terms`／`suppressions`（只 MCP 模式吃），白名單要靠 `zhtw-report.py` render 層自己過濾。借詞來源可參考 [Qmo37/localization-tw](https://github.com/Qmo37/localization-tw)（但整包別裝：詞庫實際比 zhtw 少、增量多為生活詞）
-- **修正併回**：user 確認要改的，比照「校稿紀錄」——用語修正 fold 回該篇 `posts/<slug>-MATERIAL.md`（永久真相源）再進 Phase 6
-- **本機工具、不進 repo**（`tools/` 已 gitignored）：binary 自 source build（`cargo build --release --no-default-features --features native`、排除連網 translate feature）裝在 PATH；script 為 `tools/zhtw-check.sh` + `tools/zhtw-report.py`。重建步驟見 `~/Desktop/projects/.claude/trials/` 內 zhtw-mcp trial 紀錄
-- **AI 八股味維度另有工具**：`tools/humanize-chinese`（既有、但未接流程）專做 AI 八股味去痕（賦能 / 全方位 / 綜上所述），跟支語不同維度。要認真治 AI 味再評估接它，本 gate 只管支語
-
 ## 站台設計與部署決策（固化；2026-08-24 由 STATE.md state-archive promote）
 
 - **視覺 = Anthropic warm editorial baseline，LOCKED**——對照 5 套（含 UIUXPROMAX 3 套）後使用者拍板「還是 Anthropic warm 最好」，是經得起對照的定案、不是沒比過的預設。不要再提改版。

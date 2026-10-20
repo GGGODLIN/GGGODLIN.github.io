@@ -57,6 +57,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     title: "個人 memory 從向量倉庫，改成能維護的索引與 wiki",
     minimumCommonConcept: "原始對話大量自動寫入沒有用，整理後的結論、分層索引與持續健康檢查才構成可用 memory。",
     members: [
+      "cc-session-index",
       "keep-the-wiki-alive",
       "memory-cap-reframe",
       "retire-vector-memory",

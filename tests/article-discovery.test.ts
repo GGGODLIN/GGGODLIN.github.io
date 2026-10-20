@@ -20,6 +20,7 @@ const corpus = readBlogCorpus(
 
 const exactTagCases = {
   hook: [
+    "cc-session-index",
     "checker-layoff",
     "compact-guard",
     "dcg-safety-lock",
