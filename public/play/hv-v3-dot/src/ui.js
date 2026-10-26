@@ -1,7 +1,7 @@
-import { createGame, advance, act, stats, validateSave, STRATEGIES, INVENTORY_LIMIT, previewSelectedSale, previewSafeSale, previewWeaponCommission, expeditionReports, abilityView, protectionView, counterattackView, gearSetsView, previewGearSet, isGearSetProtected } from './engine.js';
+import { createGame, advance, act, stats, validateSave, STRATEGIES, INVENTORY_LIMIT, previewSelectedSale, previewSafeSale, previewWeaponCommission, expeditionReports, abilityView, protectionView, counterattackView, gearSetsView, previewGearSet, isGearSetProtected, finishThenCampView, clearFinishThenCamp } from './engine.js';
 import { createPump, createOwnership, loadVersionedSave } from './session.js';
 import { QUALITY_TIERS } from './loot.js';
-import { resolveWeaponFamily, describeWeaponTrait, describeItemFlavor, COMMISSION_WEAPON_FAMILIES } from './loot.js';
+import { resolveWeaponFamily, describeWeaponTrait, describeItemFlavor, COMMISSION_WEAPON_FAMILIES, COMMISSION_WEAPON_SUFFIXES } from './loot.js';
 import { PENETRATED_ARMOR_RULES, penetratedArmorStatus, CLUB_STUN_RULES, stunStatus, AXE_BLEED_RULES, bleedStatus, previewStage, enemyDefenseView } from './engine.js';
 
 // Candidate builds never share progress or tab leases with the accepted game.
@@ -102,6 +102,7 @@ let preventOverwrite = loaded.error || !storeAvailable;
 let lastSavedRaw = loaded.raw;
 let prefs = { sound: false, backgroundIdle: true, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches };
 try { const saved = JSON.parse(readStorage(PREF_KEY) || '{}'); if (typeof saved.backgroundIdle === 'boolean') prefs.backgroundIdle = saved.backgroundIdle; if (typeof saved.reducedMotion === 'boolean') prefs.reducedMotion = saved.reducedMotion; } catch { /* optional preferences only */ }
+let finishCampCancelled = false; // Session-only feedback, never serialized.
 let selectedId = null;
 let selectedSlot = null;
 let selectedSaleIds = new Set();
@@ -215,6 +216,7 @@ if (channel) channel.onmessage = event => {
 if (!ownership.supported) tabOwner = true; // ephemeral memory only; never writes SAVE_KEY
 function syncSelection() {
   $('bleed-notice').hidden = true; // Imported/reloaded journeys never inherit recent damage feedback.
+  clearFinishThenCamp(state); finishCampCancelled = false;
   closeGearSetDialog(); lastGearSetSignature = ''; $('gear-set-feedback').textContent = '';
   $('counter-notice').hidden = true; clearTimeout(counterTimer);
   pinnedExpeditionReport = null; lastReportSignature = ''; // Local comparisons never cross adopted journeys or ownership changes.
@@ -244,7 +246,8 @@ function dispatch(action, payload) {
     act(state, action, payload);
     // A successful lifecycle change cannot credit time from the previous mode.
     // Rejected/repeated starts and ordinary combat actions keep their interval.
-    if ((action === 'start' || action === 'retreat') && state.mode !== previousMode) pump.reset();
+    if ((action === 'start' || action === 'retreat' || action === 'finishThenCamp') && state.mode !== previousMode) pump.reset();
+    if (action === 'start' || action === 'retreat') finishCampCancelled = false;
     reconcileWeaponCommission(); render(true); if (action === 'start' || action === 'retreat') $('bleed-notice').hidden = true; save(true); return true;
   } catch (error) { console.error('Action failed', error); showToast('此操作目前無法完成，進度仍保留。'); }
 }
@@ -557,7 +560,18 @@ function renderAbilities() {
   }
 }
 function commissionQuoteSignature(preview) {
-  return JSON.stringify([preview.family, preview.item, preview.price, preview.goldAfter, preview.quoteBasis, preview.currentWeapon, state.mode, state.stage, state.unlocked, state.wins, state.inventory, state.pendingLoot]);
+  return JSON.stringify([preview.family, preview.suffix, preview.item, preview.price, preview.goldAfter, preview.quoteBasis, preview.currentWeapon, state.mode, state.stage, state.unlocked, state.wins, state.inventory, state.pendingLoot]);
+}
+// Camp-only UI preference, deliberately absent from saves and ownership transfer.
+const commissionSuffixSelection = { axe: 'slaughter', rapier: 'slaughter', club: 'slaughter' };
+const commissionSuffixNames = { slaughter: '屠戮（Slaughter）', balance: '平衡（Balance）', nimble: '靈巧（Nimble）' };
+function selectCommissionSuffix(family, suffix) {
+  if (!claimLease() || state.mode !== 'town' || !(state.wins >= 1)) return;
+  if (!COMMISSION_WEAPON_SUFFIXES[family]?.some(choice => choice.suffix === suffix)) return;
+  if (commissionSuffixSelection[family] === suffix) return;
+  closeWeaponCommission();
+  commissionSuffixSelection[family] = suffix;
+  renderWeaponCommission();
 }
 function commissionStat(value, rate = false) {
   const number = (Number(value) || 0) * (rate ? 100 : 1);
@@ -576,7 +590,7 @@ function closeWeaponCommission() {
 function reconcileWeaponCommission() {
   if (!commissionConsent) return;
   if (!claimLease()) { abortWeaponCommission('此分頁已失去進度控制權，請接手後重新預覽。'); return; }
-  const fresh = previewWeaponCommission(state, commissionConsent.family);
+  const fresh = previewWeaponCommission(state, commissionConsent.family, commissionConsent.suffix);
   if (!fresh.available) { abortWeaponCommission(fresh.reason || '請回營後重新預覽。'); return; }
   if (commissionConsent.signature !== commissionQuoteSignature(fresh)) abortWeaponCommission('報價、進度或目前裝備已改變，請關閉後重新預覽。');
 }
@@ -586,12 +600,12 @@ function openWeaponCommission(family) {
   if (!(state.wins >= 1)) { showToast('完成首次遠征後解鎖武器委託；目前未扣款。'); return; }
   // One visible offer is one consent scope; another selection cannot silently replace it.
   if ($('commission-dialog').open) return;
-  const preview = previewWeaponCommission(state, family);
+  const preview = previewWeaponCommission(state, family, commissionSuffixSelection[family]);
   if (!preview.item) { showToast(preview.reason || '無法取得委託報價，未扣款。'); return; }
   const { item, currentWeapon } = preview;
   commissionConsent = preview.available ? { ...preview, signature: commissionQuoteSignature(preview) } : null;
   $('commission-item-name').textContent = item.name;
-  $('commission-item-meta').textContent = `${qualityName(item.quality)}（${item.quality}） · Lv.${item.level} · 品質骰 R${commissionStat(item.roll)} · 屠戮（Slaughter） · 無前綴`;
+  $('commission-item-meta').textContent = `${qualityName(item.quality)}（${item.quality}） · Lv.${item.level} · 品質骰 R${commissionStat(item.roll)} · ${commissionSuffixNames[preview.suffix || 'slaughter']} · 無前綴`;
   $('commission-current').textContent = `比較現用：${currentWeapon?.name || '無武器'}（${qualityName(currentWeapon?.quality || '')} · Lv.${currentWeapon?.level || 0}）`;
   const heading = node('div', 'commission-stat-row commission-stat-heading');
   heading.append(...['屬性', '委託值', '現用值', '差值'].map(text => node('span', '', text)));
@@ -606,6 +620,8 @@ function openWeaponCommission(family) {
   $('commission-trait').replaceChildren(node('strong', '', `武器路線 · ${itemTypeName(item)}`), node('p', '', describeWeaponTrait(item)));
   const rules = weaponRuleText(item);
   if (rules) $('commission-trait').append(node('p', 'muted', rules));
+  const tradeoffs = { slaughter: '屠戮提高基底攻擊；不含平衡的暴擊區間或靈巧的招架值區間。', balance: '平衡提高暴擊機率；放棄屠戮的攻擊區間，並非每次出手都更強。', nimble: '靈巧提高招架值；放棄屠戮攻擊與平衡暴擊區間，實際招架判定率依角色換算，並非等值百分比。' };
+  $('commission-trait').append(node('p', 'muted', tradeoffs[preview.suffix || 'slaughter']));
   $('commission-cost').textContent = `委託費用 ${format(preview.price)} 金幣 · 現有 ${format(state.hero.gold)} · 購買後餘額 ${format(preview.goldAfter)}`;
   $('commission-feedback').textContent = preview.available ? '尚未購買。確認後只交付這一件；若報價或比較條件變更，本次確認失效。' : `目前不可委託：${preview.reason} 未扣款、未交付。`;
   $('commission-confirm').textContent = `確認委託 · 支付 ${format(preview.price)} 金幣`;
@@ -621,7 +637,7 @@ function confirmWeaponCommission() {
   // Consume consent synchronously before dispatch, including an engine no-op or stale quote.
   commissionConsent = null;
   $('commission-confirm').disabled = true;
-  const completed = dispatch('commissionWeapon', { family: consent.family, quoteBasis: consent.quoteBasis });
+  const completed = dispatch('commissionWeapon', { family: consent.family, suffix: consent.suffix, quoteBasis: consent.quoteBasis });
   const delivered = state.inventory.find(item => item.id === consent.item.id);
   const purchased = completed && state.hero.gold === consent.goldAfter && state.inventory.length === countBefore + 1 && delivered?.locked === true && JSON.stringify(delivered) === JSON.stringify(consent.item) && JSON.stringify(state.equipment) === equipmentBefore;
   if (!purchased) { abortWeaponCommission('操作未確認完成，請核對金幣與背包後重新預覽。'); return; }
@@ -633,14 +649,31 @@ function confirmWeaponCommission() {
 }
 function renderWeaponCommission() {
   reconcileWeaponCommission();
-  const offers = COMMISSION_WEAPON_FAMILIES.map(choice => ({ ...choice, preview: previewWeaponCommission(state, choice.family) }));
-  const signature = JSON.stringify([tabOwner, state.mode, state.wins, offers]);
+  const offers = COMMISSION_WEAPON_FAMILIES.map(choice => ({ ...choice, preview: previewWeaponCommission(state, choice.family, commissionSuffixSelection[choice.family]) }));
+  const signature = JSON.stringify([tabOwner, state.mode, state.wins, commissionSuffixSelection, offers]);
   if (signature === lastCommissionSignature) return;
   lastCommissionSignature = signature;
+  const focused = typeof document !== 'undefined' ? document.activeElement?.id : null;
+  const controls = [];
   const canPreview = tabOwner && state.mode === 'town' && state.wins >= 1;
   $('commission-status').textContent = !tabOwner ? '唯讀分頁：接手後才能委託。' : state.mode !== 'town' ? '僅營地可委託；請先回營整備。' : !(state.wins >= 1) ? '完成首次遠征後解鎖。' : offers.every(offer => !offer.preview.available) && new Set(offers.map(offer => offer.preview.reason)).size === 1 ? offers[0].preview.reason : '選擇路線查看精確報價與比較；確認前不會扣款。';
+  $('commission-affixes').replaceChildren(...offers.map(({ family, label }) => {
+    const field = node('div', 'commission-affix');
+    const caption = node('label', '', `${label}詞綴`);
+    const select = node('select'); select.id = `commission-suffix-${family}`;
+    caption.setAttribute('for', select.id);
+    select.setAttribute('aria-label', `${label}委託詞綴`);
+    select.append(...COMMISSION_WEAPON_SUFFIXES[family].map(choice => {
+      const option = node('option', '', commissionSuffixNames[choice.suffix]); option.value = choice.suffix; return option;
+    }));
+    select.value = commissionSuffixSelection[family];
+    select.disabled = !canPreview;
+    select.addEventListener('change', () => selectCommissionSuffix(family, select.value));
+    controls.push(select); field.append(caption, select); return field;
+  }));
   $('commission-choices').replaceChildren(...offers.map(({ family, label, preview }) => {
     const button = node('button', 'commission-choice');
+    button.id = `commission-preview-${family}`; controls.push(button);
     const routes = { axe: '流血傷口', rapier: '穿透護甲', club: '暈眩控制' };
     button.append(node('strong', '', label), node('span', '', routes[family] || ''), node('span', 'commission-price', preview.item ? `${format(preview.price)} 金幣 · 查看` : '暫無報價'));
     button.disabled = !canPreview || !preview.item;
@@ -649,6 +682,7 @@ function renderWeaponCommission() {
     button.addEventListener('click', () => openWeaponCommission(family));
     return button;
   }));
+  controls.find(control => control.id === focused && !control.disabled)?.focus?.();
 }
 function safeSaleSignature(entry) {
   const item = state.inventory.find(item => item.id === entry.id);
@@ -934,6 +968,7 @@ function render(force = false) {
   $('stage-select').value = state.stage; $('stage-select').disabled = state.mode === 'battle' || !tabOwner; $('auto-advance').checked = Boolean(state.autoAdvance); $('auto-advance').disabled = !tabOwner; $('import-save').disabled = !tabOwner;
   const departure = departureReadiness();
   $('start-button').disabled = !tabOwner || state.mode === 'battle' || state.mode === 'defeat' || !departure.ready; $('retreat-button').disabled = !tabOwner || state.mode === 'town'; $('heal-button').disabled = !tabOwner || state.mode !== 'battle' || state.hero.hp >= derived.maxHp || !(state.potions > 0);
+  renderFinishCamp();
   $('heal-button').textContent = `補給藥水 · ${state.potions ?? 0}`;
   $('control-hint').textContent = state.mode === 'battle' ? (state.autoAdvance ? '自動推進中 · 隨時可回營整備' : '自動重刷本關 · 回營後才能換裝與出售') : state.mode === 'defeat' ? '點「回營整備」恢復，再挑戰較適合的關卡。' : departure.reason || '自動戰鬥 · 不考手速 · 隨時回營換裝';
   reconcileSelectedSale();
@@ -1197,6 +1232,32 @@ function drawScene(t, dt) {
   particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=dt*.25;ctx.globalAlpha=Math.max(0,p.life);rect(p.x*w,p.y*h,2,2,p.color);}ctx.globalAlpha=1;
   if(flash>0&&!prefs.reducedMotion){ctx.fillStyle=`rgba(244,221,160,${Math.min(.13,flash)})`;ctx.fillRect(0,0,w,h);}flash=Math.max(0,flash-dt*2);attackPulse=Math.max(0,attackPulse-dt*4);enemyPulse=Math.max(0,enemyPulse-dt*4);
 }
+
+// One-shot idle adaptation: not a saved policy or original HV mechanic.
+function renderFinishCamp() {
+  const view = finishThenCampView(state);
+  const button = $('finish-camp-button');
+  button.disabled = !tabOwner || !view.available;
+  button.setAttribute('aria-pressed', String(view.queued));
+  button.textContent = view.queued ? '取消通關後回營' : state._phase === 'intermission' && view.available ? '通關完成，立即回營' : '本次通關後回營';
+  $('finish-camp-status').textContent = view.queued
+    ? '已預約：本次通關獎勵結算後回營，不再自動開下一場。可再次點擊取消。'
+    : view.available && state._phase === 'intermission'
+      ? '本次獎勵已結算；現在回營不會重複領獎。'
+      : view.available && finishCampCancelled
+        ? '已取消回營預約；通關後依原設定自動繼續。'
+        : view.available
+          ? '可預約打完本次再回營；「回營整備」仍會立即撤退。'
+          : '單次回營預約不會保存；出戰後可設定，戰敗或重新載入即清除。';
+}
+$('finish-camp-button').addEventListener('click', () => {
+  const view = finishThenCampView(state);
+  if (!view.available) return;
+  if (dispatch('finishThenCamp', !view.queued)) {
+    finishCampCancelled = view.queued && !finishThenCampView(state).queued;
+    renderFinishCamp();
+  }
+});
 
 $('start-button').addEventListener('click',()=>{const previousMode=state.mode;if(dispatch('start')&&previousMode!=='battle'&&state.mode==='battle')playSound('win');});
 $('retreat-button').addEventListener('click',()=>dispatch('retreat'));

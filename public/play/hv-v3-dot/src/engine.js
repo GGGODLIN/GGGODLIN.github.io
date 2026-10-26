@@ -42,6 +42,18 @@ const counterBudgets = new WeakMap();
 // full-action automatic recast is an adaptation, not original Auto-cast Slots.
 export const PROTECTION_RULES = Object.freeze({unlockLevel:10,durationTicks:15,reduction:.25});
 const protectionSessions = new WeakMap();
+// One-shot idle UX adaptation, never an original-HV rule or saved preference.
+const finishThenCampSessions = new WeakSet();
+export function finishThenCampView(s) {
+  const available=s?.mode==='battle'&&['fight','intermission'].includes(s?._phase);
+  return {available,queued:available&&finishThenCampSessions.has(s)};
+}
+export function clearFinishThenCamp(s) { finishThenCampSessions.delete(s); }
+function finishThenCamp(s) {
+  clearFinishThenCamp(s);s.mode='town';s._phase='idle';s._rest=0;
+  s._clock=0;s._enemyClock=0;s.enemies=[];
+}
+
 export function protectionView(s) {
   const session=s&&protectionSessions.get(s);
   const level=Math.max(0,finite(s?.hero?.level));
@@ -446,7 +458,7 @@ function enemiesFor(s) {
 }
 function start(s) {
   if(s.pendingLoot.length||s.inventory.length>INVENTORY_LIMIT-5){log(s,'背包空間不足，請先整理戰利品再出戰。');return;}
-  protectionSessions.delete(s);
+  clearFinishThenCamp(s);protectionSessions.delete(s);
   s.mode='battle';s.wave=1;s.battle.elapsed=0;s.battle.actions=freshActions();s._clock=0;s._enemyClock=0;s._turns=0;s._phase='fight';s._rest=0;s.totalWaves=4;
   resetCounterBudget(s,s.timing.turns,true);recover(s);s.potions=3;s.enemies=enemiesFor(s);log(s,`進入第 ${s.stage} 層。`);
   beginExpeditionReport(s);
@@ -616,10 +628,10 @@ export function previewSelectedSale(s, requestedIds) {
     return {available:true,reason:'',items,total,goldAfter,quoteBasis};
   } catch {return unavailable('裝備或交易資料無效，未建立出售清單。');}
 }
-export function previewWeaponCommission(s, family) {
+export function previewWeaponCommission(s, family, suffix = 'slaughter') {
   const unavailable=reason=>({family:typeof family==='string'?family:null,item:null,price:null,goldAfter:null,available:false,reason,quoteBasis:null,currentWeapon:null});
   try {
-    const item=createCommissionWeapon(family,s?.hero?.level);
+    const item=createCommissionWeapon(family,s?.hero?.level,suffix);
     if(!item)return unavailable('委託資料無效；請選擇支援的武器與角色等級。');
     if(!Array.isArray(s.inventory)||!Array.isArray(s.pendingLoot)||!s.equipment
       ||!Number.isFinite(s.hero.gold)||s.hero.gold<0||s.hero.gold>1e12
@@ -636,13 +648,13 @@ export function previewWeaponCommission(s, family) {
     const currentWeapon=JSON.parse(JSON.stringify(s.equipment.weapon));
     // No durable receipt: the existing counter/balance and exact comparison make
     // a successful buy or relevant state change invalidate the previous consent.
-    const quoteBasis=JSON.stringify([family,s.hero.level,s.hero.gold,s._itemId,item.id,price,currentWeapon]);
+    const quoteBasis=JSON.stringify([family,suffix,s.hero.level,s.hero.gold,s._itemId,item,price,currentWeapon,ids]);
     const reason=s.mode!=='town'?'請先回營，再委託武器。'
       :s.wins<1?'完成首次遠征後開放武器委託。'
       :s.pendingLoot.length?'請先領取並整理待領戰利品；委託不會放入待領區。'
       :s.inventory.length>INVENTORY_LIMIT-6?'背包需至少 6 格空位：武器占 1 格，另保留出戰所需 5 格。'
       :goldAfter<0?`金幣不足：還差 ${price-s.hero.gold} 金幣。`:'';
-    return {family,item,price,goldAfter,available:!reason,reason,quoteBasis,currentWeapon};
+    return {family,suffix,item,price,goldAfter,available:!reason,reason,quoteBasis,currentWeapon};
   } catch { return unavailable('裝備或交易資料無效；未建立委託。'); }
 }
 function addLoot(s, slot) {
@@ -681,6 +693,7 @@ function win(s) {
   event(s,'win',`第 ${s.stage} 層突破`,round(s.battle.elapsed));log(s,sale?`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，保底裝備已自動出售 +${sale.value} 金幣。`:`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，保底裝備已入背包。`);
   settleExpeditionReport(s,'win');
   protectionSessions.delete(s);counterBudgets.delete(s);recover(s);s._phase='intermission';s._rest=3;s.enemies=[];
+  if(finishThenCampSessions.has(s)){finishThenCamp(s);return;}
   if(s.inventory.length>INVENTORY_LIMIT-5||s.pendingLoot.length){s.mode='town';s._phase='idle';log(s,s.autoSell===true?'背包接近滿額，已安全回營；未出售的戰利品均保留。':'背包接近滿額，已安全回營，所有戰利品均保留。');}
 }
 // Only the live-to-dead damage edge settles a kill. Re-reading a dead enemy,
@@ -739,7 +752,7 @@ function enemyAttack(s, e) {
   observeExpeditionLoss(s,previousHp-s.hero.hp,p.maxHp);
   if(s.hero.hp<=0){
     settleExpeditionReport(s,'defeat');
-    protectionSessions.delete(s);counterBudgets.delete(s);s.mode='defeat';s._phase='idle';for(const enemy of s.enemies)clearEnemyStatuses(enemy);
+    clearFinishThenCamp(s);protectionSessions.delete(s);counterBudgets.delete(s);s.mode='defeat';s._phase='idle';for(const enemy of s.enemies)clearEnemyStatuses(enemy);
     event(s,'defeat','暫時撤退，成長與戰利品保留');log(s,'挑戰失利。不損失裝備與金幣，回營調整後再試。');
     return false;
   }
@@ -877,6 +890,15 @@ function usePotion(s) {
   }
 }
 export function act(s, action, payload) {
+  if(action==='finishThenCamp'){
+    if(typeof payload!=='boolean'||!finishThenCampView(s).available)return s;
+    if(!payload){clearFinishThenCamp(s);return s;}
+    // Intermission already settled the win. Only leave; never settle it again.
+    if(s._phase==='intermission')finishThenCamp(s);
+    else finishThenCampSessions.add(s);
+    return s;
+  }
+
   if(action==='autoProtection'){if(s.mode==='town'&&typeof payload==='boolean'){if(payload)s.autoProtection=true;else delete s.autoProtection;}return s;}
 
   if(['saveGearSet','clearGearSet','applyGearSet'].includes(action)){
@@ -957,15 +979,16 @@ export function act(s, action, payload) {
     log(s,messages[action]);return s;
   }
   if(action==='commissionWeapon'){
-    let family,quoteBasis;
+    let family,quoteBasis,suffix='slaughter';
     try {
       const record=payload&&typeof payload==='object'&&!Array.isArray(payload)&&(Object.getPrototypeOf(payload)===Object.prototype||Object.getPrototypeOf(payload)===null);
       const fields=record?Object.getOwnPropertyDescriptors(payload):{};
-      if(!record||Reflect.ownKeys(payload).length!==2||!['family','quoteBasis'].every(key=>fields[key]?.enumerable&&Object.hasOwn(fields[key],'value'))
-        ||typeof fields.family.value!=='string'||typeof fields.quoteBasis.value!=='string'||fields.quoteBasis.value.length>8192)throw Error('invalid quote');
-      family=fields.family.value;quoteBasis=fields.quoteBasis.value;
+      const keys=Reflect.ownKeys(fields),hasSuffix=Object.hasOwn(fields,'suffix');
+      if(!record||keys.length!==(hasSuffix?3:2)||!(hasSuffix?['family','suffix','quoteBasis']:['family','quoteBasis']).every(key=>fields[key]?.enumerable&&Object.hasOwn(fields[key],'value'))
+        ||typeof fields.family.value!=='string'||(hasSuffix&&typeof fields.suffix.value!=='string')||typeof fields.quoteBasis.value!=='string'||fields.quoteBasis.value.length>131072)throw Error('invalid quote');
+      family=fields.family.value;quoteBasis=fields.quoteBasis.value;if(hasSuffix)suffix=fields.suffix.value;
     } catch {log(s,'武器委託取消：確認資料無效；未扣款或交付裝備。');return s;}
-    const offer=previewWeaponCommission(s,family);
+    const offer=previewWeaponCommission(s,family,suffix);
     if(!offer.available){log(s,`武器委託取消：${offer.reason}未扣款或交付裝備。`);return s;}
     if(offer.quoteBasis!==quoteBasis){log(s,'武器委託取消：報價或比較裝備已變更；請重新預覽，未扣款或交付裝備。');return s;}
     // All validation precedes this synchronous transaction. Never trust submitted
@@ -1025,7 +1048,7 @@ export function act(s, action, payload) {
   }
   if(action==='setAutoAdvance'&&typeof payload==='boolean'){s.autoAdvance=payload;return s;}
   if(action==='retreat'&&s.mode==='battle'&&s._phase==='fight')settleExpeditionReport(s,'retreat');
-  if(action==='retreat') {protectionSessions.delete(s);counterBudgets.delete(s);s.mode='town';s.enemies=[];s._phase='idle';s._clock=0;s._enemyClock=0;recover(s);refillPending(s);return s;}
+  if(action==='retreat') {clearFinishThenCamp(s);protectionSessions.delete(s);counterBudgets.delete(s);s.mode='town';s.enemies=[];s._phase='idle';s._clock=0;s._enemyClock=0;recover(s);refillPending(s);return s;}
   if(action==='heal'&&s.mode==='battle'&&s._phase==='fight'){usePotion(s);return s;}
   if(s.mode==='battle')return s;
   if(action==='selectStage'&&Number.isInteger(payload)&&payload>=1&&payload<=s.unlocked){s.stage=payload;return s;}
