@@ -146,6 +146,21 @@ export const STRATEGIES = Object.freeze([
 ]);
 const POLICIES = {balanced:{cadence:5,healAt:.38,reserve:0},assault:{cadence:3,healAt:.22,reserve:0},sustain:{cadence:5,healAt:.60,reserve:6,potionAt:.30}};
 const validStrategy = value => STRATEGIES.some(strategy=>strategy.id===value);
+// Optional idle-policy adapter for the existing free expedition supply. This
+// does not assert original-HV potion rules or buy/refill any resource. Sustain
+// keeps its historical rule, including permission to use its final potion.
+export const EMERGENCY_SUPPLY_RULES = Object.freeze({threshold:.30,reserve:1});
+const emergencyStock = s => Number.isInteger(s?.potions)&&s.potions>EMERGENCY_SUPPLY_RULES.reserve;
+export function emergencySupplyView(s) {
+  const strategy=validStrategy(s?.strategy)?s.strategy:'balanced',enabled=s?.emergencySupply===true;
+  const effective=enabled&&strategy!=='sustain',fighting=s?.mode==='battle'&&s?._phase==='fight'&&s?.hero?.hp>0;
+  const remaining=Number.isInteger(s?.potions)&&s.potions>=0?s.potions:0;
+  const low=!!fighting&&s.hero.hp<stats(s).maxHp*EMERGENCY_SUPPLY_RULES.threshold;
+  const available=effective&&!!fighting&&low&&emergencyStock(s);
+  const status=strategy==='sustain'?'sustain':!enabled?'off':!fighting?'away':!remaining?'empty':
+    remaining<=EMERGENCY_SUPPLY_RULES.reserve?'reserved':low?'ready':'healthy';
+  return {enabled,effective,strategy,...EMERGENCY_SUPPLY_RULES,remaining,available,status};
+}
 const freshActions = () => ({attacks:0,skills:0,heals:0,potions:0,manaSpent:0});
 const SLOTS = ['weapon', 'armor', 'accessory'];
 const QUALITY = ['Crude','Fair','Average','Superior','Exquisite','Magnificent','Legendary','Peerless'];
@@ -325,7 +340,8 @@ function expeditionBuild(s) {
       quality:QUALITY.includes(item?.quality)?item.quality:null});
   });
   return Object.freeze({targetPriority:validTargetPriority(s.targetPriority)?s.targetPriority:'front',
-    autoProtection:s.autoProtection===true,abilities:Object.freeze(abilities),equipment:Object.freeze(equipment)});
+    autoProtection:s.autoProtection===true,...(s.emergencySupply===true?{emergencySupply:true}:{}),
+    abilities:Object.freeze(abilities),equipment:Object.freeze(equipment)});
 }
 function copyExpeditionReport(report) {
   return {...report,build:{...report.build,abilities:report.build.abilities.map(entry=>({...entry})),equipment:report.build.equipment.map(entry=>({...entry}))},
@@ -830,7 +846,7 @@ export function previewItemWorld(s,id) {
     const context={};
     for(const key of ['version','mode','_phase','hero','soulFragments','worldSeeds','equipment','inventory','pendingLoot',
       'stage','unlocked','wins','autoAdvance','strategy','seed','timing','_itemId','kills'])context[key]=detachedData(ownData(s,key));
-    for(const key of ['gearSets','abilities','autoProtection','targetPriority','autoSell']){
+    for(const key of ['gearSets','abilities','autoProtection','targetPriority','autoSell','emergencySupply']){
       const value=ownData(s,key,true);if(Object.hasOwn(s,key))context[key]=detachedData(value);
     }
     if(context.version!==VERSION||!seedBalance(context.worldSeeds)||!fragmentBalance(context.soulFragments)
@@ -845,7 +861,7 @@ export function previewItemWorld(s,id) {
       ||!Number.isInteger(context.unlocked)||context.unlocked<context.stage||context.unlocked>MAX_STAGE
       ||!Number.isInteger(context.wins)||context.wins<0||context.wins>1e9||typeof context.autoAdvance!=='boolean'
       ||!validStrategy(context.strategy)||Object.hasOwn(context,'targetPriority')&&!validTargetPriority(context.targetPriority)
-      ||['autoProtection','autoSell'].some(key=>Object.hasOwn(context,key)&&typeof context[key]!=='boolean')
+      ||['autoProtection','autoSell','emergencySupply'].some(key=>Object.hasOwn(context,key)&&typeof context[key]!=='boolean')
       ||!Number.isInteger(context.seed)||context.seed<0||context.seed>0xffffffff
       ||!Number.isInteger(context._itemId)||context._itemId<0||context._itemId>1e9
       ||!Number.isInteger(context.kills)||context.kills<0||context.kills>1e9
@@ -855,7 +871,7 @@ export function previewItemWorld(s,id) {
     readGearSets(context);readAbilityAllocation(context);
     if([...held.values(),...context.pendingLoot].filter(isSoulboundItem).length>SOULBOUND_WEAPON_LIMIT)return empty('永久收藏超過安全上限。');
     const item=held.get(id),after=createItemWorldUpgrade(item,hero.level);
-    if(!after)return empty('僅支援已綁定的尚可／普通／優良戰斧、刺劍、戰棍，且尚未完成 IW1；其他品質與後續階級尚未實作。');
+    if(!after)return empty('僅支援已綁定的尚可／普通／優良／精良戰斧、刺劍、戰棍，且尚未完成 IW1；其他品質與後續階級尚未實作。');
     const seedsAfter=context.worldSeeds-1,strengthStage=ITEM_WORLD_STRENGTH_STAGE;
     const reason=context.mode!=='town'||context._phase!=='idle'?'請先回營，再進入裝備界。'
       :context.pendingLoot.length?'請先整理待領戰利品，再進入裝備界。'
@@ -998,12 +1014,12 @@ function win(s) {
   if(itemWorldSessions.has(s)){winItemWorld(s);return;}
   s.wins++;s.battle.cleared++;s.unlocked=Math.min(MAX_STAGE,Math.max(s.unlocked,s.stage+1));
   const previous=s.battle.bestTimes[s.stage];if(!previous||s.battle.elapsed<previous)s.battle.bestTimes[s.stage]=round(s.battle.elapsed);
-  const sale=addLoot(s,s.wins===1?'weapon':undefined);s.hero.gold+=20+s.stage*5;gainXp(s,35+s.stage*5);
+  const pendingBefore=s.pendingLoot.length,sale=addLoot(s,s.wins===1?'weapon':undefined);s.hero.gold+=20+s.stage*5;gainXp(s,35+s.stage*5);
   const fragments=fragmentBalance(s.soulFragments)?Math.min(SOUL_FRAGMENTS_PER_WIN,SOUL_FRAGMENT_LIMIT-s.soulFragments):0;
   s.soulFragments+=fragments;
   if(seedBalance(s.worldSeeds))s.worldSeeds=Math.min(WORLD_SEED_LIMIT,s.worldSeeds+WORLD_SEEDS_PER_WIN);
   const capNotice=s.soulFragments===SOUL_FRAGMENT_LIMIT?' 靈魂碎片已達持有上限；本次增加 '+fragments+' 個。':'';
-  event(s,'win',`第 ${s.stage} 層突破`,round(s.battle.elapsed));log(s,(sale?`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，保底裝備已自動出售 +${sale.value} 金幣。`:`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，保底裝備已入背包。`)+capNotice);
+  event(s,'win',`第 ${s.stage} 層突破`,round(s.battle.elapsed));log(s,(sale?`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，保底裝備已自動出售 +${sale.value} 金幣。`:`第 ${s.stage} 層通關 · ${s.battle.elapsed.toFixed(1)} 秒，${s.pendingLoot.length>pendingBefore?'保底裝備已保留於待領區。':'保底裝備已入背包。'}`)+capNotice);
   // The live balance shows the reward; no synthetic event shifts combat IDs
   // or evicts historical event/log entries from their bounded buffers.
   settleExpeditionReport(s,'win');
@@ -1035,7 +1051,9 @@ function playerTurn(s) {
   }
   // Existing v0.1 support actions do not replace the attack. Policies alter
   // eligibility only: no extra turns, free stats, or altered damage formulas.
-  if(policy.potionAt&&s.hero.hp<p.maxHp*policy.potionAt)usePotion(s);
+  const emergency=s.emergencySupply===true&&!policy.potionAt&&emergencyStock(s)&&s.hero.hp>0;
+  const potionAt=policy.potionAt||(emergency?EMERGENCY_SUPPLY_RULES.threshold:0);
+  if(potionAt&&s.hero.hp<p.maxHp*potionAt)usePotion(s);
   const protection=protectionView(s);
   if(!healed&&protection.enabled&&protection.unlocked&&!protection.active&&s.hero.mp>=protection.manaCost){
     const session=protectionSessions.get(s)||{expiresAtTick:0,casts:0,damagePrevented:0};
@@ -1202,6 +1220,17 @@ export function advance(s, seconds) {
   }
   return s;
 }
+/** Read-only camp recovery status. Pending is the existing bounded overflow
+ * queue, not extra usable storage; claiming never sells, equips or creates loot. */
+export function pendingLootView(s) {
+  const valid=!!s&&Array.isArray(s.inventory)&&s.inventory.length<=INVENTORY_LIMIT
+    &&Array.isArray(s.pendingLoot)&&s.pendingLoot.length<=8;
+  const count=valid?s.pendingLoot.length:0,freeSlots=valid?INVENTORY_LIMIT-s.inventory.length:0;
+  const claimable=Math.min(count,freeSlots);
+  const reason=!valid?'戰利品資料無效，未移動任何裝備。':s.mode!=='town'?'請先回營，再領取待領戰利品。'
+    :!count?'沒有待領戰利品。':!freeSlots?'背包已滿；請先自行整理背包，待領裝備均保留。':'';
+  return {count,freeSlots,claimable,available:!reason,reason};
+}
 function refillPending(s){while(s.pendingLoot.length&&s.inventory.length<INVENTORY_LIMIT)s.inventory.push(s.pendingLoot.shift());}
 function usePotion(s) {
   const p=stats(s);
@@ -1212,6 +1241,16 @@ function usePotion(s) {
   }
 }
 export function act(s, action, payload) {
+  if(action==='claimPending'){
+    // Re-read current room/queue on each click. No submitted IDs or stale count
+    // can select a different item, exceed capacity, or charge/duplicate rewards.
+    if(payload!==undefined)return s;
+    const view=pendingLootView(s);
+    if(!view.available||!Object.getOwnPropertyDescriptor(s,'inventory')?.writable
+      ||!Object.getOwnPropertyDescriptor(s,'pendingLoot')?.writable)return s;
+    const inventory=[...s.inventory,...s.pendingLoot.slice(0,view.claimable)],pendingLoot=s.pendingLoot.slice(view.claimable);
+    s.inventory=inventory;s.pendingLoot=pendingLoot;return s;
+  }
   if(action==='enterItemWorld'){enterItemWorld(s,payload);return s;}
   if(action==='finishThenCamp'){
     if(typeof payload!=='boolean'||!finishThenCampView(s).available)return s;
@@ -1225,6 +1264,8 @@ export function act(s, action, payload) {
   if(action==='targetPriority'){if(s.mode==='town'&&validTargetPriority(payload)){if(payload==='front')delete s.targetPriority;else s.targetPriority=payload;}return s;}
 
   if(action==='autoProtection'){if(s.mode==='town'&&typeof payload==='boolean'){if(payload)s.autoProtection=true;else delete s.autoProtection;}return s;}
+
+  if(action==='setEmergencySupply'){if(s.mode==='town'&&typeof payload==='boolean'){if(payload)s.emergencySupply=true;else delete s.emergencySupply;}return s;}
 
   if(['saveGearSet','clearGearSet','applyGearSet'].includes(action)){
     if(s.mode!=='town')return s;
@@ -1424,9 +1465,9 @@ export function validateSave(input) {
   // fields retain the legacy ignore policy; never visit their executable data.
   // Recognized fields are detached via descriptors before any value is consumed.
   if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('不支援或損壞的存檔');
-  const saved={},labels={abilities:'能力配置',gearSets:'配裝',targetPriority:'集火設定',autoProtection:'自動護盾設定',
+  const saved={},labels={abilities:'能力配置',gearSets:'配裝',targetPriority:'集火設定',autoProtection:'自動護盾設定',emergencySupply:'緊急補給設定',
     soulFragments:'靈魂碎片',worldSeeds:'世界之種',equipment:'不支援的裝備',inventory:'不支援的裝備',pendingLoot:'不支援的裝備'};
-  for(const key of ['version','seed','hero','equipment','inventory','pendingLoot','targetPriority','autoProtection','abilities','gearSets',
+  for(const key of ['version','seed','hero','equipment','inventory','pendingLoot','targetPriority','autoProtection','emergencySupply','abilities','gearSets',
     '_itemId','unlocked','stage','kills','wins','autoAdvance','strategy','autoSell','battle','soulFragments','worldSeeds']){
     try{
       const field=Object.getOwnPropertyDescriptor(input,key);
@@ -1449,6 +1490,9 @@ export function validateSave(input) {
   const protectionField=Object.getOwnPropertyDescriptor(input,'autoProtection');
   if(protectionField){if(!protectionField.enumerable||!Object.hasOwn(protectionField,'value')||typeof protectionField.value!=='boolean')throw new Error('自動護盾設定無效；未載入，請保留原存檔。');if(protectionField.value)s.autoProtection=true;}
   else if('autoProtection' in input)throw new Error('自動護盾設定無效；未載入，請保留原存檔。');
+  const supplyField=Object.getOwnPropertyDescriptor(input,'emergencySupply');
+  if(supplyField){if(!supplyField.enumerable||!Object.hasOwn(supplyField,'value')||typeof supplyField.value!=='boolean')throw new Error('緊急補給設定無效；未載入，請保留原存檔。');if(supplyField.value)s.emergencySupply=true;}
+  else if('emergencySupply' in input)throw new Error('緊急補給設定無效；未載入，請保留原存檔。');
   const allocation=readAbilityAllocation(input);
   if(allocation.learned.length)s.abilities=allocation;
   // Rebuild allocated growth rather than trusting imported attribute multipliers.

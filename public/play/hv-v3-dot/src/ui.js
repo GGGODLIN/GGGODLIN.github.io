@@ -1,4 +1,4 @@
-import { createGame, advance, act, stats, validateSave, STRATEGIES, MAJOR_ABILITIES, TARGET_PRIORITIES, targetPriorityView, INVENTORY_LIMIT, previewSelectedSale, previewSafeSale, previewWeaponCommission, previewSoulbindWeapon, previewItemWorld, itemWorldView, expeditionReports, abilityView, growthReadiness, protectionView, counterattackView, gearSetsView, previewGearSet, isGearSetProtected, finishThenCampView, clearFinishThenCamp } from './engine.js';
+import { createGame, advance, act, stats, validateSave, STRATEGIES, MAJOR_ABILITIES, TARGET_PRIORITIES, targetPriorityView, INVENTORY_LIMIT, pendingLootView, previewSelectedSale, previewSafeSale, previewWeaponCommission, previewSoulbindWeapon, previewItemWorld, itemWorldView, expeditionReports, abilityView, growthReadiness, protectionView, emergencySupplyView, counterattackView, gearSetsView, previewGearSet, isGearSetProtected, finishThenCampView, clearFinishThenCamp } from './engine.js';
 import { createPump, createOwnership, loadVersionedSave } from './session.js';
 import { QUALITY_TIERS } from './loot.js';
 import { resolveWeaponFamily, describeWeaponTrait, describeItemFlavor, COMMISSION_WEAPON_FAMILIES, COMMISSION_WEAPON_SUFFIXES } from './loot.js';
@@ -85,7 +85,7 @@ function renderRoutePreview() {
     return row;
   }));
 }
-const slotIcons = { weapon: '⚔', armor: '◈', accessory: '◇' };
+const slotIcons = { weapon: 'unknown', armor: 'armor', accessory: 'accessory' };
 const statNames = { attack: '攻擊', defense: '防禦', hp: '生命', crit: '暴擊', evade: '閃避', block: '格擋', parry: '招架值' };
 const rateStats = new Set(['crit', 'evade', 'block']);
 const stageNames = ['霧松邊境', '青苔古道', '斷月遺跡', '幽燈深林', '灰燼城門', '沉星聖所'];
@@ -108,6 +108,31 @@ let selectedId = null;
 let selectedSlot = null;
 let selectedSaleIds = new Set();
 const selectedSaleCheckboxes = new Map();
+// Exact rendered nodes, not names or selector strings, identify comparison focus.
+const comparisonButtons = { inventory: new Map(), pending: new Map(), equipment: new Map() };
+function comparisonButtonVisible(button) {
+  return button && !button.disabled && button.isConnected !== false && !button.closest?.('[hidden], [inert], dialog:not([open])');
+}
+function captureComparisonFocus() {
+  const button = document.activeElement;
+  if (!comparisonButtonVisible(button)) return null;
+  for (const [location, buttons] of Object.entries(comparisonButtons)) {
+    for (const [id, rendered] of buttons) if (rendered === button) return { location, id, button };
+  }
+  return null;
+}
+function restoreComparisonFocus(previous) {
+  if (!previous || comparisonButtons[previous.location].get(previous.id) === previous.button || previous.button.isConnected === true) return;
+  const active = document.activeElement;
+  // A later renderer or explicit action may already have chosen a focus target.
+  if (active && active !== previous.button && active !== document.body && active !== document.documentElement) return;
+  const locations = [previous.location, ...Object.keys(comparisonButtons).filter(location => location !== previous.location)];
+  const replacement = locations.map(location => comparisonButtons[location].get(previous.id)).find(comparisonButtonVisible);
+  // A moved item follows its ID, not its old slot/name. A filtered/removed item
+  // leaves focus on a visible stable control, but only after losing that node.
+  const target = [replacement, $('slot-filter'), $('settings-toggle')].find(comparisonButtonVisible);
+  target?.focus({ preventScroll: true });
+}
 let selectedSaleConsent = null;
 let safeSaleBatch = null;
 let commissionConsent = null;
@@ -230,7 +255,7 @@ function syncSelection() {
   closeWeaponCommission(); // Ownership transfer, reload and import never retain consent.
   closeSoulbindWeapon(); // Permanent investment always needs fresh local consent.
   closeItemWorld(); // A paid trial never inherits consent from another journey or owner.
-  if (selectedId && !state.inventory.some(item => item.id === selectedId)) selectedId = null;
+  if (selectedId && ![...state.inventory, ...state.pendingLoot].some(item => item.id === selectedId)) selectedId = null;
   lastInventorySignature = ''; lastEquipmentSignature = ''; lastLogSignature = ''; lastEnemyStatusSignature = ''; lastStageCount = 0; lastPreviewStage = null;
 }
 // Match the engine's existing departure reserve; this is feedback, not a new rule.
@@ -260,7 +285,7 @@ function dispatch(action, payload) {
 }
 // Gear-only plans reference owned items; they never copy items or save abilities.
 function gearSetIntentSignature() {
-  return JSON.stringify([state.gearSets, state.equipment, state.inventory, state.pendingLoot, state.hero.level, state.hero.attributes, state.hero.proficiency, state.abilities, state.mode, tabOwner]);
+  return JSON.stringify([state.gearSets, state.equipment, state.inventory, state.pendingLoot, state.hero.level, state.hero.attributes, state.hero.proficiency, state.abilities, state.strategy, state.targetPriority, state.autoProtection, state.emergencySupply, state.mode, tabOwner]);
 }
 function closeGearSetDialog() {
   gearSetConsent = null;
@@ -290,6 +315,27 @@ function gearSetComparison(preview) {
   wrap.append(node('p','gear-set-counter',`招架／格擋成功後的條件反擊：${counter(preview.currentCounter)} → ${counter(preview.nextCounter)}。不是每次受擊機率。`));
   return wrap;
 }
+// This is the current configuration retained by a gear-only switch, not saved
+// preset data. The matching consent signature cancels if any displayed choice changes.
+function gearSetRetainedContext() {
+  const section = node('section', 'report-build gear-set-retained-context');
+  const abilities = abilityView(state), protection = protectionView(state), supply = emergencySupplyView(state);
+  const strategy = STRATEGIES.find(entry => entry.id === state.strategy)?.label || '未辨識';
+  const current = {targetPriority: targetPriorityView(state).policy, autoProtection: protection.enabled};
+  section.append(node('h3', '', '目前設定 · 套用後維持'),
+    node('p', 'report-build-note', '以下是現在的設定，不是配裝方案儲存的內容。只換三件裝備；不學習、裝配或升階能力，也不切換任何戰鬥政策。'),
+    node('p', 'report-build-policy', `目前戰術：${strategy}`),
+    node('p', 'report-build-policy', buildPolicyText(current, '目前政策')),
+    node('p', 'report-build-note', protection.unlocked
+      ? `Protection 政策不代表護盾已生效；出戰後仍依原施法條件判斷，每次 ${format(protection.manaCost)} MP 並取代一次攻擊。`
+      : `Protection 尚未解鎖（Lv.${protection.unlockLevel}）；政策不代表護盾已生效，目前不能施放。`),
+    node('p', 'report-build-policy', `目前設定：${buildEmergencySupplyText(supply.enabled)}`));
+  if (supply.strategy === 'sustain') section.append(node('p', 'report-build-note', '目前為持久：額外緊急補給開關不生效；原本治癒後 HP 低於 30% 自動喝藥的規則仍獨立運作，可以用最後 1 瓶。'));
+  section.append(node('p', 'report-build-policy', '目前已裝配能力 · 套用後仍生效'),
+    buildAbilityList(abilities.valid ? abilities.catalog.filter(choice => choice.slotted).map(choice => ({id: choice.id, rank: choice.currentRank})) : null),
+    node('p', 'report-build-note', '只列已裝配階級；學會但未裝配的能力不生效。面板預覽已包含這些能力，不是另一份能力方案，也不保證勝率或速度。'));
+  return section;
+}
 function requestGearSet(id, kind) {
   if ($('gear-set-dialog').open || !claimLease() || state.mode !== 'town') return;
   const view = gearSetsView(state), row = view.sets.find(entry => entry.id === id);
@@ -314,7 +360,7 @@ function requestGearSet(id, kind) {
     }
   }
   $('gear-set-items').replaceChildren(...rows);
-  $('gear-set-stats').replaceChildren(...(preview ? [gearSetComparison(preview)] : []));
+  $('gear-set-stats').replaceChildren(...(preview ? [gearSetRetainedContext(), gearSetComparison(preview)] : []));
   $('gear-set-dialog-feedback').textContent = '取消不會改變裝備或記錄；確認只處理這份預覽。';
   $('gear-set-confirm').textContent = kind === 'apply' ? '確認套用配裝' : kind === 'save' ? '確認鎖定並覆寫' : '確認清除記錄';
   $('gear-set-confirm').disabled = false; $('gear-set-dialog').showModal();
@@ -1009,6 +1055,30 @@ function renderCounterattack() {
 function renderPlayerParry(derived) {
   $('stat-parry').textContent = `${((Number(derived.parry) || 0) * 100).toFixed(2)}%`;
 }
+function renderEmergencySupply() {
+  const toggle = $('emergency-supply');
+  if (!toggle) return; // A cached older document may omit this optional panel.
+  const view = emergencySupplyView(state), sustain = view.strategy === 'sustain';
+  toggle.checked = view.enabled;
+  toggle.disabled = !tabOwner || state.mode !== 'town' || sustain;
+  const access = !tabOwner ? '唯讀分頁；取得控制權並回營後可改。' : state.mode !== 'town' ? '回營後可改。' : '僅營地可調整。';
+  $('emergency-supply-status').textContent = sustain
+    ? `持久戰術不受此開關控制：仍按既有規則在治癒後 HP 低於 30% 自動喝藥，可用最後 1 瓶。均衡／猛攻設定保留為${view.enabled ? '開啟' : '關閉'}。${access}`
+    : `${view.enabled ? '已開啟' : '預設關閉；目前藥水僅手動使用'}。${view.enabled ? '每個我方回合先依戰術判斷治癒，再檢查 HP；低於 30% 且剩餘超過 1 瓶才用 1 瓶。' : ''}${access}`;
+  const live = $('emergency-supply-live');
+  live.hidden = state.mode !== 'battle';
+  if (live.hidden) { live.textContent = ''; return; }
+  const stock = `補給剩 ${format(view.remaining)} 瓶 · 本場已用 ${format(state.battle.actions.potions)} 瓶（含手動／自動）`;
+  const condition = view.status === 'away' ? '目前不在交戰；不自動喝藥。'
+    : view.status === 'empty' ? '庫存已空，不會購買或補充。'
+    : view.status === 'reserved' ? '已到保留量；額外緊急補給不再使用，仍可手動喝藥。'
+    : view.status === 'ready' ? '目前低於 30%；待我方回合先判斷治癒，再判斷是否使用，不是立即觸發。'
+    : '等待我方回合治癒後仍低於 30%；不保證能防止戰敗。';
+  live.textContent = sustain
+    ? `${stock} · 持久既有自動補給：治癒後低於 30% 可用最後 1 瓶；不受額外補給開關控制。`
+    : view.effective ? `${stock} · 額外緊急補給保留 ${format(view.reserve)} 瓶供手動使用。${condition}`
+    : `${stock} · 額外緊急補給關閉；均衡／猛攻仍須手動喝藥。`;
+}
 function renderProtection() {
   const view = protectionView(state);
   const toggle = $('auto-protection');
@@ -1037,16 +1107,18 @@ function renderTargetPriority() {
   live.textContent = view.targetId === null ? '' : `目前集火：${view.targetName} · ${view.reason}。普攻與攻擊技能適用；治癒／護盾仍優先，反擊仍打攻擊者。`;
 }
 function render(force = false) {
+  const comparisonFocus = captureComparisonFocus();
   renderSoulbindStatus();
   renderItemWorldStatus();
   const trial = itemWorldView(state);
   $('strategy-select').value = state.strategy || 'balanced';
   $('strategy-select').disabled = state.mode !== 'town' || !tabOwner;
-  $('strategy-description').textContent = STRATEGIES.find(strategy => strategy.id === state.strategy)?.description || '';
+  $('strategy-description').textContent = (STRATEGIES.find(strategy => strategy.id === state.strategy)?.description || '').replace('藥水手動使用。', emergencySupplyView(state).effective ? '額外緊急補給已開啟；仍可手動喝藥。' : '藥水手動使用。');
 
   renderCounterattack();
   renderProtection();
   renderTargetPriority();
+  renderEmergencySupply();
   const derived = stats(state);
   renderPlayerParry(derived);
   $('level-badge').textContent = `LV. ${state.hero.level}`;
@@ -1076,8 +1148,8 @@ function render(force = false) {
   $('heal-button').textContent = `補給藥水 · ${state.potions ?? 0}`;
   $('control-hint').textContent = trial.active ? `目標：${trial.targetName} · 完成五回合才獲 IW1；結束必回營，不自動重刷。` : state.mode === 'battle' ? (state.autoAdvance ? '自動推進中 · 隨時可回營整備' : '自動重刷本關 · 回營後才能換裝與出售') : state.mode === 'defeat' ? '點「回營整備」恢復，再挑戰較適合的關卡。' : departure.reason || '自動戰鬥 · 不考手速 · 隨時回營換裝';
   reconcileSelectedSale();
-  const inventorySignature = JSON.stringify([[...selectedSaleIds], tabOwner, state.inventory, selectedId, selectedSlot, inventoryFilters(), $('sort-select').value, state.equipment, state.gearSets, state.mode, state.hero.level, state.soulFragments, state.worldSeeds]);
-  if (force || inventorySignature !== lastInventorySignature) { lastInventorySignature = inventorySignature; renderInventory(); renderItemDetail(); }
+  const inventorySignature = JSON.stringify([[...selectedSaleIds], tabOwner, state.inventory, state.pendingLoot, selectedId, selectedSlot, inventoryFilters(), $('sort-select').value, state.equipment, state.gearSets, state.mode, state.hero.level, state.soulFragments, state.worldSeeds]);
+  if (force || inventorySignature !== lastInventorySignature) { lastInventorySignature = inventorySignature; renderInventory(); renderPendingLoot(); renderItemDetail(); }
   const equipmentSignature = JSON.stringify(state.equipment);
   if (force || equipmentSignature !== lastEquipmentSignature) { lastEquipmentSignature = equipmentSignature; renderEquipment(); }
   const logSignature = JSON.stringify(state.logs);
@@ -1093,18 +1165,39 @@ function render(force = false) {
   renderRoutePreview();
   renderExpeditionReports();
   eventEffects();
+  restoreComparisonFocus(comparisonFocus);
 }
-function itemContent(item) {
-  const icon = node('span', 'item-icon', slotIcons[item.slot] || '◇');
+// Local original artwork: family is resolved from owned item data, never a name guess.
+// Images are decorative; the adjacent full name/type/quality remain readable text.
+function itemIcon(item) {
+  const family = item.slot === 'weapon' ? resolveWeaponFamily(item) : null;
+  const key = ['axe', 'rapier', 'club'].includes(family) ? family : slotIcons[item.slot] || 'unknown';
+  const icon = node('span', 'item-icon'); icon.setAttribute('aria-hidden', 'true');
+  const image = node('img'); image.setAttribute('src', `./assets/equipment/${key}.svg`);
+  image.setAttribute('alt', ''); image.setAttribute('width', '64'); image.setAttribute('height', '64');
+  icon.append(image); return icon;
+}
+// Explicit card names must retain the same identity/investment text as their content.
+function itemAccessibleName(item) {
+  return [item.name, itemTypeName(item), qualityName(item.quality), `等級 ${item.level}`,
+    Object.hasOwn(item, 'soulbound') ? '靈魂綁定，永久鎖定，隨等級成長' : item.locked ? '已鎖定' : '',
+    item.itemWorld?.level === 1 ? 'IW1，永久成長' : ''].filter(Boolean).join('，');
+}
+function itemContent(item, comparing = false) {
+  const icon = itemIcon(item);
   const info = node('span', 'gear-info'); info.append(node('strong', '', item.name), node('span', '', `${itemTypeName(item)} · Lv.${item.level} · ${qualityName(item.quality)}`));
   if (Object.hasOwn(item, 'soulbound')) info.append(node('span', 'soulbound-badge', '靈魂綁定 · 隨等級成長'));
   if (item.itemWorld?.level === 1) info.append(node('span', 'item-world-badge', 'IW1 · 永久成長'));
+  if (comparing) info.append(node('span', 'comparison-marker', '比較中'));
   return [icon, info];
 }
 function renderEquipment() {
+  const currentWeapon = $('current-weapon-label');
+  if (currentWeapon) currentWeapon.textContent = state.equipment.weapon.name;
+  comparisonButtons.equipment.clear();
   $('equipment').replaceChildren(...Object.entries(state.equipment).map(([slot, item]) => {
-    const button = node('button', 'gear-button'); button.style.setProperty('--item-color', colorOf(item));
-    button.append(...itemContent(item)); button.title = `${slotNames[slot]}：${item.name}`;
+    const button = node('button', `gear-button${slot === selectedSlot ? ' selected' : ''}`); button.setAttribute('aria-pressed', String(slot === selectedSlot)); comparisonButtons.equipment.set(item.id, button); button.style.setProperty('--item-color', colorOf(item));
+    button.append(...itemContent(item, slot === selectedSlot)); button.title = `${slotNames[slot]}：${item.name}`;
     button.addEventListener('click', () => { selectedSlot = slot; selectedId = null; lastInventorySignature = ''; render(true); }); return button;
   }));
 }
@@ -1143,22 +1236,13 @@ function expeditionBuildContext(build) {
     section.append(node('p', 'report-build-policy', '出發配置未記錄；不以目前配置推測。'));
     return section;
   }
-  const target = TARGET_PRIORITIES.find(entry => entry.id === build.targetPriority)?.label || '未記錄';
-  const protection = build.autoProtection === true ? 'ON' : build.autoProtection === false ? 'OFF' : '未記錄';
-  section.append(node('p', 'report-build-policy', `出發政策：${target} · Protection ${protection}`),
+  section.append(node('p', 'report-build-policy', buildPolicyText(build, '出發政策')),
     node('p', 'report-build-note', '政策不代表護盾已生效；有實際施放時另列護盾取捨。'));
+  if (build.emergencySupply === true) section.append(node('p', 'report-build-policy', `出發設定：${buildEmergencySupplyText(true)}`),
+    node('p', 'report-build-note', '此設定不代表實際喝藥；行動次數另列本場實際藥水消耗（含手動／自動）。'));
   const details = node('details', 'report-build-details');
   details.append(node('summary', '', '出發配置詳情 · 已裝配能力／裝備'));
-  const abilities = node('ul', 'report-build-list');
-  if (!Array.isArray(build.abilities)) abilities.append(node('li', '', '已裝配能力：未記錄'));
-  else if (!build.abilities.length) abilities.append(node('li', '', '已裝配能力：無'));
-  else for (const ability of build.abilities.slice(0, 5)) {
-    const known = MAJOR_ABILITIES.find(entry => entry.id === ability?.id);
-    const name = known?.label || '未辨識能力';
-    const maxRank = ability?.id === 'one-handed-damage' ? 3 : 10;
-    const rank = known && Number.isInteger(ability?.rank) && ability.rank > 0 && ability.rank <= maxRank ? ability.rank : '未記錄';
-    abilities.append(node('li', '', `${name} · Rank ${rank} · ID：${known?.id || '未記錄'}`));
-  }
+  const abilities = buildAbilityList(build.abilities);
   const equipment = node('ul', 'report-build-list');
   const text = value => typeof value === 'string' && value.trim() ? value.slice(0, 160) : '未記錄';
   for (const slot of ['weapon', 'armor', 'accessory']) {
@@ -1170,6 +1254,30 @@ function expeditionBuildContext(build) {
   details.append(abilities, equipment, node('p', 'report-build-note', '僅記錄出發配置；層數、等級與遭遇不同，不代表最佳配裝或勝負原因。'));
   section.append(details);
   return section;
+}
+// Shared read-only labels keep current preset context and historical reports
+// consistent; callers still supply their own current or departure-only data.
+function buildPolicyText(build, prefix) {
+  const target = TARGET_PRIORITIES.find(entry => entry.id === build.targetPriority)?.label || '未記錄';
+  const protection = build.autoProtection === true ? 'ON' : build.autoProtection === false ? 'OFF' : '未記錄';
+  return `${prefix}：${target} · Protection ${protection}`;
+}
+function buildEmergencySupplyText(enabled) {
+  return enabled ? '額外緊急補給 ON · 僅均衡／猛攻於治癒後 HP 低於 30% 使用，保留 1 瓶手動；持久仍用既有規則，可用最後 1 瓶。'
+    : '額外緊急補給 OFF · 均衡／猛攻維持手動喝藥；持久仍用既有規則，可用最後 1 瓶。';
+}
+function buildAbilityList(entries) {
+  const list = node('ul', 'report-build-list');
+  if (!Array.isArray(entries)) list.append(node('li', '', '已裝配能力：未記錄'));
+  else if (!entries.length) list.append(node('li', '', '已裝配能力：無'));
+  else for (const ability of entries.slice(0, 5)) {
+    const known = MAJOR_ABILITIES.find(entry => entry.id === ability?.id);
+    const name = known?.label || '未辨識能力';
+    const maxRank = ability?.id === 'one-handed-damage' ? 3 : 10;
+    const rank = known && Number.isInteger(ability?.rank) && ability.rank > 0 && ability.rank <= maxRank ? ability.rank : '未記錄';
+    list.append(node('li', '', `${name} · Rank ${rank} · ID：${known?.id || '未記錄'}`));
+  }
+  return list;
 }
 function renderExpeditionReports() {
   const reports = expeditionReports(state).slice(0, 2);
@@ -1193,6 +1301,7 @@ function pinRecentExpeditionReport() {
   renderExpeditionReports();
 }
 function renderInventory() {
+  comparisonButtons.inventory.clear();
   selectedSaleCheckboxes.clear();
   const filters = inventoryFilters(), sort = $('sort-select').value;
   const items = state.inventory.filter(item => inventoryMatchesFilters(item, filters)).slice().reverse();
@@ -1203,7 +1312,7 @@ function renderInventory() {
   if (sort === 'level') items.sort((a, b) => b.level - a.level);
   if (!items.length) {
     const empty = node('div', 'empty-inventory');
-    empty.append(node('b', '', '◇'), node('span', '', labels.length ? '背包中沒有同時符合這些篩選的裝備；已穿裝備不在背包清單內。' : '背包還很輕。出發帶回第一件寶物吧；已穿裝備另列於旅者面板。'));
+    empty.append(node('span', '', labels.length ? '背包中沒有同時符合這些篩選的裝備；已穿裝備不在背包清單內。' : '背包還很輕。出發帶回第一件寶物吧；已穿裝備另列於旅者面板。'));
     if (labels.length) {
       const reset = node('button', 'secondary-button', '清除篩選，查看全部背包');
       reset.addEventListener('click', resetInventoryFilterView); empty.append(reset);
@@ -1211,19 +1320,21 @@ function renderInventory() {
     $('inventory-list').replaceChildren(empty); return;
   }
   $('inventory-list').replaceChildren(...items.map(item => {
-    const button = node('button', `inventory-card${item.id === selectedId ? ' selected' : ''}`); button.dataset.inventoryId = item.id; button.style.setProperty('--item-color', colorOf(item)); button.append(...itemContent(item));
+    const button = node('button', `inventory-card${item.id === selectedId ? ' selected' : ''}`); button.dataset.inventoryId = item.id; comparisonButtons.inventory.set(item.id, button); button.style.setProperty('--item-color', colorOf(item)); button.append(...itemContent(item, item.id === selectedId));
+    const protectedBySet = isGearSetProtected(state, item.id);
+    let comparison = '';
     if (Object.hasOwn(item, 'soulbound')) button.append(node('span', 'lock-indicator', '永久'));
-    else if (isGearSetProtected(state,item.id)) button.append(node('span', 'lock-indicator', '配裝'));
+    else if (protectedBySet) button.append(node('span', 'lock-indicator', '配裝'));
     else if (item.locked) button.append(node('span', 'lock-indicator', '鎖'));
     else {
-      const comparison = powerComparisonText(item, state.equipment[item.slot]);
+      comparison = powerComparisonText(item, state.equipment[item.slot]);
       if (comparison) {
         const marker = node('span', 'item-score-marker', comparison);
         marker.title = comparison === '異路線' ? '武器路線不同；屬性評分不含特效效益，不能視為直接升級。' : '屬性評分較高；不含特效效益，不保證更適合目前配裝。';
         button.append(marker);
       }
     }
-    button.setAttribute('aria-label', `${item.name}，${qualityName(item.quality)}，等級 ${item.level}${Object.hasOwn(item, 'soulbound') ? '，靈魂綁定，永久鎖定' : item.locked ? '，已鎖定' : ''}`);
+    button.setAttribute('aria-label', [itemAccessibleName(item), protectedBySet ? '配裝保護中' : '', comparison, item.id === selectedId ? '比較中' : ''].filter(Boolean).join('，'));
     button.setAttribute('aria-pressed', String(item.id === selectedId));
     button.addEventListener('click', () => { selectedId = item.id; selectedSlot = null; render(true); });
     const row = node('div', 'inventory-entry');
@@ -1233,22 +1344,59 @@ function renderInventory() {
     check.disabled = !tabOwner || state.mode !== 'town' || Object.hasOwn(item, 'soulbound') || isGearSetProtected(state,item.id) || !previewSelectedSale(state, [item.id]).available;
     selectedSaleCheckboxes.set(item.id, check);
     check.addEventListener('change', () => toggleSelectedSale(item.id, check.checked));
-    label.append(check, node('span', '', '選售')); row.append(label, button); return row;
+    label.append(check, node('span', '', '選售')); row.append(button, label); return row;
   }));
 }
+// Overflow is a separate FIFO queue, never a hidden part of the sale selection.
+function renderPendingLoot() {
+  comparisonButtons.pending.clear();
+  const view = pendingLootView(state), panel = $('pending-loot');
+  panel.hidden = view.count === 0;
+  const needed = Math.max(0, state.inventory.length + view.count - (INVENTORY_LIMIT - 5));
+  $('pending-loot-summary').textContent = `待領 ${view.count} 件 · 背包 ${state.inventory.length}／${INVENTORY_LIMIT} 件 · 空位 ${view.freeSlots} 格。`;
+  $('claim-pending').disabled = !tabOwner || !view.available;
+  $('claim-pending').textContent = view.claimable ? `依序領入背包 ${view.claimable} 件` : '背包已滿，先整理裝備';
+  $('pending-loot-status').textContent = !tabOwner ? '唯讀分頁：可以比較待領裝備；接手並回營後才能領取。'
+    : state.mode !== 'town' ? '待領裝備已保留；請先回營，再整理或領取。'
+    : view.freeSlots === 0 ? `背包已滿；請先比較，再自行選擇要整理的背包裝備。出售會自動依序補入待領品；要領完並保留 5 格出戰空間，共需自行整理 ${needed} 件背包裝備。`
+    : `可領取前 ${view.claimable} 件，不會自動換裝或出售。${needed ? `要領完並保留 5 格出戰空間，共需自行整理 ${needed} 件背包裝備。` : '領完後已保留出戰所需 5 格空位。'}`;
+  $('pending-loot-list').replaceChildren(...state.pendingLoot.map((item, index) => {
+    const button = node('button', `inventory-card pending-loot-card${item.id === selectedId ? ' selected' : ''}`);
+    button.dataset.pendingLootId = item.id; comparisonButtons.pending.set(item.id, button); button.style.setProperty('--item-color', colorOf(item));
+    button.append(node('span', 'pending-loot-order', `${index + 1}`), ...itemContent(item, item.id === selectedId));
+    button.setAttribute('aria-label', `第 ${index + 1} 件待領：${itemAccessibleName(item)}，ID：${item.id}，僅查看比較${item.id === selectedId ? '，比較中' : ''}`);
+    button.setAttribute('aria-pressed', String(item.id === selectedId));
+    button.addEventListener('click', () => { selectedId = item.id; selectedSlot = null; render(true); });
+    return button;
+  }));
+}
+function claimPendingLoot() {
+  const view = pendingLootView(state);
+  if (!tabOwner || state.mode !== 'town' || !view.available) { render(true); return; }
+  const before = state.pendingLoot.length, selectedWasPending = state.pendingLoot.some(item => item.id === selectedId);
+  if (!dispatch('claimPending')) return;
+  const moved = before - state.pendingLoot.length;
+  if (!(moved > 0)) return;
+  if (selectedSaleConsent) abortSelectedSale('待領裝備已領入背包；請關閉後重新預覽。');
+  showToast(`已依序領入 ${moved} 件；尚有 ${state.pendingLoot.length} 件待領。沒有出售、換裝或改變物品。`);
+  if (selectedWasPending && state.inventory.some(item => item.id === selectedId)) $('item-detail').querySelector('.detail-name')?.focus?.();
+  else if (!state.pendingLoot.length) $('slot-filter').focus();
+}
 function renderItemDetail() {
-  const item = selectedSlot ? state.equipment[selectedSlot] : state.inventory.find(item => item.id === selectedId);
+  const inventoryItem = state.inventory.find(item => item.id === selectedId);
+  const pending = !selectedSlot && !inventoryItem && state.pendingLoot.some(item => item.id === selectedId);
+  const item = selectedSlot ? state.equipment[selectedSlot] : inventoryItem || state.pendingLoot.find(item => item.id === selectedId);
   if (!item) {
-    const placeholder = node('div', 'detail-placeholder'); placeholder.append(node('span', '', '◇'), node('h3', '', '看看下一件好東西'), node('p', '', '選擇一件裝備，比較它會為旅者帶來什麼改變。')); $('item-detail').replaceChildren(placeholder); return;
+    const placeholder = node('div', 'detail-placeholder'); placeholder.append(node('h3', '', '裝備檢視'), node('p', '', '點選裝備查看屬性與差值；選售請用獨立勾選框。')); $('item-detail').replaceChildren(placeholder); return;
   }
   const restoreSoulbindFocus = document.activeElement?.dataset?.soulbindId === item.id;
   const restoreItemWorldFocus = document.activeElement?.dataset?.itemWorldId === item.id;
   const bound = Object.hasOwn(item, 'soulbound');
   const wrap = $('item-detail'); wrap.style.setProperty('--item-color', colorOf(item));
   const current = state.equipment[item.slot];
-  const quality = node('div', 'detail-quality', `${qualityName(item.quality)}${selectedSlot ? ' · 已裝備' : ''}${bound ? ' · 靈魂綁定' : ''}${item.itemWorld?.level === 1 ? ' · IW1' : ''}`);
+  const quality = node('div', 'detail-quality', `${qualityName(item.quality)}${selectedSlot ? ' · 已裝備' : pending ? ' · 待領戰利品' : ''}${bound ? ' · 靈魂綁定' : ''}${item.itemWorld?.level === 1 ? ' · IW1' : ''}`);
   const name = node('h3', 'detail-name', item.name); name.tabIndex = -1;
-  const subtitle = node('div', 'detail-subtitle', `${itemTypeName(item)} · Lv.${item.level} · 品質骰 ${Number(item.roll || 0).toFixed(0)} · 屬性評分 ${format(item.power)}`);
+  const subtitle = node('div', 'detail-subtitle', `${itemTypeName(item)} · Lv.${item.level} · 品質骰 ${Number(item.roll || 0).toFixed(0)} · 屬性評分 ${format(item.power)}${pending ? ` · ID：${item.id}` : ''}`);
   const description = node('p', 'detail-description', bound ? '已永久投入靈魂碎片；武器依原始綁定基準隨角色等級成長，沒有重新抽取屬性。' : describeItemFlavor(item) || '一件等待發揮力量的裝備。');
   const trait = node('div', 'weapon-trait');
   if (item.slot === 'weapon') {
@@ -1257,28 +1405,31 @@ function renderItemDetail() {
     if (ruleText) trait.append(node('p', 'muted', ruleText));
   } else trait.hidden = true;
   const table = node('div', 'compare-table');
+  const tableHeading = node('div', 'compare-heading'); tableHeading.append(node('span', '', '屬性'), node('span', '', selectedSlot ? '目前裝備' : '現穿 → 選取'), node('span', '', selectedSlot ? '差值' : '比現穿')); table.append(tableHeading);
   const keys = new Set([...Object.keys(item.stats || {}), ...Object.keys(current?.stats || {})]);
   for (const key of keys) {
     if (!statNames[key]) continue;
     const value = Number(item.stats?.[key]) || 0, old = Number(current?.stats?.[key]) || 0, diff = value - old;
     const display = rateStats.has(key) ? `${(value * 100).toFixed(1)}%` : key === 'parry' ? value.toFixed(1) : format(value);
     const delta = selectedSlot || Math.abs(diff) < .0001 ? '—' : `${diff > 0 ? '+' : ''}${rateStats.has(key) ? `${(diff * 100).toFixed(1)}%` : key === 'parry' ? diff.toFixed(1) : Math.round(diff)}`;
-    const row = node('div', 'compare-row'); row.append(node('span', '', statNames[key]), node('strong', '', display), node('span', `delta ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`, delta)); table.append(row);
+    const oldDisplay = rateStats.has(key) ? `${(old * 100).toFixed(1)}%` : key === 'parry' ? old.toFixed(1) : format(old);
+    const row = node('div', 'compare-row'); row.append(node('span', '', statNames[key]), node('strong', '', selectedSlot ? display : `${oldDisplay} → ${display}`), node('span', `delta ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`, delta)); table.append(row);
   }
-  const explanation = node('p', 'muted', `${selectedSlot ? '這件裝備正陪伴你的旅程。' : '右側差值與目前同部位裝備比較。招架值是裝備評級，不是機率百分比；未列時為 0。'}屬性評分不含流血、穿透護甲、暈眩等特效效益，不是 DPS；跨武器路線不能只依高分換裝。`);
+  const explanation = node('p', 'muted', `${selectedSlot ? '這件裝備正陪伴你的旅程。' : '中欄為現穿 → 選取，右側為同部位裝備差值。招架值是裝備評級，不是機率百分比；未列時為 0。'}屬性評分不含流血、穿透護甲、暈眩等特效效益，不是 DPS；跨武器路線不能只依高分換裝。`);
   const actions = node('div', 'detail-actions');
-  if (!selectedSlot) {
+  if (!selectedSlot && !pending) {
     const equip = node('button', 'primary-button', state.mode === 'battle' ? '回營後換裝' : '換上裝備'); equip.disabled = state.mode === 'battle' || !tabOwner; equip.addEventListener('click', () => { if (!dispatch('equip', item.id)) return; selectedId = null; showToast(`已裝備「${item.name}」`); render(true); });
     const protectedBySet = isGearSetProtected(state,item.id);
     const lock = node('button', 'secondary-button', bound ? '永久綁定' : protectedBySet ? '配裝保護中' : item.locked ? '解鎖' : '鎖定'); lock.disabled = state.mode === 'battle' || !tabOwner || protectedBySet || bound; lock.addEventListener('click', () => { if (!Object.hasOwn(item, 'soulbound')) dispatch('lock', item.id); });
     const sell = node('button', 'secondary-button', '出售'); sell.disabled = !tabOwner || bound || item.locked || isGearSetProtected(state,item.id) || state.mode === 'battle'; sell.addEventListener('click', () => { if (Object.hasOwn(item, 'soulbound')) return; dispatch('sell', item.id); selectedId = null; render(true); }); actions.append(equip, lock, sell);
   }
-  if (!selectedSlot && !inventoryMatchesFilters(item, inventoryFilters())) explanation.append(node('span', 'inventory-detail-hidden', '正在比較的這件裝備位於背包篩選外；選取仍保留，篩選不會自動換裝或出售。'));
-  if (bound) explanation.append(node('span', 'soulbind-protection', '永久綁定：不能解除、解鎖或出售（包含安全整理、自選出售）。清除配裝記錄也不會解除保護；可以正常換裝。'));
+  if (pending) explanation.append(node('span', 'pending-loot-detail', '待領裝備只供比較，不占背包顯示件數，也不受背包篩選影響。領入背包前不能換裝、鎖定、出售、綁定或挑戰裝備界；領取依取得先後順序，不會跳過前面的裝備。'));
+  if (!selectedSlot && !pending && !inventoryMatchesFilters(item, inventoryFilters())) explanation.append(node('span', 'inventory-detail-hidden', '正在比較的這件裝備位於背包篩選外；選取仍保留，篩選不會自動換裝或出售。'));
+  if (bound) explanation.append(node('span', 'soulbind-protection', `永久綁定：不能解除、解鎖或出售（包含安全整理、自選出售）。清除配裝記錄也不會解除保護；${pending ? '領入背包後才可換裝。' : '可以正常換裝。'}`));
   else if (isGearSetProtected(state,item.id)) explanation.append(node('span','gear-set-protection','此裝備被配裝記錄使用，不能解鎖或出售。先清除或覆寫所有使用它的配裝，再手動解鎖；不會自動解鎖。'));
   const soulbind = node('div', 'soulbind-item-action');
   let bindButton;
-  if (item.slot === 'weapon' && !bound) {
+  if (item.slot === 'weapon' && !bound && !pending) {
     const preview = previewSoulbindWeapon(state, item.id);
     bindButton = node('button', 'secondary-button', '預覽靈魂綁定');
     bindButton.dataset.soulbindId = item.id;
@@ -1290,17 +1441,20 @@ function renderItemDetail() {
   }
   const itemWorld = node('div', 'item-world-item-action');
   let itemWorldButton;
-  if (item.slot === 'weapon' && resolveWeaponFamily(item)) {
+  if (item.slot === 'weapon' && resolveWeaponFamily(item) && !pending) {
     const preview = previewItemWorld(state, item.id);
     itemWorldButton = node('button', 'secondary-button', item.itemWorld?.level === 1 ? 'IW1 已完成' : '預覽 Item World · IW1');
     itemWorldButton.dataset.itemWorldId = item.id;
     itemWorldButton.setAttribute('aria-haspopup', 'dialog');
     itemWorldButton.disabled = !tabOwner || state.mode !== 'town' || !preview.before || !preview.after || item.itemWorld?.level === 1;
     itemWorldButton.addEventListener('click', () => openItemWorld(item.id));
-    const reason = !tabOwner ? '唯讀分頁：接手並回營後才能挑戰。' : state.mode !== 'town' ? '請先回營後預覽武器試煉。' : item.itemWorld?.level === 1 ? '原版 Fair／Average／Superior 上限 IW10；後續階段尚未實作。' : !preview.available ? preview.reason : '1 世界之種 · 五回合 · 通關才獲永久 IW1；不自動換裝。';
+    const reason = !tabOwner ? '唯讀分頁：接手並回營後才能挑戰。' : state.mode !== 'town' ? '請先回營後預覽武器試煉。' : item.itemWorld?.level === 1 ? (item.quality === 'Exquisite' ? '原版 Exquisite 上限 IW15；本版只實作 IW1，IW2–15 尚未實作。' : '原版 Fair／Average／Superior 上限 IW10；本版只實作 IW1，IW2–10 尚未實作。') : !preview.available ? preview.reason : '1 世界之種 · 五回合 · 通關才獲永久 IW1；不自動換裝。';
     itemWorld.append(itemWorldButton, node('p', 'muted', reason));
   }
-  wrap.replaceChildren(quality, name, subtitle, description, trait, table, explanation, actions, soulbind, itemWorld);
+  const detailHeading = node('div', 'detail-item-heading');
+  const identity = node('div', 'detail-identity'); identity.append(quality, name, subtitle);
+  detailHeading.append(itemIcon(item), identity);
+  wrap.replaceChildren(detailHeading, table, actions, explanation, description, trait, soulbind, itemWorld);
   if (restoreSoulbindFocus && bindButton && !bindButton.disabled) bindButton.focus();
   if (restoreItemWorldFocus && itemWorldButton && !itemWorldButton.disabled) itemWorldButton.focus();
 }
@@ -1436,7 +1590,7 @@ function renderItemWorldStatus() {
   reconcileItemWorld();
   $('world-seed-balance').textContent = `${format(state.worldSeeds)} 世界之種`;
   const trial = itemWorldView(state);
-  $('item-world-status').textContent = trial.active ? `試煉中：${trial.targetName} · 第 ${trial.round}／${trial.rounds} 回合；結束必回營。` : '已綁定的 Fair／Average／Superior 戰斧／刺劍／戰棍可選取預覽 IW1；已裝備或背包皆可。';
+  $('item-world-status').textContent = trial.active ? `試煉中：${trial.targetName} · 第 ${trial.round}／${trial.rounds} 回合；結束必回營。` : '已綁定的 Fair／Average／Superior／Exquisite 戰斧／刺劍／戰棍可預覽 IW1；已裝備或背包皆可，本版只實作首階。';
 }
 
 // Entire scene is independently drawn with canvas primitives; no external assets.
@@ -1599,6 +1753,7 @@ $('start-button').addEventListener('click',()=>{const previousMode=state.mode;if
 $('retreat-button').addEventListener('click',()=>dispatch('retreat'));
 $('heal-button').addEventListener('click',()=>dispatch('heal'));
 $('pin-report').addEventListener('click', pinRecentExpeditionReport);
+$('claim-pending').addEventListener('click', claimPendingLoot);
 for (const strategy of STRATEGIES) { const option = node('option', '', strategy.label); option.value = strategy.id; $('strategy-select').append(option); }
 $('strategy-select').addEventListener('change', event => dispatch('setStrategy', event.target.value));
 for (const policy of TARGET_PRIORITIES) { const option = node('option', '', policy.label); option.value = policy.id; $('target-priority-select').append(option); }
@@ -1609,6 +1764,10 @@ $('target-priority-select').addEventListener('change', event => {
 $('auto-protection').addEventListener('change', event => {
   if (!tabOwner || state.mode !== 'town' || !protectionView(state).unlocked) { renderProtection(); return; }
   dispatch('autoProtection', event.target.checked);
+});
+$('emergency-supply')?.addEventListener('change', event => {
+  if (!tabOwner || state.mode !== 'town' || emergencySupplyView(state).strategy === 'sustain') { renderEmergencySupply(); return; }
+  if (!dispatch('setEmergencySupply', event.target.checked)) renderEmergencySupply();
 });
 $('stage-select').addEventListener('change',event=>dispatch('selectStage',Number(event.target.value)));
 $('auto-advance').addEventListener('change',event=>dispatch('setAutoAdvance',event.target.checked));
