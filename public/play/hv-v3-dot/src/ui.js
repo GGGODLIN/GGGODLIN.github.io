@@ -133,6 +133,23 @@ function restoreComparisonFocus(previous) {
   const target = [replacement, $('slot-filter'), $('settings-toggle')].find(comparisonButtonVisible);
   target?.focus({ preventScroll: true });
 }
+// Preserve keyboard position in the exact item's basic actions after repaint.
+const detailActionButtons = new Map();
+function captureDetailActionFocus() {
+  const button = document.activeElement;
+  if (!comparisonButtonVisible(button)) return null;
+  for (const [action, entry] of detailActionButtons) if (entry.button === button) return { action, ...entry };
+  return null;
+}
+function restoreDetailActionFocus(previous) {
+  if (!previous || previous.button.isConnected === true) return;
+  const active = document.activeElement;
+  if (active && active !== previous.button && active !== document.body && active !== document.documentElement) return;
+  const entry = detailActionButtons.get(previous.action);
+  const sameAction = entry?.id === previous.id ? entry.button : null;
+  const sameItem = Object.values(comparisonButtons).map(buttons => buttons.get(previous.id));
+  [sameAction, ...sameItem, $('slot-filter'), $('settings-toggle')].find(comparisonButtonVisible)?.focus({ preventScroll: true });
+}
 let selectedSaleConsent = null;
 let safeSaleBatch = null;
 let commissionConsent = null;
@@ -220,7 +237,7 @@ function refreshSavedState() {
   if (preventOverwrite || raw !== lastSavedRaw) {
     try {
       const recovering = preventOverwrite;
-      state = validateSave(JSON.parse(raw)); lastSavedRaw = raw; syncSelection();
+      state = validateSave(JSON.parse(raw)); resetEventObservation(); lastSavedRaw = raw; syncSelection();
       preventOverwrite = false;
       if (recovering) { loadProblem = ''; notice(''); }
     }
@@ -242,6 +259,14 @@ if (channel) channel.onmessage = event => {
   }
 };
 if (!ownership.supported) tabOwner = true; // ephemeral memory only; never writes SAVE_KEY
+// A validated replacement restarts transient engine event IDs. Only a new
+// journey object resets observation; ownership changes on the same object must
+// retain deduplication or old rewards would play again.
+function resetEventObservation() {
+  seenEvents.clear();
+  for (const event of state.events || []) seenEvents.add(String(event.id));
+  lastProcessedEvent = null;
+}
 function syncSelection() {
   $('bleed-notice').hidden = true; // Imported/reloaded journeys never inherit recent damage feedback.
   resetInventoryFilters(); // A newly imported/adopted journey must not inherit a hidden subset.
@@ -424,10 +449,18 @@ function inventoryFilters() {
   return {
     slot: choice('slot-filter', ['all', 'weapon', 'armor', 'accessory']),
     family: choice('family-filter', ['all', 'axe', 'rapier', 'club', 'unknown']),
-    investment: choice('investment-filter', ['all', 'unbound', 'bound', 'iw1'])
+    investment: choice('investment-filter', ['all', 'unbound', 'bound', 'iw1']),
+    quality: choice('quality-filter', ['all', ...QUALITY_TIERS.map(tier => tier.name)]),
+    protection: choice('protection-filter', ['all', 'protected', 'unprotected']),
+    name: ($('name-filter')?.value || '').trim().toLowerCase()
   };
 }
 function inventoryMatchesFilters(item, filters) {
+  const protectedItem = (filters.protection === 'protected' || filters.protection === 'unprotected') && (!!item.locked || Object.hasOwn(item, 'soulbound') || isGearSetProtected(state, item.id));
+  if (filters.protection === 'protected' && !protectedItem) return false;
+  if (filters.protection === 'unprotected' && protectedItem) return false;
+  if (filters.name && !String(item.name || '').toLowerCase().includes(filters.name)) return false;
+  if (filters.quality && filters.quality !== 'all' && item.quality !== filters.quality) return false;
   if (filters.slot !== 'all' && item.slot !== filters.slot) return false;
   if (filters.family !== 'all') {
     if (item.slot !== 'weapon') return false;
@@ -441,7 +474,7 @@ function inventoryMatchesFilters(item, filters) {
   return true;
 }
 function inventoryFilterLabels(filters) {
-  return [filters.slot !== 'all' ? slotNames[filters.slot] : '',
+  return [({ protected: '受保護裝備', unprotected: '未受保護裝備' })[filters.protection] || '', filters.name ? `名稱含「${filters.name}」` : '', filters.quality && filters.quality !== 'all' ? `${qualityName(filters.quality)}品質` : '', filters.slot !== 'all' ? slotNames[filters.slot] : '',
     filters.family !== 'all' ? weaponFamilyNames[filters.family] || '未辨識武器' : '',
     ({ unbound: '未綁定裝備', bound: '已綁定・未升 IW', iw1: 'IW1 已完成' })[filters.investment] || ''].filter(Boolean);
 }
@@ -449,7 +482,8 @@ function hiddenSelectedSaleCount(filters = inventoryFilters()) {
   return state.inventory.filter(item => selectedSaleIds.has(item.id) && !inventoryMatchesFilters(item, filters)).length;
 }
 function resetInventoryFilters() {
-  for (const id of ['slot-filter', 'family-filter', 'investment-filter']) $(id).value = 'all';
+  if ($('name-filter')) $('name-filter').value = '';
+  for (const id of ['slot-filter', 'family-filter', 'investment-filter', 'quality-filter', 'protection-filter']) $(id).value = 'all';
   // Both inspected items and exact personal sale selections survive a view reset.
 }
 function resetInventoryFilterView() {
@@ -480,13 +514,21 @@ function toggleSelectedSale(id, checked) {
   render(true);
   if (restoreFocus) selectedSaleCheckboxes.get(id)?.focus();
 }
+// Signed absolute stat changes, not a relative percentage gain. Never round a
+// real change into a zero or equal sign; tiny changes remain directionally clear.
+function statDeltaText(key, difference, equal = '—') {
+  if (difference === 0) return equal;
+  const magnitude = Math.abs(difference) * (rateStats.has(key) ? 100 : 1);
+  const digits = magnitude < 0.0001 ? '<0.0001' : String(Number(magnitude.toFixed(4)));
+  return `${difference > 0 ? '+' : '-'}${digits}${rateStats.has(key) ? ' 百分點' : ''}`;
+}
 function selectedSaleComparison(entry) {
   const table = node('div', 'compare-table');
   for (const key of Object.keys(statNames)) {
     const value = Number(entry.item.stats?.[key]) || 0, old = Number(entry.currentEquipment?.stats?.[key]) || 0;
     const diff = value - old;
     const number = amount => rateStats.has(key) ? `${Number((amount * 100).toFixed(4))}%` : String(Number(amount.toFixed(4)));
-    const delta = diff === 0 ? '相同' : `${diff > 0 ? '+' : ''}${number(diff)}${rateStats.has(key) ? ' 點' : ''}`;
+    const delta = statDeltaText(key, diff, '相同');
     const row = node('div', 'compare-row');
     row.append(node('span', '', statNames[key]), node('strong', '', number(value)), node('span', `delta ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`, delta));
     table.append(row);
@@ -1108,6 +1150,7 @@ function renderTargetPriority() {
 }
 function render(force = false) {
   const comparisonFocus = captureComparisonFocus();
+  const detailActionFocus = captureDetailActionFocus();
   renderSoulbindStatus();
   renderItemWorldStatus();
   const trial = itemWorldView(state);
@@ -1127,6 +1170,9 @@ function render(force = false) {
   $('xp-label').textContent = `${format(state.hero.xp)} / ${format(state.hero.xpNext)}`;
   setMeter('hp-bar', state.hero.hp, derived.maxHp); setMeter('mp-bar', state.hero.mp, derived.maxMp); setMeter('xp-bar', state.hero.xp, state.hero.xpNext);
   $('stat-attack').textContent = format(derived.attack); $('stat-defense').textContent = format(derived.defense); $('stat-crit').textContent = `${((derived.crit || 0) * 100).toFixed(1)}%`; $('stat-gold').textContent = format(state.hero.gold);
+  const goldAtCapacity = state.hero.gold >= 1e12;
+  $('gold-cap-warning').hidden = !goldAtCapacity;
+  $('gold-cap-warning').textContent = goldAtCapacity ? '金幣已達保存上限。擊殺與通關超額不入帳，也不會補發；建議先消費再遠征。出售若無法完整入帳會保留裝備。' : '';
   $('zone-title').textContent = trial.active ? 'Item World · 武器試煉' : stageName(state.stage);
   $('stage-label').textContent = trial.active ? `IW1 · 本作強度 ${trial.strengthStage}` : `遠征 ${String(state.stage).padStart(2, '0')}`;
   $('wave-label').textContent = trial.active ? `第 ${trial.round} / ${trial.rounds} 回合` : state.mode === 'battle' ? `第 ${state.wave} / ${state.totalWaves} 波` : state.mode === 'defeat' ? '旅者倒下了' : '準備出發';
@@ -1166,6 +1212,7 @@ function render(force = false) {
   renderExpeditionReports();
   eventEffects();
   restoreComparisonFocus(comparisonFocus);
+  restoreDetailActionFocus(detailActionFocus);
 }
 // Local original artwork: family is resolved from owned item data, never a name guess.
 // Images are decorative; the adjacent full name/type/quality remain readable text.
@@ -1282,6 +1329,8 @@ function buildAbilityList(entries) {
 function renderExpeditionReports() {
   const reports = expeditionReports(state).slice(0, 2);
   $('pin-report').disabled = !reports.length;
+  $('export-report').disabled = !reports.length;
+  $('clear-pinned-report').disabled = !pinnedExpeditionReport;
   const signature = JSON.stringify([reports, pinnedExpeditionReport]);
   if (signature === lastReportSignature) return;
   lastReportSignature = signature;
@@ -1292,6 +1341,27 @@ function renderExpeditionReports() {
   const latest = reports[0];
   $('report-status').textContent = latest ? `${latest.itemWorld ? '已記錄最近一次 Item World 試煉' : `已記錄第 ${format(latest.stage)} 層的最近一次遠征`}；新遠征開始後仍可查看。${pinnedExpeditionReport ? '比較基準已保留，不會隨新戰報替換。' : ''}` : '遠征通關、戰敗或中途回營後，戰報會自動出現在這裡。';
 }
+// Export a detached, completed report only: this is not a restorable save.
+function exportRecentExpeditionReport() {
+  const report = expeditionReports(state)[0];
+  if (!report) { showToast('還沒有已結束戰報；先完成或結束一場遠征。'); return; }
+  let url = null, link = null;
+  try {
+    const exportedAt = new Date().toISOString();
+    const record = { format: 'hv-v3-dot-expedition-report', version: 1, exportedAt,
+      notice: '僅最新已結束遠征的觀測快照，不是遊戲存檔，不能匯入恢復；不是受控配裝比較，未列全部影響因素。', report };
+    const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+    url = URL.createObjectURL(blob); link = node('a'); link.href = url;
+    link.download = `hv-v3-dot-report-${exportedAt.replace(/[:.]/g, '-')}.json`;
+    document.body.append(link); link.click();
+    const completedUrl = url; setTimeout(() => URL.revokeObjectURL(completedUrl), 10000);
+    url = null;
+    showToast('戰報已準備下載，請確認檔案保存位置；這不是遊戲存檔。');
+  } catch {
+    if (url) URL.revokeObjectURL(url);
+    showToast('戰報匯出失敗，請稍後再試；遊戲進度未變更。');
+  } finally { link?.remove(); }
+}
 function pinRecentExpeditionReport() {
   const latest = expeditionReports(state)[0];
   if (!latest) return;
@@ -1299,6 +1369,13 @@ function pinRecentExpeditionReport() {
   // not a combat action, save mutation, or permission to edit another tab's game.
   pinnedExpeditionReport = latest;
   renderExpeditionReports();
+}
+function clearPinnedExpeditionReport() {
+  if (!pinnedExpeditionReport) return;
+  pinnedExpeditionReport = null;
+  renderExpeditionReports();
+  // Disabled controls cannot remain a useful keyboard destination.
+  $('pin-report').focus({ preventScroll: true });
 }
 function renderInventory() {
   comparisonButtons.inventory.clear();
@@ -1310,6 +1387,8 @@ function renderInventory() {
   $('reset-inventory-filters').disabled = labels.length === 0;
   if (sort === 'power') items.sort((a, b) => (b.power || 0) - (a.power || 0));
   if (sort === 'level') items.sort((a, b) => b.level - a.level);
+  // Stable sort retains latest-acquired order within the same quality.
+  if (sort === 'quality') items.sort((a, b) => QUALITY_TIERS.findIndex(tier => tier.name === b.quality) - QUALITY_TIERS.findIndex(tier => tier.name === a.quality));
   if (!items.length) {
     const empty = node('div', 'empty-inventory');
     empty.append(node('span', '', labels.length ? '背包中沒有同時符合這些篩選的裝備；已穿裝備不在背包清單內。' : '背包還很輕。出發帶回第一件寶物吧；已穿裝備另列於旅者面板。'));
@@ -1383,6 +1462,7 @@ function claimPendingLoot() {
   else if (!state.pendingLoot.length) $('slot-filter').focus();
 }
 function renderItemDetail() {
+  detailActionButtons.clear();
   const inventoryItem = state.inventory.find(item => item.id === selectedId);
   const pending = !selectedSlot && !inventoryItem && state.pendingLoot.some(item => item.id === selectedId);
   const item = selectedSlot ? state.equipment[selectedSlot] : inventoryItem || state.pendingLoot.find(item => item.id === selectedId);
@@ -1431,7 +1511,7 @@ function renderItemDetail() {
     if (!statNames[key]) continue;
     const value = Number(item.stats?.[key]) || 0, old = Number(current?.stats?.[key]) || 0, diff = value - old;
     const display = rateStats.has(key) ? `${(value * 100).toFixed(1)}%` : key === 'parry' ? value.toFixed(1) : format(value);
-    const delta = selectedSlot || Math.abs(diff) < .0001 ? '—' : `${diff > 0 ? '+' : ''}${rateStats.has(key) ? `${(diff * 100).toFixed(1)}%` : key === 'parry' ? diff.toFixed(1) : Math.round(diff)}`;
+    const delta = selectedSlot ? '—' : statDeltaText(key, diff);
     const oldDisplay = rateStats.has(key) ? `${(old * 100).toFixed(1)}%` : key === 'parry' ? old.toFixed(1) : format(old);
     const row = node('div', 'compare-row'); row.append(node('span', '', statNames[key]), node('strong', '', selectedSlot ? display : `${oldDisplay} → ${display}`), node('span', `delta ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`, delta)); table.append(row);
   }
@@ -1441,7 +1521,8 @@ function renderItemDetail() {
     const equip = node('button', 'primary-button', state.mode === 'battle' ? '回營後換裝' : '換上裝備'); equip.disabled = state.mode === 'battle' || !tabOwner; equip.addEventListener('click', () => { if (!dispatch('equip', item.id)) return; selectedId = null; showToast(`已裝備「${item.name}」`); render(true); });
     const protectedBySet = isGearSetProtected(state,item.id);
     const lock = node('button', 'secondary-button', bound ? '永久綁定' : protectedBySet ? '配裝保護中' : item.locked ? '解鎖' : '鎖定'); lock.disabled = state.mode === 'battle' || !tabOwner || protectedBySet || bound; lock.addEventListener('click', () => { if (!Object.hasOwn(item, 'soulbound')) dispatch('lock', item.id); });
-    const sell = node('button', 'secondary-button', '出售'); sell.disabled = !tabOwner || bound || item.locked || isGearSetProtected(state,item.id) || state.mode === 'battle'; sell.addEventListener('click', () => { if (Object.hasOwn(item, 'soulbound')) return; dispatch('sell', item.id); selectedId = null; render(true); }); actions.append(equip, lock, sell);
+    const sell = node('button', 'secondary-button', '出售'); sell.disabled = !tabOwner || bound || item.locked || isGearSetProtected(state,item.id) || state.mode === 'battle'; sell.addEventListener('click', () => { if (Object.hasOwn(item, 'soulbound')) return; if (!dispatch('sell', item.id)) return; if (state.inventory.some(current => current.id === item.id)) { showToast('未出售這件裝備；請確認保護狀態及金幣保存上限。'); render(true); return; } selectedId = null; render(true); }); actions.append(equip, lock, sell);
+    for (const [action, button] of [['equip', equip], ['lock', lock], ['sell', sell]]) detailActionButtons.set(action, { id: item.id, button });
   }
   if (pending) explanation.append(node('span', 'pending-loot-detail', '待領裝備只供比較，不占背包顯示件數，也不受背包篩選影響。領入背包前不能換裝、鎖定、出售、綁定或挑戰裝備界；領取依取得先後順序，不會跳過前面的裝備。'));
   if (!selectedSlot && !pending && !inventoryMatchesFilters(item, inventoryFilters())) explanation.append(node('span', 'inventory-detail-hidden', '正在比較的這件裝備位於背包篩選外；選取仍保留，篩選不會自動換裝或出售。'));
@@ -1865,28 +1946,85 @@ function drawEnemy(enemy, x, y, index, t) {
 }
 function drawScene(t, dt) {
   const w = sceneWidth, h = sceneHeight;
-  const gradient = ctx.createLinearGradient(0,0,0,h); gradient.addColorStop(0,'#112730'); gradient.addColorStop(.5,'#28534e'); gradient.addColorStop(1,'#152a2b');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
-  // Moon, layered fir forest, stone ruins and narrow path.
-  ctx.fillStyle='#becdb13b';ctx.beginPath();ctx.arc(w*.72,h*.22,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e3dec77d';ctx.beginPath();ctx.arc(w*.72,h*.22,12,0,Math.PI*2);ctx.fill();
-  for(let layer=0;layer<3;layer++)for(let i=0;i<13;i++){
-    const x=i*w/11+(layer%2)*17-20,base=h*(.58+layer*.09),height=h*(.28+((i*7+layer*3)%9)/35),color=['#23443f','#1b3b37','#132e2d'][layer];
-    rect(x-2,base-height*.35,4,height*.5,color);polygon([[x,base-height],[x-13-layer*4,base-12],[x+15+layer*3,base-12]],color);
+  // Original woodland stage: a quiet clearing framed by broadleaf trunks, not a repeated icon forest.
+  // Normalised landscape coordinates preserve the combat lane at every canvas size.
+  const land = (points, color) => polygon(points.map(([x, y]) => [x * w, y * h]), color);
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, '#172d32'); sky.addColorStop(.52, '#50675e'); sky.addColorStop(1, '#243a35');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+  // Receding trunks are low contrast; their uneven fork heights leave a light central opening.
+  for (const [x, base, width, fork, lean] of [
+    [.08,.68,.013,.19,.018], [.18,.66,.009,.12,-.02], [.29,.65,.011,.26,.015],
+    [.38,.64,.007,.09,-.012], [.54,.64,.006,.2,.01], [.63,.65,.009,.13,-.015],
+    [.78,.67,.012,.24,.02], [.88,.68,.01,.08,-.014], [.97,.69,.014,.18,.01]
+  ]) {
+    land([[x-width,base],[x-width*.45,fork],[x+lean,0],[x+lean+width*.45,0],[x+width*.35,fork],[x+width,base]], '#3b564f');
+    land([[x,fork+.1],[x-.035,fork-.025],[x-.055,fork-.08],[x-.042,fork-.074],[x+.005,fork+.015]], '#3b564f');
   }
-  rect(0,h*.75,w,h*.25,'#172e2e');
-  polygon([[0,h*.94],[w*.25,h*.72],[w*.62,h*.71],[w,h*.89],[w,h],[0,h]],'#344b42');
-  polygon([[0,h*.97],[w*.25,h*.77],[w*.62,h*.77],[w,h*.94],[w,h],[0,h]],'#415649');
-  // Broken pillars, never generated from another game's artwork.
-  rect(w*.12,h*.39,11,h*.37,'#344e48');rect(w*.1,h*.39,17,5,'#547168');rect(w*.13,h*.45,3,h*.29,'#43635b');
-  rect(w*.9,h*.4,13,h*.37,'#344e48');rect(w*.89,h*.4,18,5,'#5d7869');
-  for(let i=0;i<26;i++){const x=(i*37+13)%w,y=h*.79+(i*11)%Math.max(1,h*.18);rect(x,y,3+(i%4),1,'#60705966');}
-  for(let i=0;i<14;i++){const x=(i*71+9)%w,y=h*.44+(i*19)%(h*.28);const drift=prefs.reducedMotion?0:Math.sin(t*.5+i)*3;ctx.fillStyle=i%2?'#d5cb8359':'#b1ddbd55';ctx.fillRect(x+drift,y,1,1);}
+  // A translucent horizontal veil softens distant branches, without moving the background.
+  const mist = ctx.createLinearGradient(0, h*.28, 0, h*.74);
+  mist.addColorStop(0, '#78867500'); mist.addColorStop(.62, '#8b998137'); mist.addColorStop(1, '#78867500');
+  ctx.fillStyle = mist; ctx.fillRect(0, h*.28, w, h*.46);
+  land([[0,.64],[.16,.61],[.3,.65],[.48,.62],[.65,.65],[.83,.61],[1,.65],[1,1],[0,1]], '#263e35');
+  // The worn trail recedes into the clearing; broad unmarked earth sits under all actors.
+  land([[.47,.61],[.53,.61],[.59,.69],[.7,.77],[1,.92],[1,1],[0,1],[0,.94],[.28,.8],[.4,.69]], '#4a5846');
+  land([[.48,.63],[.52,.63],[.56,.71],[.65,.8],[.88,.94],[.97,1],[.12,1],[.36,.83],[.45,.71]], '#58604c');
+  // Crooked side trunks and forked limbs frame rather than cross the hero/enemy lane.
+  land([[0,.84],[.035,.79],[.052,.6],[.048,.34],[.025,.09],[.003,0],[.056,0],[.076,.28],[.077,.56],[.069,.75],[.11,.84],[.064,.82],[.043,.86]], '#1a302b');
+  land([[.048,.35],[.115,.21],[.15,.08],[.166,.06],[.135,.22],[.069,.43]], '#1a302b');
+  land([[.052,.73],[.061,.54],[.058,.31],[.043,.11],[.049,.1],[.069,.31],[.069,.56],[.061,.76]], '#314a39');
+  land([[1,.84],[.96,.8],[.946,.62],[.95,.38],[.974,.16],[.963,0],[.925,0],[.94,.16],[.924,.39],[.929,.65],[.934,.79],[.9,.85],[.948,.82],[.974,.86]], '#1b312c');
+  land([[.94,.41],[.883,.27],[.85,.13],[.861,.14],[.899,.25],[.95,.33]], '#1b312c');
+  land([[.938,.71],[.938,.43],[.954,.22],[.961,.2],[.945,.46],[.947,.76]], '#344b39');
+  // Irregular, overlapping broadleaf masses only occupy the upper frame, never actor bodies.
+  land([[0,0],[.36,0],[.35,.06],[.29,.08],[.26,.14],[.2,.12],[.17,.19],[.11,.17],[.07,.23],[0,.21]], '#203b32');
+  land([[.57,0],[1,0],[1,.24],[.94,.2],[.9,.23],[.85,.17],[.78,.18],[.75,.12],[.67,.13],[.64,.07],[.58,.06]], '#243f34');
+  land([[0,0],[.24,0],[.23,.055],[.17,.075],[.145,.12],[.09,.1],[.065,.15],[0,.13]], '#172f29');
+  land([[.76,0],[1,0],[1,.14],[.93,.12],[.9,.16],[.84,.12],[.83,.07],[.78,.08]], '#19322b');
+  // Sparse moss and old paving fragments belong at the edge/foreground, below nameplates.
+  land([[0,.85],[.055,.81],[.11,.83],[.15,.87],[.1,.86],[.05,.87]], '#3c5238');
+  land([[.88,.86],[.925,.82],[.98,.83],[1,.86],[.95,.86],[.91,.88]], '#3a5037');
+  for (const [x, y, length, depth] of [[.39,.91,.055,.018],[.51,.87,.043,.013],[.64,.95,.068,.023],[.24,.97,.073,.02]]) {
+    land([[x,y],[x+length*.83,y-.006],[x+length,y+depth*.6],[x+length*.2,y+depth]], '#6a6d54');
+    land([[x+length*.2,y+depth],[x+length,y+depth*.6],[x+length*.94,y+depth],[x+length*.22,y+depth+.004]], '#414c3c');
+  }
+  // Six dim motes remain decorative; reduced motion freezes them and no game RNG is consumed.
+  for (let i=0;i<6;i++) {
+    const x=w*(.15+i*.137), y=h*(.48+(i%3)*.08);
+    const drift=prefs.reducedMotion?0:Math.sin(t*.5+i)*2;
+    rect(x+drift,y,1,1,'#c5cf9950');
+  }
   const ground=h*.79;
   drawHero(w*.28,ground,t);
   const enemies=(state.enemies||[]).slice(0,3);
   enemies.forEach((enemy,i)=>drawEnemy(enemy,w*(enemies.length === 1 ? .72 : .6 + i * .26 / Math.max(1, enemies.length - 1)),ground-i*2,i,t));
   if(!enemies.length){
-    rect(w*.68,ground-12,19,12,'#6d6043');rect(w*.68-1,ground-14,21,5,'#9d8255');rect(w*.68+8,ground-12,3,12,'#d2ac66');
-    if(state.mode!=='battle'){ctx.fillStyle='#e2bf7660';ctx.beginPath();ctx.arc(w*.7,ground-8,20,0,Math.PI*2);ctx.fill();}
+    // Original camp chest: a grounded wooden volume, not a glowing reward marker.
+    // Keep the existing empty-lane visibility rule; this prop has no interaction or loot state.
+    const x=w*.68, y=ground;
+    polygon([[x-3,y+1],[x+18,y-2],[x+27,y+1],[x+22,y+4],[x-1,y+4]], '#18271e80');
+    // Front planks and a darker receding right side.
+    polygon([[x,y-12],[x+18,y-12],[x+18,y],[x,y]], '#796044');
+    polygon([[x+18,y-12],[x+24,y-16],[x+24,y-4],[x+18,y]], '#453e30');
+    rect(x+1,y-9,16,1,'#9b7950');
+    rect(x+1,y-5,16,1,'#594630');
+    polygon([[x+19,y-9],[x+23,y-12],[x+23,y-11],[x+19,y-8]], '#66553b');
+    // Bevelled lid: top plane, front lip and shaded end cap.
+    polygon([[x-1,y-13],[x+2,y-17],[x+20,y-17],[x+24,y-14],[x+18,y-11]], '#a18459');
+    polygon([[x-1,y-13],[x+18,y-13],[x+18,y-10],[x-1,y-10]], '#87683f');
+    polygon([[x+18,y-13],[x+24,y-16],[x+25,y-13],[x+18,y-10]], '#625136');
+    rect(x+1,y-13,16,1,'#baa079');
+    // Two iron straps follow the lid perspective and continue down the body.
+    for (const offset of [3,13]) {
+      polygon([[x+offset,y-13],[x+offset+3,y-17],[x+offset+5,y-17],[x+offset+2,y-13]], '#687068');
+      rect(x+offset,y-13,2,13,'#4c5651');
+      rect(x+offset,y-12,1,2,'#9da28b');
+      rect(x+offset,y-2,1,1,'#919680');
+    }
+    // Small central lock, low contrast enough to leave combat labels as the focal point.
+    rect(x+8,y-11,4,5,'#b29b64');
+    rect(x+9,y-9,2,2,'#443e2e');
+    rect(x,y,18,1,'#343829');
   }
   // Front grass and vignette.
   for(let i=0;i<16;i++){const x=(i*43)%w;polygon([[x,h],[x+2,h-10-(i%3)*3],[x+5,h-3],[x+10,h-8],[x+9,h]],'#0d2326');}
@@ -1932,6 +2070,8 @@ $('start-button').addEventListener('click',()=>{const previousMode=state.mode;if
 $('retreat-button').addEventListener('click',()=>dispatch('retreat'));
 $('heal-button').addEventListener('click',()=>dispatch('heal'));
 $('pin-report').addEventListener('click', pinRecentExpeditionReport);
+$('clear-pinned-report').addEventListener('click', clearPinnedExpeditionReport);
+$('export-report').addEventListener('click', exportRecentExpeditionReport);
 $('claim-pending').addEventListener('click', claimPendingLoot);
 for (const strategy of STRATEGIES) { const option = node('option', '', strategy.label); option.value = strategy.id; $('strategy-select').append(option); }
 $('strategy-select').addEventListener('change', event => dispatch('setStrategy', event.target.value));
@@ -1950,7 +2090,9 @@ $('emergency-supply')?.addEventListener('change', event => {
 });
 $('stage-select').addEventListener('change',event=>dispatch('selectStage',Number(event.target.value)));
 $('auto-advance').addEventListener('change',event=>dispatch('setAutoAdvance',event.target.checked));
-for (const id of ['slot-filter', 'family-filter', 'investment-filter', 'sort-select']) $(id).addEventListener('change', () => render(true));
+for (const id of ['slot-filter', 'family-filter', 'investment-filter', 'quality-filter', 'protection-filter', 'sort-select']) $(id).addEventListener('change', () => render(true));
+for (const tier of QUALITY_TIERS) { const option=node('option','',`${tier.label} · ${tier.name}`); option.value=tier.name; $('quality-filter').append(option); }
+$('name-filter').addEventListener('input', () => render(true));
 $('reset-inventory-filters').addEventListener('click', resetInventoryFilterView);
 $('item-world-confirm').addEventListener('click', confirmItemWorld);
 $('item-world-dialog').addEventListener('close', closeItemWorld);
@@ -1997,20 +2139,25 @@ $('export-save').addEventListener('click',()=>{
     const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=node('a');link.href=url;link.download=`hv-v3-dot-lv${state.hero.level}-${new Date().toISOString().slice(0,10)}.json`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);showToast('存檔已準備下載，請確認檔案保存位置。');
   }catch{showToast('匯出失敗，請稍後再試。');}
 });
-$('import-save').addEventListener('click',()=>$('save-file').click());
+// New choices and leaving the page invalidate any older asynchronous file read.
+let importGeneration = 0;
+$('import-save').addEventListener('click',()=>{importGeneration++;$('save-file').click();});
 $('save-file').addEventListener('change',async event=>{
+  const generation=++importGeneration;
   const file=event.target.files?.[0];event.target.value='';if(!file)return;
   if(file.size>2*1024*1024){showToast('存檔過大，請選擇小於 2 MB 的 JSON 存檔。');return;}
   try{
-    const restored=validateSave(JSON.parse(await file.text()));
+    const raw=await file.text();
+    if(generation!==importGeneration)return;
+    const restored=validateSave(JSON.parse(raw));
     if(!claimLease(true)){showToast('此分頁已失去進度控制權，未匯入；請接手後重新選擇檔案。');return;}
     if(!confirm(`匯入 Lv.${restored.hero.level} 的旅程並取代目前進度？建議先匯出備份。`))return;
     if(!claimLease(true)){showToast('請先關閉另一個正在進行遊戲的分頁。');return;}
-    closeSafeSalePreview();state=restored;preventOverwrite=false;selectedId=null;selectedSlot=null;syncSelection();seenEvents.clear();(state.events||[]).forEach(e=>seenEvents.add(String(e.id)));notice('');save(true);render(true);showToast('存檔已匯入，從營地安全接續。');
-  }catch(error){console.warn('Invalid save rejected',error);showToast(error?.message === '不支援的裝備欄位或格式，未載入；請保留原存檔。' ? '不支援的裝備欄位或格式，已取消匯入以避免遺失或誤售。請保留原存檔；目前進度沒有改變。' : '存檔格式不符或已損壞，目前進度沒有改變。');}
+    closeSafeSalePreview();state=restored;preventOverwrite=false;selectedId=null;selectedSlot=null;syncSelection();seenEvents.clear();(state.events||[]).forEach(e=>seenEvents.add(String(e.id)));notice('');const persisted=save(true);render(true);showToast(persisted ? '存檔已匯入，進度已保存；從營地接續。' : '存檔僅在此分頁載入，尚未保存；請立即匯出備份。');
+  }catch(error){if(generation!==importGeneration)return;console.warn('Invalid save rejected',error);showToast(error?.message === '不支援的裝備欄位或格式，未載入；請保留原存檔。' ? '不支援的裝備欄位或格式，已取消匯入以避免遺失或誤售。請保留原存檔；目前進度沒有改變。' : '存檔格式不符或已損壞，目前進度沒有改變。');}
 });
 window.addEventListener('popstate', closeSafeSalePreview);
-window.addEventListener('pagehide', () => { closeSafeSalePreview(); closeWeaponCommission(); pageActive = false; releaseLease(); pump.reset(); });
+window.addEventListener('pagehide', () => { closeSafeSalePreview(); closeWeaponCommission(); importGeneration++; pageActive = false; releaseLease(); pump.reset(); });
 window.addEventListener('pageshow', () => { pageActive = true; pump.reset(); if (!handoff) ownership.resume(); });
 window.addEventListener('popstate', closeWeaponCommission);
 window.addEventListener('popstate', clearSelectedSale);
@@ -2030,7 +2177,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('storage', event => {
   if (event.key === SAVE_KEY && !tabOwner && event.newValue) {
-    try { state = validateSave(JSON.parse(event.newValue)); lastSavedRaw = event.newValue; syncSelection(); if (!document.hidden) render(true); } catch { /* invalid external state never imported */ }
+    try { state = validateSave(JSON.parse(event.newValue)); resetEventObservation(); lastSavedRaw = event.newValue; syncSelection(); if (!document.hidden) render(true); } catch { /* invalid external state never imported */ }
   }
 });
 $('growth-jump').addEventListener('click', focusGrowthChoice);

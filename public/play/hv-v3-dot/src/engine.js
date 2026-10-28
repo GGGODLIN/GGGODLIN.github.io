@@ -674,6 +674,10 @@ function safeSaleEntry(item, keepers) {
 /** Pure, detached exact-ID preview. Only equipped or locked inventory items can
  * witness a sale; pending loot and other sale candidates are never keepers.
  */
+// Manual sale must never consume items for proceeds that cannot round-trip a save.
+function canCreditManualSale(s, total) {
+  return Number.isFinite(s.hero.gold) && s.hero.gold >= 0 && Number.isSafeInteger(total) && total >= 0 && s.hero.gold + total <= 1e12;
+}
 export function previewSafeSale(s) {
   const empty={items:[],total:0};
   try {
@@ -985,12 +989,13 @@ function addLoot(s, slot) {
   // Opt-in affects only this newly generated drop, after the unchanged RNG/ID
   // path. It never sweeps inventory/pending items or bypasses the start guard.
   const sale=s.autoSell===true&&!boundMetadata(item)&&!isGearSetProtected(s,item.id)?safeSaleEntry(item,protectedLootKeepers(s)):null;
-  if(sale){
+  if(sale&&canCreditManualSale(s,sale.value)){
     s.hero.gold+=sale.value;
     event(s,'loot',`自動出售 ${item.name} · +${sale.value} 金幣`,sale.value,item.id);
     log(s,`自動出售：${item.name} · +${sale.value} 金幣；保留同型 ${sale.keeperName}。`);
     return sale;
   }
+  if(sale)log(s,'自動出售未執行：收益超過金幣保存上限，戰利品完整保留。');
   if(s.inventory.length<INVENTORY_LIMIT)s.inventory.push(item);else s.pendingLoot.push(item);
   event(s,'loot',`獲得 ${item.name}`,undefined,item.id);log(s,`戰利品：${item.name}`);
 }
@@ -1004,17 +1009,23 @@ function gainXp(s, amount) {
     event(s,'level',`成長至 Lv.${s.hero.level}`,s.hero.level);log(s,`升級！力量、耐久與資源上限提高。`);
   }
 }
+function creditCombatGold(s, amount, source) {
+  // Local persistence ceiling: report actual credit now, never promise a bank.
+  const credited=Math.min(amount,Math.max(0,1e12-s.hero.gold));
+  s.hero.gold+=credited;
+  if(credited<amount)log(s,`${source}金幣達保存上限：實收 ${credited}，超額 ${amount-credited} 未入帳；請先消費再繼續遠征。`);
+}
 function defeatEnemy(s, e) {
   const stage=encounterStage(s),credits=4+stage*2+(e.boss?15:0);
   // Trial credits use an explicit floor per kill; XP and ordinary drops survive.
-  s.kills++;s.hero.gold+=itemWorldSessions.has(s)?Math.floor(credits/4):credits;gainXp(s,(e.boss?18:7)+stage*2);
+  s.kills++;creditCombatGold(s,itemWorldSessions.has(s)?Math.floor(credits/4):credits,'擊殺');gainXp(s,(e.boss?18:7)+stage*2);
   if(!e.boss&&random(s)<.14)addLoot(s);
 }
 function win(s) {
   if(itemWorldSessions.has(s)){winItemWorld(s);return;}
   s.wins++;s.battle.cleared++;s.unlocked=Math.min(MAX_STAGE,Math.max(s.unlocked,s.stage+1));
   const previous=s.battle.bestTimes[s.stage];if(!previous||s.battle.elapsed<previous)s.battle.bestTimes[s.stage]=round(s.battle.elapsed);
-  const pendingBefore=s.pendingLoot.length,sale=addLoot(s,s.wins===1?'weapon':undefined);s.hero.gold+=20+s.stage*5;gainXp(s,35+s.stage*5);
+  const pendingBefore=s.pendingLoot.length,sale=addLoot(s,s.wins===1?'weapon':undefined);creditCombatGold(s,20+s.stage*5,'通關');gainXp(s,35+s.stage*5);
   const fragments=fragmentBalance(s.soulFragments)?Math.min(SOUL_FRAGMENTS_PER_WIN,SOUL_FRAGMENT_LIMIT-s.soulFragments):0;
   s.soulFragments+=fragments;
   if(seedBalance(s.worldSeeds))s.worldSeeds=Math.min(WORLD_SEED_LIMIT,s.worldSeeds+WORLD_SEEDS_PER_WIN);
@@ -1429,6 +1440,7 @@ export function act(s, action, payload) {
     // Validate the whole exact set before any gold/item mutation. Requested
     // keepers cannot be candidates, so every witness survives this transaction.
     const requested=new Set(ids),total=ids.reduce((sum,id)=>sum+eligible.get(id).value,0);
+    if(!canCreditManualSale(s,total))return s;
     s.hero.gold+=total;s.inventory=s.inventory.filter(item=>!requested.has(item.id));refillPending(s);
     log(s,`安全出售 ${ids.length} 件低品質裝備 · +${total} 金幣；同型保留裝備與鎖定裝備均保留。`);
     return s;
@@ -1447,8 +1459,8 @@ export function act(s, action, payload) {
   const item=s.inventory.find(i=>i.id===payload);
   if(action==='lock'&&item){if(boundMetadata(item)||isGearSetProtected(s,item.id))return s;item.locked=!item.locked;return s;}
   if(action==='equip'&&item){const old=s.equipment[item.slot];s.inventory.splice(s.inventory.indexOf(item),1,old);s.equipment[item.slot]=item;recover(s);event(s,'loot',`已裝備 ${item.name}`);return s;}
-  if(action==='sell'&&item&&!boundMetadata(item)&&!item.locked&&!isGearSetProtected(s,item.id)){s.hero.gold+=Math.max(1,Math.round(item.level*3+item.power));s.inventory.splice(s.inventory.indexOf(item),1);refillPending(s);return s;}
-  if(action==='sellCommon'){const sold=s.inventory.filter(i=>!boundMetadata(i)&&!i.locked&&!isGearSetProtected(s,i.id)&&['Crude','Fair','Average'].includes(i.quality));s.hero.gold+=sold.reduce((n,i)=>n+Math.max(1,Math.round(i.level*3+i.power)),0);s.inventory=s.inventory.filter(i=>!sold.includes(i));refillPending(s);log(s,`整理了 ${sold.length} 件普通裝備；鎖定裝備均保留。`);}
+  if(action==='sell'&&item&&!boundMetadata(item)&&!item.locked&&!isGearSetProtected(s,item.id)){const total=Math.max(1,Math.round(item.level*3+item.power));if(!canCreditManualSale(s,total))return s;s.hero.gold+=total;s.inventory.splice(s.inventory.indexOf(item),1);refillPending(s);return s;}
+  if(action==='sellCommon'){const sold=s.inventory.filter(i=>!boundMetadata(i)&&!i.locked&&!isGearSetProtected(s,i.id)&&['Crude','Fair','Average'].includes(i.quality));const total=sold.reduce((n,i)=>n+Math.max(1,Math.round(i.level*3+i.power)),0);if(!canCreditManualSale(s,total))return s;s.hero.gold+=total;s.inventory=s.inventory.filter(i=>!sold.includes(i));refillPending(s);log(s,`整理了 ${sold.length} 件普通裝備；鎖定裝備均保留。`);}
   return s;
 }
 function sanitizeItem(raw, expectedSlot) {
