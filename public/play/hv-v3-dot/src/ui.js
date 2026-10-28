@@ -13,6 +13,13 @@ const PREF_KEY = `hv-v3-dot-${storageScope}-preferences-v3`;
 const LOCK_NAME = `hv-v3-dot-${storageScope}-writer-v3`;
 const $ = id => document.getElementById(id);
 const format = value => Math.round(Number(value) || 0).toLocaleString('zh-TW');
+// Keep compact whole-number labels without calling a live fraction zero or full.
+function resourcePoolText(current, maximum) {
+  const value = number => number > 0 && number < 1 ? '<1' : format(number);
+  const currentText = value(current), maximumText = value(maximum);
+  const partial = current > 0 && current < maximum && currentText === maximumText;
+  return `${currentText} / ${maximumText}${partial ? '（未滿）' : ''}`;
+}
 const clock = value => `${Math.floor((value || 0) / 60).toString().padStart(2, '0')}:${Math.floor((value || 0) % 60).toString().padStart(2, '0')}`;
 const qualityNames = Object.fromEntries(QUALITY_TIERS.map(tier => [tier.name, tier.label]));
 const qualityName = quality => qualityNames[quality] || quality;
@@ -149,6 +156,20 @@ function restoreDetailActionFocus(previous) {
   const sameAction = entry?.id === previous.id ? entry.button : null;
   const sameItem = Object.values(comparisonButtons).map(buttons => buttons.get(previous.id));
   [sameAction, ...sameItem, $('slot-filter'), $('settings-toggle')].find(comparisonButtonVisible)?.focus({ preventScroll: true });
+}
+// Sale checkboxes retain their exact item identity across passive repaint.
+function captureSaleCheckboxFocus() {
+  const button = document.activeElement;
+  if (!comparisonButtonVisible(button)) return null;
+  for (const [id, rendered] of selectedSaleCheckboxes) if (rendered === button) return { id, button };
+  return null;
+}
+function restoreSaleCheckboxFocus(previous) {
+  if (!previous || previous.button.isConnected === true) return;
+  const active = document.activeElement;
+  if (active && active !== previous.button && active !== document.body && active !== document.documentElement) return;
+  [selectedSaleCheckboxes.get(previous.id), $('slot-filter'), $('settings-toggle')]
+    .find(comparisonButtonVisible)?.focus({ preventScroll: true });
 }
 let selectedSaleConsent = null;
 let safeSaleBatch = null;
@@ -566,8 +587,15 @@ function reconcileSelectedSale() {
   const preview = previewSelectedSale(state, [...selectedSaleIds]);
   if (selectedSaleConsent && (!preview.available || preview.quoteBasis !== selectedSaleConsent.quoteBasis)) abortSelectedSale('裝備、比較對象或金幣已變更，請關閉後重新預覽。');
   if (selectedSaleIds.size && !preview.available) {
-    selectedSaleIds.clear(); lastInventorySignature = '';
-    showToast('自選清單已失效，已清除選取；沒有出售任何裝備。');
+    // Keep other explicit choices when one item is equipped, removed or protected.
+    // Never add replacement/overflow items, and never reuse the old confirmation.
+    for (const id of selectedSaleIds) {
+      const item = state.inventory.find(entry => entry.id === id);
+      if (!item || item.locked || Object.hasOwn(item, 'soulbound') || isGearSetProtected(state, id)) selectedSaleIds.delete(id);
+    }
+    if (selectedSaleIds.size && !previewSelectedSale(state, [...selectedSaleIds]).available) selectedSaleIds.clear();
+    lastInventorySignature = '';
+    showToast(selectedSaleIds.size ? `已移除不可出售的選取，保留 ${selectedSaleIds.size} 件；請重新預覽確認。沒有出售任何裝備。` : '自選清單已失效，已清除選取；沒有出售任何裝備。');
   }
 }
 function confirmSelectedSale() {
@@ -771,8 +799,8 @@ function openWeaponCommission(family) {
   heading.append(...['屬性', '委託值', '現用值', '差值'].map(text => node('span', '', text)));
   $('commission-comparison').replaceChildren(heading, ...Object.entries(statNames).map(([key, label]) => {
     const value = Number(item.stats?.[key]) || 0, old = Number(currentWeapon?.stats?.[key]) || 0;
-    const diff = Number((value - old).toFixed(4)), rate = rateStats.has(key);
-    const delta = diff === 0 ? '—' : `${diff > 0 ? '+' : ''}${commissionStat(diff, rate)}${rate ? ' 百分點' : ''}`;
+    const diff = value - old, rate = rateStats.has(key);
+    const delta = statDeltaText(key, diff);
     const row = node('div', 'commission-stat-row');
     row.append(node('span', '', label), node('strong', '', `${commissionStat(value, rate)}${rate ? '%' : ''}`), node('span', '', `${commissionStat(old, rate)}${rate ? '%' : ''}`), node('span', `delta ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`, delta));
     return row;
@@ -1149,6 +1177,7 @@ function renderTargetPriority() {
   live.textContent = view.targetId === null ? '' : `目前集火：${view.targetName} · ${view.reason}。普攻與攻擊技能適用；治癒／護盾仍優先，反擊仍打攻擊者。`;
 }
 function render(force = false) {
+  const saleCheckboxFocus = captureSaleCheckboxFocus();
   const comparisonFocus = captureComparisonFocus();
   const detailActionFocus = captureDetailActionFocus();
   renderSoulbindStatus();
@@ -1165,8 +1194,8 @@ function render(force = false) {
   const derived = stats(state);
   renderPlayerParry(derived);
   $('level-badge').textContent = `LV. ${state.hero.level}`;
-  $('hp-label').textContent = `${format(state.hero.hp)} / ${format(derived.maxHp)}`;
-  $('mp-label').textContent = `${format(state.hero.mp)} / ${format(derived.maxMp)}`;
+  $('hp-label').textContent = resourcePoolText(state.hero.hp, derived.maxHp);
+  $('mp-label').textContent = resourcePoolText(state.hero.mp, derived.maxMp);
   $('xp-label').textContent = `${format(state.hero.xp)} / ${format(state.hero.xpNext)}`;
   setMeter('hp-bar', state.hero.hp, derived.maxHp); setMeter('mp-bar', state.hero.mp, derived.maxMp); setMeter('xp-bar', state.hero.xp, state.hero.xpNext);
   $('stat-attack').textContent = format(derived.attack); $('stat-defense').textContent = format(derived.defense); $('stat-crit').textContent = `${((derived.crit || 0) * 100).toFixed(1)}%`; $('stat-gold').textContent = format(state.hero.gold);
@@ -1178,7 +1207,7 @@ function render(force = false) {
   $('wave-label').textContent = trial.active ? `第 ${trial.round} / ${trial.rounds} 回合` : state.mode === 'battle' ? `第 ${state.wave} / ${state.totalWaves} 波` : state.mode === 'defeat' ? '旅者倒下了' : '準備出發';
   $('mode-badge').textContent = trial.active ? '武器試煉進行中' : { town: '整備中', battle: '遠征進行中', defeat: '需要整備' }[state.mode] || '整備中'; $('mode-badge').className = `status-pill ${state.mode}`;
   $('run-time').textContent = clock(state.battle?.elapsed); const best = state.battle?.bestTimes?.[state.stage]; $('best-time').textContent = trial.active ? '不計普通關卡' : best ? clock(best) : '尚無紀錄';
-  $('kill-count').textContent = format(state.kills); $('win-count').textContent = format(state.wins); $('deepest-stage').textContent = String(state.unlocked).padStart(2, '0'); $('progress-label').textContent = `${Math.max(0, state.mode === 'town' ? 0 : state.wave - 1)} / ${state.totalWaves}`;
+  $('kill-count').textContent = format(state.kills); $('win-count').textContent = format(state.wins); $('deepest-stage').textContent = String(state.unlocked).padStart(2, '0'); $('progress-label').textContent = `${Math.max(0, state.mode === 'town' ? 0 : state.mode === 'battle' && state._phase === 'intermission' ? state.totalWaves : state.wave - 1)} / ${state.totalWaves}`;
   $('scene-message').hidden = state.mode === 'battle';
   if (state.mode !== 'battle') {
     const msg = $('scene-message'); msg.querySelector('h3').textContent = state.mode === 'defeat' ? '這不是旅程的終點。' : '下一段旅程，準備好了嗎？'; msg.querySelector('p').textContent = state.mode === 'defeat' ? '回營恢復，換上好裝，再來一次。' : '選好裝備，剩下的交給戰鬥。';
@@ -1213,6 +1242,7 @@ function render(force = false) {
   eventEffects();
   restoreComparisonFocus(comparisonFocus);
   restoreDetailActionFocus(detailActionFocus);
+  restoreSaleCheckboxFocus(saleCheckboxFocus);
 }
 // Local original artwork: family is resolved from owned item data, never a name guess.
 // Images are decorative; the adjacent full name/type/quality remain readable text.
@@ -1546,7 +1576,7 @@ function renderItemDetail() {
   const explanation = node('p', 'muted', `${selectedSlot ? '這件裝備正陪伴你的旅程。' : '中欄為現穿 → 選取，右側為同部位裝備差值。招架值是裝備評級，不是機率百分比；未列時為 0。'}屬性評分不含流血、穿透護甲、暈眩等特效效益，不是 DPS；跨武器路線不能只依高分換裝。`);
   const actions = node('div', 'detail-actions');
   if (!selectedSlot && !pending) {
-    const equip = node('button', 'primary-button', state.mode === 'battle' ? '回營後換裝' : '換上裝備'); equip.disabled = state.mode === 'battle' || !tabOwner; equip.addEventListener('click', () => { if (!dispatch('equip', item.id)) return; selectedId = null; showToast(`已裝備「${item.name}」`); render(true); });
+    const equip = node('button', 'primary-button', state.mode === 'battle' ? '回營後換裝' : '換上裝備'); equip.disabled = state.mode === 'battle' || !tabOwner; equip.addEventListener('click', () => { if (selectedId !== item.id || selectedSlot || !state.inventory.some(current => current.id === item.id)) return; if (!dispatch('equip', item.id)) return; if (state.equipment[item.slot]?.id !== item.id) { showToast('未換上這件裝備；請回營後重新選取。'); render(true); return; } selectedId = null; selectedSlot = item.slot; showToast(`已裝備「${item.name}」`); render(true); });
     const protectedBySet = isGearSetProtected(state,item.id);
     const lock = node('button', 'secondary-button', bound ? '永久綁定' : protectedBySet ? '配裝保護中' : item.locked ? '解鎖' : '鎖定'); lock.disabled = state.mode === 'battle' || !tabOwner || protectedBySet || bound; lock.addEventListener('click', () => { if (!Object.hasOwn(item, 'soulbound')) dispatch('lock', item.id); });
     const sell = node('button', 'secondary-button', '出售'); sell.disabled = !tabOwner || bound || item.locked || isGearSetProtected(state,item.id) || state.mode === 'battle'; sell.addEventListener('click', () => { if (Object.hasOwn(item, 'soulbound')) return; if (!dispatch('sell', item.id)) return; if (state.inventory.some(current => current.id === item.id)) { showToast('未出售這件裝備；請確認保護狀態及金幣保存上限。'); render(true); return; } selectedId = null; render(true); }); actions.append(equip, lock, sell);
