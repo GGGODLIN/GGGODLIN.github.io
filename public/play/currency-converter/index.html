@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>匯率換算</title>
+  <link rel="stylesheet" href="src/style.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>匯率換算</h1>
+      <button id="refresh" type="button">更新匯率</button>
+    </header>
+    <p id="status" role="status" aria-live="polite"></p>
+    <ul id="rows"></ul>
+    <form id="add-form">
+      <label for="add-select">加入幣別</label>
+      <div class="add-row">
+        <select id="add-select"></select>
+        <button type="submit">加入</button>
+      </div>
+    </form>
+    <p class="hint">在任一欄輸入金額，其他幣別會跟著換算；也可以直接打算式，例如 1200*3+50。匯率是市場中間價，跟銀行買賣價會有價差。</p>
+    <footer id="source"></footer>
+  </main>
+</body>
+</html>
