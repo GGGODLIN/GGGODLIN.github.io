@@ -196,7 +196,7 @@ test("registry covers the Ticket 01 canonical corpus", () => {
 });
 
 test("every article tag is a registered canonical ID", () => {
-  assert.equal(blogCorpus.length, 45);
+  assert.equal(blogCorpus.length, 46);
   for (const article of blogCorpus) {
     for (const tag of article.tags) {
       canonicalTagRegistry.validateCanonicalId(tag);

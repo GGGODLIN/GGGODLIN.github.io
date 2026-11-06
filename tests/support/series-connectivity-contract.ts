@@ -148,6 +148,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "advisor-one-question",
       "model-routing",
       "one-model-not-enough",
+      "review-materiality-gate",
       "sem-blast-radius",
       "spec-review-round",
     ],
@@ -160,6 +161,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     members: [
       "consent-provenance",
       "gpt-review-tunnel-vision",
+      "review-materiality-gate",
       "sol-overimplementation",
     ],
     validConnectors: ["scope-control"],
