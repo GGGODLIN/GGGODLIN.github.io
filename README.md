@@ -9,7 +9,6 @@
 | `inventory/` | memory + wiki + jsonl 挖出的題目候選報告 |
 | `posts/` | `draft-<slug>.md` → user review → `published-<slug>.md` |
 | `style/` | threads 既有文章 + me-distill output + 反向萃取的風格 notes |
-| `scripts/` | inventory scan + 未來 graduate 到 `social-info/scripts/local-analysis/` |
 
 不含：站本體 build（待 inventory 撐起再建 Astro skeleton）/ gggodlin.com hub config（另一個 repo）
 
@@ -18,7 +17,7 @@
 1. Inventory 排隊 → user pick 題目
 2. Claude 寫 `posts/draft-<slug>.md`
 3. User local review + 潤色 → rename `posts/published-<slug>.md`
-4. `git push` → CF Pages auto deploy
+4. `git push` → GitHub Actions 自動部署至 GitHub Pages（`.github/workflows/deploy.yml`）
 
 ## Source
 
