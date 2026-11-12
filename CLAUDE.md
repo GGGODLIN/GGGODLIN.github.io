@@ -49,7 +49,7 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 
 - **視覺 = Anthropic warm editorial baseline，LOCKED**——對照 5 套（含 UIUXPROMAX 3 套）後使用者拍板「還是 Anthropic warm 最好」，是經得起對照的定案、不是沒比過的預設。不要再提改版。
 - **Theme switcher 永久留站當 demo**——不是比完就砍的暫時物。
-- **部署 = GitHub Pages user-page（Option B-修正）**——沿用既有 `GGGODLIN.github.io` repo、blog 上 `main`、Pages 走 Actions、舊 2020 scaffold 留 `master` 不刪。此為過渡期權宜；**域名遷移（gggodlin.com → CF Pages + `blog.gggodlin.com`）仍未做**，ready 後回歸 hub。
+- **部署 = GitHub Pages 自訂網域 `https://blog.gggodlin.com`**——沿用既有 `GGGODLIN.github.io` 儲存庫、部落格上 `main` 分支、透過 GitHub Actions 部署、舊 2020 骨架留 `master` 分支不刪；自訂網域 `https://blog.gggodlin.com` 已於 2026-10-29 正式上線（GitHub Pages + `CNAME` + 舊網址 301 轉址）。
 - Astro 6 publishing 三 trap 見 memory `feedback_astro6_publishing_traps_2026_05_17`。
 
 ## 專案 / 套件 / 工具連結規則（固化）
