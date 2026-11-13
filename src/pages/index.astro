@@ -250,10 +250,11 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
     <script>
       import { animate, scrambleText } from "animejs";
       import {
-        createArticleDiscoveryState,
         filterArticleDiscovery,
         hasArticleDiscoveryFilters,
+        parseArticleDiscoverySearchParams,
         transitionArticleDiscovery,
+        writeArticleDiscoverySearchParams,
         type ArticleDiscoveryItem,
       } from "../data/article-discovery";
 
@@ -410,7 +411,24 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
           announcement &&
           emptyState
         ) {
-          let discoveryState = createArticleDiscoveryState();
+          const validTopics = new Set(
+            buttons
+              .map((button) => button.dataset.topic ?? "")
+              .filter((topicId) => topicId !== ""),
+          );
+          const tagLabelsById = new Map<string, string>();
+          for (const tagButton of tagButtons) {
+            const id = tagButton.dataset.tag ?? "";
+            if (id !== "" && !tagLabelsById.has(id)) {
+              const label = (tagButton.textContent ?? "").trim();
+              tagLabelsById.set(id, label === "" ? id : label);
+            }
+          }
+          const validTags = new Set(tagLabelsById.keys());
+          let discoveryState = parseArticleDiscoverySearchParams(
+            window.location.search,
+            { validTopics, validTags },
+          );
           let closeTimer: number | undefined;
           let statusAnimation: ReturnType<typeof animate> | undefined;
           const discoveryItems = articles.map((article) => ({
@@ -421,6 +439,20 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
               article.querySelectorAll<HTMLElement>(".tag-filter[data-tag]"),
             ).map((button) => button.dataset.tag ?? ""),
           })) satisfies ArticleDiscoveryItem[];
+
+          const syncDiscoveryUrl = (): void => {
+            const nextSearch = writeArticleDiscoverySearchParams(
+              window.location.search,
+              discoveryState,
+            );
+            if (nextSearch !== window.location.search) {
+              history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}${nextSearch}${window.location.hash}`,
+              );
+            }
+          };
 
           const setResultStatus = (
             text: string,
@@ -474,9 +506,16 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
 
             const visibleCount = visibleIds.size;
             const hasFilters = hasArticleDiscoveryFilters(discoveryState);
-            const nextStatus = hasFilters
-              ? `${visibleCount} / ${articles.length} 篇`
-              : `${articles.length} 篇`;
+            const activeTagLabel =
+              discoveryState.tagId !== ""
+                ? tagLabelsById.get(discoveryState.tagId) ?? discoveryState.tagId
+                : "";
+            const nextStatus =
+              activeTagLabel !== ""
+                ? `#${activeTagLabel} · ${visibleCount} / ${articles.length} 篇`
+                : hasFilters
+                  ? `${visibleCount} / ${articles.length} 篇`
+                  : `${articles.length} 篇`;
             setResultStatus(nextStatus, withMotion);
             emptyState.hidden = visibleCount !== 0;
             scheduleTitleMarkSync();
@@ -522,6 +561,7 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
             });
             input.value = discoveryState.query;
             syncFilterControls();
+            syncDiscoveryUrl();
             updateResults();
             if (reduceMotionQuery.matches) {
               finishClosing();
@@ -540,6 +580,7 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
               query: input.value,
             });
             syncFilterControls();
+            syncDiscoveryUrl();
             updateResults();
           });
           for (const button of buttons) {
@@ -553,6 +594,7 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
               );
               input.value = discoveryState.query;
               syncFilterControls();
+              syncDiscoveryUrl();
               updateResults(true);
             });
           }
@@ -564,6 +606,7 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
               });
               input.value = discoveryState.query;
               syncFilterControls();
+              syncDiscoveryUrl();
               setOpen(true, false);
               updateResults(true);
               input.setSelectionRange(
@@ -583,6 +626,20 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
               setOpen(false);
             }
           });
+          window.addEventListener("popstate", () => {
+            discoveryState = parseArticleDiscoverySearchParams(
+              window.location.search,
+              { validTopics, validTags },
+            );
+            input.value = discoveryState.query;
+            syncFilterControls();
+            if (hasArticleDiscoveryFilters(discoveryState)) {
+              setOpen(true, false);
+            } else if (trigger.getAttribute("aria-expanded") === "true") {
+              setOpen(false);
+            }
+            updateResults();
+          });
 
           for (const tagButton of tagButtons) tagButton.disabled = false;
           if (trigger.localName === "jelly-button") {
@@ -596,7 +653,12 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
           } else {
             trigger.hidden = false;
           }
+          input.value = discoveryState.query;
           syncFilterControls();
+          syncDiscoveryUrl();
+          if (hasArticleDiscoveryFilters(discoveryState)) {
+            setOpen(true, false);
+          }
           updateResults();
         }
       }

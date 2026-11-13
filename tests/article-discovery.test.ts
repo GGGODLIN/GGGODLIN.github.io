@@ -4,7 +4,9 @@ import {
   createArticleDiscoveryState,
   filterArticleDiscovery,
   hasArticleDiscoveryFilters,
+  parseArticleDiscoverySearchParams,
   transitionArticleDiscovery,
+  writeArticleDiscoverySearchParams,
   type ArticleDiscoveryItem,
 } from "../src/data/article-discovery.ts";
 import { readBlogCorpus } from "./support/blog-corpus.ts";
@@ -142,4 +144,46 @@ test("topic, reset, and close transitions clear exact tag state", () => {
     transitionArticleDiscovery(taggedState, { type: "close" }),
     { query: "", topicId: "", tagId: "" },
   );
+});
+
+test("URL search params hydrate valid filters, reject unknown IDs, and preserve theme/mode params", () => {
+  const validTopics = new Set(["workflow", "memory"]);
+  const validTags = new Set(["hook", "scope-control"]);
+
+  assert.deepEqual(
+    parseArticleDiscoverySearchParams("?tag=hook&topic=memory&q=ignored", {
+      validTopics,
+      validTags,
+    }),
+    { query: "", topicId: "", tagId: "hook" },
+  );
+
+  assert.deepEqual(
+    parseArticleDiscoverySearchParams("?tag=unknown&topic=memory&q=wiki", {
+      validTopics,
+      validTags,
+    }),
+    { query: "wiki", topicId: "memory", tagId: "" },
+  );
+
+  assert.deepEqual(
+    parseArticleDiscoverySearchParams("?topic=invalid&q=   ", {
+      validTopics,
+      validTags,
+    }),
+    { query: "", topicId: "", tagId: "" },
+  );
+
+  const synced = writeArticleDiscoverySearchParams(
+    "?theme=anthropic-warm&mode=dark&q=old",
+    { query: "", topicId: "", tagId: "scope-control" },
+  );
+  assert.equal(synced, "?theme=anthropic-warm&mode=dark&tag=scope-control");
+
+  const cleared = writeArticleDiscoverySearchParams(synced, {
+    query: "",
+    topicId: "",
+    tagId: "",
+  });
+  assert.equal(cleared, "?theme=anthropic-warm&mode=dark");
 });

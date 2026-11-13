@@ -66,6 +66,65 @@ export function hasArticleDiscoveryFilters(
   );
 }
 
+export interface ArticleDiscoveryParamOptions {
+  readonly validTopics?: ReadonlySet<string>;
+  readonly validTags?: ReadonlySet<string>;
+}
+
+export function parseArticleDiscoverySearchParams(
+  search: string,
+  options: ArticleDiscoveryParamOptions = {},
+): ArticleDiscoveryState {
+  const params = new URLSearchParams(search);
+  const rawTag = (params.get("tag") ?? "").trim();
+  if (
+    rawTag !== "" &&
+    (!options.validTags || options.validTags.has(rawTag))
+  ) {
+    return createArticleDiscoveryState({ tagId: rawTag });
+  }
+
+  const rawTopic = (params.get("topic") ?? "").trim();
+  const topicId =
+    rawTopic !== "" &&
+    (!options.validTopics || options.validTopics.has(rawTopic))
+      ? rawTopic
+      : "";
+  const rawQuery = params.get("q") ?? "";
+  const query = rawQuery.trim() === "" ? "" : rawQuery;
+
+  return createArticleDiscoveryState({ query, topicId });
+}
+
+export function writeArticleDiscoverySearchParams(
+  currentSearch: string,
+  state: ArticleDiscoveryState,
+): string {
+  const params = new URLSearchParams(currentSearch);
+  const trimmedQuery = state.query.trim();
+
+  if (trimmedQuery !== "") {
+    params.set("q", trimmedQuery);
+  } else {
+    params.delete("q");
+  }
+
+  if (state.topicId !== "") {
+    params.set("topic", state.topicId);
+  } else {
+    params.delete("topic");
+  }
+
+  if (state.tagId !== "") {
+    params.set("tag", state.tagId);
+  } else {
+    params.delete("tag");
+  }
+
+  const serialized = params.toString();
+  return serialized === "" ? "" : `?${serialized}`;
+}
+
 export function filterArticleDiscovery<T extends ArticleDiscoveryItem>(
   articles: readonly T[],
   state: ArticleDiscoveryState,
