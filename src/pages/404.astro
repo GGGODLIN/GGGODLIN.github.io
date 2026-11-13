@@ -1,0 +1,137 @@
+---
+import { getCollection } from "astro:content";
+import "../styles/global.css";
+import ThemeBoot from "../components/ThemeBoot.astro";
+import ThemeSwitcher from "../components/ThemeSwitcher.astro";
+import Nav from "../components/Nav.astro";
+import Analytics from "../components/Analytics.astro";
+
+const latestPosts = (await getCollection("blog"))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+function formatDate(d: Date): string {
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+---
+
+<!doctype html>
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>找不到這個頁面 — gggodlin</title>
+    <meta name="robots" content="noindex" />
+    <ThemeBoot />
+  </head>
+  <body>
+    <main class="container">
+      <header class="site-header">
+        <div class="header-row">
+          <h1><a href="/">GGGODLIN</a></h1>
+          <Nav />
+        </div>
+      </header>
+      <section aria-labelledby="not-found-heading">
+        <p class="status-code">404</p>
+        <h2 id="not-found-heading">找不到這個頁面</h2>
+        <p class="lead">
+          這個網址可能已經搬移、拼錯字，或原本的連結少了一段路徑。你可以回首頁搜尋關鍵字，或先看最近發表的文章：
+        </p>
+        <p class="home-cta">
+          <a href="/">← 回到文章列表</a>
+        </p>
+      </section>
+      <section class="recent-section" aria-labelledby="recent-heading">
+        <h3 id="recent-heading" class="recent-heading">近期文章</h3>
+        {
+          latestPosts.map((post) => (
+            <article class="recent-item">
+              <a href={`/blog/${post.id}/`} class="recent-link">
+                <h4>{post.data.title}</h4>
+              </a>
+              <p class="recent-meta">{formatDate(post.data.pubDate)}</p>
+            </article>
+          ))
+        }
+      </section>
+    </main>
+    <ThemeSwitcher />
+    <Analytics />
+    <style>
+      .site-header {
+        margin-bottom: var(--section-gap);
+      }
+      .header-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .header-row h1 {
+        margin: 0;
+      }
+      .header-row h1 a {
+        color: inherit;
+        border: none;
+      }
+      .header-row h1 a:hover {
+        color: var(--accent);
+      }
+      .status-code {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        letter-spacing: 0.08em;
+        margin-bottom: calc(var(--baseline) * 1);
+      }
+      #not-found-heading {
+        margin-top: 0;
+      }
+      .lead {
+        color: var(--text-secondary);
+      }
+      .home-cta {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+      }
+      .recent-section {
+        margin-top: calc(var(--baseline) * 8);
+        padding-top: calc(var(--baseline) * 4);
+        border-top: 1px solid var(--border);
+      }
+      .recent-heading {
+        margin-top: 0;
+        margin-bottom: calc(var(--baseline) * 3);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .recent-item {
+        margin-bottom: calc(var(--baseline) * 3);
+      }
+      .recent-link {
+        border: none;
+        color: inherit;
+      }
+      .recent-link h4 {
+        margin: 0 0 calc(var(--baseline) * 0.5);
+        font-size: var(--text-lg);
+        transition: color 150ms ease;
+      }
+      .recent-link:hover h4 {
+        color: var(--accent);
+      }
+      .recent-meta {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+      }
+    </style>
+  </body>
+</html>
