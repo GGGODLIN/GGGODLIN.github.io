@@ -67,6 +67,7 @@ const modes = [
   id="ts-panel"
   aria-hidden="true"
   aria-label="Theme switcher"
+  inert
 >
   <div class="ts-header">
     <strong>Theme</strong>
@@ -321,6 +322,8 @@ const modes = [
 </style>
 
 <script>
+  import { syncThemePanelAccessibility } from "../data/theme-panel-state";
+
   function initThemeSwitcher() {
     const triggerRaw = document.getElementById("ts-trigger");
     const panelRaw = document.getElementById("ts-panel");
@@ -392,12 +395,22 @@ const modes = [
     }
 
     function openPanel() {
-      panel.setAttribute("aria-hidden", "false");
-      trigger.setAttribute("aria-expanded", "true");
+      syncThemePanelAccessibility({
+        open: true,
+        trigger,
+        panel,
+        closeButton: closeBtn,
+        panelContainsActiveElement: false,
+      });
     }
     function closePanel() {
-      panel.setAttribute("aria-hidden", "true");
-      trigger.setAttribute("aria-expanded", "false");
+      syncThemePanelAccessibility({
+        open: false,
+        trigger,
+        panel,
+        closeButton: closeBtn,
+        panelContainsActiveElement: panel.contains(document.activeElement),
+      });
     }
 
     trigger.addEventListener("click", openPanel);
@@ -431,7 +444,9 @@ const modes = [
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closePanel();
+      if (e.key === "Escape" && panel.getAttribute("aria-hidden") === "false") {
+        closePanel();
+      }
     });
 
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
