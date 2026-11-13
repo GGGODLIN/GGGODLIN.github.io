@@ -606,12 +606,17 @@ const serializedBlogJsonLd = JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")
         align-items: center;
         gap: calc(var(--baseline) * 1);
       }
-      .search-trigger[hidden],
       .article-discovery[hidden] {
         display: none;
       }
+      .search-trigger[hidden] {
+        display: inline-flex;
+        visibility: hidden;
+        pointer-events: none;
+      }
       .search-trigger {
         display: inline-flex;
+        flex-shrink: 0;
         align-items: center;
         justify-content: center;
         width: calc(var(--baseline) * 4.5);
