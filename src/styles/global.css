@@ -109,6 +109,16 @@ pre {
 }
 pre code { background: none; padding: 0; }
 
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light);
+}
+
+[data-mode="dark"] .astro-code,
+[data-mode="dark"] .astro-code span {
+  color: var(--shiki-dark);
+}
+
 blockquote {
   border-left: 3px solid var(--accent);
   padding-left: calc(var(--baseline) * 2);
