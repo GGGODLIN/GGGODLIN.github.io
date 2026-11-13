@@ -1,16 +1,26 @@
 ---
 import { getCollection, render } from "astro:content";
+import { resolveArticleSeries } from "../../data/series-catalog";
 import BlogPost from "../../layouts/BlogPost.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
+  const summaries = posts.map((item) => ({
+    slug: item.id,
+    title: item.data.title,
+    pubDate: item.data.pubDate,
+  }));
+
   return posts.map((post) => ({
     params: { slug: post.id },
-    props: { post },
+    props: {
+      post,
+      seriesList: resolveArticleSeries(post.id, summaries),
+    },
   }));
 }
 
-const { post } = Astro.props;
+const { post, seriesList } = Astro.props;
 const { Content } = await render(post);
 ---
 
@@ -19,6 +29,7 @@ const { Content } = await render(post);
   description={post.data.description}
   pubDate={post.data.pubDate}
   tags={post.data.tags}
+  seriesList={seriesList}
 >
   <Content />
 </BlogPost>

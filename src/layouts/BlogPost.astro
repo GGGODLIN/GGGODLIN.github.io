@@ -5,15 +5,17 @@ import ThemeSwitcher from "../components/ThemeSwitcher.astro";
 import Nav from "../components/Nav.astro";
 import Analytics from "../components/Analytics.astro";
 import { canonicalTagRegistry } from "../data/tag-registry";
+import type { ArticleSeriesContext } from "../data/series-catalog";
 
 interface Props {
   title: string;
   description: string;
   pubDate: Date;
   tags: string[];
+  seriesList?: readonly ArticleSeriesContext[];
 }
 
-const { title, description, pubDate, tags } = Astro.props;
+const { title, description, pubDate, tags, seriesList = [] } = Astro.props;
 const tagLabels = tags.map((tag) => canonicalTagRegistry.getLabel(tag));
 const formattedDate = `${pubDate.getFullYear()}年${pubDate.getMonth() + 1}月${pubDate.getDate()}日`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -74,12 +76,71 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
     <article class="container article-body">
       <header>
         <p class="post-meta">
-          {formattedDate}{tagLabels.length > 0 ? " · " + tagLabels.join(" / ") : ""}
+          {formattedDate}
+          {tags.length > 0 && (
+            <>
+              <span aria-hidden="true"> · </span>
+              {tags.map((tag, index) => (
+                <>
+                  {index > 0 && <span aria-hidden="true"> / </span>}
+                  <a
+                    class="meta-tag-link"
+                    href={`/?tag=${encodeURIComponent(tag)}`}
+                  >
+                    {canonicalTagRegistry.getLabel(tag)}
+                  </a>
+                </>
+              ))}
+            </>
+          )}
         </p>
       </header>
       <slot />
       <footer class="post-footer">
-        <a href="/">← 回首頁</a>
+        {
+          seriesList.length > 0 && (
+            <nav
+              class="series-nav"
+              aria-label="同系列文章導讀"
+              data-series-nav
+            >
+              {seriesList.map((series, index) => (
+                <details class="series-card" open={index === 0}>
+                  <summary class="series-summary">
+                    <span class="series-eyebrow">
+                      系列脈絡 · 第 {series.currentIndex + 1} /{" "}
+                      {series.items.length} 篇
+                    </span>
+                    <span class="series-title">{series.title}</span>
+                  </summary>
+                  <div class="series-body">
+                    <p class="series-concept">{series.minimumCommonConcept}</p>
+                    <ol class="series-list">
+                      {series.items.map((item) => (
+                        <li
+                          class:list={[
+                            "series-item",
+                            item.current && "series-item--current",
+                          ]}
+                        >
+                          {item.current ? (
+                            <>
+                              <span aria-current="page">{item.title}</span>
+                              <span class="series-current-badge">本篇</span>
+                            </>
+                          ) : (
+                            <a href={`/blog/${item.slug}/`}>{item.title}</a>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </details>
+              ))}
+            </nav>
+          )
+        }
+        <a class="back-home-link" href="/">← 回首頁</a>
       </footer>
     </article>
     <ThemeSwitcher />
@@ -128,23 +189,115 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
         letter-spacing: 0.05em;
         margin-bottom: calc(var(--baseline) * 4);
       }
-      .post-footer {
-        margin-top: var(--section-gap);
-        padding-top: calc(var(--baseline) * 3);
-        border-top: 1px solid var(--border);
+      .meta-tag-link {
+        color: var(--text-secondary);
+        border: none;
+        transition: color 140ms ease;
+      }
+      .meta-tag-link:hover {
+        color: var(--accent);
+        border: none;
+      }
+      .meta-tag-link:focus-visible {
+        outline: 2px solid var(--text-primary);
+        outline-offset: 2px;
+      }
+      .series-nav {
+        margin-bottom: calc(var(--baseline) * 4);
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--baseline) * 2);
+      }
+      .series-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: calc(var(--baseline) * 2) calc(var(--baseline) * 2.5);
+      }
+      .series-summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--baseline) * 0.5);
+      }
+      .series-summary::-webkit-details-marker {
+        display: none;
+      }
+      .series-summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+        border-radius: 4px;
+      }
+      .series-eyebrow {
         font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        letter-spacing: 0.04em;
+      }
+      .series-title {
+        font-family: var(--font-display);
+        font-size: var(--text-lg);
+        line-height: 1.35;
+        color: var(--text-primary);
+        transition: color 150ms ease;
+      }
+      .series-summary:hover .series-title {
+        color: var(--accent);
+      }
+      .series-body {
+        margin-top: calc(var(--baseline) * 2);
+        padding-top: calc(var(--baseline) * 2);
+        border-top: 1px solid var(--border);
+      }
+      .series-concept {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        margin-bottom: calc(var(--baseline) * 2);
+      }
+      .series-list {
+        margin-bottom: 0;
+        padding-left: 1.4em;
         font-size: var(--text-sm);
       }
-      .post-footer a {
+      .series-item {
+        margin-bottom: calc(var(--baseline) * 1);
+      }
+      .series-item:last-child {
+        margin-bottom: 0;
+      }
+      .series-item--current {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      .series-current-badge {
         display: inline-block;
+        margin-left: calc(var(--baseline) * 1);
+        padding: 0 calc(var(--baseline) * 0.75);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        font-weight: 400;
+        color: var(--text-secondary);
+      }
+      .post-footer {
+        margin-top: var(--section-gap);
+        padding-top: calc(var(--baseline) * 4);
+        border-top: 1px solid var(--border);
+      }
+      .back-home-link {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
         border: none;
         transition: transform 150ms ease;
       }
-      .post-footer a:hover {
+      .back-home-link:hover {
         border: none;
         transform: translateX(calc(var(--baseline) * -0.5));
       }
-      .post-footer a:active {
+      .back-home-link:active {
         transform: translateX(calc(var(--baseline) * -0.25)) scale(0.98);
       }
       @keyframes site-bar-reveal {
