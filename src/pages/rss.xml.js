@@ -1,5 +1,6 @@
 import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
+import { canonicalTagRegistry } from "../data/tag-registry";
 
 export async function GET(context) {
   const posts = (await getCollection("blog")).sort(
@@ -14,6 +15,7 @@ export async function GET(context) {
       pubDate: post.data.pubDate,
       description: post.data.description,
       link: `/blog/${post.id}/`,
+      categories: post.data.tags.map((tag) => canonicalTagRegistry.getLabel(tag)),
     })),
     customData: "<language>zh-tw</language>",
   });
