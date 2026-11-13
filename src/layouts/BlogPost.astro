@@ -147,6 +147,63 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
     </main>
     <ThemeSwitcher />
     <Analytics />
+    <script>
+      import {
+        extractCodeBlockText,
+        formatCopyButtonState,
+        type CopyButtonPhase,
+      } from "../data/code-copy";
+
+      const blocks = document.querySelectorAll<HTMLPreElement>(
+        ".article-body pre",
+      );
+      for (const pre of blocks) {
+        if (!navigator.clipboard || pre.parentElement?.classList.contains("code-block-frame")) {
+          continue;
+        }
+        const frame = document.createElement("div");
+        frame.className = "code-block-frame";
+        pre.parentNode?.insertBefore(frame, pre);
+        frame.appendChild(pre);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "code-copy-btn";
+
+        const applyPhase = (phase: CopyButtonPhase): void => {
+          const view = formatCopyButtonState(phase);
+          button.textContent = view.text;
+          button.setAttribute("aria-label", view.ariaLabel);
+          button.dataset.copied = view.copied;
+        };
+        applyPhase("idle");
+
+        let resetTimer: number | undefined;
+        button.addEventListener("click", async () => {
+          const codeEl = pre.querySelector("code") ?? pre;
+          const text = extractCodeBlockText(codeEl.textContent ?? "");
+          if (text === "") return;
+
+          if (resetTimer !== undefined) {
+            window.clearTimeout(resetTimer);
+          }
+
+          try {
+            await navigator.clipboard.writeText(text);
+            applyPhase("copied");
+          } catch {
+            applyPhase("failed");
+          }
+
+          resetTimer = window.setTimeout(() => {
+            applyPhase("idle");
+            resetTimer = undefined;
+          }, 1800);
+        });
+
+        frame.appendChild(button);
+      }
+    </script>
     <style>
       .site-bar {
         border-bottom: 1px solid var(--border);
@@ -193,6 +250,44 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
       }
       .article-body > :global(:where(p, ul, ol, blockquote) a:hover) {
         text-decoration-color: var(--accent);
+      }
+      .article-body :global(.code-block-frame) {
+        position: relative;
+        margin-bottom: calc(var(--baseline) * 3);
+      }
+      .article-body :global(.code-block-frame pre) {
+        margin-bottom: 0;
+        padding-right: calc(var(--baseline) * 8);
+      }
+      .article-body :global(.code-copy-btn) {
+        position: absolute;
+        top: calc(var(--baseline) * 1);
+        right: calc(var(--baseline) * 1);
+        padding: calc(var(--baseline) * 0.25) calc(var(--baseline) * 1);
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        line-height: 1.4;
+        cursor: pointer;
+        transition:
+          color 140ms ease,
+          border-color 140ms ease,
+          transform 120ms ease;
+      }
+      .article-body :global(.code-copy-btn:hover),
+      .article-body :global(.code-copy-btn[data-copied="true"]) {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .article-body :global(.code-copy-btn:focus-visible) {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .article-body :global(.code-copy-btn:active) {
+        transform: scale(0.96);
       }
       .post-meta {
         font-family: var(--font-mono);
