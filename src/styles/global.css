@@ -130,6 +130,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 th, td {
   border: 1px solid var(--border);

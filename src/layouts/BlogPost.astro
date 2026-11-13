@@ -203,6 +203,17 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
 
         frame.appendChild(button);
       }
+
+      const tables = document.querySelectorAll<HTMLTableElement>(
+        ".article-body table",
+      );
+      for (const table of tables) {
+        if (table.parentElement?.classList.contains("table-scroll")) continue;
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-scroll";
+        table.parentNode?.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      }
     </script>
     <style>
       .site-bar {
@@ -288,6 +299,18 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
       }
       .article-body :global(.code-copy-btn:active) {
         transform: scale(0.96);
+      }
+      .article-body :global(.table-scroll) {
+        width: 100%;
+        overflow-x: auto;
+        margin-bottom: calc(var(--baseline) * 3);
+        -webkit-overflow-scrolling: touch;
+      }
+      .article-body :global(.table-scroll table) {
+        margin-bottom: 0;
+      }
+      .article-body :global(.table-scroll th) {
+        white-space: nowrap;
       }
       .post-meta {
         font-family: var(--font-mono);
