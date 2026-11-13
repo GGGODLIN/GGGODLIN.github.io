@@ -74,7 +74,7 @@ GitHub Pages 部署前會跑 `npm test`，其中四份測試把文章總數與�
 
 - `tests/tag-registry.test.ts`：文章總數 +1
 - `tests/series-connectivity.test.ts`：測試名與斷言的文章總數 +1
-- `tests/support/series-connectivity-contract.ts`：把新 slug 加進一個系列的 `members`，且文章 tag 要含該系列 `validConnectors` 之一，否則會被判成未歸屬孤島
+- `src/data/series-catalog.ts`（由 `tests/support/series-connectivity-contract.ts` 重新匯出）：把新 slug 加進一個系列的 `members`，且文章 tag 要含該系列 `validConnectors` 之一，否則會被判成未歸屬孤島
 - `tests/tag-audit-manifest.test.ts`：`expectedPreConnectorTags` 加新篇完整 tag、`expectedTopicMemberships` 加新篇所屬 topic（依 `src/data/topic-groups.ts` 對照）、`assignmentCount` 加上新篇 tag 數、對應 topic 計數 +1、兩處文章總數 +1
 - `tests/article-discovery.test.ts`：只在新篇帶 hook／skill／subagent／workflow 任一 tag 時，加進對應清單
 
