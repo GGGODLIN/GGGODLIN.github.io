@@ -49,6 +49,26 @@ const workshops = [
     href: "/slides/local-models.html",
   },
 ];
+
+const pageTitle = "Workshops — gggodlin";
+const pageDescription = "Workshop 投影片：Claude Code、多模型路由、AI 協作與本地模型。";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const rssURL = new URL("rss.xml", Astro.site);
+const workshopsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: pageTitle,
+  description: pageDescription,
+  url: canonicalURL.toString(),
+  inLanguage: "zh-Hant",
+  author: {
+    "@type": "Person",
+    name: "Philip Lin",
+    alternateName: "GGGODLIN",
+    url: "https://gggodlin.com",
+  },
+};
+const serializedWorkshopsJsonLd = JSON.stringify(workshopsJsonLd).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -57,8 +77,18 @@ const workshops = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Workshops — gggodlin</title>
-    <meta name="description" content="Workshop 投影片：Claude Code、本地模型。" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="gggodlin" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="alternate" type="application/rss+xml" title="gggodlin" href={rssURL} />
+    <script is:inline type="application/ld+json" set:html={serializedWorkshopsJsonLd} />
     <ThemeBoot />
   </head>
   <body>
