@@ -1,11 +1,29 @@
 ---
+import { resolveNavItemState } from "../data/nav-state";
+
 const email = "qwe70301@gmail.com";
+const pathname = Astro.url.pathname;
+const blogNav = resolveNavItemState(pathname, "blog");
+const workshopsNav = resolveNavItemState(pathname, "workshops");
+const demoNav = resolveNavItemState(pathname, "demo");
 ---
 
 <nav class="site-nav">
-  <a href="/">Blog</a>
-  <a href="/workshops/">Workshops</a>
-  <a href="/demo/">Demo</a>
+  <a
+    href="/"
+    aria-current={blogNav.ariaCurrent}
+    data-active={blogNav.active ? "true" : undefined}
+  >Blog</a>
+  <a
+    href="/workshops/"
+    aria-current={workshopsNav.ariaCurrent}
+    data-active={workshopsNav.active ? "true" : undefined}
+  >Workshops</a>
+  <a
+    href="/demo/"
+    aria-current={demoNav.ariaCurrent}
+    data-active={demoNav.active ? "true" : undefined}
+  >Demo</a>
   <a
     href="/resume/lin-han-cheng-resume-zh.pdf"
     target="_blank"
@@ -70,6 +88,13 @@ const email = "qwe70301@gmail.com";
     color: var(--text-secondary);
     border: none;
     transition: color 0.15s ease;
+  }
+  .site-nav a[data-active="true"] {
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
   }
   .site-nav a:hover {
     color: var(--accent);
