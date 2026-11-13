@@ -27,6 +27,8 @@ const demos = [
     description: "以 Persistent 0.91 為目標的原創奇幻戰鬥原型。目前提供演練、前三個競技場與 Grindfest 測試模式，可累積經驗值、調整屬性、整理裝備並儲存本機進度。經驗值、自訂裝備掉落權重與數值換算、傷害、資源上限、取整與目標順序仍含暫定設定，尚非完整重現。測試中，持續核對規則與操作。",
     href: "/play/hv-modern/",
     image: "/play/hv-modern/public/assets/twilight-arena.png",
+    width: 1672,
+    height: 941,
     alt: "VESPER 原創暮色演練場概念圖，非遊戲實機截圖",
     kind: "回合制奇幻戰鬥・測試中・檢查點 22a",
   },
@@ -35,6 +37,8 @@ const demos = [
     description: "在暗黑奇幻戰場驅動長腳魔城，擊敗敵塔並把整座建築接到屋頂。選擇下一座堡壘，組合箭塔、火砲、修復樹與傀儡營，挑戰最後的城堡。赤砂關的路線選擇也會影響最終城門。爆破工坊可把兵營新召喚的石偶改成爆破兵，放棄攔截以突擊敵城。支援同一瀏覽器續玩，從最近的穩定決策點恢復進度。此版已通過戰鬥邏輯測試與雲端瀏覽器操作檢查；實機觸控仍待驗證。",
     href: "/play/moving-castle/",
     image: "/images/demos/moving-castle.png",
+    width: 1280,
+    height: 800,
     alt: "移動魔城 v0.2 的移動堡壘與終局城堡，離線 Canvas 渲染畫面",
     kind: "2D 城堡組裝戰鬥・試玩原型 v0.12.0",
   },
@@ -96,10 +100,18 @@ const demos = [
         <h2 id="demo-heading">Demo</h2>
         <p class="intro">一些可以直接打開來玩的作品與小實驗。</p>
         {
-          demos.map((demo) => (
+          demos.map((demo, index) => (
             <article class="demo-item">
               <a href={demo.href} class="demo-link">
-                <img src={demo.image} alt={demo.alt} width="1280" height="720" />
+                <img
+                  src={demo.image}
+                  alt={demo.alt}
+                  width={demo.width ?? 1280}
+                  height={demo.height ?? 720}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchpriority={index === 0 ? "high" : undefined}
+                  decoding="async"
+                />
                 <span class="demo-kind">{demo.kind}</span>
                 <h3>{demo.title}</h3>
                 <p>{demo.description}</p>
