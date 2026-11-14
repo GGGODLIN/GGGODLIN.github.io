@@ -1,23 +1,24 @@
 # gggodlin-blog
 
-個人技術 blog 的 pipeline + content repo。對應未來 `blog.gggodlin.com`（待建）。
+個人技術部落格的寫作流程與 Astro 6 網站本體，正式站已上線於 `https://blog.gggodlin.com`。
 
 ## Scope
 
 | Dir | 內容 |
 |---|---|
+| `src/` | Astro 6 網站本體，正式發佈文章位於 `src/content/blog/<slug>.md` |
 | `inventory/` | memory + wiki + jsonl 挖出的題目候選報告 |
-| `posts/` | `draft-<slug>.md` → user review → `published-<slug>.md` |
+| `posts/` | 個人草稿與 `MATERIAL` 素材工作區（已由 `.gitignore` 排除，不進公開庫） |
 | `style/` | threads 既有文章 + me-distill output + 反向萃取的風格 notes |
 
-不含：站本體 build（待 inventory 撐起再建 Astro skeleton）/ gggodlin.com hub config（另一個 repo）
+不含：`gggodlin.com` 主站設定（位於另一個儲存庫）
 
 ## Workflow
 
-1. Inventory 排隊 → user pick 題目
-2. Claude 寫 `posts/draft-<slug>.md`
-3. User local review + 潤色 → rename `posts/published-<slug>.md`
-4. `git push` → GitHub Actions 自動部署至 GitHub Pages（`.github/workflows/deploy.yml`）
+1. Inventory 排隊 → 使用者挑選題目
+2. 於 `posts/` 收集查證素材並撰寫多版本草稿
+3. 使用者本機校稿與定稿後，寫入 `src/content/blog/<slug>.md` 並通過契約測試（`npm test`）
+4. `git push` → GitHub Actions 自動建置並部署至 GitHub Pages 自訂網域 `https://blog.gggodlin.com`（`.github/workflows/deploy.yml`）
 
 ## Source
 

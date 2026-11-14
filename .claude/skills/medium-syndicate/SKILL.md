@@ -64,7 +64,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 
    ```js
    async () => {
-     const SRC = 'https://gggodlin.github.io/blog/<slug>/';   // 唯一要換的地方
+     const SRC = 'https://blog.gggodlin.com/blog/<slug>/';   // 唯一要換的地方
      const doc = new DOMParser().parseFromString(await (await fetch(SRC)).text(), 'text/html');
      const art = doc.querySelector('article');
      art.querySelectorAll('header, footer, h1').forEach(e => e.remove());
