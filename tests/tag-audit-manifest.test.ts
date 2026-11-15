@@ -53,6 +53,7 @@ const expectedPreConnectorTags = {
   "sem-blast-radius": ["claude-code", "hook", "code-review", "tooling", "tool-adoption"],
   "sol-overimplementation": ["claude-code", "gpt", "methodology"],
   "spec-review-round": ["claude-code", "spec-review", "ai-workflow", "methodology"],
+  "stale-doc-smoke-detector": ["ai-workflow", "report-vs-reality", "automation", "knowledge-management", "verify", "methodology"],
   "steal-determinism-layer": ["claude-code", "tool-adoption", "code-review", "methodology"],
   "subagent-boot-cost": ["claude-code", "subagent", "token-optimization", "model-routing", "ai-agent"],
   "test-theater": ["mutation-testing", "Stryker", "ai-testing", "test-theater"],
@@ -168,6 +169,7 @@ const expectedTopicMemberships = {
   "sem-blast-radius": ["tools", "quality", "automation"],
   "sol-overimplementation": ["models"],
   "spec-review-round": ["workflow", "quality"],
+  "stale-doc-smoke-detector": ["workflow", "memory", "quality", "automation"],
   "steal-determinism-layer": ["tools", "quality", "automation"],
   "subagent-boot-cost": ["workflow", "models"],
   "test-theater": ["quality", "automation"],
@@ -185,7 +187,7 @@ function readCurrentArticleTags(slug: string): readonly string[] {
   return tags;
 }
 
-test("approved connector manifest defines the 46-article final corpus", () => {
+test("approved connector manifest defines the 47-article final corpus", () => {
   const articleSlugs = blogCorpus.map((article) => article.slug);
   const expectedSlugs = Object.keys(expectedFinalTags).sort((left, right) => left.localeCompare(right));
   const affectedArticles = Object.keys(approvedConnectorAdditions)
@@ -197,9 +199,9 @@ test("approved connector manifest defines the 46-article final corpus", () => {
   const usedTags = new Set<string>(Object.values(expectedFinalTags).flat());
   const registryIds = new Set(canonicalTagRegistry.entries.map((entry) => entry.id));
 
-  assert.equal(articleSlugs.length, 46);
+  assert.equal(articleSlugs.length, 47);
   assert.deepEqual(articleSlugs, expectedSlugs);
-  assert.equal(assignmentCount, 222);
+  assert.equal(assignmentCount, 228);
   assert.equal(approvedAdditionCount, 24);
   assert.equal(affectedArticles.length, 20);
   assert.equal(registryIds.size, 58);
@@ -228,7 +230,7 @@ test("approved audit manifest fixes registry IDs and aliases without a migration
   assert.equal(registryIds.has("token-optimization"), true);
 });
 
-test("six broad topics match the approved labels, memberships, counts, and 46-article coverage", () => {
+test("six broad topics match the approved labels, memberships, counts, and 47-article coverage", () => {
   assert.deepEqual(topicGroups, expectedTopicGroups);
   assert.throws(
     () => createTopicGroups([{ id: "invalid", label: "Invalid", tags: ["unknown-tag"] }]),
@@ -248,12 +250,12 @@ test("six broad topics match the approved labels, memberships, counts, and 46-ar
   }
 
   assert.deepEqual(topicCounts, {
-    workflow: 14,
+    workflow: 15,
     models: 15,
     tools: 18,
-    memory: 6,
-    quality: 17,
-    automation: 15,
+    memory: 7,
+    quality: 18,
+    automation: 16,
   });
-  assert.equal(coveredArticles, 46);
+  assert.equal(coveredArticles, 47);
 });

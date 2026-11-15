@@ -122,6 +122,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
     members: [
       "exit-0-illusion",
       "protocol-model-dependency",
+      "stale-doc-smoke-detector",
       "websearch-misses-official-docs",
     ],
     validConnectors: ["report-vs-reality"],
@@ -153,6 +154,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "prose-exams",
       "protocol-model-dependency",
       "rule-ladder",
+      "stale-doc-smoke-detector",
       "steal-determinism-layer",
       "test-theater",
     ],
