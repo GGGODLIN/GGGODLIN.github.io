@@ -7,123 +7,77 @@ description: 把 gggodlin-blog 已在原站上線的文章「全文轉發」到 
 
 ## 為什麼流程長這樣（讀完再動）
 
-- **Medium API 已死**（2025 起停發新 integration token、不收新整合）——程式化發文不存在，流程走「本地準備 + claude-in-chrome 操作使用者已登入的真實瀏覽器代發」。使用者已授權代發含按 Publish（2026-06-13）；使用者只在兩個點出現：未登入時登入一次、發布後驗收。
-- **預設走「手動貼上 + 手動 canonical」而不是 Import a story**：Import 會把發布日期回溯成原文日期，Medium 分發演算法偏好新文，觸及吃虧；且 Import 走第三方解析，程式碼區塊大概率變形。使用者明說「用 import」才改走匯入（兩路徑對照見 [references/medium-mechanics.md](references/medium-mechanics.md)）。
+- **Medium API 已死**（2025 起停發新 integration token、不收新整合）——程式化發文不存在，流程走「本地準備 + LCU MCP（`mcp__lcu__js`）操作使用者已登入的日常 Chrome 代發」。使用者已授權代發含按 Publish（2026-06-13）；使用者只在兩個點出現：未登入時手動登入一次、發布後驗收。
+- **預設走「手動貼上 + 手動 canonical」而不是 Import a story**：Import 會把發布日期回溯成原文日期，Medium 分發演算法偏好新文，觸及吃虧；且 Import 走第三方解析，程式碼區塊大概率變形。如果要比對匯入與手動貼上路徑或查對應的建議標籤，就在執行對應步驟前讀 [references/medium-mechanics.md](references/medium-mechanics.md)。
 - **canonical 是整個轉發的存在理由**：Medium 網域權重遠高於個人站，不設 canonical 等於把原站排名讓給 Medium 副本。所以 Step 8 是硬閘。
+- **LCU 單分頁＋CDP 事件注入比系統剪貼簿穩**：依 context 裡已有的瀏覽器路由規範，只操作自建分頁，不呼叫 `cua.getState()` 傾印全機分頁、不呼叫 `tab.playwright.evaluate`／`tab.evaluate`（本機政策禁止）。在 `cua_repl` 內直接由 Node `fs.readFileSync` 讀取 `<outDir>/paste.html`，經 `tab.capabilities.get("cdp")` 的 `Runtime.evaluate` 派發 `ClipboardEvent('paste', { clipboardData: DataTransfer })`，既不會搶使用者系統剪貼簿與前景焦點，也不會因模型複述長字串產生錯字。
 
 ## 流程
 
 slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草稿區，與本流程無關。使用者給的名字對不上時 `ls src/content/blog/` 對照確認，不要猜。
 
 1. **防重複（兩個檔都要查）**：
-   - `grep "| <slug> |" docs/philip/syndication-log.md`（完整欄位格式，避免前綴重疊的 slug 誤命中；檔案不存在視為無紀錄）→ 已有紀錄代表**已發布**，停，回報既有 Medium URL，結束
-   - `grep "<slug>" docs/philip/medium-publish-queue.md`（批次草稿模式的進度落點，見下方「批次草稿模式」）→ 命中代表**草稿已建、只差發布**，跳過 Step 2-7，直接從 Step 8 對既有草稿續做（草稿在 Medium 的 Drafts 列表找）
-   - 兩邊都無紀錄 → 接 Step 2
+   - `command grep "| <slug> |" docs/philip/syndication-log.md`（完整欄位格式，避免前綴重疊的 slug 誤命中；檔案不存在視為無紀錄）→ 已有紀錄代表**已發布**，停，回報既有 Medium URL，結束。
+   - `command grep "<slug>" docs/philip/medium-publish-queue.md`（批次草稿模式的進度落點）→ 命中代表**草稿已建、只差發布**，跳過 Step 2–7，直接從 Step 8 對既有草稿續做。
+   - 兩邊都無紀錄 → 接 Step 2。怎樣算做完：兩個檔案皆完成查詢且無命中紀錄（或已依命中分支停下／跳步）。
 
-   為什麼要查第二個檔：草稿模式只做 Step 5-7、不會寫 syndication-log，只查那一個檔會判成「沒轉過」而重建一份草稿，同一篇文章在 Medium 留下兩個草稿。
-2. **跑 prep script**（repo root）：`node .claude/skills/medium-syndicate/scripts/medium-prep.mjs <slug>`，讀 JSON 輸出（title / description / tags / canonicalURL / outDir / risks）。注意 outDir 在 /tmp，macOS 重開機或隔夜可能被清——Step 7 要用時若檔案不在，重跑本步即可。接 Step 3。
-3. **原站上線確認**：對 prep 輸出的 `canonicalURL` 跑 `curl -sI` 確認 200，再 `curl -s` 抓頁面 grep `rel="canonical"` 確認自我 canonical 存在。任一失敗 → 停（文章沒上線，先走發布流程），結束。通過 → 接 Step 4。
+   為什麼要查第二個檔：草稿模式只做 Step 5–7、不會寫 syndication-log，只查那一個檔會判成「沒轉過」而重建一份草稿，同一篇文章在 Medium 留下兩個草稿。
+2. **跑 prep script**（repo root）：`node .claude/skills/medium-syndicate/scripts/medium-prep.mjs <slug>`，讀 JSON 輸出（title / description / tags / canonicalURL / outDir / risks）。注意 outDir 在 `/tmp`，macOS 重開機或隔夜可能被清——後續步驟要用時若檔案不在，重跑本步即可。怎樣算做完：拿到完整 JSON 欄位與 `outDir` 路徑。完成後接 Step 3。
+3. **原站上線確認**：對 prep 輸出的 `canonicalURL` 跑 `curl -sI` 確認 HTTP 200，再 `curl -s` 抓頁面確認含 `rel="canonical"` 指向原站自己。任一失敗 → 停（文章沒上線，先走發布流程），結束。怎樣算做完：HTTP 狀態為 200 且自我 canonical 存在。通過後接 Step 4。
 4. **風險處理（開瀏覽器前在對話裡先做完）**：
-   - `risks.tableLines > 0` → Medium 編輯器不支援表格：把每個表格改寫成條列或段落，貼給使用者過目，**等拍板才繼續**；拍板後把定稿寫進 `<outDir>/table-rewrites.md`（Step 6 取用；/tmp 被清就重跑 Step 2 並重存）
-   - `risks.images` 非空 → 列出哪幾張圖要在編輯器手動上傳，列完即續行
-   - `risks.codeBlocks` 非空 → 列出區塊編號與語言，預告 Step 7 要逐塊重建，列完即續行
-   - `risks.externalLinks` 僅供參考——貼渲染版會自動保留連結，不需處理
-   全部處理完 → 接 Step 5。
-5. **開瀏覽器**：`tabs_context_mcp` 看現況 → 新分頁開 `https://medium.com/new-story`。出現登入頁 → 停，請使用者登入 Medium 後說「好了」再從本步重來（不代登入，這是流程唯一需要使用者操作的點）。已登入看到編輯器 → **降級偵測**：對 Medium 標題塊做 click + real `type "AB"`；先照踩過的坑「fresh `/new-story` 純 `cmd+v` 會被吞」條走 type-to-wake，若 type 一/兩字後 titleText 仍不變、URL 仍卡 `/new-story`，代表 claude-in-chrome extension 的 CDP 鍵盤管道已壞（同族現象：Chrome cmd+Q 沒真殺行程、或 extension socket 卡死）→ 切「備援：chrome-devtools MCP 通道」段（見流程尾端）。通道正常 → 接 Step 6。
-6. **內容注入（代發）**：
-   1. 跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>`——抓已發布頁、剝 header/footer/H1、**把站內相對連結轉成絕對**（2026-07-29 加，輸出 `relativeLinksAbsolutised` 回報轉了幾個）、把程式碼區塊與表格換成 ⟦CODE-BLOCK-N⟧ / ⟦TABLE-N⟧ 佔位符，產出 `<outDir>/paste.html`
-   2. 跑 `bash .claude/skills/medium-syndicate/scripts/clipboard-html.sh <outDir>/paste.html` 把 HTML 放進系統剪貼簿（輸出應含 «class HTML»）
-   3. **標題用剪貼簿貼上、不要用 `type`**（`type` 對混中英數標題會丟英文段，2026-06-13 實撞 MEMORY.md/25KB 被吞）：`printf '%s' '<title>' | pbcopy` → JS 取 `.graf--title` 的 `getBoundingClientRect()` 拿實際座標（**每分頁重讀，視窗大小變時座標會變**；空標題塊要點靠左 placeholder 文字處 ≈ x=460，點中心 x=744 會落右側空白、focus 跑去內文）→ 真實 `left_click` 該座標 → **`type` 一個字元喚醒草稿**（fresh `/new-story` 未實例化時純 `cmd+v` 會被吞、URL 卡 /new-story；type 一字後 URL 變 `/p/<id>/edit` 才算醒；type 偶爾首發也被吞、重點重打一次）→ `cmd+a` 全選 → `Delete` → `cmd+v` 貼標題 → JS 讀 `.graf--title` 比對（NBSP 差異可接受，用 `.replace(/ /g,' ')` 正規化後比）。不符 → 重貼一次
-   4. 重新 `bash clipboard-html.sh <outDir>/paste.html` 載回內文 HTML → 按 `Return` 在標題下建新塊（**不要用 Down**——單行標題按 Down 游標沒離開標題塊、貼上第一段會被吸進標題；Return 才建獨立新塊）→ `cmd+v` 貼內文 → JS 確認段落數與 paste.html 的 paragraphs 大致相符、無殘留 ⟦⟧ 佔位符、無「Something is wrong」存檔錯誤。明顯缺段 → 重貼一次；仍失敗 → 停，回報使用者
-   完成 → 接 Step 7。
-7. **佔位符重建**：（**code block 捷徑**：純文字 code 不需語法高亮時，可在 paste.html 階段直接把 ⟦CODE-BLOCK-N⟧ 換成 `<pre>...</pre>` 一起貼，Medium 會自動轉成原生 code block〔class `graf--preV2`、2026-06-13 keep-the-wiki-alive 驗過〕，免本步逐塊重建；需語法高亮才走下面手動路徑。）每個 ⟦CODE-BLOCK-N⟧：點進該段選取整行刪除 → 打三個反引號觸發原生 code block → `cat <outDir>/code-block-N.txt | pbcopy` → cmd+V → 左上角下拉選語言（自動偵測常錯，必看）。每個 ⟦TABLE-N⟧：同法換成 Step 4 拍板的 `table-rewrites.md` 對應段落（pbcopy 純文字貼上）。全部換完 `read_page` 全文比對 `body-no-frontmatter.md`，確認無殘留佔位符、結尾段完整。接 Step 8。
-8. **canonical 硬閘（發布前必做）**：**走「舊版 UI 路徑」**（2026-06-29 驗證仍存在；新版「Customize canonical link」直接在三點 menu 找不到、別繞）：編輯器右上三點 → **More settings** → 頁面捲到底找 **Advanced Settings** 區段（這是 **collapsible**、預設收合、右側有 `>` 箭頭——**容易誤判成「沒這個選項」**，必須先點標題展開）→ 展開後出現 `Customize Canonical Link` 段 → 勾「This story was originally published elsewhere」checkbox → URL 輸入欄出現 → **看 input 是否 disabled（read-only）判斷分支**：(a) **新文剛勾**：input editable + 預填 Medium-self URL → click input → cmd+a → type 原站 URL → click「Save canonical link」(b) **舊文補設**（input disabled、button 顯示「Edit canonical link」而非「Save canonical link」）→ 先 click **「Edit canonical link」** 進編輯模式 → input 變 editable → click input → cmd+a → type 原站 URL → click「Save canonical link」。出 toast「Canonical link successfully updated」即成。設不成功 → 停在這裡排查，不進 Step 9。成功 → 接 Step 9。
-9. **tags 與發布（代發）**：點 Publish 進發布設定 → 填最多 5 個 topics（從 prep 的 `tags` 對應，建議見 [references/medium-mechanics.md](references/medium-mechanics.md) 的 tag 段）→ 確認 canonical 提示仍在 → 點最終 Publish 送出（使用者已授權，2026-06-13）→ 從發布完成頁取得文章 URL。接 Step 10。
-10. **發布後驗證**：對 Medium 文章 URL `curl -s | grep -o '<link rel="canonical"[^>]*>'`（或 view-source），確認指回原站。接 Step 11。
-11. **轉發紀錄落檔**（副作用步驟，不可略過）：append 到 `docs/philip/syndication-log.md`（不存在先建，表頭：`# 轉發紀錄` + 欄位說明行）：
+   - `risks.tableLines > 0` → Medium 編輯器不支援表格：把每個表格改寫成條列或段落，貼給使用者過目，**等拍板才繼續**；拍板後把定稿寫進 `<outDir>/table-rewrites.md`（Step 7 取用；`/tmp` 被清就重跑 Step 2 並重存）。
+   - `risks.images` 非空 → 列出哪幾張圖要在編輯器上傳，列完即續行。
+   - `risks.codeBlocks` 非空 → 列出區塊編號與語言，預告 Step 7 要逐塊重建，列完即續行。
+   - `risks.externalLinks` 僅供參考——貼渲染版會自動保留連結，不需處理。
+   - 接著在本地先跑 `node .claude/skills/medium-syndicate/scripts/medium-paste-html.mjs <slug>` 產出 `<outDir>/paste.html`（抓已發布頁、剝 header/footer/H1、把站內相對連結轉成絕對並回報 `relativeLinksAbsolutised`、程式碼與表格換成 `⟦CODE-BLOCK-N⟧` / `⟦TABLE-N⟧` 佔位符）。
+   怎樣算做完：四項 `risks` 皆已核對處置，且 `<outDir>/paste.html` 非空落地。完成後接 Step 5。
+5. **開瀏覽器與檢查登入狀態（LCU 入口）**：
+   - 若本回合 `cua_repl` 尚未初始化，第一發 `mcp__lcu__js` 呼叫只能單獨執行一行入口（不可夾帶其他呼叫、等待或讀檔，否則違反 LCU 啟動協定）：
+     ```js
+     let tab = await cua.createBrowserTab("chrome", "https://medium.com/new-story", { sessionName: "📝 Medium Syndicate" });
+     ```
+     若同回合已有自建 `tab`，直接用 `await tab.goto("https://medium.com/new-story")` 導航。不呼叫 `cua.getState()`，不碰使用者既有無關分頁；若 LCU 未載入、未連線或遭拒絕授權，立即停下回報阻塞，不自行改切 `claude-in-chrome`、`chrome-devtools` 或其他工具。
+   - 讀回首次呼叫附帶的說明文件與初始 AX 狀態：若畫面落在登入頁（無編輯器輸入區），先呼叫 `await tab.markHandoff()`（避免回合結束自動清理關掉使用者的登入分頁），再送出 `mcp__lcu__js({ completion_summary: "Requested Medium login" })` 後停下，請使用者手動登入後說「好了」再續做（不代填帳密）。
+   - 已登入看到編輯器 → 呼叫一次 `nodeRepl.write(await agent.documentation.get("capabilities/tab/cdp"));` 解鎖 `cdp` 能力文件。怎樣算做完：確認已登入 Medium 編輯器且 `capabilities/tab/cdp` 文件已讀取。完成後接 Step 6。
+6. **內容注入與逐塊比對（CDP `ClipboardEvent`）**：
+   在 `mcp__lcu__js` 中取 `let cdp = await tab.capabilities.get("cdp")`，用 `await import("node:fs")` 從磁碟直接讀 `<outDir>/paste.html`（不手貼長字串或 base64，避免模型複述漂移）：
+   1. **標題注入**：透過 `cdp.send("Runtime.evaluate", ...)` 選取 `.graf--title`，建立 `DataTransfer` 寫入 `text/plain` 標題並派發 `new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })`，等待約 2.5 秒。
+   2. **內文注入**：選取 `.postArticle-content` 下第一個 `.graf--p`，建立 `DataTransfer` 同時寫入 `text/html`（`pasteHtml`）與 `text/plain` 純文字備援，對 `.postArticle-content` 派發 `ClipboardEvent('paste')`（`dispatched: false` 代表 draft-js 已攔截消化事件，URL 會自動升為 `https://medium.com/p/<id>/edit`），等待約 3.5 秒供草稿自動存檔。
+   3. **逐塊完整比對（不可省略）**：在瀏覽器內用 `DOMParser` 解析 `pasteHtml` 展開頂層區塊（`UL`/`OL` 展開為各 `li`）的正規化文字陣列，與 `.postArticle-content` 下所有非 `.graf--title` 的 `.graf` 文字逐塊比對，同時檢查 `.graf--title` 文字、連結數與是否出現 `"Something is wrong"` 錯誤紅條。若尾段被 draft-js 壓縮合併（45+ 塊長文偶發），提取尾段 HTML 選取最後一個錯合 `.graf` 補貼修復，再重跑逐塊比對。
+   怎樣算做完：URL 已變成 `/p/<id>/edit`、標題完全一致、`mismatchCount === 0`、外連數吻合且 `errorBanner === false`。完成後接 Step 7。
+7. **佔位符重建**：
+   - 無 `⟦CODE-BLOCK-N⟧` 與 `⟦TABLE-N⟧` 佔位符時，直接跳接 Step 8。
+   - 純文字 code 不需語法高亮時，可在 `paste.html` 先把 `⟦CODE-BLOCK-N⟧` 換成 `<pre>...</pre>` 一起貼（Medium 會轉成原生 `graf--preV2`）。需語法高亮或含表格改寫稿時，用 JS `Range.selectNodeContents` 選取目標佔位符段落並以 `ClipboardEvent('paste')` 或原生區塊替換，全部換完後重跑全文比對確認 0 個 `⟦` 殘留且結尾完整。怎樣算做完：佔位符殘留數為 `0` 且全文末段吻合。完成後接 Step 8。
+8. **canonical 硬閘（發布前必做）**：
+   - 用 `await tab.goto("https://medium.com/p/<id>/settings")` 進入該草稿設定頁，等待載入後用 `cdp.send("Runtime.evaluate", ...)` 點擊 `#advanced_settings button` 展開預設收合的 **Advanced Settings** 區段。
+   - 勾選 `#advanced_settings input[type="checkbox"]`（「This story was originally published elsewhere」）。
+   - 檢查區塊內是否出現「Edit canonical link」按鈕（新草稿首次勾選與舊文補設常預設 `disabled`，需先 `.click()` 該按鈕才會進入可編輯態）→ 對 canonical URL `input` 用 React native input setter（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(canonInput, canonicalURL)`＋派發 `input` 與 `change` 事件）寫入原站 `canonicalURL` → 點擊「Save canonical link」。
+   - 等待 2 秒後回讀該 `input.value` 與 `input.disabled`，確認值精確等於原站 `canonicalURL` 且已鎖定儲存；不符就停在這裡排查，不進 Step 9。怎樣算做完：`canonValue === canonicalURL` 且已儲存成功。完成後接 Step 9。
+9. **topics 與發布（代發）**：
+   - `await tab.goto("https://medium.com/p/<id>/edit")` 回到編輯器 → 點擊右上 `Publish` 按鈕開啟發布設定對話框。
+   - 依 prep 的 `tags` 對應填入最多 5 個 topics（聚焦 `input[placeholder*="topic" i]` → `cdp.send("Input.insertText", { text: topic })` → 等約 1.4 秒點選相符下拉建議項或派發 `Enter` 鍵建立 chip，逐個確認後再填下一個，避免黏成一串）。
+   - 點擊對話框內的最終 `Publish` 按鈕送出（使用者已授權，2026-06-13），等待約 7 秒跳轉至公開文章頁。怎樣算做完：頁面跳轉至公開文章 URL 且取得 `article:published_time`。完成後接 Step 10。
+10. **發布後 driver-side 驗證與 LCU 收尾**：
+    - Medium 對外部 `curl` 一律回 403，因此直接在已跳轉的公開文章頁透過 `cdp.send("Runtime.evaluate", ...)` 讀取 `document.querySelector('link[rel="canonical"]')?.href` 與 `location.href`（去掉 `?postPublishedType=initial` 查詢參數即乾淨公開 URL），確認 `canonical` 精確指回原站 `canonicalURL`。
+    - **LCU 收尾硬規則**：如果同一輪緊接著還要用同一個 `tab` 跑方格子轉發，就保留 `tab` 續跑並在雙平台都驗完後才送收尾；如果瀏覽器操作到此全部結束，**下一個工具呼叫必須單獨呼叫 `mcp__lcu__js` 並只傳 `completion_summary`**（2–4 個英文字、過去式動詞開頭，如 `"Published Medium story"`，不帶 `code`），送完才可呼叫本地檔案工具進入 Step 11。怎樣算做完：`link[rel="canonical"]` 已確認指回原站，且（若瀏覽器任務結束）已送出單獨的 `completion_summary`。完成後接 Step 11。
+11. **轉發紀錄落檔**（副作用步驟，不可略過）：append 到 `docs/philip/syndication-log.md` 的 `## Medium` 段（含 `publishedAt` ISO 時間以供 24 小時兩篇上限對帳）：
 
     ```
-    - YYYY-MM-DD | <slug> | <Medium URL> | canonical=<驗證結果 ok/異常>
+    - YYYY-MM-DD | <slug> | <Medium URL> | publishedAt=<ISO+08:00>｜canonical=ok（driver-side 精確指回 <canonicalURL>）｜title=<標題>｜content=<區塊統計>｜逐塊比對=<N>/<N>（mismatchCount=0）｜topics=<topics>
     ```
 
-    寫完 grep 回讀確認該行存在。**該 slug 若在 `docs/philip/medium-publish-queue.md` 有條目，同時把它標成已發布（或移除）**——留在佇列裡會讓下次 Step 1 誤判成「草稿待發布」而跳過 Step 2-7。
-
-    兩個檔都處理完 → 給使用者驗收回報：Medium 文章 URL、canonical 實際值與原站 URL 的比對、佔位符重建數、全文比對結果。流程結束。
-
-## 備援：chrome-devtools MCP 通道（claude-in-chrome CDP 死時）
-
-**什麼時候切**：Step 5 降級偵測命中（real type 進 title / body / Google 搜尋框都 no-op、URL 卡 `/new-story`）。這是 claude-in-chrome extension 這條 CDP 通道的行程級死亡，換 CC session 也不會好；但 **chrome-devtools MCP 是獨立 CDP 通道**（不走 extension、直接連 Chrome DevTools Protocol），extension 死時它通常仍活。判斷法：用 `mcp__chrome-devtools__fill` 對 Google 搜尋框寫 "hello world" → 讀 `q?.value` 若正確 = 通道通、可救回代發。
-
-**通道差異**：chrome-devtools MCP 沒 `pbcopy → cmd+v` 系統剪貼簿路徑（CDP `press_key Meta+V` 只 fire keyboard event、不觸發作業系統 shortcut handler、Medium 收不到 paste），也不吃 `execCommand insertHTML`（draft-js 過濾掉所有 HTML tag 只留換行 + 觸發「Something is wrong」紅條、伺服器不存）。**唯一穩定 body 注入路徑 = `dispatchEvent(new ClipboardEvent('paste', {clipboardData: DataTransfer}))`**——draft-js 有 paste handler、不 check `event.isTrusted`、`dispatched:false` 表示 preventDefault（handler 消化了 event）成功注入。
-
-**代發配方**（走此段時 Step 6 貼上與 Step 8/9 操作全改成這裡的步驟）：
-
-1. **開分頁**：`mcp__chrome-devtools__new_page` 到 `https://medium.com/new-story` → `evaluate_script` 等 3 秒後驗 `.graf--title` 存在。
-2. **標題**：`take_snapshot` 拿 title heading uid → `click` 該 uid（selection anchor 會落 title 內 `#text`）→ `type_text` 標題（中英數混合會吞開頭段 → 打完必驗 title.textContent 完整，缺頭就 `evaluate_script` 設 selection 到 title offset 0 + 再 `type_text` 補打）。URL 從 `/new-story` 升 `/p/<id>/edit` 才算實例化成功。
-3. **body 注入——讓瀏覽器自己去 fetch 原站，不要經手 HTML 字串**。原站（GitHub Pages）回 `access-control-allow-origin: *`（2026-07-29 curl 實測，帶 `Origin: https://medium.com` 也回 `*`），所以 `evaluate_script` 可以直接跨源抓文章頁、在瀏覽器端剝除與轉換。**模型唯一要打的變數是那個短網址**，不碰任何長字串。整段照貼：
-
-   ```js
-   async () => {
-     const SRC = 'https://blog.gggodlin.com/blog/<slug>/';   // 唯一要換的地方
-     const doc = new DOMParser().parseFromString(await (await fetch(SRC)).text(), 'text/html');
-     const art = doc.querySelector('article');
-     art.querySelectorAll('header, footer, h1').forEach(e => e.remove());
-     art.querySelectorAll('a[href^="/"]').forEach(a => a.setAttribute('href', new URL(a.getAttribute('href'), SRC).href));
-     const html = art.innerHTML.trim();
-
-     const surface = document.querySelector('.postArticle-content');
-     const target = surface.querySelector('.graf--p');     // 標題下第一個空段
-     const range = document.createRange();
-     range.selectNodeContents(target);
-     const sel = window.getSelection();
-     sel.removeAllRanges(); sel.addRange(range);
-
-     const dt = new DataTransfer();
-     dt.setData('text/html', html);
-     dt.setData('text/plain', html.replace(/<[^>]+>/g, ''));
-     const dispatched = surface.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
-     return { dispatched, htmlLen: html.length };   // dispatched:false = draft-js 消化了事件 = 成功
-   }
-   ```
-
-   **重貼（改錯要覆蓋整段內文）時**把 selection 換成整段內文：`const body = [...surface.querySelectorAll('.graf')].filter(g => !g.className.split(/\s+/).includes('graf--title')); range.setStartBefore(body[0]); range.setEndAfter(body.at(-1));`
-
-   ⚠️ **不要走「base64 encode paste.html → 貼進 function body」那條路**（舊配方，2026-07-29 廢止）：4,692 字元的 base64 由模型逐字複述必然漂移，實測同一串 base64 在 Medium 與 vocus 各壞掉同一個字（「就」→「面」），而 bash 端解碼回來完全正確——漂移發生在模型複述那一步。同輪對照組：19 段中文正文複述 0 漂移，**有語意的內容複述得住、無語意的隨機字串複述不住**。
-4. **驗完整性**：`evaluate_script` 對比 Medium `.graf` 全塊 vs `paste.html` 塊清單，兩邊 Python 端 diff。**一次塞多塊時 draft-js 常把尾端 4-5 塊壓成 1 塊**（本次 46 塊實撞、tail P41-P45 被合成 M42「呼叫頻率謫」中間文字全丟）→ 提取尾段 HTML 另存 tail-N.html、選中錯合段（`Range.selectNodeContents(lastGraf)`）再 `dispatchEvent` paste 補注入、然後 `press_key Backspace` 刪錯合段（附帶會削掉末字元、`type_text` 補回）。
-5. **canonical**（Step 8 同分支邏輯、UI 操作改 chrome-devtools）：點三點 menu button（uid 通常無 description）→ `More settings` link → `evaluate_script` 找 `#advanced_settings button` 展開 collapsible → JS 找 checkbox `input[type=checkbox]` 中 parent 含「originally published elsewhere」的那個 → `.click()`（chrome-devtools `click` uid 可能 timeout、改 JS click）→ 找 `input[placeholder="Type the canonical URL..."]`：`disabled=true` 走「Edit canonical link」button click 進編輯模式 → **用 React native input setter 改 value**（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, url)` + `dispatchEvent(new Event('input',{bubbles:true}))`）觸發 React onChange → click「Save canonical link」button。
-6. **topics / Publish**（Step 9）：`click` topic combobox uid → `type_text "Claude Code"` → 等 2 秒 → `press_key Enter`（建 chip）→ 等 1 秒 → `press_key Enter`（clear input）→ 驗 chip 上 → 下一個。全部完成後 `click` Publish button uid。
-7. **canonical driver-side 驗證**（Step 10）：`navigate_page` 到 `https://medium.com/p/<id>` → `evaluate_script` 讀 `document.querySelector('link[rel=canonical]').href`（Medium fetch server HTML 沒 canonical、必須讓瀏覽器 render 後讀 driver-side）。
+    寫完用 `command grep "| <slug> |" docs/philip/syndication-log.md` 回讀確認該行存在。**該 slug 若在 `docs/philip/medium-publish-queue.md` 有條目，同時把它標成已發布（或移除）**——留在佇列裡會讓下次 Step 1 誤判成「草稿待發布」而跳過 Step 2–7。怎樣算做完：`syndication-log.md` 回讀命中新紀錄、佇列檔無殘留待發條目，並向使用者回報公開 URL、canonical 比對結果與逐塊驗證結果。流程結束。
 
 ## 踩過的坑（撞反例就補一行）
 
-- **Medium API / integration token 2025 起停發**，所有走 API 的第三方跨發布工具 Medium 段全廢——不要再評估 API 自動化路線（2026-06-13 查證，來源見 references）。
-- **Import a story 會 backdate**：匯入自動把發布日期改成原文日期，Medium 端分發吃虧。這是預設不走 import 的原因（2026-06-13 查證）。
-- **Medium 編輯器不支援表格**——表格必須在 Step 4 先改寫，貼上後才發現會卡在編輯器裡很難救（2026-06-13 查證）。
-- **`medium.com/p/import` 未登入直接 403**：import 入口要從個人 Stories 頁右上角按鈕進，別給使用者直連網址（2026-06-13 curl 實測）。
-- **空白草稿直接貼內文＝第一段被升格成標題**：標題 type 可能靜默失敗，貼上前必驗標題已落欄（2026-06-13 首發實撞，Step 6.3 已加驗證）。
-- **「Something is wrong and we cannot save」紅條出現就停手重載**：之後的所有編輯都只在客戶端、存不進伺服器，增量修補是白做（2026-06-13 實撞；重載後從伺服器最後存檔狀態修起）。
-- **編輯器內選取單一區塊用 JS Range（`selectNodeContents`），不要 triple-click**：triple-click 會跨塊選取，替換時把相鄰段落黏進來（2026-06-13 實撞）。
-- **Topic 下拉點選不可靠，type + Enter 穩**：輸入完整 topic 名後按 Return 即掛上 chip；點 dropdown 項目兩次都沒反應（2026-06-13 實撞）。
-- **canonical 輸入欄有預填值**：進編輯模式後先 cmd+A 再打字，否則 URL 串接成垃圾值（2026-06-13 實撞）。
-- **發布後驗證走瀏覽器內 `fetch(location.href)` 抓 server HTML**：Medium 對 curl 一律 403，Step 10 的 curl 路徑對 Medium 無效（2026-06-13 實撞）。
-- **Medium 每帳號每 24 小時最多發布/排程 2 篇**（紅條原文 maximum of two stories in the past 24 hours；2026-06-13 第 3 篇實撞）——批次轉發要按 2 篇/日排程，別嘗試繞過。草稿可先備好（內容+canonical+topics），視窗開了只差按 Publish。
-- **navigate 到編輯器後等 2 秒再打標題**：頁面初始化中打字會吞掉開頭字元（標題截斷 2 次實撞）；打完必驗，錯了用 JS Range 選取重打。
-- **topics 欄連續 type+Return 會黏成一串**：發布設定頁剛開時尤其會；第一個 topic 提交後驗證 chip 存在再繼續，黏掉就 cmd+A Delete 清掉重來（2026-06-13 實撞）。
-- **`type` 對混中英數標題會丟英文段**（MEMORY.md / 25KB 整段消失，比單純吞頭嚴重；2026-06-13 實撞）——標題一律走 Step 6.3 的剪貼簿貼上，不要用 `type`。
-- **長時間 unattended 瀏覽器 run 會環境降級**（2026-06-13 夜批次實撞）：症狀＝截圖 CDP timeout 30s（renderer 凍）/ 新草稿 URL 卡 `/new-story` 不前進 / 編輯器停止接收鍵盤事件。對策＝關分頁開新的；連兩個分頁都降級就停，等環境恢復或換 fresh session。**別在使用者離線時硬撞**——短 burst（一次 2-3 篇）比一夜全跑可靠得多。
-- **單一 session 跑「一批 ~4 篇」後就會降級**（2026-06-13 實測：第一批 84-87 四篇零失敗、同 session 第二批立刻三分頁連撞「首次輸入不註冊」）。**減載／關分頁無法恢復**——是 CDP/輸入管道的 session 級降級，要 fresh CC session **＋ 完整重啟 Chrome 行程（cmd+Q，不只關視窗）**——光換 CC session 不夠，降級層在 Chrome 行程、跨 CC session 存活（2026-06-13 重啟前 fresh session 仍降級實證）。**運維鐵則：每個 fresh session 只排一批 ~4 篇草稿，做完換 session 再下一批**，別同 session 連跑兩批。
-- **批次草稿模式**（量大時）：建草稿無 24h 限制，可一次把標題+內文都備好；**canonical 與 topics 留到發布時設**（草稿未公開不會被索引，發布前設即可，正好對齊 Step 8）。Draft 只做 Step 5-7、跳過 8-11；發布日再對每篇跑 Step 8-11。進度記在 `docs/philip/medium-publish-queue.md`。
-- **標題後按 Down 再貼內文 → 內文第一段被吸進標題塊**（2026-06-13 exit-0-illusion 草稿實撞：標題變成「正確標題＋第一段」黏一長串、內文從第二段開始）。單行標題按 Down 游標沒離開標題塊，貼上的第一段就併進去。**body 貼完必驗 `ps[0]` 是否等於預期的內文第一段**（而非標題尾巴接內文），不符即中招。
-- **修「塊被合併」用「選取整塊 → 多段 HTML 貼上取代」**：caret collapsed 處貼 `<p>` 會 inline 併進當前段（不換塊）；要產生獨立塊必須先 `selectNodeContents` 選取整段再 cmd+v 貼多段 `<p>`（2026-06-13 修 exit-0 實證）。先 `printf '<p>A</p><p>B</p>' | clipboard-html.sh` 再選取目標段貼上。
-- **JS Range 設選取/caret 前先 `computer left_click` 真實點該塊**：純 JS `getSelection()` 設好範圍但沒鍵盤 focus 時 cmd+v 會 no-op（degraded tab 實撞）；真實點擊取得 focus 後 JS 再覆寫 selection，cmd+v 才生效。
-- **段數驗證要算 graf--p ＋ graf--blockquote ＋ graf--pullquote**：原文的 `>` 引用在 Medium 是 graf--blockquote、不是 graf--p，只數 `.graf--p` 會比 paste.html 的 `<p>` 數少（workflow-vs-skill 22 vs 23 假警報實撞）。且 blockquote 偵測別用 `className.includes('blockquote')`——會誤命中 `graf-after--blockquote`（那只是「跟在引用後面的普通段」標記）；要精確比對 class token。判完整看「p0 正確 ＋ 結尾段正確 ＋ 無殘留佔位符」三者，段數只當粗略 sanity。
-- **批次 4 篇分頁隔離法**：cmd+v 用單一系統剪貼簿＋全域焦點，4 分頁不能同時貼。做法＝開 4 獨立分頁各自 new-story，貼上步驟在分頁間「快速輪序、不重疊」（一篇 title+body 貼完才換下一篇載剪貼簿）。隔離的好處是某分頁 editor 降級不影響其他三個。鎖定 recipe（2026-06-13 一批 4 篇零失敗）：① `printf title|pbcopy` ② JS 取 `.graf--title` rect（每分頁重讀、空塊點靠左 ≈x=460） ③ click→**type 一字喚醒草稿**（驗 URL 變 /p/<id>/edit，純 cmd+v 在未實例化 new-story 會被吞）→cmd+a→Delete→cmd+v 標題④ 驗 title ⑤ `clipboard-html.sh` body ⑥ **Return→cmd+v**（Return 建新塊避開吸併）⑦ 驗 p0/結尾/佔位符。
-- **fresh `/new-story` 的第一次 `cmd+v` 會被吞（草稿未實例化）**：click 後先 `type` 一個真實字元喚醒，URL 變 `/p/<id>/edit` 才算醒，再 cmd+a→Delete→cmd+v。健康 Chrome 上也會發生；type 也喚不醒才按降級處理（見降級分層條）。
-- **並行使用 Chrome 會搞砸代發**（2026-06-13 實撞：標題被洗成「design skill」、type/cmd+v 連續落空）：使用者同時開分頁／複製東西會 (a) 搶走目標分頁的前景焦點，合成鍵盤事件落到別處 (b) 蓋掉系統剪貼簿，pbcopy 的標題被使用者的複製內容取代。**代發開始前請使用者放著 Chrome 別動**；中途若標題貼出非預期字串，先 `pbpaste` 檢查剪貼簿有沒有被蓋，重 copy 後隔 1-2 秒回讀確認穩定再貼。
-- **Advanced Settings 是 collapsible、預設收合**：More settings 頁拉到底、點區段標題（右側 `>`）展開，才會出現 `Customize Canonical Link` 段（未展開時 DOM 內也沒節點，`Cmd+F` 搜不到不代表選項不存在）。
-- **舊文補設 canonical 的 input 是 disabled、要先 click「Edit canonical link」進編輯模式**（2026-06-29 #15 補設實撞）：新文剛勾「originally published elsewhere」時 input 直接 editable + 預填 Medium-self URL（可立刻 cmd+a + type）；但已發布過、之前曾經設過 / 預設 Medium-self 的舊文，重訪 settings 時 input 是 **disabled + 顯示「Edit canonical link」button**（非 Save），type 完全沒進去。對策：用 JS `document.querySelectorAll('input[placeholder="Type the canonical URL..."]')` 看 `disabled` 屬性判斷分支——disabled=true 必先 click「Edit canonical link」button、disabled=false 直接 click input + cmd+a + type。Step 8 已收兩條分支配方。
-- **Chrome 行程級 CDP 鍵盤降級跨全域、cmd+Q 未必解**（2026-07-18 #97 local-llm-hook-judge 實撞）：症狀是 real `type` 進任何頁面（Medium editor / Google 搜尋框）都 no-op；上方「單一 session 跑一批 ~4 篇後就會降級」條記載「cmd+Q 完整重啟 Chrome」是解，本次使用者宣稱已重啟後仍降級——可能只關視窗未真殺行程（macOS `pkill -9 "Google Chrome"` 才確定），或 claude-in-chrome extension 內部 socket 死透。**驗證法**：`navigate` Google 首頁 → real type "ABCDE" → 讀 `q.value`，仍空 = 確認全域降級（不是 Medium 特殊）。此狀態別再嘗試 claude-in-chrome 路徑、切「備援：chrome-devtools MCP 通道」段。
-- **draft-js 拒 `execCommand('insertHTML')`、只吃 ClipboardEvent paste**（2026-07-18 #97 實撞）：走 chrome-devtools MCP 時試過先用 `execCommand('insertHTML', false, html)` 塞 body → return true 看似成功，但 draft-js 過濾掉所有 HTML tag 只保留 `\n` 換行、擠成一段、觸發「Something is wrong and we cannot save」紅條、伺服器不存。完整穩定配方（ClipboardEvent paste dispatch）詳見「備援：chrome-devtools MCP 通道」段步驟 3。
-- **模型逐字複述長 base64 必然漂移——所以 body 注入改走瀏覽器端 fetch**（2026-07-29 #109 實證，配方已改進備援段步驟 3）：舊配方要模型把 4,692 字元的 base64 貼進 `evaluate_script` 的 function body，實測**同一串 base64 在 Medium（draft-js）與 vocus（Lexical）各壞掉同一個字**（小標的「就」→「面」）。追鏈：`paste.html` 原檔十六進位 `e5b0b1`=就 ✅ → bash 產的 base64 解碼回來=就 ✅ → **模型複製進 function body 的那串=面 ❌**。同一輪的對照組：19 段中文正文（拿來做逐塊比對用）複述 0 漂移——**有語意的內容複述得住、無語意的隨機字串複述不住**。通則：任何要進 `evaluate_script` 的長字串都不該經模型的手，改讓瀏覽器自己去 fetch（原站有 `access-control-allow-origin: *`）。
-- **「注入成功」不等於「內容正確」——逐塊比對不可省**（同輪）：`dispatched:false`（handler 消化事件）只證明注入管道通了，證明不了字元級正確。上面那個錯字是靠「Medium 端 20 塊 vs 發布檔 20 塊逐塊 diff」抓到的，肉眼掃過去不會發現。Step 7 的全文比對是硬要求、不是 sanity check。
-- **draft-js paste 一次塞多塊時尾段會被壓縮成一塊**（2026-07-18 #97 46 塊實撞）：dispatchEvent 一次注入 40 p + 6 heading，前 41 塊完美 match paste.html 對應 index、**尾巴 P41-P45 被合成單一段 M42「呼叫頻率謫，縮到 hook 裡...」**（中間 3-4 塊的文字全丟、頭尾拼在一起、還混一個錯字）。draft-js paste 消化長 HTML 時尾段 buffer 疑似溢出。修復配方（tail 補注入 + Backspace 刪錯合段）詳見「備援」段步驟 4。
+- **不加常駐 `skill-verify-auditor`**：本流程的正確性由瀏覽器內逐塊字串比對（`mismatchCount === 0`）、driver-side `link[rel="canonical"]` 實讀與 `syndication-log.md` 回讀決定性把關，派唯讀文字審稿員無法重讀 Medium 受保護 DOM。
+- **Medium API / integration token 2025 起停發**，所有走 API 的第三方跨發布工具 Medium 段全廢——不要再評估 API 自動化路線。
+- **Import a story 會 backdate**：匯入自動把發布日期改成原文日期，Medium 端分發吃虧，預設不走 import。
+- **Medium 編輯器不支援表格**：表格在 Step 4 先改寫成條列並經使用者拍板，貼上後才處理很難救。
+- **Medium 對外部 `curl` 一律回 403**：發布後的 `canonical` 驗證必須在已渲染的瀏覽器頁透過 CDP 讀 `document.querySelector('link[rel="canonical"]').href`，不能靠終端機 `curl`。
+- **Medium 每帳號每 24 小時最多發布/排程 2 篇**（紅條原文 `maximum of two stories in the past 24 hours`）：批次轉發按 2 篇/日排程；量大時可走**批次草稿模式**（建草稿無 24h 限制，只做 Step 5–7 備好標題與內文並記 `docs/philip/medium-publish-queue.md`，發布日再跑 Step 8–11）。
+- **「Something is wrong and we cannot save」紅條出現就停手重載**：出現紅條後的所有編輯都存不進伺服器；注意 `execCommand('insertHTML')` 會觸發此紅條並洗掉標籤，內文一律走 `ClipboardEvent('paste', { clipboardData: DataTransfer })`。
+- **禁止模型手貼長字串或 base64 進評估腳本**：模型複述數千字元 base64 必然單字漂移（實測「就」變「面」）；在 `cua_repl` 直接 `fs.readFileSync("<outDir>/paste.html", "utf8")` 變數傳遞，或讓瀏覽器跨源 `fetch` 原站（GitHub Pages 具 `access-control-allow-origin: *`），並強制執行逐塊比對（`dispatched: false` 只代表事件被消化，不保證尾段未被壓縮）。
+- **draft-js 一次貼入 45+ 塊長文時偶發尾段壓縮**：前段完全吻合但最後 4–5 塊被合成單一塊時，提取尾段 HTML 對最後一個 `.graf` 用 `Range.selectNodeContents` 選取後補派一次 `ClipboardEvent('paste')` 並清除錯合殘塊，再重驗 `mismatchCount === 0`。
+- **Advanced Settings 預設收合且 canonical 欄位常預設 `disabled`**：`/p/<id>/settings` 裡的 `#advanced_settings` 未點擊展開前 DOM 內無子節點；勾選 checkbox 後無論新舊草稿都先檢查有無「Edit canonical link」按鈕（有就先點開），再用 React native input setter 寫值並點「Save canonical link」。
+- **LCU 協定三個硬邊界**：首次呼叫只能單獨一行 `cua.createBrowserTab(...)`、首次使用 `tab.capabilities.get("cdp")` 前須先讀 `agent.documentation.get("capabilities/tab/cdp")`、瀏覽器階段一結束切回本地工具前須單獨送一發只含 `completion_summary` 的 `mcp__lcu__js`（未登入交棒則先 `await tab.markHandoff()`）。

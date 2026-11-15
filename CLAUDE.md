@@ -52,6 +52,11 @@ material-first-writing Phase 1.5 純 AI 校稿閘——使用者校純 AI 版時
 - **部署 = GitHub Pages 自訂網域 `https://blog.gggodlin.com`**——沿用既有 `GGGODLIN.github.io` 儲存庫、部落格上 `main` 分支、透過 GitHub Actions 部署、舊 2020 骨架留 `master` 分支不刪；自訂網域 `https://blog.gggodlin.com` 已於 2026-10-29 正式上線（GitHub Pages + `CNAME` + 舊網址 301 轉址）。
 - Astro 6 publishing 三 trap 見 memory `feedback_astro6_publishing_traps_2026_05_17`。
 
+## 文章標題長度（固化）
+
+- 發佈正稿標題（`title` 與正文 `# ` 大標）預設控制在**兩行左右**（依文章頁 `.container` `632px` 寬度配 `h1` `50px` 字級實測，約 **18～25 字內**，不寫成帶冒號長副標的四、五行標題）。
+- 實驗分母、補充數據與背景限定交給 frontmatter `description` 與首段承載，不塞進大標。
+
 ## 專案 / 套件 / 工具連結規則（固化）
 
 發佈正稿提及具體**專案 / 套件 / 工具 / repo** 時，**第一次具名出現必附完整可點擊連結**（GitHub repo 或官網），用 markdown link 形式 `[owner/repo](https://github.com/owner/repo)`。讀者看到工具名要能一鍵查證，這是讀者體驗硬要求（與全域「連結格式」規則一致，本專案落實到發佈文章內容層）。
