@@ -5,9 +5,10 @@ import test from "node:test";
 const secondaryPages = [
   "src/pages/demo.astro",
   "src/pages/workshops.astro",
+  "src/pages/hackathon/index.astro",
 ] as const;
 
-test("demo and workshops pages include canonical, Open Graph, RSS discovery, and CollectionPage JSON-LD", () => {
+test("demo, workshops, and hackathon pages include canonical, Open Graph, RSS discovery, and CollectionPage JSON-LD", () => {
   for (const relPath of secondaryPages) {
     const source = readFileSync(new URL(`../${relPath}`, import.meta.url), "utf8");
     assert.match(source, /<link\s+rel="canonical"\s+href=\{canonicalURL\}\s*\/>/, relPath);

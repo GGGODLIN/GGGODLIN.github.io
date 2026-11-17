@@ -24,6 +24,18 @@ test("resolveNavItemState marks exact page matches with aria-current='page' and 
     active: true,
     ariaCurrent: "page",
   });
+  assert.deepEqual(resolveNavItemState("/hackathon/", "hackathon"), {
+    active: true,
+    ariaCurrent: "page",
+  });
+  assert.deepEqual(resolveNavItemState("/hackathon/reserverail/", "hackathon"), {
+    active: true,
+    ariaCurrent: undefined,
+  });
+  assert.deepEqual(resolveNavItemState("/hackathon/reserverail/", "blog"), {
+    active: false,
+    ariaCurrent: undefined,
+  });
   assert.deepEqual(resolveNavItemState("/demo/", "demo"), {
     active: true,
     ariaCurrent: "page",

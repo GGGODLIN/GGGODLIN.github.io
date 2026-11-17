@@ -7,6 +7,7 @@ const pageTemplates = [
   "src/layouts/BlogPost.astro",
   "src/pages/demo.astro",
   "src/pages/workshops.astro",
+  "src/pages/hackathon/index.astro",
 ] as const;
 
 test("all primary page templates link /favicon.svg and public/favicon.svg exists", () => {

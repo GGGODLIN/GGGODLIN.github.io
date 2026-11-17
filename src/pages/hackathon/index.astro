@@ -1,0 +1,123 @@
+---
+import "../../styles/global.css";
+import ThemeBoot from "../../components/ThemeBoot.astro";
+import ThemeSwitcher from "../../components/ThemeSwitcher.astro";
+import Nav from "../../components/Nav.astro";
+import Analytics from "../../components/Analytics.astro";
+
+const entries = [
+  {
+    title: "ReserveRail: Stopping AI Treasury Drains with ZK State Chains",
+    event: "zkVerify Agent Games · 2026-11",
+    href: "/hackathon/reserverail/",
+  },
+];
+
+const pageTitle = "Hackathon — gggodlin";
+const pageDescription = "黑客松參賽作品與技術說明（英文）。";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const rssURL = new URL("rss.xml", Astro.site);
+const hackathonJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: pageTitle,
+  description: pageDescription,
+  url: canonicalURL.toString(),
+  inLanguage: "zh-Hant",
+  author: {
+    "@type": "Person",
+    name: "Philip Lin",
+    alternateName: "GGGODLIN",
+    url: "https://gggodlin.com",
+  },
+};
+const serializedHackathonJsonLd = JSON.stringify(hackathonJsonLd).replace(/</g, "\\u003c");
+---
+
+<!doctype html>
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="gggodlin" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="alternate" type="application/rss+xml" title="gggodlin" href={rssURL} />
+    <script is:inline type="application/ld+json" set:html={serializedHackathonJsonLd} />
+    <ThemeBoot />
+  </head>
+  <body>
+    <main class="container">
+      <header class="site-header">
+        <div class="header-row">
+          <h1><a href="/">GGGODLIN</a></h1>
+          <Nav />
+        </div>
+      </header>
+      <section class="hackathon-list">
+        <h2>Hackathon</h2>
+        {
+          entries.map((entry) => (
+            <article class="hackathon-item">
+              <a href={entry.href}>
+                <h3>{entry.title}</h3>
+              </a>
+              <p class="hackathon-event">{entry.event}</p>
+            </article>
+          ))
+        }
+      </section>
+    </main>
+    <ThemeSwitcher />
+    <Analytics />
+    <style>
+      .site-header {
+        margin-bottom: var(--section-gap);
+      }
+      .header-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .header-row h1 {
+        margin: 0;
+      }
+      .header-row h1 a {
+        color: inherit;
+        border: none;
+      }
+      .header-row h1 a:hover {
+        color: var(--accent);
+        border: none;
+      }
+      .hackathon-item {
+        margin-bottom: calc(var(--baseline) * 4);
+      }
+      .hackathon-item h3 {
+        margin: 0;
+      }
+      .hackathon-item a {
+        border: none;
+      }
+      .hackathon-item a:hover h3 {
+        color: var(--accent);
+      }
+      .hackathon-event {
+        margin: calc(var(--baseline) * 0.5) 0 0;
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+      }
+    </style>
+  </body>
+</html>

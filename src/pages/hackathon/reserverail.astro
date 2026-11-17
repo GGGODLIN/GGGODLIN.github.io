@@ -1,0 +1,16 @@
+---
+import BlogPost from "../../layouts/BlogPost.astro";
+import { Content, frontmatter } from "./_reserverail.md";
+---
+
+<BlogPost
+  title={frontmatter.title}
+  description={frontmatter.description}
+  pubDate={new Date(frontmatter.pubDate)}
+  tags={[]}
+  lang="en"
+  backHref="/hackathon/"
+  backLabel="← All hackathon write-ups"
+>
+  <Content />
+</BlogPost>

@@ -5,6 +5,7 @@ const email = "qwe70301@gmail.com";
 const pathname = Astro.url.pathname;
 const blogNav = resolveNavItemState(pathname, "blog");
 const workshopsNav = resolveNavItemState(pathname, "workshops");
+const hackathonNav = resolveNavItemState(pathname, "hackathon");
 const demoNav = resolveNavItemState(pathname, "demo");
 ---
 
@@ -19,6 +20,11 @@ const demoNav = resolveNavItemState(pathname, "demo");
     aria-current={workshopsNav.ariaCurrent}
     data-active={workshopsNav.active ? "true" : undefined}
   >Workshops</a>
+  <a
+    href="/hackathon/"
+    aria-current={hackathonNav.ariaCurrent}
+    data-active={hackathonNav.active ? "true" : undefined}
+  >Hackathon</a>
   <a
     href="/demo/"
     aria-current={demoNav.ariaCurrent}
