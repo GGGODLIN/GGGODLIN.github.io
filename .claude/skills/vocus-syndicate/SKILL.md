@@ -39,7 +39,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
    怎樣算做完：`titleVal === TITLE`、頂欄顯示已自動儲存、`mismatchCount === 0` 且外連數完全吻合。完成後接 Step 7。
 7. **佔位符重建**（若 Step 4 有 code/table）：逐塊比照 [references/vocus-mechanics.md](references/vocus-mechanics.md) 重建程式碼或表格區塊並重驗無 `⟦` 殘留；無 code/table 直接接 Step 8。怎樣算做完：0 個 `⟦` 佔位符殘留。
 8. **進發佈設定三步精靈**：點擊右上「準備發佈」（已發佈過的文章顯示為「調整發佈設定」）進 `vocus.cc/publish-v2/{id}`：
-   1. **基本設定**：文章無圖時點擊 `#coverSource-clear`（或對應「不使用縮圖」label）避免預設底圖；對分類 combobox 外層控制容器依序派發 `mousedown` → `mouseup` → `click` 展開選單，找到文字為「軟體開發」（或「科技」）的葉節點 `scrollIntoView({ block: 'center' })` 並 `.click()`；點「下一步」。
+   1. **基本設定**：文章無圖時點擊 `#coverSource-clear`（或對應「不使用縮圖」label）避免預設底圖，點完用 `Runtime.evaluate` 讀回 `#coverSource-clear` 的 `checked` 記為 `coverCleared`（讀不到記 `unknown`），Step 11 依它填縮圖欄；對分類 combobox 外層控制容器依序派發 `mousedown` → `mouseup` → `click` 展開選單，找到文字為「軟體開發」（或「科技」）的葉節點 `scrollIntoView({ block: 'center' })` 並 `.click()`；點「下一步」。
    2. **進階設定**：勾選 `#openCanonical`（或 `label[for="openCanonical"]`，「啟用整合網址」Beta）→ 對顯示出來的網址 `input` 用 React native input setter（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(inp, canonicalURL)`＋派發 `input` 與 `change` 事件）寫入原站 `canonicalURL` → 點「下一步」。
    3. **權限和狀態**：內容收費維持「免費公開」；勾選 `#publishMethod-public`（或 `label[for="publishMethod-public"]`，「公開發佈」）。怎樣算做完：`pubChecked === true` 且底部按鈕變為「確認發佈」。完成後接 Step 9。
 9. **發佈與公開頁確認（代發）**：
@@ -53,7 +53,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 11. **轉發紀錄落檔**（副作用步驟，不可略過）：依 Step 10 實測結果 append 到 `docs/philip/syndication-log.md` 的 `## 方格子（vocus）` 段（段不存在先建）：
 
     ```
-    - YYYY-MM-DD | <slug> | <vocus URL> | canonical=<ok（公開 DOM 與 server HTML 精確指回原站） 或 vocus-self（整合網址 Beta 已填原站，公開頁仍自指）>｜title=<標題>｜content=<區塊統計>｜逐塊比對=<N>/<N>（mismatchCount=0）｜分類=軟體開發｜免費公開／公開發佈｜縮圖=不使用縮圖｜server HTML=200
+    - YYYY-MM-DD | <slug> | <vocus URL> | canonical=<ok（公開 DOM 與 server HTML 精確指回原站） 或 vocus-self（整合網址 Beta 已填原站，公開頁仍自指）>｜title=<標題>｜content=<區塊統計>｜逐塊比對=<N>/<N>（mismatchCount=0）｜分類=軟體開發｜免費公開／公開發佈｜縮圖=<依 Step 8.1 的 coverCleared：true 寫「不使用縮圖」、false 寫讀到的實際設定、unknown 寫「未驗」>｜server HTML=200
     ```
 
     寫完用 `command grep "| <slug> |" docs/philip/syndication-log.md` 回讀確認該行存在 → 給使用者驗收回報：vocus 文章 URL、內容保真度（區塊比對/外連/佔位符）、server HTML canonical 實測結果。怎樣算做完：回讀命中新紀錄並完成驗收回報。流程結束。
