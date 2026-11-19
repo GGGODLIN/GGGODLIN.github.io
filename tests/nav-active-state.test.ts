@@ -36,6 +36,14 @@ test("resolveNavItemState marks exact page matches with aria-current='page' and 
     active: false,
     ariaCurrent: undefined,
   });
+  assert.deepEqual(resolveNavItemState("/tier/", "tier"), {
+    active: true,
+    ariaCurrent: "page",
+  });
+  assert.deepEqual(resolveNavItemState("/tier/", "blog"), {
+    active: false,
+    ariaCurrent: undefined,
+  });
   assert.deepEqual(resolveNavItemState("/demo/", "demo"), {
     active: true,
     ariaCurrent: "page",

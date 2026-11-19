@@ -6,6 +6,7 @@ const pathname = Astro.url.pathname;
 const blogNav = resolveNavItemState(pathname, "blog");
 const workshopsNav = resolveNavItemState(pathname, "workshops");
 const hackathonNav = resolveNavItemState(pathname, "hackathon");
+const tierNav = resolveNavItemState(pathname, "tier");
 const demoNav = resolveNavItemState(pathname, "demo");
 ---
 
@@ -25,6 +26,11 @@ const demoNav = resolveNavItemState(pathname, "demo");
     aria-current={hackathonNav.ariaCurrent}
     data-active={hackathonNav.active ? "true" : undefined}
   >Hackathon</a>
+  <a
+    href="/tier/"
+    aria-current={tierNav.ariaCurrent}
+    data-active={tierNav.active ? "true" : undefined}
+  >Tier</a>
   <a
     href="/demo/"
     aria-current={demoNav.ariaCurrent}

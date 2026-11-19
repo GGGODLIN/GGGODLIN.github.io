@@ -1,0 +1,343 @@
+---
+import "../styles/global.css";
+import ThemeBoot from "../components/ThemeBoot.astro";
+import ThemeSwitcher from "../components/ThemeSwitcher.astro";
+import Nav from "../components/Nav.astro";
+import Analytics from "../components/Analytics.astro";
+import tierData from "../data/tier-table.json";
+
+interface TierCell {
+  strong?: string;
+  text?: string;
+  sub?: string;
+  tone?: string;
+}
+interface TierColumn {
+  key: string;
+  label: string;
+  hint?: string;
+  kind?: string;
+}
+interface TierRow {
+  model: { name: string; note?: string };
+  cells: Record<string, TierCell>;
+}
+interface TierGroup {
+  tier: { label: string; variant: string; sub?: string };
+  rows: TierRow[];
+}
+interface TierTable {
+  id: string;
+  heading: string;
+  lead?: string;
+  tierColumnLabel: string;
+  columns: TierColumn[];
+  groups: TierGroup[];
+}
+interface TierNote {
+  label?: string;
+  text: string;
+}
+
+const data = tierData as unknown as {
+  title: string;
+  updated: string;
+  tables: TierTable[];
+  notes: TierNote[];
+};
+
+const cellClass = (cell: TierCell | undefined, column: TierColumn) => {
+  if (column.kind === "note") return "note";
+  if (cell?.tone === "na") return "na";
+  return ["num", cell?.tone === "good" && "good", cell?.tone === "warn" && "warn"]
+    .filter(Boolean)
+    .join(" ");
+};
+
+const pageTitle = "模型 Tier 表 — gggodlin";
+const pageDescription = "我用私有專案的真實 PR 與突變測試考過的 AI 模型分級表。";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const rssURL = new URL("rss.xml", Astro.site);
+const tierJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: pageTitle,
+  description: pageDescription,
+  url: canonicalURL.toString(),
+  inLanguage: "zh-Hant",
+  dateModified: data.updated,
+  author: {
+    "@type": "Person",
+    name: "Philip Lin",
+    alternateName: "GGGODLIN",
+    url: "https://gggodlin.com",
+  },
+};
+const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c");
+---
+
+<!doctype html>
+<html lang="zh-Hant" data-theme="anthropic-warm" data-mode="light" data-user-mode="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="gggodlin" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="alternate" type="application/rss+xml" title="gggodlin" href={rssURL} />
+    <script is:inline type="application/ld+json" set:html={serializedTierJsonLd} />
+    <ThemeBoot />
+  </head>
+  <body>
+    <main class="container">
+      <header class="site-header">
+        <div class="header-row">
+          <h1><a href="/">GGGODLIN</a></h1>
+          <Nav />
+        </div>
+      </header>
+      <div class="tier-wide">
+        <div class="tier-title">
+          <h2>模型 Tier 表</h2>
+          <span class="meta">更新於 {data.updated}</span>
+        </div>
+        {
+          data.tables.map((table) => (
+            <section class="tier-section" id={table.id}>
+              <h3>{table.heading}</h3>
+              {table.lead && <p class="lead">{table.lead}</p>}
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th class="tier">{table.tierColumnLabel}</th>
+                      <th>模型</th>
+                      {table.columns.map((column) => (
+                        <th>
+                          {column.label}
+                          {column.hint && <small>{column.hint}</small>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {table.groups.map((group) =>
+                      group.rows.map((row, rowIndex) => (
+                        <tr
+                          class:list={[
+                            { "group-start": rowIndex === 0 },
+                            { ref: group.tier.variant === "reference" },
+                          ]}
+                        >
+                          <td class="tier">
+                            <span class={`badge b-${group.tier.variant}`}>{group.tier.label}</span>
+                            {group.tier.sub && <span class="sub">{group.tier.sub}</span>}
+                          </td>
+                          <td class="model">
+                            {row.model.name}
+                            {row.model.note && <span class="sub">{row.model.note}</span>}
+                          </td>
+                          {table.columns.map((column) => {
+                            const cell = row.cells[column.key];
+                            return (
+                              <td class={cellClass(cell, column)}>
+                                {cell?.strong && <b>{cell.strong}</b>}
+                                {cell?.strong && cell?.text ? ` ${cell.text}` : cell?.text}
+                                {cell?.sub && <span class="sub">{cell.sub}</span>}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ))
+        }
+        <footer class="tier-notes">
+          {
+            data.notes.map((note) => (
+              <p>
+                {note.label && <b>{note.label}</b>}
+                {note.label && "："}
+                {note.text}
+              </p>
+            ))
+          }
+        </footer>
+      </div>
+    </main>
+    <ThemeSwitcher />
+    <Analytics />
+    <style>
+      .site-header {
+        margin-bottom: var(--section-gap);
+      }
+      .header-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .header-row h1 {
+        margin: 0;
+      }
+      .header-row h1 a {
+        color: inherit;
+        border: none;
+      }
+      .header-row h1 a:hover {
+        color: var(--accent);
+        border: none;
+      }
+      /* 表格欄多，680px 的閱讀寬度放不下；只放寬表格區，頁首維持跟其他頁同寬，切換分頁時導覽列不會跳位 */
+      .tier-wide {
+        position: relative;
+        left: 50%;
+        width: min(1240px, calc(100vw - var(--baseline) * 6));
+        transform: translateX(-50%);
+      }
+      .tier-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: calc(var(--baseline) * 2);
+        flex-wrap: wrap;
+      }
+      .tier-title h2 {
+        margin: 0;
+      }
+      .meta,
+      .lead,
+      .sub,
+      .tier-notes {
+        color: var(--text-secondary);
+      }
+      .meta {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+      }
+      .tier-section {
+        margin-top: calc(var(--baseline) * 5);
+      }
+      .tier-section h3 {
+        margin: 0 0 calc(var(--baseline) * 1);
+      }
+      .lead {
+        font-size: var(--text-sm);
+        margin: 0 0 calc(var(--baseline) * 2);
+        max-width: 1000px;
+      }
+      .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      th {
+        text-transform: none;
+        letter-spacing: normal;
+        vertical-align: bottom;
+        line-height: 1.35;
+      }
+      th small {
+        display: block;
+        font-weight: 400;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+      td {
+        vertical-align: middle;
+        line-height: 1.4;
+      }
+      tr.group-start td {
+        border-top-width: 2px;
+      }
+      tr.ref td {
+        background: var(--bg-secondary);
+      }
+      .tier {
+        width: 72px;
+        text-align: center;
+      }
+      .badge {
+        display: inline-block;
+        min-width: 38px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 700;
+        font-size: var(--text-xs);
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+      }
+      .b-s { background: #7c3aed; }
+      .b-a { background: #2563eb; }
+      .b-b { background: #64748b; }
+      .b-t1 { background: #059669; }
+      .b-t2 { background: #0891b2; }
+      .b-t3 { background: #d97706; }
+      .b-t4 { background: #9ca3af; }
+      .b-reference { background: #c9c3b6; color: #3f444b; }
+      .model {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .num {
+        white-space: nowrap;
+      }
+      .sub {
+        display: block;
+        font-weight: 400;
+        font-size: var(--text-xs);
+      }
+      .na {
+        color: var(--text-muted);
+      }
+      .good {
+        color: #1a7f4b;
+        font-weight: 700;
+      }
+      .warn {
+        color: #b45309;
+      }
+      :global([data-mode="dark"]) .good {
+        color: #4ade80;
+      }
+      :global([data-mode="dark"]) .warn {
+        color: #fbbf24;
+      }
+      .note {
+        min-width: 200px;
+        font-size: var(--text-xs);
+      }
+      .tier-notes {
+        margin-top: calc(var(--baseline) * 3);
+        font-size: var(--text-xs);
+        line-height: 1.7;
+        max-width: 1000px;
+      }
+      .tier-notes p {
+        margin: 0;
+      }
+      .tier-notes b {
+        color: var(--text-primary);
+      }
+      @media (max-width: 760px) {
+        table {
+          min-width: 980px;
+        }
+      }
+    </style>
+  </body>
+</html>

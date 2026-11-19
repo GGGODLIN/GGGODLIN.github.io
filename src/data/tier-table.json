@@ -1,0 +1,767 @@
+{
+  "title": "模型 Tier 表",
+  "lang": "zh-TW",
+  "updated": "2026-11-19",
+  "tables": [
+    {
+      "id": "frontier",
+      "heading": "前沿模型",
+      "lead": "只考過真實 PR 和突變測試，所以欄位跟下面那張不同；兩張共用「自己做真實 PR」這欄。分級看品質評級、突變測試名次與通過數；每格只考 1 次，同一級內不再細排，照突變名次列。",
+      "tierColumnLabel": "Tier",
+      "columns": [
+        {
+          "key": "realPr",
+          "label": "自己做真實 PR",
+          "hint": "8 題通過（重算）／品質 A·B·C"
+        },
+        {
+          "key": "mutation",
+          "label": "突變測試分數",
+          "hint": "3 題，測試抓到幾個故意改壞的地方"
+        },
+        {
+          "key": "timePerTask",
+          "label": "每題作答時間",
+          "hint": "8 題中位"
+        },
+        {
+          "key": "summary",
+          "label": "一句話",
+          "kind": "note"
+        }
+      ],
+      "groups": [
+        {
+          "tier": {
+            "label": "S",
+            "variant": "s"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "Claude Opus 5.5",
+                "note": "xhigh"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 98.3% · 品質 5/3/0"
+                },
+                "mutation": {
+                  "text": "第一",
+                  "sub": "95.52% · 243/244 · 1408/1427",
+                  "tone": "good"
+                },
+                "timePerTask": {
+                  "text": "20 分鐘",
+                  "sub": "最長一題花 95 分鐘",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "品質最好、測試最細；有 2 題各差 1 條所以通過數最少；最慢"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "GPT-6 Astra",
+                "note": "ultra · 10/29 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "4（4）",
+                  "text": "題",
+                  "sub": "部分分數 96.8% · 品質 6/2/0"
+                },
+                "mutation": {
+                  "text": "第二",
+                  "sub": "95.21% · 241 · 1408"
+                },
+                "timePerTask": {
+                  "text": "11.4 分鐘",
+                  "sub": "同時 2～3 場並行"
+                },
+                "summary": {
+                  "text": "突變題跟 Opus 同一級（第三題並列第二）；有一題 135/145、另一題差 7 條"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "A",
+            "variant": "a"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "Gemini 4 Carbon",
+                "note": "high · 11/11 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 86.4% · 品質 0/7/0（7 題有評）"
+                },
+                "mutation": {
+                  "text": "第三",
+                  "sub": "95.67% · 241 · 1406"
+                },
+                "timePerTask": {
+                  "text": "42.8 分鐘",
+                  "sub": "同時 3 場並行",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "第一題突變全表第一；有一題撞 32K 輸出上限沒交卷（扣掉它部分分數 98.8%）；品質全 B"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Gemini 4 Neon",
+                "note": "xhigh · 11/19 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "4（6）",
+                  "text": "題",
+                  "sub": "部分分數 97.4% · 品質 1/7/0"
+                },
+                "mutation": {
+                  "text": "第四",
+                  "sub": "94.59% · 241 · 1410"
+                },
+                "timePerTask": {
+                  "text": "16.4 分鐘",
+                  "sub": "同時 3 場並行"
+                },
+                "summary": {
+                  "text": "第三題 1410 全表最高；重算後 6 題跟 Argon 並列最多；有一題差 8 條沒過；品質 1 題 A"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "GPT-6.1 Sol",
+                "note": "ultra"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "5（5）",
+                  "text": "題",
+                  "sub": "部分分數 97.8% · 品質 3/4/1"
+                },
+                "mutation": {
+                  "text": "第五",
+                  "sub": "94.90% · 241 · 1406"
+                },
+                "timePerTask": {
+                  "text": "9.5 分鐘",
+                  "sub": "8 題都在 20 分鐘內",
+                  "tone": "good"
+                },
+                "summary": {
+                  "text": "最快；交卷回報準、沒有範圍外改動；有一題差 7 條"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "GPT-6.1 Terra",
+                "note": "max · 10/29 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "3（6）",
+                  "text": "題",
+                  "sub": "部分分數 97.2% · 品質 3/5/0"
+                },
+                "mutation": {
+                  "text": "第六",
+                  "sub": "94.90% · 239 · 1408"
+                },
+                "timePerTask": {
+                  "text": "10.5 分鐘",
+                  "sub": "同時 2 場並行"
+                },
+                "summary": {
+                  "text": "重算後 6 題跟 Argon、Neon 並列最多；第三題並列第二、第二題最低"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "B",
+            "variant": "b",
+            "sub": "交界"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "Gemini 4 Hydrogen",
+                "note": "xhigh · 11/13 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 96.9% · 品質 2/6/0"
+                },
+                "mutation": {
+                  "text": "並列第七",
+                  "sub": "93.35% · 241 · 1377"
+                },
+                "timePerTask": {
+                  "text": "10.5 分鐘",
+                  "sub": "同時 3 場並行"
+                },
+                "summary": {
+                  "text": "突變三題都 5 分鐘內交卷；第三題少抓 27 個以上；品質 2 題 A"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Gemini 4 Argon",
+                "note": "交界線"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "5（6）",
+                  "text": "題",
+                  "sub": "部分分數 98.7% · 品質 0/8/0"
+                },
+                "mutation": {
+                  "text": "並列第七",
+                  "sub": "91.96% · 241 · 1404"
+                },
+                "timePerTask": {
+                  "text": "50 分鐘",
+                  "sub": "含流量限制冷卻等待",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "通過數與部分分數最高、品質全 B；改動最保守；會卡 429"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "non-frontier",
+      "heading": "非前沿模型",
+      "tierColumnLabel": "Tier",
+      "columns": [
+        {
+          "key": "daily",
+          "label": "日常任務",
+          "hint": "50 題答對數"
+        },
+        {
+          "key": "speed",
+          "label": "速度",
+          "hint": "寫 400 字"
+        },
+        {
+          "key": "realPr",
+          "label": "自己做真實 PR",
+          "hint": "8 題中通過幾題"
+        },
+        {
+          "key": "solReview",
+          "label": "Sol 拆工驗收",
+          "hint": "8 題中通過幾題"
+        },
+        {
+          "key": "analysis",
+          "label": "分析類",
+          "hint": "盤點／稽核 4 題"
+        },
+        {
+          "key": "summary",
+          "label": "一句話",
+          "kind": "note"
+        }
+      ],
+      "groups": [
+        {
+          "tier": {
+            "label": "交界",
+            "variant": "reference"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "Gemini 4 Argon",
+                "note": "前沿表最後一名，參考列"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "50",
+                  "sub": "10-16"
+                },
+                "speed": {
+                  "text": "—",
+                  "tone": "na"
+                },
+                "realPr": {
+                  "strong": "6",
+                  "text": "題",
+                  "sub": "部分分數 98.7%"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "strong": "95.8%",
+                  "sub": "有效 4/4 · 捏造 0"
+                },
+                "summary": {
+                  "text": "免費模型跟它比"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "T1",
+            "variant": "t1"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "MiMo V2.6 Flash"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "43–50",
+                  "sub": "對照組"
+                },
+                "speed": {
+                  "text": "8.6 秒"
+                },
+                "realPr": {
+                  "strong": "5",
+                  "text": "題",
+                  "sub": "部分分數 95.9%"
+                },
+                "solReview": {
+                  "strong": "4",
+                  "text": "題",
+                  "sub": "部分分數 94.0%"
+                },
+                "analysis": {
+                  "text": "100%",
+                  "tone": "good"
+                },
+                "summary": {
+                  "text": "免費裡通過數最多；部分題目會被安全過濾拒答"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Grok 4.7"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "47"
+                },
+                "speed": {
+                  "text": "慢",
+                  "sub": "約 MiMo 的 1.7 倍",
+                  "tone": "warn"
+                },
+                "realPr": {
+                  "strong": "4",
+                  "text": "題",
+                  "sub": "部分分數 96.1%"
+                },
+                "solReview": {
+                  "strong": "4",
+                  "text": "題",
+                  "sub": "部分分數 82.0%"
+                },
+                "analysis": {
+                  "text": "92.7%"
+                },
+                "summary": {
+                  "text": "品質最穩的免費模型，但慢、用量大"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "T2",
+            "variant": "t2"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "SWE-2 Max",
+                "note": "10/16 加入"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "46",
+                  "sub": "2 題答案被工具覆蓋、不計"
+                },
+                "speed": {
+                  "text": "11.5 秒",
+                  "sub": "Max 推理"
+                },
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 96.2% · 品質 0/6/2"
+                },
+                "solReview": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 93.7%"
+                },
+                "analysis": {
+                  "text": "92.7%"
+                },
+                "summary": {
+                  "text": "分數在 Grok 附近；品質 2 個 C（MiMo 1、Grok 0）；當工人愛越界"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Gemini 3.8 Flash"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "50"
+                },
+                "speed": {
+                  "text": "11.3 秒"
+                },
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 94.7% · 品質 0/6/2"
+                },
+                "solReview": {
+                  "strong": "2（2）",
+                  "text": "題",
+                  "sub": "部分分數 94.6%"
+                },
+                "analysis": {
+                  "text": "100%",
+                  "tone": "good"
+                },
+                "summary": {
+                  "text": "短任務又準又快；長任務掉分；額度少"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Meta Muse Ember",
+                "note": "11/06 加入，暫定 · 測的是上線前代號版 Crouton Alpha"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "49"
+                },
+                "speed": {
+                  "text": "10.4 秒"
+                },
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 92.5%（原始 95.0%）· 品質 1/3/4（扣漏檔 2/3/3）"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "95.8%"
+                },
+                "summary": {
+                  "text": "通過數追平 SWE-2 Max／Grok；1M 視窗且不扣 OpenRouter 每日 1,000 次水桶；長題品質 C"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "T3",
+            "variant": "t3"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "DeepSeek V4.1 Flash"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "48"
+                },
+                "speed": {
+                  "text": "8.8 秒"
+                },
+                "realPr": {
+                  "strong": "3（3）",
+                  "text": "題",
+                  "sub": "部分分數 93.0% · 品質 1/4/3"
+                },
+                "solReview": {
+                  "strong": "4（6）",
+                  "text": "題",
+                  "sub": "部分分數 96.9%"
+                },
+                "analysis": {
+                  "text": "90.1%"
+                },
+                "summary": {
+                  "text": "有人驗收時接近 T1，自己做品質偏低"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "MiniMax M3.1 Flash",
+                "note": "10/22 加入"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "43",
+                  "sub": "回歸檢查未過"
+                },
+                "speed": {
+                  "text": "12.8 秒",
+                  "sub": "日常任務中位，量法不同"
+                },
+                "realPr": {
+                  "strong": "2（2）",
+                  "text": "題",
+                  "sub": "部分分數 92.9% · 品質 2/4/2"
+                },
+                "solReview": {
+                  "strong": "2（3）",
+                  "text": "題",
+                  "sub": "部分分數 95.1%"
+                },
+                "analysis": {
+                  "text": "100%",
+                  "tone": "good"
+                },
+                "summary": {
+                  "text": "自己做品質 2 個 A、2 個 C；通過數偏少；每日額度少"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Maritaca S5-free",
+                "note": "11/07 加入，暫定 · 限時免費"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "47"
+                },
+                "speed": {
+                  "text": "6.9 秒",
+                  "sub": "xhigh 推理",
+                  "tone": "good"
+                },
+                "realPr": {
+                  "strong": "3（3）",
+                  "text": "題",
+                  "sub": "部分分數 80.6%（7 題 92.1%）· 品質 2/3/3"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "69.2%",
+                  "sub": "按時 3/4 · 有交件 3 場 92.2%",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "速度最快（6.9s）、過 3 題拿 2 個 A；多輪受限 256K 視窗與 256K TPM，最長一題撞牆編譯失敗"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "SWE-2 Flash",
+                "note": "11/05 加入 · 限免至 11/30"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "47"
+                },
+                "speed": {
+                  "text": "7.0 秒",
+                  "sub": "Max 推理",
+                  "tone": "good"
+                },
+                "realPr": {
+                  "strong": "2（3）",
+                  "text": "題",
+                  "sub": "部分分數 82.0%（7 題 93.8%）· 品質 3/1/4"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "94.4%",
+                  "sub": "捏造 1",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "短中題追平 SWE-2 Max（3 個 A），長題掉分；與 SWE-2 共用免費限流水桶、硬牆 262K"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Muse Spark 1.3"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "50"
+                },
+                "speed": {
+                  "text": "39.8 秒",
+                  "tone": "warn"
+                },
+                "realPr": {
+                  "strong": "3",
+                  "text": "題",
+                  "sub": "部分分數 79.3%"
+                },
+                "solReview": {
+                  "strong": "2",
+                  "text": "題",
+                  "sub": "只有 4 題有分數"
+                },
+                "analysis": {
+                  "text": "100%",
+                  "tone": "good"
+                },
+                "summary": {
+                  "text": "很慢，長任務做不完"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "tier": {
+            "label": "T4",
+            "variant": "t4"
+          },
+          "rows": [
+            {
+              "model": {
+                "name": "WorkBuddy Hy4 Flash Free",
+                "note": "11/17 加入，暫定 · 限免至 11/30"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "49"
+                },
+                "speed": {
+                  "text": "18.4 秒",
+                  "sub": "足額 64K 中位 59.2s"
+                },
+                "realPr": {
+                  "strong": "2（2）",
+                  "text": "題",
+                  "sub": "部分分數 89.6% · 品質 0/4/4"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "95.8%"
+                },
+                "summary": {
+                  "text": "解掉舊版超時瓶頸（日常任務 49/50、分析類按時全過、PR 快 3 倍、950K 視窗零扣點）；長 PR 會把繁中鍵名改簡體（2 題判 C）"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Nemotron 3.5 Super VL",
+                "note": "10/21 加入，暫定"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "45"
+                },
+                "speed": {
+                  "text": "31.0 秒",
+                  "sub": "日常任務中位，量法不同",
+                  "tone": "warn"
+                },
+                "realPr": {
+                  "strong": "2",
+                  "text": "題",
+                  "sub": "部分分數 84.3%（7 題）"
+                },
+                "solReview": {
+                  "text": "有效只有 2 場",
+                  "sub": "過 1 題，其餘作廢或沒跑",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "78.9%",
+                  "sub": "捏造 2",
+                  "tone": "warn"
+                },
+                "summary": {
+                  "text": "真實 PR 品質偏低（0/3/4，7 題有評）；分析題會捏造"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "label": "怎麼讀",
+      "text": "通過題數已排除題面沒寫清楚的測試；「部分分數」是隱藏測試的平均通過率。分析類是逐項查證的平均正確率，原本 8 條免費腿全部按時交件、0 捏造、0 越界；10/21 加入的 Nemotron 3.5 Super VL 按時交件但捏造 2 次。SWE-2 Max 的速度用 Max 推理量，其他腿是 9/27 用各自預設推理量的。"
+    },
+    {
+      "label": "品質已重評",
+      "text": "表上原本待評或待重評的品質格，已於 2026-11-19 全部重新評過。"
+    },
+    {
+      "label": "題目",
+      "text": "真實 PR 與突變測試都取自我工作過的私有專案，題目內容不公開。突變測試三題依序稱第一、二、三題。"
+    },
+    {
+      "label": "分級",
+      "text": "前沿表分 S／A／B。S 是品質評級最好（皆 0 個 C）且突變測試第 1、2；A 是突變測試第 3～6、重算後通過 4～6 題、品質以 B 為主；B（交界）是突變測試並列最後。"
+    },
+    {
+      "text": "每格只考 1 次，同一級裡的高低可能是誤差。"
+    }
+  ]
+}

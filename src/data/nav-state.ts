@@ -1,4 +1,4 @@
-export type NavSection = "blog" | "workshops" | "hackathon" | "demo";
+export type NavSection = "blog" | "workshops" | "hackathon" | "tier" | "demo";
 
 export interface NavItemState {
   readonly active: boolean;
