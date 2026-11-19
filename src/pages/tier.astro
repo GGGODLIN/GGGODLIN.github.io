@@ -46,10 +46,14 @@ const data = tierData as unknown as {
   notes: TierNote[];
 };
 
-const cellClass = (cell: TierCell | undefined, column: TierColumn) => {
-  if (column.kind === "note") return "note";
-  if (cell?.tone === "na") return "na";
-  return ["num", cell?.tone === "good" && "good", cell?.tone === "warn" && "warn"]
+const cellToneClass = (cell: TierCell | undefined, column: TierColumn): string => {
+  if (column.kind === "note") return "cell-note";
+  if (cell?.tone === "na") return "cell-metric tone-na";
+  return [
+    "cell-metric",
+    cell?.tone === "good" && "tone-good",
+    cell?.tone === "warn" && "tone-warn",
+  ]
     .filter(Boolean)
     .join(" ");
 };
@@ -104,71 +108,99 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           <Nav />
         </div>
       </header>
+
       <div class="tier-wide">
-        <div class="tier-title">
+        <header class="page-head">
           <h2>模型 Tier 表</h2>
           <span class="meta">更新於 {data.updated}</span>
-        </div>
+        </header>
+
         {
           data.tables.map((table) => (
-            <section class="tier-section" id={table.id}>
-              <h3>{table.heading}</h3>
-              {table.lead && <p class="lead">{table.lead}</p>}
-              <div class="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th class="tier">{table.tierColumnLabel}</th>
-                      <th>模型</th>
-                      {table.columns.map((column) => (
-                        <th>
-                          {column.label}
-                          {column.hint && <small>{column.hint}</small>}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {table.groups.map((group) =>
-                      group.rows.map((row, rowIndex) => (
-                        <tr
-                          class:list={[
-                            { "group-start": rowIndex === 0 },
-                            { ref: group.tier.variant === "reference" },
-                          ]}
-                        >
-                          <td class="tier">
-                            <span class={`badge b-${group.tier.variant}`}>{group.tier.label}</span>
-                            {group.tier.sub && <span class="sub">{group.tier.sub}</span>}
-                          </td>
-                          <td class="model">
-                            {row.model.name}
-                            {row.model.note && <span class="sub">{row.model.note}</span>}
-                          </td>
-                          {table.columns.map((column) => {
-                            const cell = row.cells[column.key];
-                            return (
-                              <td class={cellClass(cell, column)}>
-                                {cell?.strong && <b>{cell.strong}</b>}
-                                {cell?.strong && cell?.text ? ` ${cell.text}` : cell?.text}
-                                {cell?.sub && <span class="sub">{cell.sub}</span>}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      )),
-                    )}
-                  </tbody>
-                </table>
+            <section class={`tier-section section-${table.id}`} id={table.id}>
+              <div class="section-head">
+                <h3>{table.heading}</h3>
+                {table.lead && <p class="lead">{table.lead}</p>}
+              </div>
+
+              <div class="roster-scroll">
+                <div class={`roster roster--${table.id}`} role="table" aria-label={table.heading}>
+                  <div class="roster-head" role="rowgroup">
+                    <div class="roster-head-row" role="row">
+                      <div class="rh-pillar" role="columnheader">{table.tierColumnLabel}</div>
+                      <div class={`rh-cols cols--${table.id}`}>
+                        <div class="rh-col rh-model" role="columnheader">模型</div>
+                        {table.columns.map((column) => (
+                          <div
+                            class={column.kind === "note" ? "rh-col rh-note" : `rh-col rh-${column.key}`}
+                            role="columnheader"
+                          >
+                            <span class="rh-label">{column.label}</span>
+                            {column.hint && <small class="rh-hint">{column.hint}</small>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="roster-body" role="rowgroup">
+                    {table.groups.map((group, groupIndex) => (
+                      <div
+                        class:list={[
+                          "tier-band",
+                          `band-${group.tier.variant}`,
+                          { "band-lead": group.tier.variant === "s" || group.tier.variant === "t1" },
+                          { "band-ref": group.tier.variant === "reference" },
+                        ]}
+                        style={`--band-index: ${groupIndex};`}
+                      >
+                        <div class="tier-pillar">
+                          <span class="pillar-label">{group.tier.label}</span>
+                          {group.tier.sub && <span class="pillar-sub">{group.tier.sub}</span>}
+                        </div>
+
+                        <div class="band-rows">
+                          {group.rows.map((row) => (
+                            <div class={`model-row cols--${table.id}`} role="row" tabindex="0">
+                              <div class="cell-model" role="cell" data-label="模型">
+                                <span class="model-name">{row.model.name}</span>
+                                {row.model.note && (
+                                  <span class="sub model-note">{row.model.note}</span>
+                                )}
+                              </div>
+                              {table.columns.map((column) => {
+                                const cell = row.cells[column.key];
+                                return (
+                                  <div
+                                    class={`${cellToneClass(cell, column)} col-${column.key}`}
+                                    role="cell"
+                                    data-label={column.label}
+                                  >
+                                    <span class="cell-val">
+                                      {cell?.strong && <strong>{cell.strong}</strong>}
+                                      {cell?.strong && cell?.text ? ` ${cell.text}` : cell?.text}
+                                    </span>
+                                    {cell?.sub && <span class="sub">{cell.sub}</span>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
           ))
         }
+
         <footer class="tier-notes">
           {
             data.notes.map((note) => (
-              <p>
-                {note.label && <b>{note.label}</b>}
+              <p class={note.label ? "note-entry" : "note-entry note-footnote"}>
+                {note.label && <strong>{note.label}</strong>}
                 {note.label && "："}
                 {note.text}
               </p>
@@ -179,7 +211,9 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
     </main>
     <ThemeSwitcher />
     <Analytics />
+
     <style>
+      /* Site header untouched so nav position and width match all sibling pages */
       .site-header {
         margin-bottom: var(--section-gap);
       }
@@ -201,141 +235,511 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         color: var(--accent);
         border: none;
       }
-      /* 表格欄多，680px 的閱讀寬度放不下；只放寬表格區，頁首維持跟其他頁同寬，切換分頁時導覽列不會跳位 */
+
+      /* Dials: DESIGN_VARIANCE=6 (asymmetric banded pillars), MOTION_INTENSITY=5, VISUAL_DENSITY=5 */
       .tier-wide {
+        --radius-band: 10px;
+        --radius-inner: 6px;
+        --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+        --line-subtle: color-mix(in srgb, var(--text-primary) 9%, transparent);
+        --line-medium: color-mix(in srgb, var(--text-primary) 16%, transparent);
+        --band-surface: color-mix(in srgb, var(--bg-secondary) 55%, var(--bg-primary));
+        --band-lead-surface: color-mix(in srgb, var(--accent) 7%, var(--bg-secondary));
+        --row-hover: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
+        --pillar-lead-bg: color-mix(in srgb, var(--accent) 82%, var(--text-primary));
+        --pillar-lead-fg: var(--bg-primary);
+        --good-ink: #3f6212;
+        --warn-ink: #9c5218;
+
         position: relative;
         left: 50%;
-        width: min(1240px, calc(100vw - var(--baseline) * 6));
+        width: min(1320px, calc(100vw - 64px));
         transform: translateX(-50%);
       }
-      .tier-title {
+
+      :global([data-mode="dark"]) .tier-wide {
+        --line-subtle: color-mix(in srgb, var(--text-primary) 10%, transparent);
+        --line-medium: color-mix(in srgb, var(--text-primary) 18%, transparent);
+        --band-surface: color-mix(in srgb, var(--bg-secondary) 75%, var(--bg-primary));
+        --band-lead-surface: color-mix(in srgb, var(--accent) 11%, var(--bg-secondary));
+        --row-hover: color-mix(in srgb, var(--text-primary) 5%, var(--bg-secondary));
+        --pillar-lead-bg: var(--accent);
+        --pillar-lead-fg: var(--bg-primary);
+        --good-ink: #a2c76b;
+        --warn-ink: #e7aa59;
+      }
+
+      /* Vertical stacked page header (no split-header floater) */
+      .page-head {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        gap: calc(var(--baseline) * 2);
+        gap: 16px;
         flex-wrap: wrap;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line-medium);
       }
-      .tier-title h2 {
+      .page-head h2 {
         margin: 0;
-      }
-      .meta,
-      .lead,
-      .sub,
-      .tier-notes {
-        color: var(--text-secondary);
+        font-family: var(--font-display);
+        font-size: 36px;
+        line-height: 1.15;
+        font-weight: 500;
+        letter-spacing: -0.02em;
       }
       .meta {
         font-family: var(--font-mono);
-        font-size: var(--text-xs);
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
       }
+
       .tier-section {
-        margin-top: calc(var(--baseline) * 5);
+        margin-top: 56px;
       }
-      .tier-section h3 {
-        margin: 0 0 calc(var(--baseline) * 1);
+      .section-frontier {
+        margin-top: 32px;
+      }
+      .section-head {
+        margin-bottom: 24px;
+      }
+      .section-head h3 {
+        margin: 0 0 8px 0;
+        font-family: var(--font-display);
+        font-size: 24px;
+        line-height: 1.25;
+        font-weight: 500;
+        letter-spacing: -0.015em;
       }
       .lead {
-        font-size: var(--text-sm);
-        margin: 0 0 calc(var(--baseline) * 2);
-        max-width: 1000px;
-      }
-      .table-scroll {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      th {
-        text-transform: none;
-        letter-spacing: normal;
-        vertical-align: bottom;
-        line-height: 1.35;
-      }
-      th small {
-        display: block;
-        font-weight: 400;
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.65;
         color: var(--text-secondary);
-        margin-top: 2px;
+        max-width: 65ch;
       }
-      td {
-        vertical-align: middle;
-        line-height: 1.4;
+
+      .roster-scroll {
+        width: 100%;
       }
-      tr.group-start td {
-        border-top-width: 2px;
+      .roster {
+        width: 100%;
+        font-variant-numeric: tabular-nums;
       }
-      tr.ref td {
-        background: var(--bg-secondary);
+
+      /* Column Header Bar: exact horizontal geometry mirror of tier-band + band-rows */
+      .roster-head {
+        margin-bottom: 12px;
+        padding: 0 1px;
       }
-      .tier {
-        width: 72px;
+      .roster-head-row {
+        display: grid;
+        grid-template-columns: 84px minmax(0, 1fr);
+        align-items: end;
+      }
+      .rh-pillar {
+        padding: 8px 12px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 500;
+        color: var(--text-secondary);
         text-align: center;
       }
-      .badge {
-        display: inline-block;
-        min-width: 38px;
-        padding: 4px 8px;
-        border-radius: 8px;
-        color: #fff;
-        font-weight: 700;
-        font-size: var(--text-xs);
-        letter-spacing: 0.03em;
+      .rh-cols {
+        display: grid;
+        gap: 12px;
+        padding: 8px 16px;
+        align-items: end;
+      }
+      .rh-col {
+        min-width: 0;
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .rh-label {
+        display: block;
+      }
+      .rh-hint {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 400;
+        color: var(--text-secondary);
+      }
+
+      /* Shared exact desktop column grids (sum fits 1320px with zero horizontal clip) */
+      .cols--frontier {
+        grid-template-columns: 190px 232px 218px 142px minmax(0, 1fr);
+      }
+      .cols--non-frontier {
+        grid-template-columns: 184px 104px 104px 202px 124px 132px minmax(0, 1fr);
+      }
+
+      /* Asymmetric Banded Roster Body */
+      .roster-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .tier-band {
+        display: grid;
+        grid-template-columns: 84px minmax(0, 1fr);
+        border-radius: var(--radius-band);
+        border: 1px solid var(--line-medium);
+        background: var(--band-surface);
+        overflow: hidden;
+        transition: border-color 180ms var(--ease-fluid);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .tier-band {
+          animation: band-enter 420ms var(--ease-fluid) backwards;
+          animation-delay: calc(min(var(--band-index, 0), 6) * 45ms);
+        }
+        @keyframes band-enter {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      }
+      .tier-band:hover {
+        border-color: color-mix(in srgb, var(--text-primary) 26%, transparent);
+      }
+
+      /* Top tier bands (S / T1): subtle warm accent presence, single accent locked */
+      .tier-band.band-lead {
+        background: var(--band-lead-surface);
+        border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+      }
+      /* Reference divider band (交界) */
+      .tier-band.band-ref {
+        background: var(--bg-secondary);
+        border-style: dashed;
+        border-color: var(--line-medium);
+      }
+
+      /* Left Tier Pillar spanning the entire band */
+      .tier-pillar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 16px 8px;
+        border-right: 1px solid var(--line-subtle);
+        text-align: center;
+      }
+      .pillar-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        padding: 4px 10px;
+        border-radius: var(--radius-inner);
+        font-family: var(--font-display);
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 500;
+        color: var(--text-primary);
         white-space: nowrap;
       }
-      .b-s { background: #7c3aed; }
-      .b-a { background: #2563eb; }
-      .b-b { background: #64748b; }
-      .b-t1 { background: #059669; }
-      .b-t2 { background: #0891b2; }
-      .b-t3 { background: #d97706; }
-      .b-t4 { background: #9ca3af; }
-      .b-reference { background: #c9c3b6; color: #3f444b; }
-      .model {
+      .band-lead .tier-pillar {
+        background: var(--pillar-lead-bg);
+        border-right-color: transparent;
+      }
+      .band-lead .pillar-label {
+        color: var(--pillar-lead-fg);
+      }
+      .band-a .tier-pillar,
+      .band-t2 .tier-pillar {
+        background: color-mix(in srgb, var(--text-primary) 7%, var(--bg-primary));
+      }
+      .band-b .tier-pillar,
+      .band-t3 .tier-pillar {
+        background: color-mix(in srgb, var(--text-primary) 3%, var(--bg-primary));
+      }
+      .band-b .pillar-label,
+      .band-t3 .pillar-label {
+        color: var(--text-secondary);
+      }
+      .band-t4 .tier-pillar,
+      .band-ref .tier-pillar {
+        background: transparent;
+      }
+      .band-t4 .pillar-label,
+      .band-ref .pillar-label {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+      .pillar-sub {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 14px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .band-lead .pillar-sub {
+        color: var(--pillar-lead-fg);
+        opacity: 0.9;
+      }
+
+      /* Rows inside each band */
+      .band-rows {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .model-row {
+        position: relative;
+        display: grid;
+        gap: 12px;
+        padding: 14px 16px;
+        align-items: start;
+        background: var(--bg-primary);
+        transition: background-color 180ms var(--ease-fluid);
+      }
+      .band-lead .model-row {
+        background: color-mix(in srgb, var(--accent) 3%, var(--bg-primary));
+      }
+      .band-ref .model-row {
+        background: var(--bg-secondary);
+      }
+      .model-row + .model-row {
+        border-top: 1px solid var(--line-subtle);
+      }
+
+      /* Motivated horizontal row-trace indicator (GPU-only transform + opacity) */
+      .model-row::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 6px;
+        bottom: 6px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: var(--accent);
+        opacity: 0;
+        transform: scaleY(0.35);
+        transition:
+          transform 200ms var(--ease-fluid),
+          opacity 200ms var(--ease-fluid);
+        pointer-events: none;
+      }
+      .model-row:hover,
+      .model-row:focus-visible {
+        background: var(--row-hover);
+        outline: none;
+      }
+      .model-row:hover::before,
+      .model-row:focus-visible::before {
+        opacity: 1;
+        transform: scaleY(1);
+      }
+      .model-row:focus-visible {
+        box-shadow: inset 0 0 0 2px var(--accent);
+      }
+
+      /* Cell typography */
+      .cell-model,
+      .cell-metric,
+      .cell-note {
+        min-width: 0;
+      }
+      .model-name {
+        display: block;
+        font-size: 14px;
+        line-height: 20px;
         font-weight: 600;
+        color: var(--text-primary);
+      }
+      .cell-val {
+        display: block;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-primary);
         white-space: nowrap;
       }
-      .num {
-        white-space: nowrap;
+      .cell-val strong {
+        font-weight: 600;
       }
       .sub {
         display: block;
-        font-weight: 400;
-        font-size: var(--text-xs);
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 17px;
+        color: var(--text-secondary);
+        white-space: normal;
       }
-      .na {
+      .cell-note .cell-val {
+        font-size: 13px;
+        line-height: 20px;
+        color: var(--text-secondary);
+        white-space: normal;
+      }
+
+      /* Toned semantic ink */
+      .tone-na .cell-val {
         color: var(--text-muted);
       }
-      .good {
-        color: #1a7f4b;
-        font-weight: 700;
+      .tone-good .cell-val {
+        color: var(--good-ink);
+        font-weight: 600;
       }
-      .warn {
-        color: #b45309;
+      .tone-warn .cell-val {
+        color: var(--warn-ink);
+        font-weight: 500;
       }
-      :global([data-mode="dark"]) .good {
-        color: #4ade80;
-      }
-      :global([data-mode="dark"]) .warn {
-        color: #fbbf24;
-      }
-      .note {
-        min-width: 200px;
-        font-size: var(--text-xs);
-      }
+
+      /* Footer notes: unified 10px radius surface */
       .tier-notes {
-        margin-top: calc(var(--baseline) * 3);
-        font-size: var(--text-xs);
+        margin-top: 48px;
+        padding: 24px 28px;
+        border-radius: var(--radius-band);
+        border: 1px solid var(--line-subtle);
+        background: var(--band-surface);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 32px;
+        font-size: 13px;
         line-height: 1.7;
-        max-width: 1000px;
+        color: var(--text-secondary);
       }
-      .tier-notes p {
+      .note-entry {
         margin: 0;
       }
-      .tier-notes b {
+      .note-entry strong {
+        font-weight: 600;
         color: var(--text-primary);
       }
-      @media (max-width: 760px) {
-        table {
-          min-width: 980px;
+      .note-footnote {
+        grid-column: 1 / -1;
+        padding-top: 12px;
+        border-top: 1px solid var(--line-subtle);
+        color: var(--text-muted);
+      }
+
+      /* Reduced motion guarantee (MOTION_INTENSITY > 3) */
+      @media (prefers-reduced-motion: reduce) {
+        .tier-band {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
+        .model-row,
+        .model-row::before {
+          transition: none !important;
+        }
+      }
+
+      /* Tablet: controlled horizontal scroll inside roster-scroll */
+      @media (max-width: 1120px) and (min-width: 769px) {
+        .tier-wide {
+          width: calc(100vw - 48px);
+        }
+        .roster-scroll {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .roster--non-frontier {
+          min-width: 1080px;
+        }
+        .roster--frontier {
+          min-width: 900px;
+        }
+      }
+
+      /* Explicit < 768px mobile collapse (DESIGN_VARIANCE=6 rule): strict single-column tier bands */
+      @media (max-width: 768px) {
+        .tier-wide {
+          position: static;
+          left: auto;
+          transform: none;
+          width: 100%;
+        }
+        .page-head h2 {
+          font-size: 30px;
+        }
+        .tier-section {
+          margin-top: 40px;
+        }
+        .roster-head {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+        }
+        .tier-band {
+          grid-template-columns: 1fr;
+        }
+        .tier-pillar {
+          flex-direction: row;
+          justify-content: flex-start;
+          gap: 10px;
+          padding: 10px 16px;
+          border-right: none;
+          border-bottom: 1px solid var(--line-subtle);
+          text-align: left;
+        }
+        .pillar-label {
+          min-width: auto;
+          padding: 0;
+          font-size: 16px;
+          line-height: 20px;
+        }
+        .model-row,
+        .cols--frontier,
+        .cols--non-frontier {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px 16px;
+          padding: 16px;
+        }
+        .cell-model {
+          grid-column: 1 / -1;
+          padding-bottom: 10px;
+          border-bottom: 1px solid var(--line-subtle);
+        }
+        .model-name {
+          font-size: 16px;
+          line-height: 22px;
+        }
+        .cell-metric::before,
+        .cell-note::before {
+          content: attr(data-label);
+          display: block;
+          font-family: var(--font-mono);
+          font-size: 11px;
+          line-height: 16px;
+          color: var(--text-muted);
+          margin-bottom: 2px;
+        }
+        .cell-val {
+          white-space: normal;
+        }
+        .cell-note {
+          grid-column: 1 / -1;
+          padding-top: 10px;
+          border-top: 1px solid var(--line-subtle);
+        }
+        .tier-notes {
+          grid-template-columns: 1fr;
+          padding: 20px;
+          gap: 12px;
         }
       }
     </style>
