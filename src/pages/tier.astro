@@ -372,12 +372,11 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         color: var(--text-secondary);
       }
 
-      /* Shared exact desktop column grids (sum fits 1320px with zero horizontal clip) */
       .cols--frontier {
-        grid-template-columns: 190px 232px 218px 142px minmax(0, 1fr);
+        grid-template-columns: 184px 216px 206px 136px minmax(220px, 1fr);
       }
       .cols--non-frontier {
-        grid-template-columns: 184px 104px 104px 202px 124px 132px minmax(0, 1fr);
+        grid-template-columns: 176px 96px 96px 188px 118px 124px minmax(230px, 1fr);
       }
 
       /* Asymmetric Banded Roster Body */
@@ -643,30 +642,32 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         }
       }
 
-      /* Tablet: controlled horizontal scroll inside roster-scroll */
-      @media (max-width: 1120px) and (min-width: 769px) {
+      /* Tablet & narrow laptop: horizontal scroll before note column compresses */
+      @media (max-width: 1320px) and (min-width: 769px) {
         .tier-wide {
           width: calc(100vw - 48px);
         }
         .roster-scroll {
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
+          padding-bottom: 6px;
         }
         .roster--non-frontier {
-          min-width: 1080px;
+          min-width: 1180px;
         }
         .roster--frontier {
-          min-width: 900px;
+          min-width: 1020px;
         }
       }
 
-      /* Explicit < 768px mobile collapse (DESIGN_VARIANCE=6 rule): strict single-column tier bands */
+      /* Mobile collapse: single-column tier bands */
       @media (max-width: 768px) {
         .tier-wide {
           position: static;
           left: auto;
           transform: none;
           width: 100%;
+          padding-bottom: 64px;
         }
         .page-head h2 {
           font-size: 30px;
@@ -731,6 +732,9 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         .cell-val {
           white-space: normal;
         }
+        .cols--non-frontier .col-analysis {
+          grid-column: 1 / -1;
+        }
         .cell-note {
           grid-column: 1 / -1;
           padding-top: 10px;
@@ -740,6 +744,30 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           grid-template-columns: 1fr;
           padding: 20px;
           gap: 12px;
+        }
+      }
+
+      @media print {
+        .site-header,
+        :global(.theme-switcher) {
+          display: none !important;
+        }
+        .tier-wide {
+          position: static;
+          left: auto;
+          transform: none;
+          width: 100%;
+          padding-bottom: 0;
+        }
+        .roster-scroll {
+          overflow: visible;
+        }
+        .roster--frontier,
+        .roster--non-frontier {
+          min-width: 0;
+        }
+        .tier-band {
+          break-inside: avoid;
         }
       }
     </style>

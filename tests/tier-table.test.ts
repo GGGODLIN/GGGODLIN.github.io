@@ -24,3 +24,11 @@ test("tier data stays free of private project identifiers", () => {
   }
   assert.doesNotMatch(raw, /#\d{3,}/);
 });
+
+test("tier page guards narrow laptop scroll thresholds, mobile orphan cell, and print rules", () => {
+  const page = readFileSync(new URL("../src/pages/tier.astro", import.meta.url), "utf8");
+  assert.match(page, /@media \(max-width: 1320px\) and \(min-width: 769px\)/);
+  assert.match(page, /\.roster--non-frontier\s*\{[^}]*min-width:\s*1180px;/);
+  assert.match(page, /\.cols--non-frontier \.col-analysis\s*\{[^}]*grid-column:\s*1 \/ -1;/);
+  assert.match(page, /@media print\s*\{[\s\S]*break-inside:\s*avoid;/);
+});
