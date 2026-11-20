@@ -32,3 +32,13 @@ test("tier page guards narrow laptop scroll thresholds, mobile orphan cell, and 
   assert.match(page, /\.cols--non-frontier \.col-analysis\s*\{[^}]*grid-column:\s*1 \/ -1;/);
   assert.match(page, /@media print\s*\{[\s\S]*break-inside:\s*avoid;/);
 });
+
+test("tier page preserves valid ARIA table structure, rowheader cells, time tag, and avoids static tabindex traps", () => {
+  const page = readFileSync(new URL("../src/pages/tier.astro", import.meta.url), "utf8");
+  assert.match(page, /class=\{`rh-cols cols--\$\{table\.id\}`\}\s+role="none"/);
+  assert.match(page, /class="tier-pillar"\s+aria-hidden="true"/);
+  assert.match(page, /class="sr-tier-cell"\s+role="cell"/);
+  assert.match(page, /class="cell-model"\s+role="rowheader"/);
+  assert.doesNotMatch(page, /class=\{`model-row[^`]*`\}\s+role="row"\s+tabindex="0"/);
+  assert.match(page, /<time datetime=\{data\.updated\}>\{data\.updated\}<\/time>/);
+});

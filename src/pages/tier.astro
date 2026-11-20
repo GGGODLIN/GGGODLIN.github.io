@@ -58,7 +58,7 @@ const cellToneClass = (cell: TierCell | undefined, column: TierColumn): string =
     .join(" ");
 };
 
-const pageTitle = "模型 Tier 表 — gggodlin";
+const pageTitle = `${data.title} — gggodlin`;
 const pageDescription = "我用私有專案的真實 PR 與突變測試考過的 AI 模型分級表。";
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const rssURL = new URL("rss.xml", Astro.site);
@@ -111,8 +111,8 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
 
       <div class="tier-wide">
         <header class="page-head">
-          <h2>模型 Tier 表</h2>
-          <span class="meta">更新於 {data.updated}</span>
+          <h2>{data.title}</h2>
+          <span class="meta">更新於 <time datetime={data.updated}>{data.updated}</time></span>
         </header>
 
         {
@@ -123,12 +123,12 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
                 {table.lead && <p class="lead">{table.lead}</p>}
               </div>
 
-              <div class="roster-scroll">
+              <div class="roster-scroll" role="region" aria-label={`${table.heading}捲動檢視`}>
                 <div class={`roster roster--${table.id}`} role="table" aria-label={table.heading}>
                   <div class="roster-head" role="rowgroup">
                     <div class="roster-head-row" role="row">
                       <div class="rh-pillar" role="columnheader">{table.tierColumnLabel}</div>
-                      <div class={`rh-cols cols--${table.id}`}>
+                      <div class={`rh-cols cols--${table.id}`} role="none">
                         <div class="rh-col rh-model" role="columnheader">模型</div>
                         {table.columns.map((column) => (
                           <div
@@ -153,16 +153,21 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
                           { "band-ref": group.tier.variant === "reference" },
                         ]}
                         style={`--band-index: ${groupIndex};`}
+                        role="none"
                       >
-                        <div class="tier-pillar">
+                        <div class="tier-pillar" aria-hidden="true">
                           <span class="pillar-label">{group.tier.label}</span>
                           {group.tier.sub && <span class="pillar-sub">{group.tier.sub}</span>}
                         </div>
 
-                        <div class="band-rows">
+                        <div class="band-rows" role="none">
                           {group.rows.map((row) => (
-                            <div class={`model-row cols--${table.id}`} role="row" tabindex="0">
-                              <div class="cell-model" role="cell" data-label="模型">
+                            <div class={`model-row cols--${table.id}`} role="row">
+                              <span class="sr-tier-cell" role="cell">
+                                {group.tier.label}
+                                {group.tier.sub ? `（${group.tier.sub}）` : ""}
+                              </span>
+                              <div class="cell-model" role="rowheader" data-label="模型">
                                 <span class="model-name">{row.model.name}</span>
                                 {row.model.note && (
                                   <span class="sub model-note">{row.model.note}</span>
@@ -522,7 +527,18 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         border-top: 1px solid var(--line-subtle);
       }
 
-      /* Motivated horizontal row-trace indicator (GPU-only transform + opacity) */
+      /* Keep Tier cell in ARIA row tree without occupying a desktop CSS Grid track */
+      .sr-tier-cell {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
       .model-row::before {
         content: "";
         position: absolute;
@@ -539,18 +555,12 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           opacity 200ms var(--ease-fluid);
         pointer-events: none;
       }
-      .model-row:hover,
-      .model-row:focus-visible {
+      .model-row:hover {
         background: var(--row-hover);
-        outline: none;
       }
-      .model-row:hover::before,
-      .model-row:focus-visible::before {
+      .model-row:hover::before {
         opacity: 1;
         transform: scaleY(1);
-      }
-      .model-row:focus-visible {
-        box-shadow: inset 0 0 0 2px var(--accent);
       }
 
       /* Cell typography */
@@ -723,6 +733,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         .cell-metric::before,
         .cell-note::before {
           content: attr(data-label);
+          content: attr(data-label) / "";
           display: block;
           font-family: var(--font-mono);
           font-size: 11px;
