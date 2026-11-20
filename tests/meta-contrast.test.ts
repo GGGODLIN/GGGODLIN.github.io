@@ -15,6 +15,18 @@ const files = [
     name: "src/pages/demo.astro",
     selector: /\.demo-kind\s*\{([^}]+)\}/,
   },
+  {
+    name: "src/pages/tier.astro",
+    selector: /\.tone-na \.cell-val\s*\{([^}]+)\}/,
+  },
+  {
+    name: "src/pages/tier.astro",
+    selector: /\.note-footnote\s*\{([^}]+)\}/,
+  },
+  {
+    name: "src/pages/tier.astro",
+    selector: /\.cell-metric::before,\s*\.cell-note::before\s*\{([^}]+)\}/,
+  },
 ] as const;
 
 test("metadata labels use --text-secondary so small mono text meets WCAG AA contrast", () => {

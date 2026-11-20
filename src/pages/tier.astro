@@ -236,7 +236,6 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         border: none;
       }
 
-      /* Dials: DESIGN_VARIANCE=6 (asymmetric banded pillars), MOTION_INTENSITY=5, VISUAL_DENSITY=5 */
       .tier-wide {
         --radius-band: 10px;
         --radius-inner: 6px;
@@ -246,10 +245,11 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         --band-surface: color-mix(in srgb, var(--bg-secondary) 55%, var(--bg-primary));
         --band-lead-surface: color-mix(in srgb, var(--accent) 7%, var(--bg-secondary));
         --row-hover: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
-        --pillar-lead-bg: color-mix(in srgb, var(--accent) 82%, var(--text-primary));
+        /* Darker accent mix keeps S/T1 pillar contrast >= 4.5:1 across all 6 light themes */
+        --pillar-lead-bg: color-mix(in srgb, var(--accent) 70%, var(--text-primary));
         --pillar-lead-fg: var(--bg-primary);
         --good-ink: #3f6212;
-        --warn-ink: #9c5218;
+        --warn-ink: #8a4312;
 
         position: relative;
         left: 50%;
@@ -269,7 +269,12 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         --warn-ink: #e7aa59;
       }
 
-      /* Vertical stacked page header (no split-header floater) */
+      /* Respect terminal-ollama's strictly achromatic accent contract */
+      :global([data-theme="terminal-ollama"]) .tier-wide {
+        --good-ink: var(--text-primary);
+        --warn-ink: var(--text-secondary);
+      }
+
       .page-head {
         display: flex;
         align-items: baseline;
@@ -490,7 +495,6 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
       }
       .band-lead .pillar-sub {
         color: var(--pillar-lead-fg);
-        opacity: 0.9;
       }
 
       /* Rows inside each band */
@@ -587,9 +591,8 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         white-space: normal;
       }
 
-      /* Toned semantic ink */
       .tone-na .cell-val {
-        color: var(--text-muted);
+        color: var(--text-secondary);
       }
       .tone-good .cell-val {
         color: var(--good-ink);
@@ -600,7 +603,6 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         font-weight: 500;
       }
 
-      /* Footer notes: unified 10px radius surface */
       .tier-notes {
         margin-top: 48px;
         padding: 24px 28px;
@@ -625,10 +627,9 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         grid-column: 1 / -1;
         padding-top: 12px;
         border-top: 1px solid var(--line-subtle);
-        color: var(--text-muted);
+        color: var(--text-secondary);
       }
 
-      /* Reduced motion guarantee (MOTION_INTENSITY > 3) */
       @media (prefers-reduced-motion: reduce) {
         .tier-band {
           animation: none !important;
@@ -726,7 +727,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           font-family: var(--font-mono);
           font-size: 11px;
           line-height: 16px;
-          color: var(--text-muted);
+          color: var(--text-secondary);
           margin-bottom: 2px;
         }
         .cell-val {
