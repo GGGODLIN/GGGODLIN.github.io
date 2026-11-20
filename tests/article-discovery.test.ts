@@ -34,6 +34,7 @@ const exactTagCases = {
     "protocol-model-dependency",
     "rule-ladder",
     "sem-blast-radius",
+    "workflow-change-backtest",
   ],
   skill: [
     "consent-provenance",
