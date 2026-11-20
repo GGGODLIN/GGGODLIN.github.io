@@ -196,8 +196,30 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
                               : isArgonNonFrontier
                                 ? "argon-non-frontier"
                                 : undefined;
+                            const modelKey = `${table.id}:${row.model.name}`;
+                            const compareMetrics = table.columns.map((column) => {
+                              const cell = row.cells[column.key];
+                              const val = [cell?.strong, cell?.text].filter(Boolean).join(" ") || "—";
+                              return {
+                                key: column.key,
+                                label: column.label,
+                                value: val,
+                                sub: cell?.sub,
+                              };
+                            });
                             return (
-                              <div class={`model-row cols--${table.id}`} role="row" id={rowId}>
+                              <div
+                                class={`model-row cols--${table.id}`}
+                                role="row"
+                                id={rowId}
+                                data-model-key={modelKey}
+                                data-table={table.id}
+                                data-table-heading={table.heading}
+                                data-tier-label={group.tier.label}
+                                data-model-name={row.model.name}
+                                data-model-note={row.model.note ?? ""}
+                                data-compare-metrics={JSON.stringify(compareMetrics)}
+                              >
                                 <span class="sr-tier-cell" role="cell">
                                   {group.tier.label}
                                   {group.tier.sub ? `（${group.tier.sub}）` : ""}
@@ -207,16 +229,27 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
                                   {row.model.note && (
                                     <span class="sub model-note">{row.model.note}</span>
                                   )}
-                                  {isArgonFrontier && (
-                                    <a class="bridge-link" href="#argon-non-frontier">
-                                      對照非前沿參考列（重算 6 題）↓
-                                    </a>
-                                  )}
-                                  {isArgonNonFrontier && (
-                                    <a class="bridge-link" href="#argon-frontier">
-                                      回到前沿交界（5（6）題）↑
-                                    </a>
-                                  )}
+                                  <div class="model-meta-actions">
+                                    <button
+                                      type="button"
+                                      class="pin-btn"
+                                      data-pin-model={modelKey}
+                                      aria-pressed="false"
+                                      aria-label={`釘選 ${row.model.name} 加入並排對照`}
+                                    >
+                                      + 對照
+                                    </button>
+                                    {isArgonFrontier && (
+                                      <a class="bridge-link" href="#argon-non-frontier">
+                                        對照非前沿參考列（重算 6 題）↓
+                                      </a>
+                                    )}
+                                    {isArgonNonFrontier && (
+                                      <a class="bridge-link" href="#argon-frontier">
+                                        回到前沿交界（5（6）題）↑
+                                      </a>
+                                    )}
+                                  </div>
                                 </div>
                                 {table.columns.map((column) => {
                                   const cell = row.cells[column.key];
@@ -260,8 +293,201 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         </footer>
       </div>
     </main>
+    <aside
+      id="tier-compare-drawer"
+      class="compare-drawer"
+      aria-label="模型並排對照"
+      hidden
+    >
+      <div class="compare-head">
+        <div class="compare-head-title">
+          <strong>並排對照</strong>
+          <span id="compare-count" class="compare-count">0 / 3</span>
+        </div>
+        <div class="compare-head-actions">
+          <button type="button" id="compare-toggle" class="compare-chip" aria-expanded="true">
+            收合
+          </button>
+          <button type="button" id="compare-clear" class="compare-chip">清空</button>
+        </div>
+      </div>
+      <div id="compare-body" class="compare-body"></div>
+    </aside>
     <ThemeSwitcher />
     <Analytics />
+
+    <script>
+      import {
+        MAX_PINNED_MODELS,
+        buildComparisonRows,
+        togglePinnedModel,
+        type CompareModelRecord,
+      } from "../data/tier-compare.ts";
+
+      const rows = Array.from(document.querySelectorAll<HTMLElement>(".model-row"));
+      const compareDrawer = document.getElementById("tier-compare-drawer") as HTMLElement | null;
+      const compareCountEl = document.getElementById("compare-count");
+      const compareBodyEl = document.getElementById("compare-body") as HTMLElement | null;
+      const compareToggleBtn = document.getElementById("compare-toggle") as HTMLButtonElement | null;
+      const compareClearBtn = document.getElementById("compare-clear") as HTMLButtonElement | null;
+      const pinButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-pin-model]"));
+
+      const compareCatalog = new Map<string, CompareModelRecord>();
+      for (const el of rows) {
+        const key = el.dataset.modelKey ?? "";
+        if (!key) continue;
+        let metrics: CompareModelRecord["metrics"] = [];
+        try {
+          metrics = JSON.parse(el.dataset.compareMetrics ?? "[]");
+        } catch {
+          metrics = [];
+        }
+        compareCatalog.set(key, {
+          id: key,
+          tableId: el.dataset.table ?? "",
+          tableHeading: el.dataset.tableHeading ?? "",
+          tierLabel: el.dataset.tierLabel ?? "",
+          name: el.dataset.modelName ?? "",
+          note: el.dataset.modelNote || undefined,
+          metrics,
+        });
+      }
+
+      let pinnedIds: string[] = [];
+      let compareCollapsed = false;
+
+      function renderCompareDrawer() {
+        const atLimit = pinnedIds.length >= MAX_PINNED_MODELS;
+        for (const btn of pinButtons) {
+          const key = btn.dataset.pinModel ?? "";
+          const pinned = pinnedIds.includes(key);
+          btn.classList.toggle("is-pinned", pinned);
+          btn.setAttribute("aria-pressed", String(pinned));
+          btn.textContent = pinned ? "已釘選" : "+ 對照";
+          btn.disabled = !pinned && atLimit;
+        }
+
+        if (!compareDrawer || !compareBodyEl) return;
+        if (pinnedIds.length === 0) {
+          compareDrawer.hidden = true;
+          compareBodyEl.textContent = "";
+          return;
+        }
+
+        compareDrawer.hidden = false;
+        if (compareCountEl) {
+          compareCountEl.textContent = `${pinnedIds.length} / ${MAX_PINNED_MODELS}`;
+        }
+        compareBodyEl.hidden = compareCollapsed;
+        if (compareToggleBtn) {
+          compareToggleBtn.textContent = compareCollapsed ? "展開" : "收合";
+          compareToggleBtn.setAttribute("aria-expanded", String(!compareCollapsed));
+        }
+
+        const selected = pinnedIds
+          .map((id) => compareCatalog.get(id))
+          .filter((item): item is CompareModelRecord => Boolean(item));
+        compareBodyEl.textContent = "";
+
+        if (selected.length < 2) {
+          const hint = document.createElement("p");
+          hint.className = "compare-hint";
+          hint.textContent = `已釘選 ${selected[0]?.name ?? ""}（${selected[0]?.tierLabel ?? ""}），再選 1～2 款模型即可並排對照。`;
+          compareBodyEl.appendChild(hint);
+          return;
+        }
+
+        const isCrossTable = new Set(selected.map((m) => m.tableId)).size > 1;
+        const tableEl = document.createElement("table");
+        tableEl.className = "compare-table";
+
+        const thead = document.createElement("thead");
+        const headRow = document.createElement("tr");
+        const corner = document.createElement("th");
+        corner.scope = "col";
+        corner.textContent = "指標";
+        headRow.appendChild(corner);
+
+        for (const model of selected) {
+          const th = document.createElement("th");
+          th.scope = "col";
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = `${model.name}（${model.tierLabel}）`;
+          th.appendChild(nameSpan);
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "compare-unpin";
+          removeBtn.textContent = "×";
+          removeBtn.setAttribute("aria-label", `移除 ${model.name}`);
+          removeBtn.addEventListener("click", () => {
+            pinnedIds = togglePinnedModel(pinnedIds, model.id);
+            renderCompareDrawer();
+          });
+          th.appendChild(removeBtn);
+
+          const sub = document.createElement("span");
+          sub.className = "compare-sub";
+          sub.textContent = model.note ? `${model.tableHeading} · ${model.note}` : model.tableHeading;
+          th.appendChild(sub);
+          headRow.appendChild(th);
+        }
+        thead.appendChild(headRow);
+        tableEl.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        for (const compRow of buildComparisonRows(selected)) {
+          const tr = document.createElement("tr");
+          const labelCell = document.createElement("th");
+          labelCell.scope = "row";
+          labelCell.textContent = compRow.label;
+          if (isCrossTable && compRow.shared && compRow.key === "realPr") {
+            const tag = document.createElement("span");
+            tag.className = "compare-shared-tag";
+            tag.textContent = "共用";
+            labelCell.appendChild(tag);
+          }
+          tr.appendChild(labelCell);
+
+          for (const val of compRow.values) {
+            const td = document.createElement("td");
+            td.textContent = val.value;
+            if (val.sub) {
+              const sub = document.createElement("span");
+              sub.className = "compare-sub";
+              sub.textContent = val.sub;
+              td.appendChild(sub);
+            }
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+        tableEl.appendChild(tbody);
+        compareBodyEl.appendChild(tableEl);
+      }
+
+      for (const btn of pinButtons) {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.pinModel ?? "";
+          pinnedIds = togglePinnedModel(pinnedIds, key);
+          if (pinnedIds.length >= 2) compareCollapsed = false;
+          renderCompareDrawer();
+        });
+      }
+
+      compareToggleBtn?.addEventListener("click", () => {
+        compareCollapsed = !compareCollapsed;
+        renderCompareDrawer();
+      });
+
+      compareClearBtn?.addEventListener("click", () => {
+        pinnedIds = [];
+        compareCollapsed = false;
+        renderCompareDrawer();
+      });
+
+      renderCompareDrawer();
+    </script>
 
     <style>
       /* Site header untouched so nav position and width match all sibling pages */
@@ -411,13 +637,176 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
       }
       .bridge-link {
         display: inline-block;
-        margin-top: 6px;
         font-family: var(--font-mono);
         font-size: 11px;
         line-height: 16px;
         color: var(--accent);
         text-decoration: none;
         border-bottom: 1px solid transparent;
+      }
+      .model-meta-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        margin-top: 6px;
+      }
+      .pin-btn {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line-medium);
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition:
+          background-color 150ms var(--ease-fluid),
+          border-color 150ms var(--ease-fluid),
+          color 150ms var(--ease-fluid);
+      }
+      .pin-btn:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--text-primary);
+      }
+      .pin-btn.is-pinned {
+        background: var(--pillar-lead-bg);
+        border-color: transparent;
+        color: var(--pillar-lead-fg);
+      }
+      .pin-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .pin-btn:focus-visible,
+      .compare-chip:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .compare-chip {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 18px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line-medium);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        cursor: pointer;
+      }
+      .compare-chip:hover {
+        border-color: var(--accent);
+      }
+      .compare-drawer {
+        position: fixed;
+        left: 20px;
+        right: 104px;
+        bottom: 16px;
+        z-index: 40;
+        max-width: 1120px;
+        margin: 0 auto;
+        border-radius: var(--radius-band);
+        border: 1px solid var(--line-medium);
+        background: var(--bg-primary);
+        box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 14%, transparent);
+        padding: 14px 18px;
+      }
+      .compare-drawer[hidden] {
+        display: none;
+      }
+      .compare-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .compare-head-title,
+      .compare-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .compare-count {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+      .compare-body {
+        margin-top: 12px;
+        max-height: 46vh;
+        overflow: auto;
+      }
+      .compare-body[hidden] {
+        display: none;
+      }
+      :global(.compare-table) {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        font-variant-numeric: tabular-nums;
+      }
+      :global(.compare-table th),
+      :global(.compare-table td) {
+        border: none;
+        border-top: 1px solid var(--line-subtle);
+        background: transparent;
+        padding: 8px 10px;
+        font-family: inherit;
+        font-size: inherit;
+        text-transform: none;
+        letter-spacing: normal;
+        text-align: left;
+        vertical-align: top;
+      }
+      :global(.compare-table thead th) {
+        border-top: none;
+        border-bottom: 1px solid var(--line-medium);
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      :global(.compare-table tbody th) {
+        width: 140px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      :global(.compare-shared-tag) {
+        display: inline-block;
+        margin-left: 6px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: var(--band-lead-surface);
+        color: var(--accent-ink);
+      }
+      :global(.compare-sub) {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+      :global(.compare-unpin) {
+        margin-left: 6px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+      :global(.compare-unpin:hover) {
+        color: var(--accent-ink);
+      }
+      :global(.compare-hint) {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--text-secondary);
       }
       .bridge-link:hover,
       .bridge-link:focus-visible {
@@ -884,10 +1273,18 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           padding: 20px;
           gap: 12px;
         }
+        .compare-drawer {
+          left: 12px;
+          right: 12px;
+          bottom: 64px;
+          padding: 12px 14px;
+        }
       }
 
       @media print {
         .site-header,
+        .compare-drawer,
+        .pin-btn,
         :global(.theme-switcher) {
           display: none !important;
         }
