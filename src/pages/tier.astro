@@ -115,6 +115,31 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           <span class="meta">更新於 <time datetime={data.updated}>{data.updated}</time></span>
         </header>
 
+        <details class="reading-guide">
+          <summary>
+            <span>30 秒看懂這張表：3（4）題、品質 A／B／C、突變名次與交界線怎麼讀</span>
+            <span class="guide-toggle" aria-hidden="true"></span>
+          </summary>
+          <dl class="guide-grid">
+            <div>
+              <dt>通過題數「3（4）題」</dt>
+              <dd>前數是原始通過題數，括號內是排除題面敘述不清的測試後重算的通過題數；「部分分數」為隱藏測試平均通過率。</dd>
+            </div>
+            <div>
+              <dt>品質「5/3/0」</dt>
+              <dd>依序為 8 題實作的 A／B／C 評級數量；A 代表結構與驗證最完整，C 代表出現明顯缺陷、捏造或越界改動。</dd>
+            </div>
+            <div>
+              <dt>突變測試與 Sol 拆工驗收</dt>
+              <dd>突變測試在 3 題內故意改壞程式，比模型寫的測試能抓回幾處；「Sol 拆工驗收」代表由前沿模型先拆步驟並把關，再交給非前沿模型實作的結果。</dd>
+            </div>
+            <div>
+              <dt>兩表交界線（Gemini 4 Argon）</dt>
+              <dd>前沿表最後一名與非前沿表頂部參考列都是 Gemini 4 Argon，兩邊以「自己做真實 PR」重算後 6 題對齊，方便免費模型直接跟前沿底線比。</dd>
+            </div>
+          </dl>
+        </details>
+
         {
           data.tables.map((table) => (
             <section class={`tier-section section-${table.id}`} id={table.id}>
@@ -161,36 +186,57 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
                         </div>
 
                         <div class="band-rows" role="none">
-                          {group.rows.map((row) => (
-                            <div class={`model-row cols--${table.id}`} role="row">
-                              <span class="sr-tier-cell" role="cell">
-                                {group.tier.label}
-                                {group.tier.sub ? `（${group.tier.sub}）` : ""}
-                              </span>
-                              <div class="cell-model" role="rowheader" data-label="模型">
-                                <span class="model-name">{row.model.name}</span>
-                                {row.model.note && (
-                                  <span class="sub model-note">{row.model.note}</span>
-                                )}
+                          {group.rows.map((row) => {
+                            const isArgonFrontier =
+                              table.id === "frontier" && row.model.name === "Gemini 4 Argon";
+                            const isArgonNonFrontier =
+                              table.id === "non-frontier" && row.model.name === "Gemini 4 Argon";
+                            const rowId = isArgonFrontier
+                              ? "argon-frontier"
+                              : isArgonNonFrontier
+                                ? "argon-non-frontier"
+                                : undefined;
+                            return (
+                              <div class={`model-row cols--${table.id}`} role="row" id={rowId}>
+                                <span class="sr-tier-cell" role="cell">
+                                  {group.tier.label}
+                                  {group.tier.sub ? `（${group.tier.sub}）` : ""}
+                                </span>
+                                <div class="cell-model" role="rowheader" data-label="模型">
+                                  <span class="model-name">{row.model.name}</span>
+                                  {row.model.note && (
+                                    <span class="sub model-note">{row.model.note}</span>
+                                  )}
+                                  {isArgonFrontier && (
+                                    <a class="bridge-link" href="#argon-non-frontier">
+                                      對照非前沿參考列（重算 6 題）↓
+                                    </a>
+                                  )}
+                                  {isArgonNonFrontier && (
+                                    <a class="bridge-link" href="#argon-frontier">
+                                      回到前沿交界（5（6）題）↑
+                                    </a>
+                                  )}
+                                </div>
+                                {table.columns.map((column) => {
+                                  const cell = row.cells[column.key];
+                                  return (
+                                    <div
+                                      class={`${cellToneClass(cell, column)} col-${column.key}`}
+                                      role="cell"
+                                      data-label={column.label}
+                                    >
+                                      <span class="cell-val">
+                                        {cell?.strong && <strong>{cell.strong}</strong>}
+                                        {cell?.strong && cell?.text ? ` ${cell.text}` : cell?.text}
+                                      </span>
+                                      {cell?.sub && <span class="sub">{cell.sub}</span>}
+                                    </div>
+                                  );
+                                })}
                               </div>
-                              {table.columns.map((column) => {
-                                const cell = row.cells[column.key];
-                                return (
-                                  <div
-                                    class={`${cellToneClass(cell, column)} col-${column.key}`}
-                                    role="cell"
-                                    data-label={column.label}
-                                  >
-                                    <span class="cell-val">
-                                      {cell?.strong && <strong>{cell.strong}</strong>}
-                                      {cell?.strong && cell?.text ? ` ${cell.text}` : cell?.text}
-                                    </span>
-                                    {cell?.sub && <span class="sub">{cell.sub}</span>}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -303,6 +349,83 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         line-height: 18px;
         color: var(--text-secondary);
         font-variant-numeric: tabular-nums;
+      }
+
+      .reading-guide {
+        margin-top: 18px;
+        border: 1px solid var(--line-medium);
+        border-radius: var(--radius-band);
+        background: var(--band-surface);
+        padding: 12px 18px;
+      }
+      .reading-guide summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        cursor: pointer;
+        list-style: none;
+        font-size: 14px;
+        line-height: 22px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .reading-guide summary::-webkit-details-marker {
+        display: none;
+      }
+      .reading-guide summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+        border-radius: 4px;
+      }
+      .guide-toggle::after {
+        content: "展開";
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .reading-guide[open] .guide-toggle::after {
+        content: "收合";
+      }
+      .guide-grid {
+        margin: 14px 0 4px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line-subtle);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 28px;
+      }
+      .guide-grid dt {
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+      .guide-grid dd {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--text-secondary);
+      }
+      .bridge-link {
+        display: inline-block;
+        margin-top: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+      }
+      .bridge-link:hover,
+      .bridge-link:focus-visible {
+        border-bottom-color: currentColor;
+      }
+      .model-row:target {
+        scroll-margin-top: 24px;
+        box-shadow: inset 0 0 0 2px var(--accent);
       }
 
       .tier-section {
@@ -751,6 +874,10 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           grid-column: 1 / -1;
           padding-top: 10px;
           border-top: 1px solid var(--line-subtle);
+        }
+        .guide-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
         }
         .tier-notes {
           grid-template-columns: 1fr;

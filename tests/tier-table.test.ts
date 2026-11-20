@@ -42,3 +42,11 @@ test("tier page preserves valid ARIA table structure, rowheader cells, time tag,
   assert.doesNotMatch(page, /class=\{`model-row[^`]*`\}\s+role="row"\s+tabindex="0"/);
   assert.match(page, /<time datetime=\{data\.updated\}>\{data\.updated\}<\/time>/);
 });
+
+test("tier page offers collapsible quick reading guide and bidirectional Argon bridge anchors", () => {
+  const page = readFileSync(new URL("../src/pages/tier.astro", import.meta.url), "utf8");
+  assert.match(page, /<details class="reading-guide">/);
+  assert.match(page, /href="#argon-non-frontier"/);
+  assert.match(page, /href="#argon-frontier"/);
+  assert.match(page, /\.model-row:target/);
+});
