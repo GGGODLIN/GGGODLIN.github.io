@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const raw = readFileSync(new URL("../src/data/tier-table.json", import.meta.url), "utf8");
@@ -49,4 +49,17 @@ test("tier page offers collapsible quick reading guide and bidirectional Argon b
   assert.match(page, /href="#argon-non-frontier"/);
   assert.match(page, /href="#argon-frontier"/);
   assert.match(page, /\.model-row:target/);
+});
+
+test("tier page related methodology links resolve to existing published blog articles", () => {
+  const page = readFileSync(new URL("../src/pages/tier.astro", import.meta.url), "utf8");
+  const slugs = Array.from(
+    page.matchAll(/\{\s*slug:\s*"([a-z0-9-]+)"/g),
+    (match) => match[1],
+  );
+  assert.ok(slugs.length >= 4, "expected at least 4 related methodology articles");
+  for (const slug of slugs) {
+    const fileUrl = new URL(`../src/content/blog/${slug}.md`, import.meta.url);
+    assert.equal(existsSync(fileUrl), true, `missing related blog article: ${slug}`);
+  }
 });
