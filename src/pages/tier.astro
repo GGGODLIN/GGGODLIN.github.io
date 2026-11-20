@@ -152,11 +152,11 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
             </div>
             <div>
               <dt>品質「5/3/0」</dt>
-              <dd>依序為 8 題實作的 A／B／C 評級數量；A 代表結構與驗證最完整，C 代表出現明顯缺陷、捏造或越界改動。</dd>
+              <dd>依序為真實 PR 實作的 A／B／C 評級數量（未交卷者會少於 8 題）；評級由高至低為 A、B、C，C 涵蓋越界改動、漏檔或長題品質失準等情況。</dd>
             </div>
             <div>
               <dt>突變測試與 Sol 拆工驗收</dt>
-              <dd>突變測試在 3 題內故意改壞程式，比模型寫的測試能抓回幾處；「Sol 拆工驗收」代表由前沿模型先拆步驟並把關，再交給非前沿模型實作的結果。</dd>
+              <dd>突變測試在 3 題內故意改壞程式，比模型寫的測試能抓回幾處；「Sol 拆工驗收」代表改由 GPT-6.1 Sol 拆工並驗收把關、交給非前沿模型實作的通過題數。</dd>
             </div>
             <div>
               <dt>兩表交界線（Gemini 4 Argon）</dt>
@@ -557,7 +557,8 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         border: none;
       }
 
-      .tier-wide {
+      .tier-wide,
+      .compare-drawer {
         --radius-band: 10px;
         --radius-inner: 6px;
         --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
@@ -566,24 +567,29 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         --band-surface: color-mix(in srgb, var(--bg-secondary) 55%, var(--bg-primary));
         --band-lead-surface: color-mix(in srgb, var(--accent) 7%, var(--bg-secondary));
         --row-hover: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
-        /* Darker accent mix keeps S/T1 pillar contrast >= 4.5:1 across all 6 light themes */
+        /* Darker accent mixes keep small accent text & S/T1 pillars >= 4.5:1 across all 6 light themes */
+        --accent-ink: color-mix(in srgb, var(--accent) 58%, var(--text-primary));
         --pillar-lead-bg: color-mix(in srgb, var(--accent) 70%, var(--text-primary));
         --pillar-lead-fg: var(--bg-primary);
         --good-ink: #3f6212;
         --warn-ink: #8a4312;
+      }
 
+      .tier-wide {
         position: relative;
         left: 50%;
         width: min(1320px, calc(100vw - 64px));
         transform: translateX(-50%);
       }
 
-      :global([data-mode="dark"]) .tier-wide {
+      :global([data-mode="dark"]) .tier-wide,
+      :global([data-mode="dark"]) .compare-drawer {
         --line-subtle: color-mix(in srgb, var(--text-primary) 10%, transparent);
         --line-medium: color-mix(in srgb, var(--text-primary) 18%, transparent);
         --band-surface: color-mix(in srgb, var(--bg-secondary) 75%, var(--bg-primary));
         --band-lead-surface: color-mix(in srgb, var(--accent) 11%, var(--bg-secondary));
         --row-hover: color-mix(in srgb, var(--text-primary) 5%, var(--bg-secondary));
+        --accent-ink: color-mix(in srgb, var(--accent) 72%, var(--text-primary));
         --pillar-lead-bg: var(--accent);
         --pillar-lead-fg: var(--bg-primary);
         --good-ink: #a2c76b;
@@ -591,9 +597,17 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
       }
 
       /* Respect terminal-ollama's strictly achromatic accent contract */
-      :global([data-theme="terminal-ollama"]) .tier-wide {
+      :global([data-theme="terminal-ollama"]) .tier-wide,
+      :global([data-theme="terminal-ollama"]) .compare-drawer {
+        --accent-ink: var(--text-primary);
         --good-ink: var(--text-primary);
         --warn-ink: var(--text-secondary);
+      }
+
+      /* Darken exaggerated-min light --text-secondary slightly inside /tier so 11-14px text reaches >= 4.5:1 */
+      :global([data-theme="exaggerated-min"][data-mode="light"]) .tier-wide,
+      :global([data-theme="exaggerated-min"][data-mode="light"]) .compare-drawer {
+        --text-secondary: color-mix(in srgb, #78716c 88%, var(--text-primary));
       }
 
       .page-head {
@@ -684,7 +698,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         font-family: var(--font-mono);
         font-size: 11px;
         line-height: 16px;
-        color: var(--accent);
+        color: var(--accent-ink);
         text-decoration: none;
         border-bottom: 1px solid transparent;
       }
@@ -1388,7 +1402,8 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
         .site-header,
         .compare-drawer,
         .pin-btn,
-        :global(.theme-switcher) {
+        :global(.ts-trigger),
+        :global(.ts-panel) {
           display: none !important;
         }
         .tier-wide {

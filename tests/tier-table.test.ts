@@ -63,3 +63,10 @@ test("tier page related methodology links resolve to existing published blog art
     assert.equal(existsSync(fileUrl), true, `missing related blog article: ${slug}`);
   }
 });
+
+test("tier page enforces drawer CSS token scope, accessible accent ink, and ThemeSwitcher print hiding", () => {
+  const page = readFileSync(new URL("../src/pages/tier.astro", import.meta.url), "utf8");
+  assert.match(page, /\.tier-wide,\s*\.compare-drawer\s*\{[\s\S]*--accent-ink:/);
+  assert.match(page, /:global\(\.compare-table th\),\s*:global\(\.compare-table td\)\s*\{[\s\S]*text-transform:\s*none;/);
+  assert.match(page, /@media print\s*\{[\s\S]*:global\(\.ts-trigger\),\s*:global\(\.ts-panel\)/);
+});
