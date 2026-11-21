@@ -142,7 +142,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
 
         <details class="reading-guide">
           <summary>
-            <span>30 秒看懂這張表：3（4）題、品質 A／B／C、突變名次與交界線怎麼讀</span>
+            <span>30 秒看懂這張表：3（4）題、品質 A／B／C、突變名次、抓真 bug 與交界線怎麼讀</span>
             <span class="guide-toggle" aria-hidden="true"></span>
           </summary>
           <dl class="guide-grid">
@@ -155,8 +155,8 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
               <dd>依序為真實 PR 實作的 A／B／C 評級數量（未交卷者會少於 8 題）；評級由高至低為 A、B、C，C 涵蓋越界改動、漏檔或長題品質失準等情況。</dd>
             </div>
             <div>
-              <dt>突變測試與 Sol 拆工驗收</dt>
-              <dd>突變測試在 3 題內故意改壞程式，比模型寫的測試能抓回幾處；「Sol 拆工驗收」代表改由 GPT-6.1 Sol 拆工並驗收把關、交給非前沿模型實作的通過題數。</dd>
+              <dt>突變測試、抓真 bug 與 Sol 拆工驗收</dt>
+              <dd>突變測試在 3 題內故意改壞程式，比模型寫的測試能抓回幾處；「抓真 bug」改用專案歷史裡真的修過的 bug，只算從使用者看得到的結果驗出來的命中，只分前群與後群；「Sol 拆工驗收」代表改由 GPT-6.1 Sol 拆工並驗收把關、交給非前沿模型實作的通過題數。</dd>
             </div>
             <div>
               <dt>兩表交界線（Gemini 4 Argon）</dt>
@@ -953,7 +953,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
       }
 
       .cols--frontier {
-        grid-template-columns: 184px 216px 206px 136px minmax(220px, 1fr);
+        grid-template-columns: 184px 216px 206px 150px 136px minmax(220px, 1fr);
       }
       .cols--non-frontier {
         grid-template-columns: 176px 96px 96px 188px 118px 124px minmax(230px, 1fr);
@@ -1293,7 +1293,7 @@ const serializedTierJsonLd = JSON.stringify(tierJsonLd).replace(/</g, "\\u003c")
           min-width: 1180px;
         }
         .roster--frontier {
-          min-width: 1020px;
+          min-width: 1170px;
         }
       }
 
