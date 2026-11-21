@@ -242,31 +242,30 @@
           "rows": [
             {
               "model": {
-                "name": "Gemini 4 Hydrogen",
-                "note": "xhigh · 11/13 加入"
+                "name": "Qwen4-Max",
+                "note": "high · 11/21 加入 · Nous 5 天限免"
               },
               "cells": {
                 "realPr": {
                   "strong": "3（4）",
                   "text": "題",
-                  "sub": "部分分數 96.9% · 品質 2/6/0"
+                  "sub": "部分分數 95.4% · 品質 2/6/0"
                 },
                 "mutation": {
-                  "text": "並列第七",
-                  "sub": "93.35% · 241 · 1377"
-                },
-                "timePerTask": {
-                  "text": "10.5 分鐘",
-                  "sub": "同時 3 場並行"
-                },
-                "summary": {
-                  "text": "突變三題都 5 分鐘內交卷；第三題少抓 27 個以上；品質 2 題 A"
+                  "text": "第七",
+                  "sub": "94.28% · 241 · 1398"
                 },
                 "realBug": {
-                  "strong": "45",
-                  "text": "分",
-                  "sub": "滿分 58 · 後群",
+                  "text": "沒考",
+                  "tone": "na"
+                },
+                "timePerTask": {
+                  "text": "46.2 分鐘",
+                  "sub": "同時 2 場並行",
                   "tone": "warn"
+                },
+                "summary": {
+                  "text": "突變總名次贏 Argon 與 Hydrogen（第一題贏兩家）；通過數與品質跟 Hydrogen 相同（2 題 A、沒有 C）；每題 46.2 分鐘偏慢"
                 }
               }
             },
@@ -282,7 +281,7 @@
                   "sub": "部分分數 98.7% · 品質 0/8/0"
                 },
                 "mutation": {
-                  "text": "並列第七",
+                  "text": "第八",
                   "sub": "91.96% · 241 · 1404"
                 },
                 "timePerTask": {
@@ -296,6 +295,36 @@
                 "realBug": {
                   "text": "沒考",
                   "tone": "na"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Gemini 4 Hydrogen",
+                "note": "xhigh · 11/13 加入"
+              },
+              "cells": {
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 96.9% · 品質 2/6/0"
+                },
+                "mutation": {
+                  "text": "第九",
+                  "sub": "93.35% · 241 · 1377"
+                },
+                "timePerTask": {
+                  "text": "10.5 分鐘",
+                  "sub": "同時 3 場並行"
+                },
+                "summary": {
+                  "text": "突變三題都 5 分鐘內交卷；第三題少抓 21 個以上；品質 2 題 A"
+                },
+                "realBug": {
+                  "strong": "45",
+                  "text": "分",
+                  "sub": "滿分 58 · 後群",
+                  "tone": "warn"
                 }
               }
             }
@@ -349,7 +378,7 @@
             {
               "model": {
                 "name": "Gemini 4 Argon",
-                "note": "前沿表最後一名，參考列"
+                "note": "前沿表交界，參考列"
               },
               "cells": {
                 "daily": {
@@ -445,6 +474,36 @@
                 },
                 "summary": {
                   "text": "品質 2/6/0、8 題沒有 C；但慢、用量大"
+                }
+              }
+            },
+            {
+              "model": {
+                "name": "Qwen4-Max",
+                "note": "11/21 加入 · Nous 5 天限免"
+              },
+              "cells": {
+                "daily": {
+                  "strong": "49"
+                },
+                "speed": {
+                  "text": "18.7 秒",
+                  "sub": "足額 131K 輸出（4K 預算 22.4 秒）"
+                },
+                "realPr": {
+                  "strong": "3（4）",
+                  "text": "題",
+                  "sub": "部分分數 95.4% · 品質 2/6/0"
+                },
+                "solReview": {
+                  "text": "未測",
+                  "tone": "na"
+                },
+                "analysis": {
+                  "text": "95.8%"
+                },
+                "summary": {
+                  "text": "跟 Grok 同為品質 2/6/0、8 題沒有 C；突變三題總名次贏 Argon 與 Hydrogen，同步列入前沿表交界；長題作答慢（8 題中位 46.2 分鐘）"
                 }
               }
             }
@@ -806,7 +865,7 @@
     },
     {
       "label": "分級",
-      "text": "前沿表分 S／A／B。S 是品質評級最好（皆 0 個 C）且突變測試第 1、2；A 是突變測試第 3～6、重算後通過 4～6 題、品質以 B 為主；B（交界）是突變測試並列最後。"
+      "text": "前沿表分 S／A／B。S 是品質評級最好（皆 0 個 C）且突變測試第 1、2；A 是突變測試第 3～6、重算後通過 4～6 題、品質以 B 為主；B（交界）是突變測試第 7～9。"
     },
     {
       "label": "抓真 bug",
