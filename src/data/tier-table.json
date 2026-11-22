@@ -1,7 +1,7 @@
 {
   "title": "模型 Tier 表",
   "lang": "zh-TW",
-  "updated": "2026-11-21",
+  "updated": "2026-11-22",
   "tables": [
     {
       "id": "frontier",
@@ -318,8 +318,10 @@
                   "sub": "①610/647（94.28%） ②241/244 ③1398/1427"
                 },
                 "realBug": {
-                  "text": "未測",
-                  "tone": "na"
+                  "strong": "46/58",
+                  "text": "分",
+                  "sub": "6 份考卷｜後段（49 分以下）",
+                  "tone": "warn"
                 },
                 "timePerTask": {
                   "text": "中位 46.2 分鐘",
