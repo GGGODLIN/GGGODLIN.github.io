@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>官網改版 5 顆 AI 盲測 — gggodlin</title>
+    <meta
+      name="description"
+      content="把同一個產品官網交給 5 顆前沿 AI 模型各自設計並實作，隨機打亂成方案 A 到 E 互動體驗，挑出你最喜歡的那一版才揭曉背後模型。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="官網改版 5 顆 AI 盲測 — 你會盲選哪一顆？" />
+    <meta
+      property="og:description"
+      content="同一個產品官網，5 顆前沿 AI 各自提案並寫成真實網頁。隨機洗牌互動試玩，選完才揭曉每版背後的模型真身。"
+    />
+    <meta property="og:image" content="https://blog.gggodlin.com/images/demos/hub-design-blind-test.png" />
+    <meta property="og:url" content="https://blog.gggodlin.com/play/hub-design-blind-test/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      :root {
+        --shell-bg: #111317;
+        --shell-surface: #1a1e25;
+        --shell-surface-2: #232933;
+        --shell-border: #2e3542;
+        --shell-text: #eef2f6;
+        --shell-muted: #98a3b3;
+        --shell-accent: #f4f6f8;
+        --shell-accent-ink: #111317;
+        --shell-cta: #e8ff5a;
+        --shell-cta-ink: #13170b;
+        --shell-ok: #34d399;
+        --shell-bar-h: 56px;
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--shell-bg);
+        color: var(--shell-text);
+        font: 14px/1.5 var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        width: 100%;
+      }
+
+      .topbar {
+        min-height: var(--shell-bar-h);
+        padding: 8px 14px;
+        background: var(--shell-bg);
+        border-bottom: 1px solid var(--shell-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        z-index: 20;
+      }
+
+      .topbar-left,
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .back-link {
+        color: var(--shell-muted);
+        text-decoration: none;
+        font-size: 13px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        white-space: nowrap;
+        transition: color 140ms ease, background 140ms ease;
+      }
+
+      .back-link:hover {
+        color: var(--shell-text);
+        background: var(--shell-surface);
+      }
+
+      .title-pill {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--shell-text);
+        white-space: nowrap;
+        padding-right: 6px;
+        border-right: 1px solid var(--shell-border);
+      }
+
+      .tabs {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab-btn {
+        position: relative;
+        appearance: none;
+        border: 1px solid var(--shell-border);
+        background: var(--shell-surface);
+        color: var(--shell-muted);
+        border-radius: 7px;
+        padding: 6px 12px;
+        min-height: 36px;
+        font: 600 13px/1 var(--font-sans);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+      }
+
+      .tab-btn:hover {
+        color: var(--shell-text);
+        border-color: #4a5568;
+      }
+
+      .tab-btn[aria-selected="true"] {
+        background: var(--shell-accent);
+        color: var(--shell-accent-ink);
+        border-color: var(--shell-accent);
+      }
+
+      .tab-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: transparent;
+        border: 1px solid currentColor;
+        opacity: 0.45;
+      }
+
+      .tab-btn.is-seen .tab-dot {
+        background: var(--shell-ok);
+        border-color: var(--shell-ok);
+        opacity: 1;
+      }
+
+      .tab-btn[aria-selected="true"].is-seen .tab-dot {
+        background: #0d7a52;
+        border-color: #0d7a52;
+      }
+
+      .tab-model {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.8;
+      }
+
+      .seen-count {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--shell-muted);
+        white-space: nowrap;
+      }
+
+      .ctrl-btn {
+        appearance: none;
+        border: 1px solid var(--shell-border);
+        background: var(--shell-surface);
+        color: var(--shell-text);
+        border-radius: 7px;
+        padding: 6px 10px;
+        min-height: 36px;
+        font: 500 13px/1 var(--font-sans);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 140ms ease, border-color 140ms ease;
+      }
+
+      .ctrl-btn:hover {
+        background: var(--shell-surface-2);
+        border-color: #4a5568;
+      }
+
+      .ctrl-btn[aria-pressed="true"] {
+        border-color: #8ab4f8;
+        color: #cfe0ff;
+      }
+
+      .pick-btn {
+        appearance: none;
+        border: 1px solid var(--shell-cta);
+        background: var(--shell-cta);
+        color: var(--shell-cta-ink);
+        border-radius: 7px;
+        padding: 6px 14px;
+        min-height: 36px;
+        font: 700 13px/1 var(--font-sans);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform 100ms ease, filter 140ms ease;
+      }
+
+      .pick-btn:hover {
+        filter: brightness(0.95);
+      }
+
+      .pick-btn:active {
+        transform: translateY(1px);
+      }
+
+      .stage {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+        background: #0a0c10;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        overflow: hidden;
+      }
+
+      .frame-wrap {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transition: width 220ms ease;
+        background: #ffffff;
+      }
+
+      .stage.is-dark .frame-wrap,
+      .stage.is-dark iframe.preview {
+        background: #0c0f14;
+      }
+
+      .stage.is-mobile {
+        padding: 16px;
+        background: radial-gradient(circle at 50% 0%, #1c2230, #0a0c10 70%);
+      }
+
+      .stage.is-mobile .frame-wrap {
+        width: 390px;
+        max-width: 100%;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #353d4d;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      }
+
+      iframe.preview {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+        background: #ffffff;
+      }
+
+      .hint-toast {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(17, 19, 23, 0.92);
+        color: var(--shell-text);
+        border: 1px solid var(--shell-border);
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-size: 13px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 180ms ease;
+        z-index: 40;
+        white-space: nowrap;
+      }
+
+      .hint-toast.is-show {
+        opacity: 1;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 10, 14, 0.78);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 50;
+      }
+
+      .modal-backdrop.is-open {
+        display: flex;
+      }
+
+      .modal {
+        width: 100%;
+        max-width: 680px;
+        max-height: calc(100dvh - 36px);
+        overflow-y: auto;
+        background: #151921;
+        border: 1px solid #2e3645;
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--shell-cta);
+        letter-spacing: 0.04em;
+        margin: 0 0 8px;
+      }
+
+      .modal h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        line-height: 1.25;
+      }
+
+      .modal-sub {
+        margin: 0 0 18px;
+        color: var(--shell-muted);
+        font-size: 14px;
+      }
+
+      .winner-card {
+        background: #1d2330;
+        border: 1px solid rgba(232, 255, 90, 0.45);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+      }
+
+      .winner-tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--shell-cta);
+        color: var(--shell-cta-ink);
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+
+      .winner-model {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      .winner-meta {
+        font-size: 13px;
+        color: var(--shell-muted);
+        margin: 0;
+      }
+
+      .roster {
+        list-style: none;
+        margin: 0 0 20px;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .roster-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 14px;
+        background: var(--shell-surface);
+        border: 1px solid var(--shell-border);
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        color: inherit;
+        font: inherit;
+        transition: border-color 140ms ease, background 140ms ease;
+      }
+
+      .roster-item:hover {
+        border-color: #55627a;
+        background: var(--shell-surface-2);
+      }
+
+      .roster-item.is-picked {
+        border-color: rgba(232, 255, 90, 0.6);
+        background: rgba(232, 255, 90, 0.08);
+      }
+
+      .roster-left {
+        min-width: 0;
+      }
+
+      .roster-name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .roster-desc {
+        font-size: 12px;
+        color: var(--shell-muted);
+        margin-top: 2px;
+      }
+
+      .roster-badge {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--shell-muted);
+        white-space: nowrap;
+      }
+
+      .modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .confirm-box {
+        max-width: 440px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      @media (max-width: 900px) {
+        .title-pill,
+        #viewport-btn {
+          display: none;
+        }
+        .topbar {
+          padding: 8px 10px;
+          gap: 8px;
+        }
+        .topbar-left {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .topbar-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .tab-btn {
+          padding: 6px 10px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="back-link" href="/demo">← Demo</a>
+          <span class="title-pill">官網改版 5 顆 AI 盲測</span>
+          <div class="tabs" role="tablist" aria-label="盲測候選方案" id="tabs"></div>
+        </div>
+        <div class="topbar-right">
+          <span class="seen-count" id="seen-count">已看 1/5</span>
+          <button type="button" class="ctrl-btn" id="mode-btn" aria-pressed="false" title="切換淺色或深色主題（快捷鍵 D）">
+            淺色
+          </button>
+          <button type="button" class="ctrl-btn" id="viewport-btn" aria-pressed="false" title="切換桌機或手機 390px 寬度">
+            桌機
+          </button>
+          <button type="button" class="pick-btn" id="pick-btn">就選這版！</button>
+        </div>
+      </header>
+
+      <main class="stage" id="stage">
+        <div class="frame-wrap">
+          <iframe
+            id="preview-frame"
+            class="preview"
+            title="候選官網即時互動預覽"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+          ></iframe>
+        </div>
+      </main>
+    </div>
+
+    <div class="hint-toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="modal-backdrop" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="modal confirm-box">
+        <p class="modal-eyebrow">盲測提醒</p>
+        <h2 id="confirm-title">還有幾個方案還沒看過</h2>
+        <p class="modal-sub" id="confirm-desc"></p>
+        <div class="modal-actions">
+          <button type="button" class="pick-btn" id="confirm-reveal-btn">直接選這版揭曉</button>
+          <button type="button" class="ctrl-btn" id="confirm-cancel-btn">先逛完其他版</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="reveal-modal" role="dialog" aria-modal="true" aria-labelledby="reveal-title">
+      <div class="modal">
+        <p class="modal-eyebrow">盲測揭曉</p>
+        <h2 id="reveal-title">你盲選出的模型揭曉</h2>
+        <p class="modal-sub">
+          五個版本都拿同一份產品網站與同一組公開契約，先各自盲探提案、去重拉開風格後再獨立實作。點下方任一列可切回比較。
+        </p>
+        <div class="winner-card" id="winner-card"></div>
+        <ul class="roster" id="roster"></ul>
+        <div class="modal-actions">
+          <button type="button" class="pick-btn" id="copy-btn">複製盲測結果給朋友</button>
+          <button type="button" class="ctrl-btn" id="close-reveal-btn">留著答案繼續逛</button>
+          <button type="button" class="ctrl-btn" id="reshuffle-btn">重新洗牌再測一次</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const LABELS = ["A", "B", "C", "D", "E"];
+        const STORAGE_ORDER = "hub-blind-test-order-v1";
+        const STORAGE_SEEN = "hub-blind-test-seen-v1";
+        const STORAGE_PICK = "hub-blind-test-pick-v1";
+        const SHARE_URL = "https://blog.gggodlin.com/play/hub-design-blind-test/";
+
+        // Encoded reveal table so casual inspection of page text doesn't spoil the test
+        const PAYLOAD = "W3siaWQiOiJ2MSIsIm0iOiJHUFQtNi4yLVNvbCIsInMiOiJHUFQtNi4yLVNvbCAoeGhpZ2gpIiwidiI6Iumbmei8quWwjeS9jeWFieahjCIsImgiOiLpm7blpJbpg6jlrZflnovntJTns7vntbHnspfpu5HjgIHkuK3mgKfngq3pu5HphY3onqLlhYnpu4PliLvpu57lsI3pvYrlhanovKoiLCJjIjoiSGVyZHIifSx7ImlkIjoidjIiLCJtIjoiQ2xhdWRlIE9wdXMgNS41IiwicyI6IkNsYXVkZSBPcHVzIDUuNSAoSGlnaCkiLCJ2Ijoi5aWX5Y2w5qCh5qijIiwiaCI6IkNNWUsg6Z2S44CB5rSL57SF5Y2w54mI55aK5Y2w77yaRklYRUQg5bCN5rqW5oiQ6buR44CBU1RJTExfT1BFTiDnlZnpjK/kvY3oibLpgooiLCJjIjoiQW50aWdyYXZpdHkgL2Jvb3N0In0seyJpZCI6InYzIiwibSI6IkdQVC02LjItQXN0cmEiLCJzIjoiR1BULTYuMi1Bc3RyYSAoeGhpZ2gpIiwidiI6Iue5lOijnOaoo+acrCIsImgiOiJHbG9vY2sg6auY5Y+N5beu5aSn6KWv57ea5pCt6KaG55uG6I6T57SF77yM5Lit5aSu5biD6YKK6Yed6IWz5Y2A5YiG57ir5ZCI6IiH57y65Y+jIiwiYyI6IkhlcmRyIENvZGV4In0seyJpZCI6InY0IiwibSI6IkdlbWluaSA0IENhcmJvbiIsInMiOiJHZW1pbmkgNCBDYXJib24gKEhpZ2gpIiwidiI6IueRnuWjq+ehrOmrlOaqoumpl+efqemZoyIsImgiOiLpm7blnJPop5Llr6bpu5HmoYbnt5rjgIHoqIromZ/mnLHntIXmqZ/morDmjInpjbXoiIflhajlr6zpm5nmrIToqJjliIbmnb8iLCJjIjoiQW50aWdyYXZpdHkgL2Jvb3N0In0seyJpZCI6InY1IiwibSI6IkdlbWluaSA0IE5lb24iLCJzIjoiR2VtaW5pIDQgTmVvbiAoRXh0cmEgSGlnaCkiLCJ2Ijoi5pmu6a2v5aOr6JeN5pmS5bel56iL5qqi6amX5pu4IiwiaCI6IuW7uuevieijveWcluWNgeWtl+inkuaomeOAgeWeguebtCBSMSDihpIgUjIg5Zug5p6c6LuM6YGT6IiH6ZuZ5Li76aGM6JeN5pmS5qC857eaIiwiYyI6IkFudGlncmF2aXR5IC9ib29zdCJ9XQ==";
+
+        function decodeMeta() {
+          const bin = atob(PAYLOAD);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return JSON.parse(new TextDecoder("utf-8").decode(bytes));
+        }
+
+        const META_BY_ID = Object.fromEntries(decodeMeta().map((item) => [item.id, item]));
+        const SLOTS = ["v1", "v2", "v3", "v4", "v5"];
+
+        function shuffle(arr) {
+          const copy = arr.slice();
+          const rand = new Uint32Array(copy.length);
+          crypto.getRandomValues(rand);
+          for (let i = copy.length - 1; i > 0; i--) {
+            const j = rand[i] % (i + 1);
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+          }
+          return copy;
+        }
+
+        function loadOrder() {
+          try {
+            const saved = JSON.parse(sessionStorage.getItem(STORAGE_ORDER) || "null");
+            if (Array.isArray(saved) && saved.length === 5 && SLOTS.every((s) => saved.includes(s))) {
+              return saved;
+            }
+          } catch {}
+          const fresh = shuffle(SLOTS);
+          try {
+            sessionStorage.setItem(STORAGE_ORDER, JSON.stringify(fresh));
+          } catch {}
+          return fresh;
+        }
+
+        let order = loadOrder();
+        let activeIdx = 0;
+        let seen = new Set();
+        try {
+          const savedSeen = JSON.parse(sessionStorage.getItem(STORAGE_SEEN) || "[]");
+          if (Array.isArray(savedSeen)) savedSeen.forEach((id) => seen.add(id));
+        } catch {}
+        let pickedId = null;
+        try {
+          pickedId = sessionStorage.getItem(STORAGE_PICK) || null;
+        } catch {}
+        let revealed = Boolean(pickedId);
+        const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        let userModeOverride = false;
+        let currentMode = colorSchemeQuery.matches ? "dark" : "light";
+        try {
+          if (!localStorage.getItem("blind-test-mode-mig-v2")) {
+            localStorage.removeItem("blind-test-mode");
+            localStorage.setItem("blind-test-mode-mig-v2", "1");
+          }
+          const savedBlind = localStorage.getItem("blind-test-mode");
+          const savedBlog = localStorage.getItem("gggodlin-mode");
+          if (savedBlind === "dark" || savedBlind === "light") {
+            currentMode = savedBlind;
+            userModeOverride = true;
+          } else if (savedBlog === "dark" || savedBlog === "light") {
+            currentMode = savedBlog;
+          }
+        } catch {}
+        let mobilePreview = false;
+
+        const tabsEl = document.getElementById("tabs");
+        const seenCountEl = document.getElementById("seen-count");
+        const modeBtn = document.getElementById("mode-btn");
+        const viewportBtn = document.getElementById("viewport-btn");
+        const pickBtn = document.getElementById("pick-btn");
+        const stageEl = document.getElementById("stage");
+        const frameEl = document.getElementById("preview-frame");
+        const toastEl = document.getElementById("toast");
+
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmDesc = document.getElementById("confirm-desc");
+        const confirmRevealBtn = document.getElementById("confirm-reveal-btn");
+        const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
+
+        const revealModal = document.getElementById("reveal-modal");
+        const winnerCardEl = document.getElementById("winner-card");
+        const rosterEl = document.getElementById("roster");
+        const copyBtn = document.getElementById("copy-btn");
+        const closeRevealBtn = document.getElementById("close-reveal-btn");
+        const reshuffleBtn = document.getElementById("reshuffle-btn");
+
+        let toastTimer = null;
+        function showToast(text) {
+          toastEl.textContent = text;
+          toastEl.classList.add("is-show");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toastEl.classList.remove("is-show"), 1800);
+        }
+
+        function saveSeen() {
+          try {
+            sessionStorage.setItem(STORAGE_SEEN, JSON.stringify([...seen]));
+          } catch {}
+        }
+
+        function updateModeButton() {
+          const isDark = currentMode === "dark";
+          modeBtn.textContent = isDark ? "深色" : "淺色";
+          modeBtn.setAttribute("aria-pressed", String(isDark));
+          stageEl.classList.toggle("is-dark", isDark);
+        }
+
+        function syncFrameMode() {
+          try {
+            frameEl.contentWindow?.postMessage({ type: "blind-set-mode", mode: currentMode }, "*");
+          } catch {}
+        }
+
+        function renderTabs() {
+          tabsEl.innerHTML = "";
+          order.forEach((slotId, idx) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "tab-btn" + (seen.has(slotId) ? " is-seen" : "");
+            btn.setAttribute("role", "tab");
+            btn.setAttribute("aria-selected", String(idx === activeIdx));
+
+            const dot = document.createElement("span");
+            dot.className = "tab-dot";
+            dot.setAttribute("aria-hidden", "true");
+            btn.appendChild(dot);
+
+            const labelSpan = document.createElement("span");
+            labelSpan.textContent = `方案 ${LABELS[idx]}`;
+            btn.appendChild(labelSpan);
+
+            if (revealed) {
+              const tag = document.createElement("span");
+              tag.className = "tab-model";
+              const shortName = META_BY_ID[slotId].m.replace("Gemini 4 ", "").replace("Claude ", "").replace("GPT-6.2-", "");
+              tag.textContent = shortName + (pickedId === slotId ? " ★" : "");
+              btn.appendChild(tag);
+            }
+
+            btn.addEventListener("click", () => selectTab(idx));
+            tabsEl.appendChild(btn);
+          });
+
+          seenCountEl.textContent = `已看 ${seen.size}/5`;
+          pickBtn.textContent = revealed ? "查看揭曉結果" : `就選方案 ${LABELS[activeIdx]}`;
+        }
+
+        function selectTab(idx) {
+          activeIdx = idx;
+          const slotId = order[idx];
+          seen.add(slotId);
+          saveSeen();
+          if (userModeOverride) {
+            try {
+              localStorage.setItem("blind-test-mode", currentMode);
+            } catch {}
+          }
+          frameEl.src = `./${slotId}/index.html`;
+          renderTabs();
+        }
+
+        function openReveal() {
+          const pickIdx = order.indexOf(pickedId);
+          const pickLabel = LABELS[pickIdx] ?? "?";
+          const winner = META_BY_ID[pickedId];
+
+          winnerCardEl.innerHTML = `
+            <span class="winner-tag">你的盲選冠軍 · 方案 ${pickLabel}</span>
+            <p class="winner-model">${winner.s}</p>
+            <p class="winner-meta">${winner.v}（${winner.c}）— ${winner.h}</p>
+          `;
+
+          rosterEl.innerHTML = "";
+          order.forEach((slotId, idx) => {
+            const info = META_BY_ID[slotId];
+            const li = document.createElement("li");
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "roster-item" + (slotId === pickedId ? " is-picked" : "");
+            btn.innerHTML = `
+              <div class="roster-left">
+                <div class="roster-name">方案 ${LABELS[idx]}：${info.s} · ${info.v}</div>
+                <div class="roster-desc">${info.h}</div>
+              </div>
+              <span class="roster-badge">${slotId === pickedId ? "你選了這版" : "切去比較 →"}</span>
+            `;
+            btn.addEventListener("click", () => {
+              revealModal.classList.remove("is-open");
+              selectTab(idx);
+            });
+            li.appendChild(btn);
+            rosterEl.appendChild(li);
+          });
+
+          revealModal.classList.add("is-open");
+          renderTabs();
+        }
+
+        function finalizePick() {
+          pickedId = order[activeIdx];
+          revealed = true;
+          try {
+            sessionStorage.setItem(STORAGE_PICK, pickedId);
+          } catch {}
+          confirmModal.classList.remove("is-open");
+          openReveal();
+        }
+
+        pickBtn.addEventListener("click", () => {
+          if (revealed) {
+            openReveal();
+            return;
+          }
+          if (seen.size < 5) {
+            const unseenLabels = order
+              .map((id, idx) => (!seen.has(id) ? `方案 ${LABELS[idx]}` : null))
+              .filter(Boolean)
+              .join("、");
+            confirmDesc.textContent = `你目前看了 ${seen.size}/5 個方案（還沒看：${unseenLabels}）。確定直接選「方案 ${LABELS[activeIdx]}」並揭曉全部模型嗎？`;
+            confirmModal.classList.add("is-open");
+            return;
+          }
+          finalizePick();
+        });
+
+        confirmRevealBtn.addEventListener("click", finalizePick);
+        confirmCancelBtn.addEventListener("click", () => confirmModal.classList.remove("is-open"));
+        closeRevealBtn.addEventListener("click", () => revealModal.classList.remove("is-open"));
+
+        reshuffleBtn.addEventListener("click", () => {
+          order = shuffle(SLOTS);
+          seen = new Set();
+          pickedId = null;
+          revealed = false;
+          try {
+            sessionStorage.setItem(STORAGE_ORDER, JSON.stringify(order));
+            sessionStorage.removeItem(STORAGE_SEEN);
+            sessionStorage.removeItem(STORAGE_PICK);
+          } catch {}
+          revealModal.classList.remove("is-open");
+          selectTab(0);
+          showToast("已重新隨機洗牌方案 A–E");
+        });
+
+        copyBtn.addEventListener("click", async () => {
+          const pickIdx = order.indexOf(pickedId);
+          const winner = META_BY_ID[pickedId];
+          const others = order
+            .filter((id) => id !== pickedId)
+            .map((id) => META_BY_ID[id].m)
+            .join(" / ");
+          const text = [
+            `我在 GGGODLIN 官網 5 顆 AI 盲測（方案 ${LABELS[pickIdx]}）挑中了：`,
+            `🏆 ${winner.m}（${winner.v}）`,
+            `同場對決：${others}`,
+            `來測測你會盲選哪一顆 AI 👉 ${SHARE_URL}`,
+          ].join("\n");
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("已複製盲測結果，直接貼給朋友吧！");
+          } catch {
+            prompt("請複製以下盲測結果：", text);
+          }
+        });
+
+        modeBtn.addEventListener("click", () => {
+          currentMode = currentMode === "dark" ? "light" : "dark";
+          userModeOverride = true;
+          try {
+            localStorage.setItem("blind-test-mode", currentMode);
+          } catch {}
+          updateModeButton();
+          syncFrameMode();
+          showToast(currentMode === "dark" ? "已切換為深色主題" : "已切換為淺色主題");
+        });
+
+        colorSchemeQuery.addEventListener("change", (ev) => {
+          if (userModeOverride) return;
+          currentMode = ev.matches ? "dark" : "light";
+          updateModeButton();
+          syncFrameMode();
+        });
+
+        viewportBtn.addEventListener("click", () => {
+          mobilePreview = !mobilePreview;
+          stageEl.classList.toggle("is-mobile", mobilePreview);
+          viewportBtn.textContent = mobilePreview ? "手機 390px" : "桌機";
+          viewportBtn.setAttribute("aria-pressed", String(mobilePreview));
+        });
+
+        frameEl.addEventListener("load", () => {
+          syncFrameMode();
+        });
+
+        window.addEventListener("message", (ev) => {
+          if (!ev.data || ev.data.type !== "blind-mode-sync") return;
+          if (ev.data.mode === "dark" || ev.data.mode === "light") {
+            currentMode = ev.data.mode;
+            updateModeButton();
+          }
+        });
+
+        window.addEventListener("keydown", (ev) => {
+          if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+          if (ev.key === "Escape") {
+            confirmModal.classList.remove("is-open");
+            revealModal.classList.remove("is-open");
+            return;
+          }
+          if (confirmModal.classList.contains("is-open") || revealModal.classList.contains("is-open")) return;
+          if (ev.key >= "1" && ev.key <= "5") {
+            selectTab(Number(ev.key) - 1);
+          } else if (ev.key === "ArrowRight") {
+            selectTab((activeIdx + 1) % 5);
+          } else if (ev.key === "ArrowLeft") {
+            selectTab((activeIdx + 4) % 5);
+          } else if (ev.key === "d" || ev.key === "D") {
+            modeBtn.click();
+          }
+        });
+
+        confirmModal.addEventListener("click", (ev) => {
+          if (ev.target === confirmModal) confirmModal.classList.remove("is-open");
+        });
+        revealModal.addEventListener("click", (ev) => {
+          if (ev.target === revealModal) revealModal.classList.remove("is-open");
+        });
+
+        updateModeButton();
+        selectTab(0);
+      })();
+    </script>
+  </body>
+</html>

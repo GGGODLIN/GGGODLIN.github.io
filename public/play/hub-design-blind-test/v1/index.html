@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en" data-site-release="pr-review-cloud-v1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GGGODLIN Labs — PR Review Cloud &amp; Open Source</title>
+    <meta
+      name="description"
+      content="GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GGGODLIN Labs" />
+    <meta property="og:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      property="og:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <meta property="og:url" content="https://gggodlin.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      name="twitter:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <link rel="canonical" href="https://gggodlin.com/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GGGODLIN Labs",
+        "url": "https://gggodlin.com/",
+        "description": "GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally.",
+        "email": "philip@gggodlin.com",
+        "founder": {
+          "@type": "Person",
+          "name": "Philip Lin"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Xinyi Dist., Taipei City",
+          "postalCode": "110615",
+          "addressCountry": "TW"
+        },
+        "sameAs": [
+          "https://github.com/GGGODLIN-Labs",
+          "https://blog.gggodlin.com"
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PR Review Cloud",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "url": "https://app.gggodlin.com/",
+        "description": "Zero-LLM-burn cloud workspace for storing, comparing, and sharing multi-axis pull request review reports generated locally by claude-pr-review.",
+        "offers": [
+          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro Pass", "price": "49", "priceCurrency": "USD" }
+        ]
+      }
+    </script>
+    <script>
+      (function () {
+        var mode;
+        try { mode = localStorage.getItem('blind-test-mode'); } catch (e) {}
+        var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-mode', (mode ?? system) === 'dark' ? 'dark' : 'light');
+      })();
+    </script>
+    <link rel="stylesheet" href="./site.css" />
+    <style>
+      .run-row--two {
+        min-height: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <header class="site-header">
+        <a class="wordmark" href="https://gggodlin.com">GGGODLIN Labs</a>
+        <nav class="nav" aria-label="Main">
+          <a class="nav-link" href="#platform">Platform</a>
+          <a class="nav-link" href="#pricing">Pricing</a>
+          <a class="nav-link" href="https://app.gggodlin.com/sample">Live sample</a>
+          <a class="nav-link" href="https://app.gggodlin.com/workspace">Workspace</a>
+          <a class="nav-link" href="https://blog.gggodlin.com">Engineering blog</a>
+          <a class="nav-link" href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+          </button>
+          <details class="menu">
+            <summary class="icon-btn" aria-label="Menu">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16" />
+                <path d="M4 12h16" />
+                <path d="M4 18h16" />
+              </svg>
+            </summary>
+            <div class="menu-panel">
+              <a href="#platform">Platform</a>
+              <a href="#pricing">Pricing</a>
+              <a href="https://app.gggodlin.com/sample">Live sample</a>
+              <a href="https://app.gggodlin.com/workspace">Workspace</a>
+              <a href="https://blog.gggodlin.com">Engineering blog</a>
+              <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+            </div>
+          </details>
+        </nav>
+      </header>
+
+      <main id="main-content">
+        <section class="hero">
+          <div class="hero-copy">
+            <h1><span>PR Review</span> <span>Cloud</span></h1>
+            <p class="hero-sub">See which findings were fixed and what’s still open.</p>
+            <p class="hero-detail">
+              Run AI code reviews locally. Compare the Markdown reports across rounds in your workspace, with no server-side model charges.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="https://app.gggodlin.com/sample">View 2-round live sample <span aria-hidden="true">↗</span></a>
+              <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace</a>
+              <div class="hero-cli"><a class="text-link" href="https://github.com/GGGODLIN/claude-pr-review">Get the open-source CLI <span aria-hidden="true">↗</span></a></div>
+            </div>
+          </div>
+
+          <figure class="run" aria-labelledby="run-caption">
+            <div class="run-meta">
+              <span>claude-pr-review</span>
+              <span>Report projection schema: 2</span>
+            </div>
+            <h2 class="run-title">Cross-model verification</h2>
+
+            <div class="run-rounds" aria-hidden="true">
+              <div class="run-row run-row--two"><b>Round 1</b><span>Findings</span></div>
+              <div class="run-row run-row--two"><b>Round 2</b><span>Recheck</span></div>
+            </div>
+            <ul class="run-findings" role="list">
+              <li class="run-row">
+                <div class="run-cell run-before">
+                  <h3>Retry limit</h3>
+                  <p><span class="run-round-tag">Round 1 · </span>Flagged</p>
+                </div>
+                <div class="run-cell run-after">
+                  <p class="run-round-tag">Round 2 · Recheck</p>
+                  <p class="run-status is-pass"><span aria-hidden="true">✓</span> FIXED</p>
+                  <p>Cap verified</p>
+                </div>
+              </li>
+              <li class="run-row">
+                <div class="run-cell run-before">
+                  <h3>Retry test</h3>
+                  <p><span class="run-round-tag">Round 1 · </span>Flagged</p>
+                </div>
+                <div class="run-cell run-after">
+                  <p class="run-round-tag">Round 2 · Recheck</p>
+                  <p class="run-status is-held"><span aria-hidden="true">○</span> STILL_OPEN</p>
+                  <p>Timeout case missing</p>
+                </div>
+              </li>
+            </ul>
+            <figcaption class="run-foot" id="run-caption">
+              <span>Prior review continuity: CHECKED</span>
+              <span>Illustrated example</span>
+            </figcaption>
+          </figure>
+        </section>
+
+        <div class="review-flow">
+          <ol aria-label="How PR Review Cloud works">
+            <li><span class="step-number" aria-hidden="true">01</span><div><strong>Run locally</strong><p>Review a pull request with the open-source CLI.</p></div></li>
+            <li><span class="step-number" aria-hidden="true">02</span><div><strong>Upload Markdown</strong><p>Send the report from your terminal or browser.</p></div></li>
+            <li><span class="step-number" aria-hidden="true">03</span><div><strong>Compare rounds</strong><p>Recheck earlier findings as the pull request changes.</p></div></li>
+          </ol>
+        </div>
+
+        <section class="section" id="platform">
+          <div class="section-head">
+            <h2>Platform &amp; open source</h2>
+          </div>
+          <div class="platform-pair">
+            <div>
+              <p class="category">On your machine</p>
+              <h3>claude-pr-review</h3>
+              <p>Run multi-axis PR reviews locally and check findings across models and review rounds.</p>
+              <a class="text-link" href="https://github.com/GGGODLIN/claude-pr-review">Install claude-pr-review on GitHub <span aria-hidden="true">↗</span></a>
+            </div>
+            <div>
+              <p class="category">In the workspace</p>
+              <h3>PR Review Cloud</h3>
+              <p>Store Markdown review reports, compare findings across rounds and share selected reports with revocable links.</p>
+              <a class="text-link" href="https://app.gggodlin.com">Open PR Review Cloud <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <h3 class="ledger-title">More open-source tools</h3>
+          <ul class="ledger">
+            <li>
+              <div>
+                <h4>cc-translate-proxy</h4>
+                <div class="category">Translation</div>
+              </div>
+              <p>A translation proxy for Claude Code.</p>
+              <div class="source">
+                <a href="https://github.com/GGGODLIN/cc-translate-proxy">View cc-translate-proxy on GitHub</a>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>gggodlin-cc-harness</h4>
+                <div class="category">Claude Code harness</div>
+              </div>
+              <p>Hooks and workflow tooling for Claude Code.</p>
+              <div class="source">
+                <a href="https://github.com/GGGODLIN/gggodlin-cc-harness">View gggodlin-cc-harness on GitHub</a>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>cc-mod-image-view</h4>
+                <div class="category">Image viewing</div>
+              </div>
+              <p>An image viewer for Claude Code.</p>
+              <div class="source">
+                <a href="https://github.com/GGGODLIN/cc-mod-image-view">View cc-mod-image-view on GitHub</a>
+              </div>
+            </li>
+          </ul>
+          <p class="source ecosystem-links">
+            <a href="https://github.com/GGGODLIN-Labs">GGGODLIN Labs on GitHub</a>
+            <a href="https://blog.gggodlin.com">Engineering blog</a>
+          </p>
+        </section>
+
+        <section class="section" id="pricing">
+          <div class="section-head">
+            <h2>Pricing</h2>
+            <p>Prices in USD</p>
+          </div>
+          <div class="plans">
+            <p class="plan-availability">Paid upgrades open inside the workspace once billing launches.</p>
+            <article class="plan plan-free">
+              <h3>Free</h3>
+              <div class="price"><strong>$0</strong></div>
+              <ul class="features">
+                <li>Up to 20 stored reports, 128 KB per report</li>
+                <li>GitHub sign-in &amp; cross-round finding comparison</li>
+                <li>Private by default, with instantly revocable share links</li>
+                <li>One-line CLI upload with <code>curl</code> or web upload</li>
+              </ul>
+              <a class="btn btn-primary" href="https://app.gggodlin.com/workspace">Start free</a>
+            </article>
+
+            <article class="plan">
+              <h3>Pro</h3>
+              <div class="price"><strong>$19</strong><span>/ month</span></div>
+              <ul class="features">
+                <li>Up to 500 stored reports, 128 KB per report</li>
+                <li>Track which findings were fixed across rounds</li>
+                <li>Personal API key management and revocable share links</li>
+                <li>Checkout activates inside the workspace once billing opens</li>
+              </ul>
+              <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace for Pro</a>
+            </article>
+
+            <article class="plan">
+              <h3>Pro Pass</h3>
+              <div class="price"><strong>$49</strong><span>one-time</span></div>
+              <p class="plan-for">A one-time purchase for an individual account with Pro access.</p>
+              <ul class="features">
+                <li>Up to 500 stored reports, 128 KB per report</li>
+                <li>Track which findings were fixed across rounds</li>
+                <li>Personal API key management and revocable share links</li>
+                <li>Guaranteed at least 12 months of operation, no monthly fee</li>
+              </ul>
+              <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace for Pro Pass</a>
+            </article>
+          </div>
+          <p class="pass-terms">
+            <strong>Pro Pass guarantee.</strong> No monthly fee for as long as the service operates.
+            We guarantee at least 12 months of operation from purchase. If we retire the service, we
+            will give you at least 30 days' advance notice to export your reports. If we retire the
+            service within 12 months of purchase, we will issue a pro-rata refund for unused months
+            in that 12-month period. See the <a href="./refund/">refund policy</a> for details.
+          </p>
+        </section>
+
+        <section class="section" id="experiments">
+          <div class="section-head">
+            <h2>Experiments</h2>
+            <p>Hackathon projects</p>
+          </div>
+          <div class="experiments">
+            <article>
+              <h3>CreditRoll Live</h3>
+              <div class="source">
+                <a href="https://youtu.be/cE3SuZF7sic" aria-label="Demo: CreditRoll Live">Demo <span aria-hidden="true">↗</span></a>
+                <a href="https://github.com/GGGODLIN/paypal-credit-roll-live" aria-label="Source: CreditRoll Live">Source <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+            <article>
+              <h3>FlowWitness</h3>
+              <div class="source">
+                <a href="https://youtu.be/2H3QmFD4D20" aria-label="Demo: FlowWitness">Demo <span aria-hidden="true">↗</span></a>
+                <a href="https://github.com/GGGODLIN/firebase-flow-witness" aria-label="Source: FlowWitness">Source <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+            <article>
+              <h3>ReserveRail</h3>
+              <div class="source">
+                <a href="https://youtu.be/NO--HeY-e3A" aria-label="Demo: ReserveRail">Demo <span aria-hidden="true">↗</span></a>
+                <a href="https://github.com/GGGODLIN/reserverail" aria-label="Source: ReserveRail">Source <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+            <article>
+              <h3>ClauseClock</h3>
+              <div class="source">
+                <a href="https://youtu.be/xFWynDts-Ow" aria-label="Demo: ClauseClock">Demo <span aria-hidden="true">↗</span></a>
+                <a href="https://github.com/GGGODLIN/atlassian-clause-clock" aria-label="Source: ClauseClock">Source <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="supporters" aria-label="Startup program support">
+          <span>Supported by</span>
+          <a
+            class="supporter-link"
+            href="https://www.cartesia.ai/startups"
+            rel="noopener noreferrer"
+            aria-label="Cartesia Startups"
+          >
+            <svg class="supporter-logo" aria-hidden="true" focusable="false" viewBox="0 0 579 83" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M89.1256 28.6346V51.252H77.9183L76.4474 49.2161L72.9215 44.3358L70.5208 41.0131L66.4165 35.3331L67.6578 41.0131L69.4514 49.2161L69.8956 51.252L71.245 57.4192L72.9215 65.092L73.0376 65.6225L74.8301 73.8241L76.6237 82.0274H51.3153L49.5216 73.8241L48.6137 69.6692L47.7291 65.6225L45.9355 57.4192L44.5874 51.252L43.2394 57.4192L41.4457 65.6225L40.5122 69.8934L39.6532 73.8241L37.8595 82.0274H12.5021L14.2958 73.8241L16.0393 65.8445V65.8435L16.2042 65.7215L16.339 65.6225L24.3069 59.7214L27.4162 57.4192L32.4095 53.7207L35.7439 51.252H0V28.6346H24.1731L24.3069 28.0255L25.0544 24.6081L26.8469 16.405L28.6406 8.2019L30.4331 0H58.6925L60.485 8.2019L60.8605 9.9186L56.7162 12.9875L52.1007 16.405L48.6137 18.9878L41.0246 24.6081L40.5122 24.987L35.5868 28.6346H89.1256Z" fill="currentColor"></path><g><path d="M533.321 73.5189H512.402V69.1647H517.986L540.42 8.11005H550.927L573.172 69.1647H578.946V73.5189H552.253V69.1647H561.34L554.619 50.3277H530.765L524.139 69.1647H533.321V73.5189ZM532.185 46.068H553.199C545.343 23.634 543.828 19.0904 542.787 15.7774C541.746 18.9958 540.136 23.634 532.185 46.068Z" fill="currentColor"></path><path d="M509.259 73.5189H483.512V69.1647H490.896V12.4643H483.512V8.11005H509.259V12.4643H501.876V69.1647H509.259V73.5189Z" fill="currentColor"></path><path d="M425.863 53.6412H435.708V54.8717C435.708 65.0001 441.292 70.301 451.894 70.301C463.159 70.301 467.797 65.4734 467.797 58.2794C467.797 51.8426 465.241 48.4349 454.071 46.2578L444.511 44.3646C432.963 42.1875 428.04 36.9813 428.04 25.9063C428.04 15.6832 434.761 6.97461 453.125 6.97461C469.69 6.97461 476.695 13.2221 476.695 25.433V26.2849H467.418V25.433C467.418 16.8191 464.2 11.2342 452.935 11.2342C441.198 11.2342 437.79 17.103 437.79 23.3505C437.79 29.4086 440.63 33.2896 450.285 35.1828L460.129 37.0759C473.003 39.5371 477.925 44.1753 477.925 55.4397C477.925 68.6918 467.986 74.6553 451.705 74.6553C433.53 74.6553 425.863 67.1773 425.863 54.5877V53.6412Z" fill="currentColor"></path><path d="M345.828 73.5189H320.081V69.1647H327.464V12.4643H311.514L309.811 23.8233H302.333L304.462 8.11005H361.541L363.67 23.8233H356.287L354.584 12.4643H338.444V69.1647H345.828V73.5189Z" fill="currentColor"></path><path d="M193.568 73.5189H172.649V69.1647H178.234L200.668 8.11005H211.175L233.42 69.1647H239.194V73.5189H212.5V69.1647H221.587L214.867 50.3277H191.013L184.387 69.1647H193.568V73.5189ZM192.433 46.068H213.447C205.59 23.634 204.075 19.0904 203.034 15.7774C201.993 18.9958 200.384 23.634 192.433 46.068Z" fill="currentColor"></path><path d="M172.479 51.464V51.9373C172.479 65.0001 164.433 74.6553 145.88 74.6553C125.623 74.6553 115.968 64.0536 115.968 40.673C115.968 17.5763 127.516 6.97461 146.448 6.97461C164.244 6.97461 172.479 15.7778 172.479 30.5445V31.1125H162.066V30.5445C162.066 20.2268 159.132 11.3289 146.448 11.3289C134.426 11.3289 127.421 19.4695 127.421 40.5783C127.421 65.7574 136.225 70.2064 146.258 70.2064C157.333 70.2064 162.256 63.4856 162.256 52.032V51.464H172.479Z" fill="currentColor"></path><path d="M418.784 23.8233H411.401L409.271 12.4643H386.459V37.3596H400.171V30.072H405.765V49.2489H400.171V41.7138H386.459V69.1646H412.158L413.862 56.7645H421.15L419.021 73.5188H368.095V69.1646H375.478V12.4643H368.095V8.11005H416.654L418.784 23.8233Z" fill="currentColor"></path><path d="M266.645 8.11005C271.946 8.11005 277.815 8.39407 281.791 9.05667C291.162 10.5712 295.422 16.5348 295.422 26.0006C295.422 34.8037 291.825 40.0099 283.022 43.0389L297.409 69.1646H302.258V54.3422H307.852V73.5192L287.281 73.5188L272.609 45.027C270.527 45.2163 268.35 45.3106 266.362 45.3106H260.777V69.1646H268.823V73.5188H242.413V69.1646H249.796V12.4643H242.413V8.11005H266.645ZM260.777 40.862H267.781C272.23 40.862 276.017 40.1994 278.383 38.7796C282.17 36.6971 284.063 32.6265 284.063 26.3791C284.063 19.0904 281.601 15.3988 276.585 13.6949C274.691 13.0324 270.621 12.4643 267.498 12.4643H260.777V40.862Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></g></svg>
+            <span class="supporter-tag">Startups</span>
+          </a>
+        </aside>
+      </main>
+
+      <footer class="site-footer">
+        <div>© 2026 GGGODLIN Labs · Xinyi Dist., Taipei City 110615, Taiwan</div>
+        <nav aria-label="Footer">
+          <a href="./privacy/">Privacy</a>
+          <a href="./terms/">Terms</a>
+          <a href="./refund/">Refunds</a>
+          <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>
+          <a href="mailto:philip@labs.gggodlin.com">philip@labs.gggodlin.com</a>
+          <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </nav>
+      </footer>
+    </div>
+
+    <script type="module" src="./theme.mjs"></script>
+  <script>
+(() => {
+  const sendMode = () => {
+    try {
+      window.parent.postMessage({ type: "blind-mode-sync", mode: document.documentElement.dataset.mode || "light" }, "*");
+    } catch {}
+  };
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "blind-set-mode") return;
+    const next = ev.data.mode === "dark" ? "dark" : "light";
+    document.documentElement.dataset.mode = next;
+    try { localStorage.setItem("blind-test-mode", next); } catch {}
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", String(next === "dark"));
+  });
+  document.addEventListener("click", (ev) => {
+    const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (a && /^https?:\/\//i.test(a.getAttribute("href") || "")) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (ev.target && ev.target.closest && ev.target.closest("#theme-toggle")) {
+      setTimeout(sendMode, 20);
+    }
+  }, true);
+  window.addEventListener("DOMContentLoaded", sendMode);
+})();
+</script>
+  </body>
+</html>

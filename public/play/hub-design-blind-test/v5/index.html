@@ -1,0 +1,1878 @@
+<!doctype html>
+<html lang="en" data-theme="prussian-blueprint" data-site-release="pr-review-cloud-v1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GGGODLIN Labs — PR Review Cloud &amp; Open Source</title>
+    <meta
+      name="description"
+      content="GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GGGODLIN Labs" />
+    <meta property="og:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      property="og:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <meta property="og:url" content="https://gggodlin.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      name="twitter:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <link rel="canonical" href="https://gggodlin.com/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GGGODLIN Labs",
+        "url": "https://gggodlin.com/",
+        "description": "GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally.",
+        "email": "philip@gggodlin.com",
+        "founder": {
+          "@type": "Person",
+          "name": "Philip Lin"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Xinyi Dist., Taipei City",
+          "postalCode": "110615",
+          "addressCountry": "TW"
+        },
+        "sameAs": [
+          "https://github.com/GGGODLIN-Labs",
+          "https://blog.gggodlin.com"
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PR Review Cloud",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "url": "https://app.gggodlin.com/",
+        "description": "Zero-LLM-burn cloud workspace for storing, comparing, and sharing multi-axis pull request review reports generated locally by claude-pr-review.",
+        "offers": [
+          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro Pass", "price": "49", "priceCurrency": "USD" }
+        ]
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('blind-test-mode');
+          var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-mode', (m ?? (d ? 'dark' : 'light')) === 'dark' ? 'dark' : 'light');
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="./site.css" />
+    <style>
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .nav a {
+        color: var(--text-2);
+        white-space: nowrap;
+        padding: 6px 0;
+        position: relative;
+        transition: color 150ms var(--ease);
+      }
+
+      .nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1.5px;
+        background-color: var(--accent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 180ms var(--ease);
+      }
+
+      .nav a:hover {
+        color: var(--text-1);
+      }
+
+      .nav a:hover::after {
+        transform: scaleX(1);
+      }
+
+      .menu {
+        display: none;
+        position: relative;
+      }
+
+      .menu summary {
+        list-style: none;
+      }
+
+      .menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .menu-panel {
+        position: absolute;
+        right: 0;
+        top: 42px;
+        min-width: 210px;
+        padding: 8px 6px 6px;
+        background-color: var(--paper);
+        border: 1px solid var(--hairline-strong);
+        border-radius: var(--radius-panel);
+        box-shadow: inset 0 2px 0 0 var(--accent), var(--shadow-float);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        z-index: 20;
+        animation: menu-in 160ms var(--ease) both;
+      }
+
+      .menu-panel a {
+        padding: 9px 12px;
+        border-radius: var(--radius-control);
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-2);
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+      }
+
+      .menu-panel a::after {
+        display: none;
+      }
+
+      .menu-panel a:hover {
+        background-color: var(--raised);
+        color: var(--text-1);
+      }
+
+      @keyframes menu-in {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 5.1fr) minmax(0, 6.9fr);
+        gap: 48px;
+        align-items: center;
+        padding: 68px 0 64px;
+      }
+
+      .hero-spec {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        margin-bottom: 18px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--text-3);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .spec-index {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        white-space: nowrap;
+        padding: 2px 7px;
+        border-radius: var(--radius-control);
+        background-color: var(--accent-soft);
+        border: 1px solid var(--accent-border);
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      .hero h1 {
+        font-size: clamp(42px, 4.6vw, 60px);
+        line-height: 1.03;
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        color: var(--text-1);
+        text-wrap: balance;
+      }
+
+      .hero-sub {
+        margin-top: 20px;
+        max-width: 46ch;
+        font-size: 16px;
+        line-height: 1.62;
+        color: var(--text-2);
+      }
+
+      .actions {
+        margin-top: 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .actions-primary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .action-cli {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 6px 12px;
+        border: 1px dashed var(--hairline-strong);
+        border-radius: var(--radius-control);
+        background-color: var(--paper);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--text-2);
+        white-space: nowrap;
+        transition: border-color 150ms var(--ease), color 150ms var(--ease),
+          background-color 150ms var(--ease), transform 110ms var(--ease);
+      }
+
+      .action-cli:hover {
+        border-style: solid;
+        border-color: var(--accent);
+        background-color: var(--accent-soft);
+        color: var(--text-1);
+      }
+
+      .action-cli:active {
+        transform: translateY(1px);
+      }
+
+      .cli-prompt {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      .run {
+        position: relative;
+        background-color: var(--paper);
+        border: 1px solid var(--hairline-strong);
+        border-radius: var(--radius-panel);
+        box-shadow: var(--shadow-float);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 20px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .run::before,
+      .run::after,
+      .run-frame::before,
+      .run-frame::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .run::before {
+        top: -1px;
+        left: -1px;
+        border-top: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
+        border-top-left-radius: var(--radius-panel);
+      }
+
+      .run::after {
+        top: -1px;
+        right: -1px;
+        border-top: 2px solid var(--accent);
+        border-right: 2px solid var(--accent);
+        border-top-right-radius: var(--radius-panel);
+      }
+
+      .run-frame {
+        position: relative;
+      }
+
+      .run-frame::before {
+        bottom: -1px;
+        left: -1px;
+        border-bottom: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
+        border-bottom-left-radius: var(--radius-panel);
+      }
+
+      .run-frame::after {
+        bottom: -1px;
+        right: -1px;
+        border-bottom: 2px solid var(--accent);
+        border-right: 2px solid var(--accent);
+        border-bottom-right-radius: var(--radius-panel);
+      }
+
+      .run-head {
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--hairline);
+        background-color: var(--raised);
+        border-top-left-radius: calc(var(--radius-panel) - 1px);
+        border-top-right-radius: calc(var(--radius-panel) - 1px);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+      }
+
+      .run-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--text-1);
+      }
+
+      .run-mark {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background-color: var(--accent);
+        flex: none;
+      }
+
+      .run-meta {
+        padding: 3px 8px;
+        border-radius: var(--radius-control);
+        border: 1px solid var(--hairline);
+        background-color: var(--paper);
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--text-2);
+      }
+
+      .run-block {
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .run-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 500;
+        color: var(--text-3);
+        margin-bottom: 10px;
+      }
+
+      .run-coord {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--accent);
+        letter-spacing: 0.04em;
+      }
+
+      .round-track {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .run-row {
+        display: grid;
+        grid-template-columns: 8.5rem minmax(0, 1fr) 7.5rem;
+        gap: 12px;
+        min-height: 32px;
+        align-items: center;
+        color: var(--text-2);
+      }
+
+      .run-row--two {
+        position: relative;
+        padding-left: 27px;
+        grid-template-columns: 7.75rem minmax(0, 1fr);
+      }
+
+      .round-track > .run-row--two::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        width: 2px;
+        background-color: var(--accent-border);
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .round-track > .run-row--two:first-child::after {
+        top: 50%;
+        bottom: -4px;
+      }
+
+      .round-track > .run-row--two:last-child::after {
+        top: 0;
+        height: 50%;
+      }
+
+      .round-track > .run-row--two::before {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+      }
+
+      .round-track > .run-row--two:first-child::before {
+        background-color: var(--paper);
+        border: 2px solid var(--accent);
+      }
+
+      .round-track > .run-row--two:last-child::before {
+        background-color: var(--accent);
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .diff-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .run-diff {
+        padding: 8px 12px;
+        border-radius: var(--radius-control);
+        border: 1px solid var(--hairline);
+        border-left-width: 3px;
+        background-color: var(--bg);
+        transition: background-color 150ms var(--ease), border-color 150ms var(--ease);
+      }
+
+      .run-diff--pass {
+        border-left-color: var(--pass);
+      }
+
+      .run-diff--pass:hover {
+        background-color: var(--pass-tint);
+        border-color: var(--pass-border);
+        border-left-color: var(--pass);
+      }
+
+      .run-diff--open {
+        border-left-color: var(--open);
+      }
+
+      .run-diff--open:hover {
+        background-color: var(--open-tint);
+        border-color: var(--open-border);
+        border-left-color: var(--open);
+      }
+
+      .run-row .key {
+        color: var(--text-1);
+        font-weight: 500;
+      }
+
+      .run-row .detail {
+        color: var(--text-2);
+      }
+
+      .run-row .status {
+        justify-self: end;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 2px 8px;
+        border-radius: var(--radius-control);
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+
+      .run-row .status::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: currentColor;
+      }
+
+      .is-pass {
+        color: var(--pass);
+        background-color: var(--pass-tint);
+        border: 1px solid var(--pass-border);
+      }
+
+      .is-held {
+        color: var(--open);
+        background-color: var(--open-tint);
+        border: 1px solid var(--open-border);
+      }
+
+      .run-foot {
+        padding: 16px 22px 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: stretch;
+        gap: 16px;
+      }
+
+      .evidence {
+        min-width: 0;
+        padding: 12px 14px;
+        background-color: var(--raised);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 6px 12px;
+        font-size: 12.5px;
+        line-height: 18px;
+      }
+
+      .evidence dt {
+        font-weight: 500;
+      }
+
+      .ev-pass {
+        color: var(--pass);
+      }
+
+      .ev-open {
+        color: var(--open);
+      }
+
+      .evidence dd {
+        color: var(--text-1);
+      }
+
+      .evidence .missing {
+        color: var(--text-1);
+      }
+
+      .verdict {
+        position: relative;
+        overflow: hidden;
+        min-width: 132px;
+        padding: 13px 14px 10px;
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        background-color: var(--paper);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .verdict::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: var(--accent);
+      }
+
+      .verdict-head {
+        font-size: 11px;
+        line-height: 14px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+      }
+
+      .verdict-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 12.5px;
+        line-height: 18px;
+        font-weight: 500;
+      }
+
+      .verdict-pass {
+        color: var(--pass);
+      }
+
+      .verdict-open {
+        color: var(--open);
+      }
+
+      .workflow {
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .workflow-step {
+        padding: 26px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .workflow-step:first-child {
+        padding-left: 0;
+      }
+
+      .workflow-step:last-child {
+        padding-right: 0;
+      }
+
+      .workflow-step + .workflow-step {
+        border-left: 1px solid var(--hairline);
+      }
+
+      .step-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .step-num {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        line-height: 16px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .workflow-step h2 {
+        font-size: 16px;
+        line-height: 22px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--text-1);
+      }
+
+      .workflow-step p {
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--text-2);
+        max-width: 38ch;
+      }
+
+      .section {
+        padding-top: 108px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px 24px;
+        padding-bottom: 18px;
+        margin-bottom: 28px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .section-title-group {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+
+      .section-num {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .section-head h2 {
+        font-size: clamp(26px, 2.8vw, 34px);
+        line-height: 1.15;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        color: var(--text-1);
+      }
+
+      .section-head p {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-3);
+      }
+
+      .platform-core {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .core-card {
+        position: relative;
+        overflow: hidden;
+        padding: 28px 28px 26px;
+        background-color: var(--paper);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: border-color 150ms var(--ease);
+      }
+
+      .core-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: var(--text-1);
+      }
+
+      .core-card--primary::before {
+        background-color: var(--accent);
+      }
+
+      .core-card:hover {
+        border-color: var(--accent-border);
+      }
+
+      .core-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .core-card h3 {
+        font-size: 20px;
+        line-height: 26px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--text-1);
+      }
+
+      .category {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--text-3);
+      }
+
+      .core-card p {
+        color: var(--text-2);
+        font-size: 15px;
+        line-height: 1.6;
+        max-width: 52ch;
+      }
+
+      .core-action {
+        margin-top: auto;
+        padding: 10px 0 4px;
+        display: inline-block;
+        align-self: flex-start;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--accent);
+        min-height: 34px;
+        transition: color 150ms var(--ease);
+      }
+
+      .core-action .ext-arrow {
+        margin-left: 5px;
+      }
+
+      .core-action:hover {
+        color: var(--accent-hover);
+      }
+
+      .platform-tools {
+        list-style: none;
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        background-color: var(--paper);
+        overflow: hidden;
+      }
+
+      .platform-tools li {
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: background-color 150ms var(--ease);
+      }
+
+      .platform-tools li:hover {
+        background-color: var(--bg);
+      }
+
+      .platform-tools li + li {
+        border-left: 1px solid var(--hairline);
+      }
+
+      .tool-head {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .platform-tools h3 {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        line-height: 22px;
+        font-weight: 500;
+        color: var(--text-1);
+      }
+
+      .platform-tools p {
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--text-2);
+      }
+
+      .source {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        line-height: 18px;
+      }
+
+      .platform-tools .source {
+        margin-top: auto;
+        padding-top: 6px;
+      }
+
+      .source a {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 32px;
+        color: var(--text-2);
+        align-self: flex-start;
+        transition: color 150ms var(--ease);
+      }
+
+      .source a:hover {
+        color: var(--accent);
+      }
+
+      .ecosystem-links {
+        display: flex;
+        width: 100%;
+        margin-top: 14px;
+        padding: 12px 20px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        background-color: var(--raised);
+        flex-flow: row wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 24px;
+      }
+
+      .ecosystem-label {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-3);
+      }
+
+      .ecosystem-anchors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+      }
+
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .plan {
+        padding: 26px 24px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .plan--free {
+        background-color: transparent;
+      }
+
+      .plan--pro {
+        background-color: var(--paper);
+      }
+
+      .plan--featured {
+        position: relative;
+        overflow: hidden;
+        background-color: var(--paper);
+        border-color: var(--accent-border);
+        box-shadow: var(--shadow-float);
+      }
+
+      .plan--featured::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: var(--accent);
+      }
+
+      .plan-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px 10px;
+      }
+
+      .plan h3 {
+        font-size: 18px;
+        line-height: 24px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--text-1);
+        white-space: nowrap;
+      }
+
+      .plan-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px;
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .plan-badge--live {
+        color: var(--pass);
+        background-color: var(--pass-tint);
+        border: 1px solid var(--pass-border);
+      }
+
+      .plan-badge--live::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: currentColor;
+      }
+
+      .plan-badge--muted {
+        color: var(--text-3);
+        background-color: var(--raised);
+        border: 1px solid var(--hairline);
+      }
+
+      .plan-badge--value {
+        color: var(--accent);
+        background-color: var(--accent-soft);
+        border: 1px solid var(--accent-border);
+      }
+
+      .price {
+        margin-top: 18px;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .price strong {
+        font-size: 44px;
+        line-height: 1;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        color: var(--text-1);
+      }
+
+      .price span {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        line-height: 16px;
+        color: var(--text-3);
+      }
+
+      .plan-for {
+        margin-top: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-2);
+      }
+
+      .features {
+        list-style: none;
+        margin-top: 22px;
+        margin-bottom: 24px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-2);
+      }
+
+      .features li {
+        padding: 9px 0;
+        border-top: 1px solid var(--hairline);
+      }
+
+      .plan .btn {
+        margin-top: auto;
+        width: 100%;
+      }
+
+      .pass-terms {
+        margin-top: 18px;
+        padding: 18px 22px;
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--accent);
+        border-radius: var(--radius-control);
+        background-color: var(--raised);
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-2);
+      }
+
+      .pass-terms strong {
+        color: var(--text-1);
+        font-weight: 600;
+      }
+
+      .pass-terms a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .pass-terms a:hover {
+        color: var(--accent-hover);
+      }
+
+      .experiments {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .experiments article {
+        background-color: var(--paper);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: border-color 150ms var(--ease);
+      }
+
+      .experiments article:hover {
+        border-color: var(--accent-border);
+      }
+
+      .exp-body {
+        padding: 20px 22px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .exp-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        line-height: 16px;
+        color: var(--text-3);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .exp-code {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      .experiments h3 {
+        font-size: 18px;
+        line-height: 24px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--text-1);
+      }
+
+      .exp-desc {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-2);
+      }
+
+      .exp-actions {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-top: 1px solid var(--hairline);
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        line-height: 18px;
+      }
+
+      .exp-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 40px;
+        padding: 8px 14px;
+        color: var(--text-2);
+        transition: background-color 150ms var(--ease), color 150ms var(--ease);
+      }
+
+      .exp-actions a + a {
+        border-left: 1px solid var(--hairline);
+      }
+
+      .exp-actions a:hover {
+        background-color: var(--raised);
+        color: var(--accent);
+      }
+
+      .supporters {
+        margin-top: 64px;
+        padding: 18px 22px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-panel);
+        background-color: var(--paper);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 20px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 20px;
+        color: var(--text-3);
+      }
+
+      .supporter-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 32px;
+        padding: 4px 0;
+        color: var(--text-2);
+        transition: color 150ms var(--ease);
+      }
+
+      .supporter-link:hover {
+        color: var(--text-1);
+      }
+
+      .supporter-logo {
+        height: 15px;
+        width: auto;
+        display: block;
+      }
+
+      .supporter-tag {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-3);
+      }
+
+      .rise {
+        animation: rise 360ms var(--ease) both;
+        animation-delay: calc(var(--i, 0) * 70ms);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .rise,
+        .menu-panel {
+          animation: none;
+        }
+        .nav a::after,
+        .action-cli,
+        .run-diff,
+        .core-card,
+        .core-action,
+        .platform-tools li,
+        .experiments article,
+        .exp-actions a,
+        .supporter-link {
+          transition: none;
+        }
+        .action-cli:active {
+          transform: none;
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 36px;
+          padding: 44px 0 44px;
+        }
+        .hero-copy {
+          max-width: 640px;
+        }
+      }
+
+      @media (max-width: 1000px) {
+        .plans {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .nav .nav-link {
+          display: none;
+        }
+        .menu {
+          display: block;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .workflow {
+          grid-template-columns: 1fr;
+        }
+        .workflow-step {
+          padding: 20px 0;
+        }
+        .workflow-step + .workflow-step {
+          border-left: none;
+          border-top: 1px solid var(--hairline);
+        }
+        .platform-core {
+          grid-template-columns: 1fr;
+        }
+        .platform-tools {
+          grid-template-columns: 1fr;
+        }
+        .platform-tools li + li {
+          border-left: none;
+          border-top: 1px solid var(--hairline);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .hero {
+          padding: 32px 0 36px;
+          gap: 28px;
+        }
+        .hero h1 {
+          font-size: 36px;
+          line-height: 1.06;
+        }
+        .actions {
+          width: 100%;
+        }
+        .actions-primary {
+          width: 100%;
+          flex-direction: column;
+        }
+        .actions-primary .btn {
+          width: 100%;
+        }
+        .action-cli {
+          width: 100%;
+          justify-content: center;
+        }
+        .run-head {
+          padding: 14px 16px;
+        }
+        .run-block {
+          padding: 14px 16px;
+        }
+        .run-row:not(.run-row--two) .detail {
+          display: none;
+        }
+        .run-row:not(.run-row--two) {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .run-row--two {
+          padding-left: 24px;
+          grid-template-columns: 5.25rem minmax(0, 1fr);
+        }
+        .run-foot {
+          grid-template-columns: 1fr;
+          padding: 14px 16px 16px;
+        }
+        .verdict {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .verdict-stats {
+          flex-direction: row;
+          gap: 12px;
+        }
+        .section {
+          padding-top: 64px;
+        }
+        .section-head {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .experiments {
+          grid-template-columns: 1fr;
+        }
+        .ecosystem-links {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .supporters {
+          margin-top: 48px;
+          padding: 16px 18px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-spec {
+          font-size: 11px;
+          gap: 6px 8px;
+        }
+        .core-card {
+          padding: 22px 18px 20px;
+        }
+        .core-top {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+        .core-action {
+          font-size: 12.5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <header class="site-header">
+        <a class="wordmark" href="https://gggodlin.com">GGGODLIN Labs</a>
+        <nav class="nav" aria-label="Main">
+          <a class="nav-link" href="#platform">Platform</a>
+          <a class="nav-link" href="#pricing">Pricing</a>
+          <a class="nav-link" href="https://app.gggodlin.com/sample">Live sample</a>
+          <a class="nav-link" href="https://app.gggodlin.com/workspace">Workspace</a>
+          <a class="nav-link" href="https://blog.gggodlin.com">Engineering blog</a>
+          <a class="nav-link" href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+          </button>
+          <details class="menu">
+            <summary class="icon-btn" aria-label="Menu">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16" />
+                <path d="M4 12h16" />
+                <path d="M4 18h16" />
+              </svg>
+            </summary>
+            <div class="menu-panel">
+              <a href="#platform">Platform</a>
+              <a href="#pricing">Pricing</a>
+              <a href="https://app.gggodlin.com/sample">Live sample</a>
+              <a href="https://app.gggodlin.com/workspace">Workspace</a>
+              <a href="https://blog.gggodlin.com">Engineering blog</a>
+              <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+            </div>
+          </details>
+        </nav>
+      </header>
+
+      <main id="main-content">
+      <section class="hero">
+        <div class="hero-copy rise" style="--i: 0">
+          <div class="hero-spec">
+            <span class="spec-index">01</span>
+            <span>Local CLI · Zero server-side LLM billing</span>
+          </div>
+          <h1>PR Review Cloud</h1>
+          <p class="hero-sub">
+            Compare findings across PR review rounds and see what changed. Run multi-axis AI reviews
+            locally with the open-source CLI, then verify every fix in the workspace with no
+            server-side model charges.
+          </p>
+          <div class="actions">
+            <div class="actions-primary">
+              <a class="btn btn-primary" href="https://app.gggodlin.com/sample">View 2-round live sample</a>
+              <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace</a>
+            </div>
+            <a class="action-cli" href="https://github.com/GGGODLIN/claude-pr-review">
+              <span class="cli-prompt" aria-hidden="true">$</span>
+              <span>Get the open-source CLI</span>
+              <span class="ext-arrow" aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+
+        <figure class="run rise" style="--i: 1" aria-label="Illustrated two-round review summary">
+          <div class="run-frame">
+            <figcaption class="run-head">
+              <div class="run-title">
+                <span class="run-mark" aria-hidden="true"></span>
+                <span>claude-pr-review</span>
+              </div>
+              <div class="run-meta">Report projection schema: 2</div>
+            </figcaption>
+
+            <div class="run-block">
+              <div class="run-label">
+                <span>Cross-model verification</span>
+                <span class="run-coord">R1 → R2</span>
+              </div>
+              <div class="round-track">
+                <div class="run-row run-row--two">
+                  <span class="key">Round 1</span>
+                  <span class="detail">Review findings</span>
+                </div>
+                <div class="run-row run-row--two">
+                  <span class="key">Round 2</span>
+                  <span class="detail">Recheck findings after changes</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="run-block">
+              <div class="run-label">
+                <span>Prior review continuity: CHECKED</span>
+                <span class="run-coord">DIFF</span>
+              </div>
+              <div class="diff-list">
+                <div class="run-row run-diff run-diff--pass">
+                  <span class="key">Retry limit</span>
+                  <span class="detail">Cap verified</span>
+                  <span class="status is-pass">FIXED</span>
+                </div>
+                <div class="run-row run-diff run-diff--open">
+                  <span class="key">Retry test</span>
+                  <span class="detail">Timeout case missing</span>
+                  <span class="status is-held">STILL_OPEN</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="run-foot">
+              <dl class="evidence">
+                <dt class="ev-pass">Fixed</dt>
+                <dd>Round 2 verified the cap.</dd>
+                <dt class="ev-open">Open</dt>
+                <dd class="missing">The timeout path still needs a test.</dd>
+              </dl>
+              <div class="verdict" aria-label="Comparison summary: 1 fixed, 1 open">
+                <div class="verdict-head">R1 → R2</div>
+                <div class="verdict-stats">
+                  <span class="verdict-pass">1 fixed</span>
+                  <span class="verdict-open">1 open</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="workflow" aria-label="How PR Review Cloud works">
+        <div class="workflow-step">
+          <div class="step-head">
+            <span class="step-num">STEP 01</span>
+            <h2>Local multi-axis CLI</h2>
+          </div>
+          <p>Run <code>claude-pr-review</code> on your machine with your own models and keys. Code execution stays local.</p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-head">
+            <span class="step-num">STEP 02</span>
+            <h2>Zero-LLM cloud upload</h2>
+          </div>
+          <p>Push Markdown reports via one-line <code>curl</code> or web upload. The server stores reports without running LLMs.</p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-head">
+            <span class="step-num">STEP 03</span>
+            <h2>Cross-round diff &amp; revoke</h2>
+          </div>
+          <p>Inspect which findings resolved across rounds and share private reports with links you can revoke anytime.</p>
+        </div>
+      </section>
+
+      <section class="section" id="platform">
+        <div class="section-head">
+          <div class="section-title-group">
+            <span class="section-num">02</span>
+            <h2>Platform &amp; open source</h2>
+          </div>
+          <p>Local review generation paired with structured cloud comparison</p>
+        </div>
+
+        <div class="platform-core">
+          <article class="core-card core-card--primary">
+            <div class="core-top">
+              <h3>PR Review Cloud</h3>
+              <span class="category">Cloud workspace</span>
+            </div>
+            <p>Store Markdown review reports, compare findings across rounds and share selected reports with revocable links.</p>
+            <a class="core-action" href="https://app.gggodlin.com">Open PR Review Cloud<span class="ext-arrow" aria-hidden="true">↗</span></a>
+          </article>
+
+          <article class="core-card">
+            <div class="core-top">
+              <h3>claude-pr-review</h3>
+              <span class="category">Local review CLI</span>
+            </div>
+            <p>Run multi-axis PR reviews locally and check findings across models and review rounds.</p>
+            <a class="core-action" href="https://github.com/GGGODLIN/claude-pr-review">Install claude-pr-review on GitHub<span class="ext-arrow" aria-hidden="true">↗</span></a>
+          </article>
+        </div>
+
+        <ul class="platform-tools">
+          <li>
+            <div class="tool-head">
+              <h3>cc-translate-proxy</h3>
+              <div class="category">Translation</div>
+            </div>
+            <p>A translation proxy for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/cc-translate-proxy" aria-label="View cc-translate-proxy on GitHub">
+                <span>View on GitHub</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </li>
+          <li>
+            <div class="tool-head">
+              <h3>gggodlin-cc-harness</h3>
+              <div class="category">Claude Code harness</div>
+            </div>
+            <p>Hooks and workflow tooling for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/gggodlin-cc-harness" aria-label="View gggodlin-cc-harness on GitHub">
+                <span>View on GitHub</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </li>
+          <li>
+            <div class="tool-head">
+              <h3>cc-mod-image-view</h3>
+              <div class="category">Image viewing</div>
+            </div>
+            <p>An image viewer for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/cc-mod-image-view" aria-label="View cc-mod-image-view on GitHub">
+                <span>View on GitHub</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+
+        <div class="source ecosystem-links">
+          <span class="ecosystem-label">More from GGGODLIN Labs</span>
+          <div class="ecosystem-anchors">
+            <a href="https://github.com/GGGODLIN-Labs">
+              <span>GGGODLIN Labs on GitHub</span>
+              <span class="ext-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="https://blog.gggodlin.com">
+              <span>Engineering blog</span>
+              <span class="ext-arrow" aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="pricing">
+        <div class="section-head">
+          <div class="section-title-group">
+            <span class="section-num">03</span>
+            <h2>Pricing</h2>
+          </div>
+          <p>Prices in USD · Free is live now; paid upgrades open inside the workspace once billing launches</p>
+        </div>
+
+        <div class="plans">
+          <article class="plan plan--free">
+            <div class="plan-head">
+              <h3>Free</h3>
+              <span class="plan-badge plan-badge--live">Live now</span>
+            </div>
+            <div class="price"><strong>$0</strong><span>always free tier</span></div>
+            <p class="plan-for">Start comparing local PR review rounds immediately.</p>
+            <ul class="features">
+              <li>Up to 20 stored reports, 128 KB per report</li>
+              <li>GitHub sign-in &amp; cross-round finding comparison</li>
+              <li>Private by default, with instantly revocable share links</li>
+              <li>One-line CLI upload with <code>curl</code> or web upload</li>
+            </ul>
+            <a class="btn" href="https://app.gggodlin.com/workspace">Start free</a>
+          </article>
+
+          <article class="plan plan--pro">
+            <div class="plan-head">
+              <h3>Pro</h3>
+              <span class="plan-badge plan-badge--muted">Monthly</span>
+            </div>
+            <div class="price"><strong>$19</strong><span>/ month</span></div>
+            <p class="plan-for">Flexible month-to-month capacity for active pull request streams.</p>
+            <ul class="features">
+              <li>Up to 500 stored reports, 128 KB per report</li>
+              <li>Track which findings were fixed across rounds</li>
+              <li>Personal API key management and revocable share links</li>
+              <li>Checkout activates inside the workspace once billing opens</li>
+            </ul>
+            <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace for Pro</a>
+          </article>
+
+          <article class="plan plan--featured">
+            <div class="plan-head">
+              <h3>Pro Pass</h3>
+              <span class="plan-badge plan-badge--value">One-time · Best value</span>
+            </div>
+            <div class="price"><strong>$49</strong><span>one-time</span></div>
+            <p class="plan-for">A one-time purchase for an individual account with Pro access. Pays for itself in under 3 months.</p>
+            <ul class="features">
+              <li>Up to 500 stored reports, 128 KB per report</li>
+              <li>Track which findings were fixed across rounds</li>
+              <li>Personal API key management and revocable share links</li>
+              <li>Guaranteed at least 12 months of operation, no monthly fee</li>
+            </ul>
+            <a class="btn btn-primary" href="https://app.gggodlin.com/workspace">Open workspace for Pro Pass</a>
+          </article>
+        </div>
+
+        <p class="pass-terms">
+          <strong>Pro Pass guarantee.</strong> No monthly fee for as long as the service operates.
+          We guarantee at least 12 months of operation from purchase. If we retire the service, we
+          will give you at least 30 days' advance notice to export your reports. If we retire the
+          service within 12 months of purchase, we will issue a pro-rata refund for unused months
+          in that 12-month period. See the <a href="./refund/">refund policy</a> for details.
+        </p>
+      </section>
+
+      <section class="section" id="experiments">
+        <div class="section-head">
+          <div class="section-title-group">
+            <span class="section-num">04</span>
+            <h2>Experiments</h2>
+          </div>
+          <p>Hackathon projects &amp; public archives</p>
+        </div>
+        <div class="experiments">
+          <article>
+            <div class="exp-body">
+              <div class="exp-meta">
+                <span class="exp-code">EXP-01</span>
+                <span>Billing ledger</span>
+              </div>
+              <h3>CreditRoll Live</h3>
+              <p class="exp-desc">Live credit roll and payment workflow prototype.</p>
+            </div>
+            <div class="exp-actions">
+              <a href="https://youtu.be/cE3SuZF7sic" aria-label="Watch CreditRoll Live demo">
+                <span>Watch demo</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+              <a href="https://github.com/GGGODLIN/paypal-credit-roll-live" aria-label="View CreditRoll Live source">
+                <span>View source</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+
+          <article>
+            <div class="exp-body">
+              <div class="exp-meta">
+                <span class="exp-code">EXP-02</span>
+                <span>Execution trace</span>
+              </div>
+              <h3>FlowWitness</h3>
+              <p class="exp-desc">Workflow event capture and verification prototype.</p>
+            </div>
+            <div class="exp-actions">
+              <a href="https://youtu.be/2H3QmFD4D20" aria-label="Watch FlowWitness demo">
+                <span>Watch demo</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+              <a href="https://github.com/GGGODLIN/firebase-flow-witness" aria-label="View FlowWitness source">
+                <span>View source</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+
+          <article>
+            <div class="exp-body">
+              <div class="exp-meta">
+                <span class="exp-code">EXP-03</span>
+                <span>Reserve tracking</span>
+              </div>
+              <h3>ReserveRail</h3>
+              <p class="exp-desc">Reserve state tracking and settlement rail prototype.</p>
+            </div>
+            <div class="exp-actions">
+              <a href="https://youtu.be/NO--HeY-e3A" aria-label="Watch ReserveRail demo">
+                <span>Watch demo</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+              <a href="https://github.com/GGGODLIN/reserverail" aria-label="View ReserveRail source">
+                <span>View source</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+
+          <article>
+            <div class="exp-body">
+              <div class="exp-meta">
+                <span class="exp-code">EXP-04</span>
+                <span>Clause monitoring</span>
+              </div>
+              <h3>ClauseClock</h3>
+              <p class="exp-desc">Contract clause deadline and audit alert prototype.</p>
+            </div>
+            <div class="exp-actions">
+              <a href="https://youtu.be/xFWynDts-Ow" aria-label="Watch ClauseClock demo">
+                <span>Watch demo</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+              <a href="https://github.com/GGGODLIN/atlassian-clause-clock" aria-label="View ClauseClock source">
+                <span>View source</span>
+                <span class="ext-arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <aside class="supporters" aria-label="Startup program support">
+        <span>Supported by</span>
+        <a
+          class="supporter-link"
+          href="https://www.cartesia.ai/startups"
+          rel="noopener noreferrer"
+          aria-label="Cartesia Startups"
+        >
+          <svg class="supporter-logo" aria-hidden="true" focusable="false" viewBox="0 0 579 83" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M89.1256 28.6346V51.252H77.9183L76.4474 49.2161L72.9215 44.3358L70.5208 41.0131L66.4165 35.3331L67.6578 41.0131L69.4514 49.2161L69.8956 51.252L71.245 57.4192L72.9215 65.092L73.0376 65.6225L74.8301 73.8241L76.6237 82.0274H51.3153L49.5216 73.8241L48.6137 69.6692L47.7291 65.6225L45.9355 57.4192L44.5874 51.252L43.2394 57.4192L41.4457 65.6225L40.5122 69.8934L39.6532 73.8241L37.8595 82.0274H12.5021L14.2958 73.8241L16.0393 65.8445V65.8435L16.2042 65.7215L16.339 65.6225L24.3069 59.7214L27.4162 57.4192L32.4095 53.7207L35.7439 51.252H0V28.6346H24.1731L24.3069 28.0255L25.0544 24.6081L26.8469 16.405L28.6406 8.2019L30.4331 0H58.6925L60.485 8.2019L60.8605 9.9186L56.7162 12.9875L52.1007 16.405L48.6137 18.9878L41.0246 24.6081L40.5122 24.987L35.5868 28.6346H89.1256Z" fill="currentColor"></path><g><path d="M533.321 73.5189H512.402V69.1647H517.986L540.42 8.11005H550.927L573.172 69.1647H578.946V73.5189H552.253V69.1647H561.34L554.619 50.3277H530.765L524.139 69.1647H533.321V73.5189ZM532.185 46.068H553.199C545.343 23.634 543.828 19.0904 542.787 15.7774C541.746 18.9958 540.136 23.634 532.185 46.068Z" fill="currentColor"></path><path d="M509.259 73.5189H483.512V69.1647H490.896V12.4643H483.512V8.11005H509.259V12.4643H501.876V69.1647H509.259V73.5189Z" fill="currentColor"></path><path d="M425.863 53.6412H435.708V54.8717C435.708 65.0001 441.292 70.301 451.894 70.301C463.159 70.301 467.797 65.4734 467.797 58.2794C467.797 51.8426 465.241 48.4349 454.071 46.2578L444.511 44.3646C432.963 42.1875 428.04 36.9813 428.04 25.9063C428.04 15.6832 434.761 6.97461 453.125 6.97461C469.69 6.97461 476.695 13.2221 476.695 25.433V26.2849H467.418V25.433C467.418 16.8191 464.2 11.2342 452.935 11.2342C441.198 11.2342 437.79 17.103 437.79 23.3505C437.79 29.4086 440.63 33.2896 450.285 35.1828L460.129 37.0759C473.003 39.5371 477.925 44.1753 477.925 55.4397C477.925 68.6918 467.986 74.6553 451.705 74.6553C433.53 74.6553 425.863 67.1773 425.863 54.5877V53.6412Z" fill="currentColor"></path><path d="M345.828 73.5189H320.081V69.1647H327.464V12.4643H311.514L309.811 23.8233H302.333L304.462 8.11005H361.541L363.67 23.8233H356.287L354.584 12.4643H338.444V69.1647H345.828V73.5189Z" fill="currentColor"></path><path d="M193.568 73.5189H172.649V69.1647H178.234L200.668 8.11005H211.175L233.42 69.1647H239.194V73.5189H212.5V69.1647H221.587L214.867 50.3277H191.013L184.387 69.1647H193.568V73.5189ZM192.433 46.068H213.447C205.59 23.634 204.075 19.0904 203.034 15.7774C201.993 18.9958 200.384 23.634 192.433 46.068Z" fill="currentColor"></path><path d="M172.479 51.464V51.9373C172.479 65.0001 164.433 74.6553 145.88 74.6553C125.623 74.6553 115.968 64.0536 115.968 40.673C115.968 17.5763 127.516 6.97461 146.448 6.97461C164.244 6.97461 172.479 15.7778 172.479 30.5445V31.1125H162.066V30.5445C162.066 20.2268 159.132 11.3289 146.448 11.3289C134.426 11.3289 127.421 19.4695 127.421 40.5783C127.421 65.7574 136.225 70.2064 146.258 70.2064C157.333 70.2064 162.256 63.4856 162.256 52.032V51.464H172.479Z" fill="currentColor"></path><path d="M418.784 23.8233H411.401L409.271 12.4643H386.459V37.3596H400.171V30.072H405.765V49.2489H400.171V41.7138H386.459V69.1646H412.158L413.862 56.7645H421.15L419.021 73.5188H368.095V69.1646H375.478V12.4643H368.095V8.11005H416.654L418.784 23.8233Z" fill="currentColor"></path><path d="M266.645 8.11005C271.946 8.11005 277.815 8.39407 281.791 9.05667C291.162 10.5712 295.422 16.5348 295.422 26.0006C295.422 34.8037 291.825 40.0099 283.022 43.0389L297.409 69.1646H302.258V54.3422H307.852V73.5192L287.281 73.5188L272.609 45.027C270.527 45.2163 268.35 45.3106 266.362 45.3106H260.777V69.1646H268.823V73.5188H242.413V69.1646H249.796V12.4643H242.413V8.11005H266.645ZM260.777 40.862H267.781C272.23 40.862 276.017 40.1994 278.383 38.7796C282.17 36.6971 284.063 32.6265 284.063 26.3791C284.063 19.0904 281.601 15.3988 276.585 13.6949C274.691 13.0324 270.621 12.4643 267.498 12.4643H260.777V40.862Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></g></svg>
+          <span class="supporter-tag">Startups</span>
+        </a>
+      </aside>
+      </main>
+
+      <footer class="site-footer">
+        <div>© 2026 GGGODLIN Labs · Xinyi Dist., Taipei City 110615, Taiwan</div>
+        <nav aria-label="Footer">
+          <a href="./privacy/">Privacy</a>
+          <a href="./terms/">Terms</a>
+          <a href="./refund/">Refunds</a>
+          <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>
+          <a href="mailto:philip@labs.gggodlin.com">philip@labs.gggodlin.com</a>
+          <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </nav>
+      </footer>
+    </div>
+
+    <script type="module" src="./theme.mjs"></script>
+  <script>
+(() => {
+  const sendMode = () => {
+    try {
+      window.parent.postMessage({ type: "blind-mode-sync", mode: document.documentElement.dataset.mode || "light" }, "*");
+    } catch {}
+  };
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "blind-set-mode") return;
+    const next = ev.data.mode === "dark" ? "dark" : "light";
+    document.documentElement.dataset.mode = next;
+    try { localStorage.setItem("blind-test-mode", next); } catch {}
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", String(next === "dark"));
+  });
+  document.addEventListener("click", (ev) => {
+    const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (a && /^https?:\/\//i.test(a.getAttribute("href") || "")) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (ev.target && ev.target.closest && ev.target.closest("#theme-toggle")) {
+      setTimeout(sendMode, 20);
+    }
+  }, true);
+  window.addEventListener("DOMContentLoaded", sendMode);
+})();
+</script>
+  </body>
+</html>

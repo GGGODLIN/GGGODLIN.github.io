@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-theme="anthropic-warm">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — GGGODLIN Labs</title>
+    <meta name="description" content="How GGGODLIN Labs handles account, report and payment data for PR Review Cloud." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Privacy Policy — GGGODLIN Labs" />
+    <meta property="og:description" content="How GGGODLIN Labs handles account, report and payment data for PR Review Cloud." />
+    <meta property="og:url" content="https://gggodlin.com/privacy" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href="https://gggodlin.com/privacy" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&amp;family=Schibsted+Grotesk:wght@400;500;700&amp;display=swap" />
+    <script>(function(){try{var m=localStorage.getItem('blind-test-mode');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-mode',(m||(d?'dark':'light'))==='dark'?'dark':'light');}catch(e){}})();</script>
+    <link rel="stylesheet" href="../site.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <header class="site-header">
+        <a class="wordmark" href="../">GGGODLIN Labs</a>
+        <div class="header-actions">
+          <nav class="subnav" aria-label="Main">
+            <a href="../">Home</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="https://app.gggodlin.com/sample">Live sample</a>
+          </nav>
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41m0-14.14-1.41 1.41M6.34 17.66l-1.41 1.41" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <main id="main-content" class="legal">
+        <h1>Privacy Policy</h1>
+        <p>GGGODLIN Labs operates PR Review Cloud. Contact us at <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a> about your data or this policy.</p>
+        <h2>Account and report data</h2>
+        <p>We use basic account identifiers from GitHub sign-in to identify your workspace. We store API key hashes to authenticate CLI uploads and store the Markdown review reports you upload so you can view and compare them.</p>
+        <p>Reports are private by default. Anyone with a share link you create can view that report until you revoke the link. Review execution stays on your machine. PR Review Cloud does not run LLMs on your behalf.</p>
+        <h2>Payments</h2>
+        <p>Polar is the Merchant of Record. It processes payments and handles applicable taxes. Checkout and payment data are handled by Polar under its own privacy policy.</p>
+        <h2>Data requests</h2>
+        <p>Use the contact address above to request access to, correction of, or deletion of your data.</p>
+      </main>
+      <footer class="site-footer">
+        <div>© 2026 GGGODLIN Labs · Xinyi Dist., Taipei City 110615, Taiwan</div>
+        <nav aria-label="Footer">
+          <a href="../">Home</a>
+          <a href="../privacy/" aria-current="page">Privacy</a>
+          <a href="../terms/">Terms</a>
+          <a href="../refund/">Refunds</a>
+          <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>
+          <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </nav>
+      </footer>
+    </div>
+    <script type="module" src="../theme.mjs"></script>
+  <script>
+(() => {
+  const sendMode = () => {
+    try {
+      window.parent.postMessage({ type: "blind-mode-sync", mode: document.documentElement.dataset.mode || "light" }, "*");
+    } catch {}
+  };
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "blind-set-mode") return;
+    const next = ev.data.mode === "dark" ? "dark" : "light";
+    document.documentElement.dataset.mode = next;
+    try { localStorage.setItem("blind-test-mode", next); } catch {}
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", String(next === "dark"));
+  });
+  document.addEventListener("click", (ev) => {
+    const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (a && /^https?:\/\//i.test(a.getAttribute("href") || "")) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (ev.target && ev.target.closest && ev.target.closest("#theme-toggle")) {
+      setTimeout(sendMode, 20);
+    }
+  }, true);
+  window.addEventListener("DOMContentLoaded", sendMode);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,1767 @@
+<!doctype html>
+<html lang="en" data-theme="anthropic-warm" data-site-release="pr-review-cloud-v1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GGGODLIN Labs — PR Review Cloud &amp; Open Source</title>
+    <meta
+      name="description"
+      content="GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GGGODLIN Labs" />
+    <meta property="og:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      property="og:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <meta property="og:url" content="https://gggodlin.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="GGGODLIN Labs — PR Review Cloud &amp; Open Source" />
+    <meta
+      name="twitter:description"
+      content="Compare pull request review findings across rounds with zero server-side model charges."
+    />
+    <link rel="canonical" href="https://gggodlin.com/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GGGODLIN Labs",
+        "url": "https://gggodlin.com/",
+        "description": "GGGODLIN Labs builds PR Review Cloud, a workspace for comparing pull request reviews across rounds, and open-source AI code review tools that run locally.",
+        "email": "philip@gggodlin.com",
+        "founder": {
+          "@type": "Person",
+          "name": "Philip Lin"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Xinyi Dist., Taipei City",
+          "postalCode": "110615",
+          "addressCountry": "TW"
+        },
+        "sameAs": [
+          "https://github.com/GGGODLIN-Labs",
+          "https://blog.gggodlin.com"
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PR Review Cloud",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "url": "https://app.gggodlin.com/",
+        "description": "Zero-LLM-burn cloud workspace for storing, comparing, and sharing multi-axis pull request review reports generated locally by claude-pr-review.",
+        "offers": [
+          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Pro Pass", "price": "49", "priceCurrency": "USD" }
+        ]
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('blind-test-mode');
+          var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-mode', (m || (d ? 'dark' : 'light')) === 'dark' ? 'dark' : 'light');
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="./site.css" />
+    <style>
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .nav a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        color: var(--text-2);
+        white-space: nowrap;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 6px;
+        transition: color 150ms var(--ease), text-decoration-color 150ms var(--ease);
+      }
+
+      .nav a:hover {
+        color: var(--text-1);
+        text-decoration-color: var(--accent);
+      }
+
+      .menu {
+        display: none;
+        position: relative;
+      }
+
+      .menu summary {
+        list-style: none;
+      }
+
+      .menu summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .menu[open] summary {
+        background-color: var(--paper);
+        color: var(--text-1);
+      }
+
+      .menu-panel {
+        position: absolute;
+        right: 0;
+        top: 44px;
+        min-width: 220px;
+        padding: 8px;
+        background-color: var(--paper);
+        border: 1px solid var(--rule);
+        border-top: 3px solid var(--plate-m);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-float);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        z-index: 10;
+        animation: menu-in 180ms var(--ease) both;
+      }
+
+      .menu-panel a {
+        display: flex;
+        align-items: center;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        font-size: 15px;
+        line-height: 20px;
+        color: var(--text-2);
+        text-decoration: none;
+      }
+
+      .menu-panel a:hover {
+        background-color: var(--raised);
+        color: var(--text-1);
+      }
+
+      @keyframes menu-in {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+
+      .sheet-slug {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 32px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .sheet-slug::before {
+        content: "Sheet 01 · 2 plates · pr-review-cloud-v1";
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sheet-slug::after {
+        content: "";
+        flex: none;
+        width: 96px;
+        height: 8px;
+        background: var(--cmyk);
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        gap: 56px;
+        align-items: center;
+        margin-top: 24px;
+        padding: 64px 56px 72px;
+        background-image: var(--crop-img), radial-gradient(var(--halftone) 1.2px, transparent 1.7px);
+        background-size: var(--crop-size), 7px 7px;
+        background-position: var(--crop-pos), 0 0;
+        background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat,
+          repeat;
+      }
+
+      .hero::before,
+      .hero::after {
+        content: "";
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        color: var(--crop);
+        background: var(--reg);
+        pointer-events: none;
+      }
+
+      .hero::before {
+        top: 4px;
+        left: 40px;
+      }
+
+      .hero::after {
+        bottom: 4px;
+        right: 40px;
+      }
+
+      .hero h1 {
+        font-size: clamp(52px, 7.2vw, 104px);
+        line-height: 0.92;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        text-wrap: balance;
+      }
+
+      .hero-sub {
+        margin-top: 28px;
+        max-width: 34rem;
+        font-size: 18px;
+        line-height: 28px;
+        color: var(--text-2);
+      }
+
+      .actions {
+        margin-top: 36px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn {
+        min-height: 44px;
+        padding: 10px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: var(--radius);
+        font-size: 15px;
+        line-height: 20px;
+        font-weight: 500;
+        border: 1px solid var(--text-1);
+        background-color: transparent;
+        color: var(--text-1);
+        transition: background-color 150ms var(--ease), box-shadow 150ms var(--ease), color 150ms var(--ease),
+          transform 120ms var(--ease);
+      }
+
+      .btn:hover {
+        background-color: var(--paper);
+        box-shadow: var(--misregister);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+        box-shadow: none;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-bg);
+        border-color: var(--primary-bg);
+        color: var(--primary-text);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-bg-hover);
+        border-color: var(--primary-bg-hover);
+      }
+
+      .run {
+        position: relative;
+        background-color: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-float);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 20px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .run::before {
+        content: "";
+        position: absolute;
+        inset: -14px;
+        pointer-events: none;
+        background-image: var(--crop-img);
+        background-size: var(--crop-size);
+        background-position: var(--crop-pos);
+        background-repeat: no-repeat;
+      }
+
+      .run-head {
+        position: relative;
+        padding: 20px 80px 18px 24px;
+        border-bottom: 1px solid var(--hairline);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .run-head::before,
+      .run-head::after {
+        content: "";
+        position: absolute;
+        top: 24px;
+        width: 16px;
+        height: 16px;
+        mix-blend-mode: var(--blend);
+      }
+
+      .run-head::before {
+        right: 34px;
+        background-color: var(--plate-c);
+      }
+
+      .run-head::after {
+        right: 24px;
+        background-color: var(--plate-m);
+      }
+
+      .run-title {
+        font-family: var(--font-sans);
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--text-1);
+      }
+
+      .run-meta {
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.04em;
+        color: var(--text-3);
+      }
+
+      .run-block {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .run-label {
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 10px;
+      }
+
+      .run-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 8rem;
+        gap: 12px;
+        min-height: 32px;
+        align-items: center;
+        color: var(--text-2);
+      }
+
+      .run-row--two {
+        grid-template-columns: 6.5rem minmax(0, 1fr);
+        padding-left: 12px;
+        border-left: 3px solid var(--rule);
+      }
+
+      .run-row--two + .run-row--two {
+        margin-top: 6px;
+      }
+
+      .run-row--two[data-plate="c"] {
+        border-left-color: var(--plate-c);
+      }
+
+      .run-row--two[data-plate="m"] {
+        border-left-color: var(--plate-m);
+      }
+
+      .run-row .key {
+        color: var(--text-1);
+      }
+
+      .run-row--two[data-plate="c"] .key {
+        color: var(--plate-c);
+      }
+
+      .run-row--two[data-plate="m"] .key {
+        color: var(--plate-m);
+      }
+
+      .run-row .detail {
+        color: var(--text-3);
+      }
+
+      .run-row .status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--text-1);
+        white-space: nowrap;
+      }
+
+      .run-row .status::before {
+        content: "";
+        flex: none;
+      }
+
+      .status.is-pass {
+        animation: register 600ms var(--ease) 700ms both;
+      }
+
+      .status.is-pass::before {
+        width: 5px;
+        height: 10px;
+        margin-top: -3px;
+        border: solid var(--pass);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        animation: tick 260ms var(--ease) 1300ms both;
+      }
+
+      .status.is-held {
+        text-shadow: -1.5px 0 0 var(--plate-c), 1.5px 0 0 var(--plate-m);
+      }
+
+      .status.is-held::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--stamp);
+        box-shadow: -3px 0 0 var(--plate-c);
+      }
+
+      @keyframes register {
+        from {
+          text-shadow: -3px 0 0 var(--plate-c), 3px 0 0 var(--plate-m);
+        }
+        to {
+          text-shadow: 0 0 0 transparent, 0 0 0 transparent;
+        }
+      }
+
+      @keyframes tick {
+        from {
+          opacity: 0;
+          transform: rotate(45deg) scale(0.3);
+        }
+      }
+
+      .run-foot {
+        padding: 16px 24px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .evidence {
+        flex: 1;
+        min-width: 0;
+        padding: 14px 16px;
+        background-color: var(--raised);
+        border-radius: var(--radius);
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 6px 16px;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--text-2);
+      }
+
+      .evidence dt {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-2);
+      }
+
+      .evidence dt::before {
+        content: "";
+        flex: none;
+        width: 6px;
+        height: 6px;
+        background-color: var(--plate-c);
+      }
+
+      .evidence dt ~ dt::before {
+        background-color: var(--plate-m);
+      }
+
+      .evidence dd {
+        color: var(--text-1);
+      }
+
+      .evidence .missing {
+        color: var(--stamp);
+      }
+
+      .stamp {
+        position: relative;
+        flex: none;
+        padding-left: 36px;
+        color: var(--text-1);
+      }
+
+      .stamp::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 26px;
+        height: 26px;
+        margin-top: -13px;
+        background: var(--reg);
+      }
+
+      .stamp strong {
+        display: block;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .stamp span {
+        display: block;
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--text-3);
+        white-space: nowrap;
+      }
+
+      .colorbar {
+        height: 10px;
+        border-top: 1px solid var(--hairline);
+        background: var(--cmyk);
+        background: linear-gradient(
+          90deg,
+          var(--plate-c) 0 8.333%,
+          var(--plate-m) 8.333% 16.666%,
+          var(--plate-y) 16.666% 25%,
+          var(--plate-k) 25% 33.333%,
+          color-mix(in srgb, var(--plate-c) 50%, var(--paper)) 33.333% 41.666%,
+          color-mix(in srgb, var(--plate-m) 50%, var(--paper)) 41.666% 50%,
+          color-mix(in srgb, var(--plate-y) 50%, var(--paper)) 50% 58.333%,
+          color-mix(in srgb, var(--plate-k) 50%, var(--paper)) 58.333% 66.666%,
+          color-mix(in srgb, var(--plate-c) 25%, var(--paper)) 66.666% 75%,
+          color-mix(in srgb, var(--plate-m) 25%, var(--paper)) 75% 83.333%,
+          color-mix(in srgb, var(--plate-y) 25%, var(--paper)) 83.333% 91.666%,
+          color-mix(in srgb, var(--plate-k) 25%, var(--paper)) 91.666% 100%
+        );
+      }
+
+      .section {
+        padding-top: 120px;
+        scroll-margin-top: 16px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 40px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .section-head h2 {
+        font-size: 40px;
+        line-height: 44px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+      }
+
+      .section-head p {
+        max-width: 46ch;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-3);
+        text-align: right;
+      }
+
+      .source {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      .source a {
+        color: var(--text-2);
+        align-self: flex-start;
+        text-decoration: underline;
+        text-decoration-color: var(--rule);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 5px;
+        transition: color 150ms var(--ease), text-decoration-color 150ms var(--ease), background-color 150ms var(--ease),
+          border-color 150ms var(--ease), box-shadow 150ms var(--ease), transform 120ms var(--ease);
+      }
+
+      .source a:hover {
+        color: var(--accent);
+        text-decoration-color: currentColor;
+      }
+
+      .ecosystem-links {
+        margin-top: 24px;
+        flex-flow: row wrap;
+        gap: 8px 24px;
+      }
+
+      .ecosystem-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+      }
+
+      .flow {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 40px;
+        margin-bottom: 40px;
+      }
+
+      .flow-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        column-gap: 16px;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .flow-step::before {
+        content: "";
+        grid-row: 1 / span 2;
+        width: 40px;
+        height: 40px;
+        background-image: linear-gradient(var(--plate-c), var(--plate-c)), linear-gradient(var(--plate-m), var(--plate-m));
+        background-size: 26px 26px, 26px 26px;
+        background-position: 0 0, 14px 14px;
+        background-repeat: no-repeat;
+        background-blend-mode: var(--blend);
+      }
+
+      .flow-step[data-plate="c"]::before {
+        background-size: 26px 26px, 0 0;
+      }
+
+      .flow-step[data-plate="m"]::before {
+        background-size: 0 0, 26px 26px;
+      }
+
+      .flow-step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 36px;
+        right: -40px;
+        width: 40px;
+        border-top: 1px dashed var(--rule);
+      }
+
+      .flow-index {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .flow-title {
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--text-1);
+      }
+
+      .plates {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .plates > li {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 36px 32px 32px;
+        background-color: var(--paper);
+        border: 1px solid var(--rule);
+        border-top: 4px solid var(--plate-c);
+        border-radius: var(--radius);
+        transition: box-shadow 200ms var(--ease), transform 200ms var(--ease);
+      }
+
+      .plates > li[data-plate="m"] {
+        border-top-color: var(--plate-m);
+      }
+
+      .plates > li:hover,
+      .plates > li:focus-within {
+        transform: translate(-2px, -2px);
+        box-shadow: var(--shadow-float);
+      }
+
+      .plates > li[data-plate="m"]:hover,
+      .plates > li[data-plate="m"]:focus-within {
+        box-shadow: var(--shadow-m);
+      }
+
+      .plates > li::before {
+        position: absolute;
+        top: 16px;
+        right: 20px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .plates > li[data-plate="c"]::before {
+        content: "Plate C";
+        content: "Plate C" / "";
+      }
+
+      .plates > li[data-plate="m"]::before {
+        content: "Plate M";
+        content: "Plate M" / "";
+      }
+
+      .plates h3 {
+        font-size: 40px;
+        line-height: 44px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        overflow-wrap: anywhere;
+      }
+
+      .category {
+        margin-top: 8px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .plates p {
+        max-width: 48ch;
+        color: var(--text-2);
+      }
+
+      .plates .source {
+        margin-top: auto;
+        padding-top: 8px;
+      }
+
+      .plates .source a {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 1px solid var(--text-1);
+        border-radius: var(--radius);
+        color: var(--text-1);
+        text-decoration: none;
+      }
+
+      .plates .source a::after,
+      .ledger .source a::after {
+        content: "\2192";
+        content: "\2192" / "";
+      }
+
+      .plates .source a:hover {
+        color: var(--text-1);
+        background-color: var(--bg);
+        box-shadow: var(--misregister);
+      }
+
+      .plates .source a:active {
+        transform: translateY(1px);
+        box-shadow: none;
+      }
+
+      .ledger {
+        list-style: none;
+        margin-top: 32px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .ledger li {
+        display: grid;
+        grid-template-columns: minmax(0, 380px) minmax(0, 1fr) auto;
+        gap: 6px 32px;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .ledger li > div:first-child {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+      }
+
+      .ledger h3 {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 500;
+        color: var(--text-1);
+      }
+
+      .ledger .category {
+        margin-top: 0;
+      }
+
+      .ledger p {
+        font-size: 15px;
+        line-height: 24px;
+        color: var(--text-2);
+      }
+
+      .ledger .source a {
+        display: inline-block;
+        padding: 8px 0;
+      }
+
+      .ledger .source a::after {
+        margin-left: 8px;
+      }
+
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .plan {
+        position: relative;
+        padding: 28px;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        background-color: var(--paper);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .plan-featured {
+        border-top: 3px solid var(--plate-m);
+        padding-top: 26px;
+        box-shadow: var(--shadow-m);
+      }
+
+      .plan-featured::before {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 20px;
+        right: 20px;
+        height: 8px;
+        background-image: radial-gradient(circle at 4px 4px, var(--bg) 0 2.4px, var(--rule) 2.4px 3.2px, transparent 3.4px),
+          linear-gradient(90deg, var(--rule) 0 50%, transparent 50%);
+        background-size: 14px 8px, 4px 1px;
+        background-position: 0 0, 0 50%;
+        background-repeat: repeat-x;
+      }
+
+      .plan-pass {
+        padding: 27px;
+        border: 2px solid var(--text-1);
+      }
+
+      .plan-pass::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        height: 22px;
+        border-left: 1px dashed var(--text-1);
+      }
+
+      .plan h3 {
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .price {
+        margin-top: 16px;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .price strong {
+        font-size: 40px;
+        line-height: 44px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+      }
+
+      .price span {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .ruler {
+        position: relative;
+        margin-top: 20px;
+        height: 28px;
+        border-bottom: 2px solid var(--text-1);
+        background: linear-gradient(90deg, var(--text-1) 0 1px, transparent 1px) 0 100% / calc((100% - 1px) / 12) 10px repeat-x;
+      }
+
+      .ruler::before,
+      .ruler::after {
+        position: absolute;
+        top: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 14px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .ruler::before {
+        content: "M00";
+        left: 0;
+      }
+
+      .ruler::after {
+        content: "M12";
+        right: 0;
+      }
+
+      .plan-for {
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-2);
+      }
+
+      .features {
+        list-style: none;
+        margin-top: 24px;
+        margin-bottom: 28px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-2);
+      }
+
+      .features li {
+        position: relative;
+        padding: 10px 0 10px 20px;
+        border-top: 1px solid var(--hairline);
+      }
+
+      .features li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 19px;
+        width: 9px;
+        height: 1px;
+        background-color: var(--text-1);
+      }
+
+      .plan .btn {
+        margin-top: auto;
+        width: 100%;
+      }
+
+      .pass-terms {
+        position: relative;
+        max-width: 76ch;
+        margin: 22px 0 0 auto;
+        padding: 18px 22px;
+        border: 1px dashed var(--rule);
+        border-radius: var(--radius);
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--text-2);
+      }
+
+      .pass-terms strong {
+        color: var(--text-1);
+      }
+
+      .pass-terms a {
+        color: var(--text-1);
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+        text-underline-offset: 3px;
+      }
+
+      .pass-terms a:hover {
+        color: var(--accent);
+      }
+
+      .experiments {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        counter-reset: frame;
+      }
+
+      .experiments article {
+        counter-increment: frame;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px;
+        background-color: var(--paper);
+        background-image: var(--crop-img);
+        background-size: 8px 1px, 1px 8px, 8px 1px, 1px 8px, 8px 1px, 1px 8px, 8px 1px, 1px 8px;
+        background-position: 0 8px, 8px 0, 100% 8px, calc(100% - 8px) 0, 0 calc(100% - 8px), 8px 100%,
+          100% calc(100% - 8px), calc(100% - 8px) 100%;
+        background-repeat: no-repeat;
+        border-radius: var(--radius);
+      }
+
+      .experiments article::after {
+        content: "";
+        order: -1;
+        height: 84px;
+        border-radius: var(--radius);
+        background-color: var(--raised);
+        background-image: radial-gradient(var(--plate-c) 1.5px, transparent 2px);
+        background-image: radial-gradient(color-mix(in srgb, var(--plate-c) 60%, transparent) 1.5px, transparent 2px);
+        background-size: 8px 8px;
+      }
+
+      .experiments article:nth-child(2)::after {
+        background-image: radial-gradient(var(--plate-m) 1.5px, transparent 2px);
+        background-image: radial-gradient(color-mix(in srgb, var(--plate-m) 60%, transparent) 1.5px, transparent 2px);
+      }
+
+      .experiments article:nth-child(3)::after {
+        background-image: radial-gradient(var(--plate-y) 1.5px, transparent 2px);
+        background-image: radial-gradient(color-mix(in srgb, var(--plate-y) 90%, transparent) 1.5px, transparent 2px);
+      }
+
+      .experiments article:nth-child(4)::after {
+        background-image: radial-gradient(var(--text-3) 1.5px, transparent 2px);
+        background-image: radial-gradient(color-mix(in srgb, var(--plate-k) 45%, transparent) 1.5px, transparent 2px);
+      }
+
+      .experiments article::before {
+        content: "FR " counter(frame, decimal-leading-zero);
+        content: "FR " counter(frame, decimal-leading-zero) / "";
+        position: absolute;
+        top: 28px;
+        left: 28px;
+        z-index: 1;
+        padding: 2px 6px;
+        border-radius: var(--radius);
+        background-color: var(--paper);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        color: var(--text-1);
+      }
+
+      .experiments h3 {
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .experiments .source {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+      }
+
+      .experiments .source a {
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 32px;
+        padding: 7px 10px;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--text-1);
+        text-decoration: none;
+      }
+
+      .experiments .source a::after {
+        content: "\2197";
+        content: "\2197" / "";
+        flex: none;
+        color: var(--text-3);
+      }
+
+      .experiments .source a:hover {
+        color: var(--text-1);
+        border-color: var(--text-1);
+        box-shadow: var(--misregister);
+      }
+
+      .experiments .source a:active {
+        transform: translateY(1px);
+        box-shadow: none;
+      }
+
+      .supporters {
+        margin-top: 96px;
+        padding: 12px 0;
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .supporters::before {
+        content: "";
+        flex: none;
+        width: 48px;
+        height: 6px;
+        background: var(--cmyk);
+      }
+
+      .supporter-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 4px 0;
+        color: var(--text-2);
+        letter-spacing: 0.04em;
+        transition: color 150ms var(--ease);
+      }
+
+      .supporter-link:hover {
+        color: var(--text-1);
+      }
+
+      .supporter-logo {
+        height: 15px;
+        width: auto;
+        display: block;
+      }
+
+      .supporter-tag {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-3);
+      }
+
+      .rise {
+        animation: rise 420ms var(--ease) both;
+        animation-delay: calc(var(--i, 0) * 80ms);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .rise,
+        .menu-panel,
+        .status.is-pass,
+        .status.is-pass::before {
+          animation: none;
+        }
+
+        .plates > li:hover,
+        .plates > li:focus-within {
+          transform: none;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .experiments {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 56px;
+          padding: 56px 40px 64px;
+        }
+        .hero-copy {
+          max-width: 680px;
+        }
+        .plates h3 {
+          font-size: 28px;
+          line-height: 32px;
+        }
+        .ledger li {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .ledger p {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .nav .nav-link {
+          display: none;
+        }
+        .menu {
+          display: block;
+        }
+        .plans {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .plan-pass {
+          grid-column: 1 / -1;
+        }
+        .pass-terms {
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .hero {
+          margin-top: 16px;
+          gap: 48px;
+          padding: 44px 0 56px;
+        }
+        .hero::before {
+          left: 28px;
+        }
+        .hero::after {
+          right: 28px;
+        }
+        .hero-sub {
+          font-size: 17px;
+          line-height: 27px;
+        }
+        .run {
+          font-size: 12px;
+        }
+        .run-head {
+          padding: 16px 72px 16px 16px;
+        }
+        .run-head::before {
+          right: 26px;
+          top: 20px;
+        }
+        .run-head::after {
+          right: 16px;
+          top: 20px;
+        }
+        .run-block {
+          padding: 14px 16px;
+        }
+        .run-row:not(.run-row--two) .detail {
+          display: none;
+        }
+        .run-row:not(.run-row--two) {
+          grid-template-columns: minmax(0, 1fr) 7.5rem;
+        }
+        .run-row--two {
+          grid-template-columns: 5rem minmax(0, 1fr);
+          padding-left: 10px;
+        }
+        .run-foot {
+          flex-direction: column;
+          align-items: stretch;
+          padding: 16px;
+        }
+        .evidence {
+          grid-template-columns: 56px minmax(0, 1fr);
+          padding: 12px;
+        }
+        .stamp {
+          align-self: flex-start;
+        }
+        .section {
+          padding-top: 88px;
+        }
+        .section-head {
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 32px;
+        }
+        .section-head h2 {
+          font-size: 32px;
+          line-height: 36px;
+        }
+        .section-head p {
+          text-align: left;
+        }
+        .flow {
+          grid-template-columns: 1fr;
+          gap: 0;
+          margin-bottom: 32px;
+        }
+        .flow-step {
+          padding: 14px 0;
+        }
+        .flow-step:not(:last-child)::after {
+          display: none;
+        }
+        .plates {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .plates > li {
+          padding: 32px 22px 24px;
+        }
+        .ledger li {
+          grid-template-columns: 1fr;
+          padding: 16px 0;
+        }
+        .ledger p {
+          grid-row: auto;
+        }
+        .plans {
+          grid-template-columns: 1fr;
+        }
+        .plan-pass {
+          grid-column: auto;
+        }
+        .plan {
+          padding: 24px 22px;
+        }
+        .plan-featured {
+          padding-top: 22px;
+        }
+        .plan-pass {
+          padding: 23px 21px;
+        }
+        .supporters {
+          margin-top: 72px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .sheet-slug::before {
+          content: "Sheet 01 · 2 plates";
+        }
+        .experiments {
+          grid-template-columns: 1fr;
+        }
+        .experiments article::after {
+          height: 56px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <filter id="ink">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" />
+        <feDisplacementMap in="SourceGraphic" scale="1.5" />
+      </filter>
+    </svg>
+
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <header class="site-header">
+        <a class="wordmark" href="https://gggodlin.com">GGGODLIN Labs</a>
+        <nav class="nav" aria-label="Main">
+          <a class="nav-link" href="#platform">Platform</a>
+          <a class="nav-link" href="#pricing">Pricing</a>
+          <a class="nav-link" href="https://app.gggodlin.com/sample">Live sample</a>
+          <a class="nav-link" href="https://app.gggodlin.com/workspace">Workspace</a>
+          <a class="nav-link" href="https://blog.gggodlin.com">Engineering blog</a>
+          <a class="nav-link" href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+          </button>
+          <details class="menu">
+            <summary class="icon-btn" aria-label="Menu">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16" />
+                <path d="M4 12h16" />
+                <path d="M4 18h16" />
+              </svg>
+            </summary>
+            <div class="menu-panel">
+              <a href="#platform">Platform</a>
+              <a href="#pricing">Pricing</a>
+              <a href="https://app.gggodlin.com/sample">Live sample</a>
+              <a href="https://app.gggodlin.com/workspace">Workspace</a>
+              <a href="https://blog.gggodlin.com">Engineering blog</a>
+              <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+            </div>
+          </details>
+        </nav>
+      </header>
+      <div class="sheet-slug" aria-hidden="true"></div>
+
+      <main id="main-content">
+      <section class="hero">
+        <div class="hero-copy rise" style="--i: 0">
+          <h1>PR Review Cloud</h1>
+          <p class="hero-sub">
+            Compare findings across PR review rounds and see what changed. Run multi-axis AI reviews
+            with the open-source CLI on your machine and use the workspace to review the results.
+            PR Review Cloud incurs no server-side model charges.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="https://app.gggodlin.com/sample">View 2-round live sample</a>
+            <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace</a>
+            <a class="btn" href="https://github.com/GGGODLIN/claude-pr-review">Get the open-source CLI</a>
+          </div>
+        </div>
+
+        <figure class="run rise" style="--i: 1" aria-label="Illustrated two-round review summary">
+          <figcaption class="run-head">
+            <div class="run-title">claude-pr-review</div>
+            <div class="run-meta">Report projection schema: 2</div>
+          </figcaption>
+
+          <div class="run-block">
+            <div class="run-label">Cross-model verification</div>
+            <div class="run-row run-row--two" data-plate="c">
+              <span class="key">Round 1</span>
+              <span class="detail">Review findings</span>
+            </div>
+            <div class="run-row run-row--two" data-plate="m">
+              <span class="key">Round 2</span>
+              <span class="detail">Recheck findings after changes</span>
+            </div>
+          </div>
+
+          <div class="run-block">
+            <div class="run-label">Prior review continuity: CHECKED</div>
+            <div class="run-row">
+              <span class="key">Retry limit</span>
+              <span class="detail">Cap verified</span>
+              <span class="status is-pass">FIXED</span>
+            </div>
+            <div class="run-row">
+              <span class="key">Retry test</span>
+              <span class="detail">Timeout case missing</span>
+              <span class="status is-held">STILL_OPEN</span>
+            </div>
+          </div>
+
+          <div class="run-foot">
+            <dl class="evidence">
+              <dt>Fixed</dt>
+              <dd>Round 2 verified the cap.</dd>
+              <dt>Open</dt>
+              <dd class="missing">The timeout path still needs a test.</dd>
+            </dl>
+            <div class="stamp" aria-hidden="true">
+              <strong>Compared</strong>
+              <span>Round 1 → Round 2</span>
+            </div>
+          </div>
+          <div class="colorbar" aria-hidden="true"></div>
+        </figure>
+      </section>
+
+      <section class="section" id="platform">
+        <div class="section-head">
+          <h2>Platform &amp; open source</h2>
+        </div>
+        <ol class="flow">
+          <li class="flow-step" data-plate="c">
+            <span class="flow-index" aria-hidden="true">01 C</span>
+            <span class="flow-title">Run locally</span>
+          </li>
+          <li class="flow-step" data-plate="m">
+            <span class="flow-index" aria-hidden="true">02 M</span>
+            <span class="flow-title">Upload</span>
+          </li>
+          <li class="flow-step" data-plate="k">
+            <span class="flow-index" aria-hidden="true">03 K</span>
+            <span class="flow-title">Compare rounds</span>
+          </li>
+        </ol>
+        <ul class="plates">
+          <li data-plate="c">
+            <div>
+              <h3>PR Review Cloud</h3>
+              <div class="category">Cloud workspace</div>
+            </div>
+            <p>Store Markdown review reports, compare findings across rounds and share selected reports with revocable links.</p>
+            <div class="source">
+              <a href="https://app.gggodlin.com">Open PR Review Cloud</a>
+            </div>
+          </li>
+          <li data-plate="m">
+            <div>
+              <h3>claude-pr-review</h3>
+              <div class="category">Local review CLI</div>
+            </div>
+            <p>Run multi-axis PR reviews locally and check findings across models and review rounds.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/claude-pr-review">Install claude-pr-review on GitHub</a>
+            </div>
+          </li>
+        </ul>
+        <ul class="ledger">
+          <li>
+            <div>
+              <h3>cc-translate-proxy</h3>
+              <div class="category">Translation</div>
+            </div>
+            <p>A translation proxy for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/cc-translate-proxy">View cc-translate-proxy on GitHub</a>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>gggodlin-cc-harness</h3>
+              <div class="category">Claude Code harness</div>
+            </div>
+            <p>Hooks and workflow tooling for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/gggodlin-cc-harness">View gggodlin-cc-harness on GitHub</a>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>cc-mod-image-view</h3>
+              <div class="category">Image viewing</div>
+            </div>
+            <p>An image viewer for Claude Code.</p>
+            <div class="source">
+              <a href="https://github.com/GGGODLIN/cc-mod-image-view">View cc-mod-image-view on GitHub</a>
+            </div>
+          </li>
+        </ul>
+        <p class="source ecosystem-links">
+          <a href="https://github.com/GGGODLIN-Labs">GGGODLIN Labs on GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </p>
+      </section>
+
+      <section class="section" id="pricing">
+        <div class="section-head">
+          <h2>Pricing</h2>
+          <p>Prices in USD · Free is live now; paid upgrades open inside the workspace once billing launches</p>
+        </div>
+        <div class="plans">
+          <article class="plan">
+            <h3>Free</h3>
+            <div class="price"><strong>$0</strong></div>
+            <ul class="features">
+              <li>Up to 20 stored reports, 128 KB per report</li>
+              <li>GitHub sign-in &amp; cross-round finding comparison</li>
+              <li>Private by default, with instantly revocable share links</li>
+              <li>One-line CLI upload with <code>curl</code> or web upload</li>
+            </ul>
+            <a class="btn" href="https://app.gggodlin.com/workspace">Start free</a>
+          </article>
+
+          <article class="plan plan-featured">
+            <h3>Pro</h3>
+            <div class="price"><strong>$19</strong><span>/ month</span></div>
+            <ul class="features">
+              <li>Up to 500 stored reports, 128 KB per report</li>
+              <li>Track which findings were fixed across rounds</li>
+              <li>Personal API key management and revocable share links</li>
+              <li>Checkout activates inside the workspace once billing opens</li>
+            </ul>
+            <a class="btn btn-primary" href="https://app.gggodlin.com/workspace">Open workspace for Pro</a>
+          </article>
+
+          <article class="plan plan-pass">
+            <h3>Pro Pass</h3>
+            <div class="price"><strong>$49</strong><span>one-time</span></div>
+            <div class="ruler" aria-hidden="true"></div>
+            <p class="plan-for">A one-time purchase for an individual account with Pro access.</p>
+            <ul class="features">
+              <li>Up to 500 stored reports, 128 KB per report</li>
+              <li>Track which findings were fixed across rounds</li>
+              <li>Personal API key management and revocable share links</li>
+              <li>Guaranteed at least 12 months of operation, no monthly fee</li>
+            </ul>
+            <a class="btn" href="https://app.gggodlin.com/workspace">Open workspace for Pro Pass</a>
+          </article>
+        </div>
+        <p class="pass-terms">
+          <strong>Pro Pass guarantee.</strong> No monthly fee for as long as the service operates.
+          We guarantee at least 12 months of operation from purchase. If we retire the service, we
+          will give you at least 30 days' advance notice to export your reports. If we retire the
+          service within 12 months of purchase, we will issue a pro-rata refund for unused months
+          in that 12-month period. See the <a href="./refund/">refund policy</a> for details.
+        </p>
+      </section>
+
+      <section class="section" id="experiments">
+        <div class="section-head">
+          <h2>Experiments</h2>
+          <p>Hackathon projects</p>
+        </div>
+        <div class="experiments">
+          <article>
+            <h3>CreditRoll Live</h3>
+            <div class="source">
+              <a href="https://youtu.be/cE3SuZF7sic">Watch CreditRoll Live demo</a>
+              <a href="https://github.com/GGGODLIN/paypal-credit-roll-live">View CreditRoll Live source</a>
+            </div>
+          </article>
+          <article>
+            <h3>FlowWitness</h3>
+            <div class="source">
+              <a href="https://youtu.be/2H3QmFD4D20">Watch FlowWitness demo</a>
+              <a href="https://github.com/GGGODLIN/firebase-flow-witness">View FlowWitness source</a>
+            </div>
+          </article>
+          <article>
+            <h3>ReserveRail</h3>
+            <div class="source">
+              <a href="https://youtu.be/NO--HeY-e3A">Watch ReserveRail demo</a>
+              <a href="https://github.com/GGGODLIN/reserverail">View ReserveRail source</a>
+            </div>
+          </article>
+          <article>
+            <h3>ClauseClock</h3>
+            <div class="source">
+              <a href="https://youtu.be/xFWynDts-Ow">Watch ClauseClock demo</a>
+              <a href="https://github.com/GGGODLIN/atlassian-clause-clock">View ClauseClock source</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <aside class="supporters" aria-label="Startup program support">
+        <span>Supported by</span>
+        <a
+          class="supporter-link"
+          href="https://www.cartesia.ai/startups"
+          rel="noopener noreferrer"
+          aria-label="Cartesia Startups"
+        >
+          <svg class="supporter-logo" aria-hidden="true" focusable="false" viewBox="0 0 579 83" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M89.1256 28.6346V51.252H77.9183L76.4474 49.2161L72.9215 44.3358L70.5208 41.0131L66.4165 35.3331L67.6578 41.0131L69.4514 49.2161L69.8956 51.252L71.245 57.4192L72.9215 65.092L73.0376 65.6225L74.8301 73.8241L76.6237 82.0274H51.3153L49.5216 73.8241L48.6137 69.6692L47.7291 65.6225L45.9355 57.4192L44.5874 51.252L43.2394 57.4192L41.4457 65.6225L40.5122 69.8934L39.6532 73.8241L37.8595 82.0274H12.5021L14.2958 73.8241L16.0393 65.8445V65.8435L16.2042 65.7215L16.339 65.6225L24.3069 59.7214L27.4162 57.4192L32.4095 53.7207L35.7439 51.252H0V28.6346H24.1731L24.3069 28.0255L25.0544 24.6081L26.8469 16.405L28.6406 8.2019L30.4331 0H58.6925L60.485 8.2019L60.8605 9.9186L56.7162 12.9875L52.1007 16.405L48.6137 18.9878L41.0246 24.6081L40.5122 24.987L35.5868 28.6346H89.1256Z" fill="currentColor"></path><g><path d="M533.321 73.5189H512.402V69.1647H517.986L540.42 8.11005H550.927L573.172 69.1647H578.946V73.5189H552.253V69.1647H561.34L554.619 50.3277H530.765L524.139 69.1647H533.321V73.5189ZM532.185 46.068H553.199C545.343 23.634 543.828 19.0904 542.787 15.7774C541.746 18.9958 540.136 23.634 532.185 46.068Z" fill="currentColor"></path><path d="M509.259 73.5189H483.512V69.1647H490.896V12.4643H483.512V8.11005H509.259V12.4643H501.876V69.1647H509.259V73.5189Z" fill="currentColor"></path><path d="M425.863 53.6412H435.708V54.8717C435.708 65.0001 441.292 70.301 451.894 70.301C463.159 70.301 467.797 65.4734 467.797 58.2794C467.797 51.8426 465.241 48.4349 454.071 46.2578L444.511 44.3646C432.963 42.1875 428.04 36.9813 428.04 25.9063C428.04 15.6832 434.761 6.97461 453.125 6.97461C469.69 6.97461 476.695 13.2221 476.695 25.433V26.2849H467.418V25.433C467.418 16.8191 464.2 11.2342 452.935 11.2342C441.198 11.2342 437.79 17.103 437.79 23.3505C437.79 29.4086 440.63 33.2896 450.285 35.1828L460.129 37.0759C473.003 39.5371 477.925 44.1753 477.925 55.4397C477.925 68.6918 467.986 74.6553 451.705 74.6553C433.53 74.6553 425.863 67.1773 425.863 54.5877V53.6412Z" fill="currentColor"></path><path d="M345.828 73.5189H320.081V69.1647H327.464V12.4643H311.514L309.811 23.8233H302.333L304.462 8.11005H361.541L363.67 23.8233H356.287L354.584 12.4643H338.444V69.1647H345.828V73.5189Z" fill="currentColor"></path><path d="M193.568 73.5189H172.649V69.1647H178.234L200.668 8.11005H211.175L233.42 69.1647H239.194V73.5189H212.5V69.1647H221.587L214.867 50.3277H191.013L184.387 69.1647H193.568V73.5189ZM192.433 46.068H213.447C205.59 23.634 204.075 19.0904 203.034 15.7774C201.993 18.9958 200.384 23.634 192.433 46.068Z" fill="currentColor"></path><path d="M172.479 51.464V51.9373C172.479 65.0001 164.433 74.6553 145.88 74.6553C125.623 74.6553 115.968 64.0536 115.968 40.673C115.968 17.5763 127.516 6.97461 146.448 6.97461C164.244 6.97461 172.479 15.7778 172.479 30.5445V31.1125H162.066V30.5445C162.066 20.2268 159.132 11.3289 146.448 11.3289C134.426 11.3289 127.421 19.4695 127.421 40.5783C127.421 65.7574 136.225 70.2064 146.258 70.2064C157.333 70.2064 162.256 63.4856 162.256 52.032V51.464H172.479Z" fill="currentColor"></path><path d="M418.784 23.8233H411.401L409.271 12.4643H386.459V37.3596H400.171V30.072H405.765V49.2489H400.171V41.7138H386.459V69.1646H412.158L413.862 56.7645H421.15L419.021 73.5188H368.095V69.1646H375.478V12.4643H368.095V8.11005H416.654L418.784 23.8233Z" fill="currentColor"></path><path d="M266.645 8.11005C271.946 8.11005 277.815 8.39407 281.791 9.05667C291.162 10.5712 295.422 16.5348 295.422 26.0006C295.422 34.8037 291.825 40.0099 283.022 43.0389L297.409 69.1646H302.258V54.3422H307.852V73.5192L287.281 73.5188L272.609 45.027C270.527 45.2163 268.35 45.3106 266.362 45.3106H260.777V69.1646H268.823V73.5188H242.413V69.1646H249.796V12.4643H242.413V8.11005H266.645ZM260.777 40.862H267.781C272.23 40.862 276.017 40.1994 278.383 38.7796C282.17 36.6971 284.063 32.6265 284.063 26.3791C284.063 19.0904 281.601 15.3988 276.585 13.6949C274.691 13.0324 270.621 12.4643 267.498 12.4643H260.777V40.862Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></g></svg>
+          <span class="supporter-tag">Startups</span>
+        </a>
+      </aside>
+      </main>
+
+      <footer class="site-footer">
+        <div>© 2026 GGGODLIN Labs · Xinyi Dist., Taipei City 110615, Taiwan</div>
+        <nav aria-label="Footer">
+          <a href="./privacy/">Privacy</a>
+          <a href="./terms/">Terms</a>
+          <a href="./refund/">Refunds</a>
+          <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>
+          <a href="mailto:philip@labs.gggodlin.com">philip@labs.gggodlin.com</a>
+          <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </nav>
+      </footer>
+    </div>
+
+    <script type="module" src="./theme.mjs"></script>
+  <script>
+(() => {
+  const sendMode = () => {
+    try {
+      window.parent.postMessage({ type: "blind-mode-sync", mode: document.documentElement.dataset.mode || "light" }, "*");
+    } catch {}
+  };
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "blind-set-mode") return;
+    const next = ev.data.mode === "dark" ? "dark" : "light";
+    document.documentElement.dataset.mode = next;
+    try { localStorage.setItem("blind-test-mode", next); } catch {}
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", String(next === "dark"));
+  });
+  document.addEventListener("click", (ev) => {
+    const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (a && /^https?:\/\//i.test(a.getAttribute("href") || "")) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (ev.target && ev.target.closest && ev.target.closest("#theme-toggle")) {
+      setTimeout(sendMode, 20);
+    }
+  }, true);
+  window.addEventListener("DOMContentLoaded", sendMode);
+})();
+</script>
+  </body>
+</html>

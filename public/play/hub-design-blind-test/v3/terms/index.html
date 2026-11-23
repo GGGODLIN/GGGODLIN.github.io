@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en" data-theme="anthropic-warm">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms of Service — GGGODLIN Labs</title>
+    <meta name="description" content="Terms for PR Review Cloud, including monthly subscriptions and the one-time Pro Pass." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Terms of Service — GGGODLIN Labs" />
+    <meta property="og:description" content="Terms for PR Review Cloud, including monthly subscriptions and the one-time Pro Pass." />
+    <meta property="og:url" content="https://gggodlin.com/terms" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href="https://gggodlin.com/terms" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" />
+    <script>(function(){try{var m=localStorage.getItem('blind-test-mode');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-mode',(m||(d?'dark':'light'))==='dark'?'dark':'light');}catch(e){}})();</script>
+    <link rel="stylesheet" href="../site.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <header class="site-header">
+        <a class="wordmark" href="../">GGGODLIN Labs</a>
+        <div class="header-actions">
+          <nav class="subnav" aria-label="Main">
+            <a href="../">Home</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="https://app.gggodlin.com/sample">Live sample</a>
+          </nav>
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41m0-14.14-1.41 1.41M6.34 17.66l-1.41 1.41" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <main id="main-content" class="legal">
+        <h1>Terms of Service</h1>
+        <p>GGGODLIN Labs operates PR Review Cloud. For questions about the service or these terms, contact <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>.</p>
+        <h2>Using the workspace</h2>
+        <p>Use an account you control and upload only reports you have permission to share with the service. We handle basic GitHub sign-in identifiers, API key hashes and uploaded Markdown review reports. Reports are private by default. PR Review Cloud does not run LLMs on your behalf. See the <a href="../privacy/">privacy policy</a> for how we use this data.</p>
+        <h2>Pro monthly subscription</h2>
+        <p>Pro costs US$19 per month. Polar is the Merchant of Record and handles payments and applicable taxes.</p>
+        <p>Cancel before your next renewal to avoid the next charge. You can use Pro through the end of the paid billing period. The current period is not refunded except where required by law or when Polar approves a refund.</p>
+        <h2>Pro Pass and service retirement</h2>
+        <p>The US$49 Pro Pass is a one-time purchase for an individual account with Pro access.</p>
+        <p>No monthly fee for as long as the service operates. We guarantee at least 12 months of operation from purchase. If we retire the service, we will give you at least 30 days' advance notice to export your reports. If we retire the service within 12 months of purchase, we will issue a pro-rata refund for unused months in that 12-month period.</p>
+        <p>See the <a href="../refund/">refund policy</a> for billing and refund requests.</p>
+      </main>
+      <footer class="site-footer">
+        <div>© 2026 GGGODLIN Labs · Xinyi Dist., Taipei City 110615, Taiwan</div>
+        <nav aria-label="Footer">
+          <a href="../">Home</a>
+          <a href="../privacy/">Privacy</a>
+          <a href="../terms/" aria-current="page">Terms</a>
+          <a href="../refund/">Refunds</a>
+          <a href="mailto:philip@gggodlin.com">philip@gggodlin.com</a>
+          <a href="https://github.com/GGGODLIN-Labs">GitHub</a>
+          <a href="https://blog.gggodlin.com">Engineering blog</a>
+        </nav>
+      </footer>
+    </div>
+    <script type="module" src="../theme.mjs"></script>
+  <script>
+(() => {
+  const sendMode = () => {
+    try {
+      window.parent.postMessage({ type: "blind-mode-sync", mode: document.documentElement.dataset.mode || "light" }, "*");
+    } catch {}
+  };
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "blind-set-mode") return;
+    const next = ev.data.mode === "dark" ? "dark" : "light";
+    document.documentElement.dataset.mode = next;
+    try { localStorage.setItem("blind-test-mode", next); } catch {}
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.setAttribute("aria-pressed", String(next === "dark"));
+  });
+  document.addEventListener("click", (ev) => {
+    const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (a && /^https?:\/\//i.test(a.getAttribute("href") || "")) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (ev.target && ev.target.closest && ev.target.closest("#theme-toggle")) {
+      setTimeout(sendMode, 20);
+    }
+  }, true);
+  window.addEventListener("DOMContentLoaded", sendMode);
+})();
+</script>
+  </body>
+</html>
