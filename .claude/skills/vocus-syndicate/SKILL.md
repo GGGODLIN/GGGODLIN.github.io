@@ -32,8 +32,8 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
    - 檢查登入與手機驗證狀態：
      - **未登入**（右上出現「註冊/登入」而非使用者頭像與右上「創作」按鈕）或點擊右上「創作」後跳出 **「請完成手機驗證」彈窗** → 先呼叫 `await tab.markHandoff()`（保留該分頁跨回合不被自動關閉），再送出 `mcp__lcu__js({ completion_summary: "Requested Vocus verification" })` 後停下，請使用者手動完成登入或手機簡訊驗證後說「好了」再續做（不代填帳密或驗證碼）。
    - 已登入 → 若尚未讀過 `cdp` 文件，先呼叫 `nodeRepl.write(await agent.documentation.get("capabilities/tab/cdp"));`，再取 `let cdpVocus = await tab.capabilities.get("cdp")`（跨網域導航後重新取得 `cdp` handle）。點擊頂欄右上角的「創作」`button`（注意區分頁尾或導覽列連往 `/composition` 主題頁的 `<a>` 連結；從冷狀態直接 `goto("https://vocus.cc/creatordesk")` 常被導回首頁，點右上「創作」按鈕才會進 `vocus.cc/creatordesk` 面板）→ 找文字含「文章」與「完整的編輯功能」的卡片連點兩下（第一下只進 hover 態、第二下才導航）→ 等待約 4.5 秒確認 URL 變為 `vocus.cc/new-editor/{id}`。怎樣算做完：URL 已進入 `vocus.cc/new-editor/{id}` 且標題與內文編輯區皆已渲染。完成後接 Step 6。
-6. **內容注入與逐塊比對（CDP `Input.insertText`＋`ClipboardEvent`）**：
-   1. **標題注入（必走 `Input.insertText` 並等自動儲存）**：透過 `Runtime.evaluate` 聚焦並全選 `textarea[placeholder="請輸入文章名稱"]`，接著呼叫 `await cdpVocus.send("Input.insertText", { text: TITLE })` 輸入標題，並等待約 3.5 秒讓方格子觸發自動儲存（單純用 React setter 改 `textarea.value` 不會觸發標題自動存檔，進發佈精靈時標題會變空）。確認 `document.title` 已更新為文章標題。
+6. **內容注入與逐塊比對（Playwright `locator.fill`＋CDP `ClipboardEvent`）**：
+   1. **標題注入（走 Playwright `locator.fill` 並等自動儲存）**：以 `await tab.playwright.locator('textarea[placeholder="請輸入文章名稱"]').fill(TITLE)` 輸入標題（LCU MCP 拒絕 raw CDP 的 `Input.insertText`；單純用 React setter 改 `textarea.value` 不會觸發標題自動存檔，進發佈精靈時標題會變空），並等待約 3.5 秒讓方格子觸發自動儲存。確認 `document.title` 已更新為文章標題。
    2. **內文注入**：在 `cua_repl` 用 `fs.readFileSync("<outDir>/paste.html", "utf8")` 讀取 HTML（不手貼長 base64），在 `Runtime.evaluate` 聚焦 `.ContentEditable__root`、將選取範圍收合至首節點開頭，建立 `DataTransfer` 寫入 `text/html` 與 `text/plain` 後對 `.ContentEditable__root` 派發 `new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })`（`dispatched: false` 代表 Lexical 已消化事件），等待約 5 秒讓 Lexical 完成解析與自動儲存（頂欄出現「已自動儲存」）。
    3. **逐塊完整比對（不可省略）**：在 `Runtime.evaluate` 用 `DOMParser` 解析 `pasteHtml` 取全部 `p, h2, li` 正規化文字陣列，與 `.ContentEditable__root` 內全部 `p, h2, li` 逐項比對，同時核對 `a[href]` 連結數（確認無殘留相對路徑被解析成 `vocus.cc/blog/...`）與無殘留未預期佔位符。
    怎樣算做完：`titleVal === TITLE`、頂欄顯示已自動儲存、`mismatchCount === 0` 且外連數完全吻合。完成後接 Step 7。
@@ -64,7 +64,7 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 - **方格子沒有可用的 agent 發文 API**（FC-064/065）：內部 `POST/PATCH /api/articles*` 需 Bearer JWT＋Lexical JSON＋多支序列呼叫，對單篇或小批轉發 ROI 不划算；細節留 [references/vocus-mechanics.md](references/vocus-mechanics.md) 備查。
 - **發文前置＝帳號級手機簡訊驗證**：未驗證帳號點「創作」會跳「請完成手機驗證」，驗證碼只進使用者手機；先 `await tab.markHandoff()`＋送 `completion_summary` 後交給使用者本人完成，不代填。
 - **冷導航直連 `/creatordesk` 常被導回首頁，且頁內有兩個「創作」**：導覽／主題區的 `<a href="/composition">創作</a>` 是主題分類頁；必須點擊頂欄右上角的「創作」`button` 才會開啟創作者後台面板，且「文章」卡片要連點兩下才導航進 `new-editor`。
-- **標題只走 React setter 不會觸發自動儲存**：`new-editor` 標題 `textarea` 若只用 `HTMLTextAreaElement.prototype.value` setter 寫值，進 `publish-v2` 精靈時標題會變空白並跳「請輸入標題」警告；改用聚焦全選＋`cdp.send("Input.insertText", { text: TITLE })` 並等 3.5 秒讓草稿自動儲存即可一次到位。
+- **標題只走 React setter 不會觸發自動儲存**：`new-editor` 標題 `textarea` 若只用 `HTMLTextAreaElement.prototype.value` setter 寫值，進 `publish-v2` 精靈時標題會變空白並跳「請輸入標題」警告；改用 `tab.playwright.locator('textarea[placeholder="請輸入文章名稱"]').fill(TITLE)`（LCU MCP 不支援 raw CDP `Input.insertText`）並等 3.5 秒讓草稿自動儲存即可一次到位。
 - **分類 combobox 不吃單純 `.click()`**：React Select 監聽 `mousedown`＋`mouseup`，需對控制容器依序派發 `mousedown` → `mouseup` → `click` 才會展開選項清單。
 - **選「公開發佈」後確認鈕會改名**：底部按鈕文字會從「確認」變成「確認發佈」，精確匹配時須優先找「確認發佈」，按完等約 8–10 秒讓伺服器完成狀態轉換。
 - **相對內部連結會被 Lexical 解析成 `vocus.cc/blog/...`**：`medium-paste-html.mjs` 已在產檔階段將站內相對連結轉為原站絕對連結；貼上後核對 `a[href]` 清單確認無誤即可。

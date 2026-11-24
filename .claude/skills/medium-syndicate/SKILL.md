@@ -51,11 +51,11 @@ slug = `src/content/blog/` 下的檔名（不含 .md）；`posts/` 是寫作草�
 8. **canonical 硬閘（發布前必做）**：
    - 用 `await tab.goto("https://medium.com/p/<id>/settings")` 進入該草稿設定頁，等待載入後用 `cdp.send("Runtime.evaluate", ...)` 點擊 `#advanced_settings button` 展開預設收合的 **Advanced Settings** 區段。
    - 勾選 `#advanced_settings input[type="checkbox"]`（「This story was originally published elsewhere」）。
-   - 檢查區塊內是否出現「Edit canonical link」按鈕（新草稿首次勾選與舊文補設常預設 `disabled`，需先 `.click()` 該按鈕才會進入可編輯態）→ 對 canonical URL `input` 用 React native input setter（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(canonInput, canonicalURL)`＋派發 `input` 與 `change` 事件）寫入原站 `canonicalURL` → 點擊「Save canonical link」。
+   - 檢查區塊內是否出現「Edit canonical link」按鈕（新草稿首次勾選與舊文補設常預設 `disabled`，需先 `.click()` 該按鈕才會進入可編輯態）→ 鎖定 `#advanced_settings input[placeholder*="canonical" i]`（避開同區塊內的 radio input）並用 React native input setter（`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(canonInput, canonicalURL)`＋派發 `input` 與 `change` 事件）寫入原站 `canonicalURL` → 點擊「Save canonical link」。
    - 等待 2 秒後回讀該 `input.value` 與 `input.disabled`，確認值精確等於原站 `canonicalURL` 且已鎖定儲存；不符就停在這裡排查，不進 Step 9。怎樣算做完：`canonValue === canonicalURL` 且已儲存成功。完成後接 Step 9。
 9. **topics 與發布（代發）**：
    - `await tab.goto("https://medium.com/p/<id>/edit")` 回到編輯器 → 點擊右上 `Publish` 按鈕開啟發布設定對話框。
-   - 依 prep 的 `tags` 對應填入最多 5 個 topics（聚焦 `input[placeholder*="topic" i]` → `cdp.send("Input.insertText", { text: topic })` → 等約 1.4 秒點選相符下拉建議項或派發 `Enter` 鍵建立 chip，逐個確認後再填下一個，避免黏成一串）。
+   - 依 prep 的 `tags` 對應填入最多 5 個 topics（以 `await tab.playwright.locator('input[placeholder*="topic" i]').fill(topic)` 輸入，LCU MCP 拒絕 raw CDP 的 `Input.insertText` → 等約 1.4 秒點選相符下拉建議項或派發 `Enter` 鍵建立 chip，逐個確認後再填下一個，避免黏成一串）。
    - 點擊對話框內的最終 `Publish` 按鈕送出（使用者已授權，2026-06-13），等待約 7 秒跳轉至公開文章頁。怎樣算做完：頁面跳轉至公開文章 URL 且取得 `article:published_time`。完成後接 Step 10。
 10. **發布後 driver-side 驗證與 LCU 收尾**：
     - Medium 對外部 `curl` 一律回 403，因此直接在已跳轉的公開文章頁透過 `cdp.send("Runtime.evaluate", ...)` 讀取 `document.querySelector('link[rel="canonical"]')?.href` 與 `location.href`（去掉 `?postPublishedType=initial` 查詢參數即乾淨公開 URL），確認 `canonical` 精確指回原站 `canonicalURL`。
