@@ -1,6 +1,8 @@
 ---
 title: "我以為 Opus 沒遇到麻煩，後來發現是它根本沒在報"
 description: "換 Opus 一個多月沒看到 agent 回報摩擦點，我以為沒問題。grep 一下才發現，是它根本沒在報。"
+tldr: |
+  沒收到問題回報不等於一切正常，仰賴自律的文字規範常在切換模型後靜默失效。這篇區分哪些常駐指示綁定模型特性，並說明如何用 hook 把請求升級為 harness 層的提醒與稽核。
 pubDate: "2026-06-27"
 tags: ["claude-code", "hook", "model-behavior", "report-vs-reality"]
 ---

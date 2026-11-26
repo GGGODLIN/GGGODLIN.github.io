@@ -1,6 +1,8 @@
 ---
 title: "你已經有的越多，新工具能給的越少"
 description: "評估熱門 AI 工具的方法總綱：先列自己已有的，再把工具賣點一條一條對上去，多數工具會自己歸零，剩下的那一點才值得認真看。"
+tldr: |
+  評估工具的順序決定結論：看賣點前先盤點自家等價物與成熟度，才能算出真實殘值與負價值。這篇拆解辨別真缺口、抽架構與留先例的方法，並附 skill [check-my-stack](https://github.com/gggodlin/check-my-stack)。
 pubDate: 2026-06-11
 tags: ["claude-code", "tool-evaluation", "methodology"]
 ---

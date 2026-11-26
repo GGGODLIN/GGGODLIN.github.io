@@ -1,6 +1,8 @@
 ---
 title: "省 token 工具：省不了多少，但風險不小"
 description: "親手試了五個主打省 token 的工具，從命令列代理到上下文壓縮層 proxy，宣稱跟實測常差一截，真正的代價在風險。連那個「做對了透明可逆」的也不值得裝。"
+tldr: |
+  省 token 與資訊失真本是同一條軸，壓縮工具不僅對真實帳單降幅有限，還得拿無聲降級與破壞快取去換。這篇拆解從截斷到中介代理的風險結構，說明省成本應靠任務外包而非硬省。
 pubDate: 2026-06-01
 tags: ["claude-code", "token-optimization", "mcp", "tool-evaluation", "tool-adoption"]
 ---

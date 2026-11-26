@@ -1,6 +1,8 @@
 ---
 title: Claude Code 換第三方模型的踩坑指南
 description: 把 CC 接到 DeepSeek、Kimi、GLM、Qwen 加第三方中轉站的踩坑清單：WebSearch 四種死法、計費校準、context 隱形縮水、同 endpoint 三條呼叫路徑結論完全相反、中介層破口跟 repo 活躍不同步。
+tldr: |
+  改接外部端點或中介層，只測連線與主對話不夠。這篇拆解協議、功能與生態三層檢查，測齊 subagent 與 workflow 路徑，並重驗 context、快取與監控。
 pubDate: 2026-07-03
 tags: ["claude-code", "vendor-swap", "llm"]
 ---

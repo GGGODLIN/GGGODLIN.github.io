@@ -1,6 +1,8 @@
 ---
 title: "偷確定性層：否決整套 AI 工具後，還能帶走什麼"
 description: "三題篩掉三個 AI 工具的本體後，把它們不靠 AI 的那一層拆回家。三案顯示這層移植成本最低、永遠帶得走。"
+tldr: |
+  把判斷綁死給模型的工具不值得整套安裝，但其中不靠 AI 的資料比對、診斷詞彙與設計構想都能低成本移植。這篇拆解工具篩選法，以及將確定性層嵌進高頻路徑、誠實標註分母的原則。
 pubDate: "2026-06-25"
 tags: ["claude-code", "tool-adoption", "code-review", "methodology", "automation"]
 ---

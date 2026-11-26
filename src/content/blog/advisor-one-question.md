@@ -1,6 +1,8 @@
 ---
 title: "Advisor：換顆腦袋，不用換整個 session"
 description: "對 AI 這一次的判斷不滿意時，不必把整個對話換成更貴的模型；把這一題打包送給另一顆模型當顧問就好。成敗取決於三件事：你給它看什麼、它看得到什麼，以及意見回來後誰裁決。"
+tldr: |
+  對主流程單次判斷不滿意時，只把該題外包給顧問模型，不必把整場對話升級成高階模型。這篇拆解單題顧問機制的關鍵：以盲審抽離既有結論、依查證能力分層選席，並由人逐條裁決意見。
 pubDate: "2026-09-10"
 tags: ["claude-code", "model-routing", "multi-model", "methodology", "gpt", "review-governance"]
 ---

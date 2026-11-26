@@ -1,6 +1,8 @@
 ---
 title: "GPT 不是停不下來，是看不見停止線：Review 隧道視野與停止條件治理"
 description: "記錄 GPT-5.6-sol 如何在 review 裡把 finding 持續轉成實作目標，以及我如何用核心行為、範圍與具名處置理由畫出停止線。"
+tldr: |
+  追求消除不確定性，會讓模型把審查疑慮一路擴寫成新需求，用防禦程式取代原本目標。這篇拆解不求清空清單的煞車設計：可重現的功能缺陷做最小修正，其餘留具名理由或交還拍板。
 pubDate: "2026-08-27"
 tags: ["claude-code", "gpt", "code-review", "methodology", "scope-control"]
 ---

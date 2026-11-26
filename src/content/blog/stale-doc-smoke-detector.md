@@ -1,6 +1,8 @@
 ---
 title: "CLAUDE.md 過期時，用一行 prompt 抓出腐壞"
 description: "過期說明檔因指令階層壓過現有程式碼，實測 10 個專案有 7 個照錯寫還回報沒問題，其中 6 個更是連衝突都沒吭聲；我在全域規則第一行加一句英文，搭配收尾帳本與三路分流，九天順手抓出 186 筆文件落差，也整理出遷移中專案的邊界解法。"
+tldr: |
+  指令階層會讓模型盲從過時文件而無視現場程式碼。這篇以全域優先規則當煙霧偵測器，搭收尾帳本、歸屬分流與遷移護欄收斂落差，實作見 [gggodlin-cc-harness](https://github.com/GGGODLIN/gggodlin-cc-harness)。
 pubDate: "2026-11-15"
 tags: ["ai-workflow", "report-vs-reality", "automation", "knowledge-management", "verify", "methodology"]
 ---

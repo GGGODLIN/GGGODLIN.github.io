@@ -1,6 +1,8 @@
 ---
 title: "省 token 工具說能省多少，扣掉暖機費後才算數"
 description: "評估省 token 的 proxy 工具時，先扣除新 session 的暖機費，再看工具最後能省下多少，以及 session 規模能否跨過回本門檻。"
+tldr: |
+  透過中繼代理開啟新 session，首回合就可能背上一筆未命中快取的進場成本。這篇說明為何不能只看總量降幅，而應依快取計價換算 prompt 成本、先扣進場門檻再算回本率。
 pubDate: "2026-08-25"
 tags: ["claude-code", "token-optimization", "prompt-caching", "proxy", "cost-analysis"]
 ---

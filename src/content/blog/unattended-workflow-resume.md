@@ -1,6 +1,8 @@
 ---
 title: "讓額度不大的帳號，也能掛機過夜跑完大型研究 workflow"
 description: "想讓一個跑上百 agent 的重型研究在我睡覺時自己跑完，連額度不大的帳號也扛得起。難點是它幾十分鐘就燒爆一段每 5 小時的額度，得靠 pause→resume 跨段續跑。而 resume 能不能省 token，卡在一個官方沒明說的前提：workflow 夠不夠確定性。"
+tldr: |
+  workflow 跨段續跑能否用回快取，關鍵在編排確定性：進度只認完全一致的 prompt，並行搶跑會讓下游全重算。解法是加關卡固定排序、保留參數，搭配額度監控自動暫停續跑。
 pubDate: 2026-06-08
 tags: ["claude-code", "workflow", "workflow-resume", "deep-research"]
 ---

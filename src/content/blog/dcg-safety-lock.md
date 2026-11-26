@@ -1,6 +1,8 @@
 ---
 title: 防得了失誤，防不住意圖：給 AI 的 shell 裝一把鎖
 description: 在 AI agent 執行 shell 指令前架一道攔截器，四週實測下來的三個確定判斷：誤攔數量不是重點、關不掉不等於繞不過、它防得了失誤卻防不住意圖。
+tldr: |
+  評估 AI 命令列攔截器，誤攔次數不是重點，成本是否轉嫁給人工介入或任務失敗才算數。這篇藉實測 [dcg](https://github.com/Dicklesworthstone/destructive_command_guard)，說明安全閘的真實驗收標準、繞行邊界，與「AI 解釋、人放行」的協作設計。
 pubDate: 2026-08-10
 tags: ["claude-code", "hook", "security", "tooling", "tool-adoption", "trial-review"]
 ---

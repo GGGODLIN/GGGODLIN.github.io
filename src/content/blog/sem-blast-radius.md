@@ -1,6 +1,8 @@
 ---
 title: AI 只拿得到 diff：我用 sem 補上改動影響面
 description: 讓 AI 改程式碼一陣子後發現它看不到「改動會炸到誰」，用 sem 加兩支 hook 補上，附兩個月試用期成績單。
+tldr: |
+  只給改動片段時，AI 看不見波及哪些呼叫端與測試缺口，讓它自己查又容易漏掉。這篇拆解如何以 [sem](https://github.com/Ataraxy-Labs/sem) 預先計算靜態相依關係，只在審查關口注入並過濾雜訊。
 pubDate: 2026-08-13
 tags: ["claude-code", "hook", "code-review", "tooling", "tool-adoption", "review-governance", "trial-review"]
 ---

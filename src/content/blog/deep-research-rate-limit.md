@@ -1,6 +1,8 @@
 ---
 title: "官方 deep-research workflow，我用 Opus 跑一次掛一次"
 description: "拿官方 deep-research workflow 密集跑研究，75 個 verify agent 一次湧入、直接頂破 Anthropic 的 acceleration limit。撞名、撞限、自己 fork 一支批次節流版的復盤。"
+tldr: |
+  並行驗證若觸發伺服器限流，失敗的查核 agent 會被誤判為已反駁，刷掉正確結論。這篇解釋限流取決於供應端政策，並示範以批次節流壓低尖峰併發，不降品質就保住研究完整性。
 pubDate: 2026-06-03
 tags: ["claude-code", "workflow", "deep-research"]
 ---

@@ -1,6 +1,8 @@
 ---
 title: "wiki 蓋好之後，讓它繼續活著才是真正的問題"
 description: "Karpathy 的 LLM-wiki 範例給了結構，但結構不保證系統有用。不到一個月的密集迭代後，讓它持續活下去的是每天主動量健康度、由我手動拍板的迴圈，跟架構、演算法無關。"
+tldr: |
+  知識系統建好架構還不夠，被動清理會等到失控，全自動整理又難保品質。這篇提出「每日唯讀體檢、人工拍板晉升」的迴圈：自動化只量健康度與候選清單，取捨永遠留在人手裡。
 pubDate: 2026-05-19
 tags: ["claude-code", "memory", "knowledge-management", "retrospective"]
 ---

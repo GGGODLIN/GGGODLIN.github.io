@@ -1,6 +1,8 @@
 ---
 title: 抄 awesome 清單不難，難的是決定不抄什麼
 description: 面對百條規模的開源清單，真正有價值的不是把工具整包裝上去，而是讓每一條都拿到一個寫下來的判決，含「不抄」的理由。
+tldr: |
+  既有 workflow 越成熟，整包照搬外部清單越容易衝突。這篇拆解逐條判決法：每筆必歸類為抽概念、列候選或附理由跳過，讓否決先例複利累積，並先為試用工具寫好退場條件。
 pubDate: 2026-08-15
 tags: ["claude-code", "tool-evaluation", "methodology", "workflow", "trial-review"]
 ---

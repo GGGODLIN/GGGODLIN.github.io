@@ -1,6 +1,8 @@
 ---
 title: "AI 說它查過官方文件，但它沒有"
 description: "2026-05-10 實測：同一個查詢，WebSearch 回傳 10 條連結，沒有一條是官方文件專頁。瀏覽器走真實 Google 第一條就是。"
+tldr: |
+  結果有官方網域連結，不等於 AI 看過功能專頁。因 WebSearch 索引不透明且易漏頁，可靠解法是用瀏覽器讀真實 Google 搜尋結果交叉驗證，並用 hook 強制把關。
 pubDate: 2026-05-18
 tags: ["claude-code", "websearch", "fact-check", "retrospective", "report-vs-reality"]
 ---

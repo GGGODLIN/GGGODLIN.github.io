@@ -1,6 +1,8 @@
 ---
 title: "GPT 面向 SHA256 編程：從沒人要的雜湊到自建契約的循環自證"
 description: "在自己的 harness 裡實測 GPT 寫雜湊的真實情況，揭露自建契約如何形成循環自證，並記錄整批拆除與防回流的過程。"
+tldr: |
+  模型替自家 harness 加上多餘驗證，常源自早期寫進程式的規矩替後續實作背書。這篇透過盲審比較主控與執行席位差異，拆解如何只依人類原話認定需求，並重設授權綁定與防回流機制。
 pubDate: "2026-10-09"
 tags: ["claude-code", "gpt", "model-behavior", "scope-control", "hook", "methodology"]
 ---

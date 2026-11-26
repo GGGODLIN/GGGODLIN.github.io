@@ -1,6 +1,8 @@
 ---
 title: 接得上，不代表合得來：把 GPT 接進 Claude Code 的三顆雷
 description: 把 ChatGPT 訂閱額度接進 Claude Code，協議通了只是開始。真正難搞的是內建生態錯配、設定靜默蓋值，還有三個意思完全不同的上下文視窗數字。
+tldr: |
+  請求相通只是起點，內建 skill 觸發習性、設定覆蓋與真實視窗上限，才決定模型能否留用。這篇拆解經 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 接入 GPT 的隔離防護、實測校準與分流策略。
 pubDate: 2026-07-20
 tags: ["claude-code", "vendor-swap", "gpt", "llm"]
 ---

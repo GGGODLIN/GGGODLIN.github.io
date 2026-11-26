@@ -1,6 +1,8 @@
 ---
 title: "AI 寫的測試全綠，但可能什麼都沒測"
 description: "AI 寫的測試常常跑得過但沒真的在檢查。用 mutation testing 故意把程式改壞 86 處實測抓漏率，再講怎麼讓這個檢查真的持續發生：溫和提醒 0/5 全漏接，推送前強制攔截才用起來。"
+tldr: |
+  測試全過與覆蓋率只證明程式跑完，抓不到漏驗行為的測試劇場。改用突變測試故意改壞程式來驗斷言，並靠推送前 hook 強制把關留紀錄，搭配 [Stryker](https://github.com/stryker-mutator/stryker-js)。
 pubDate: "2026-08-17"
 tags: ["mutation-testing", "Stryker", "ai-testing", "test-theater", "automation"]
 ---

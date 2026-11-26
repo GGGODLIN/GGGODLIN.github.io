@@ -1,6 +1,8 @@
 ---
 title: "改動 AI 工作流前，先拿自己的歷史回測"
 description: "裝新工具觀察七天常遇到零觸發，換模型又容易靠體感猜。這篇整理改動 AI 工作流前如何按型態做歷史回測：查事故與作者歸屬、離線重放舊紀錄與 commit、固定輸入換模型對照、封存真題做文字 skill 盲評，並交代新做法試做與低成本人工保底兩道邊界。"
+tldr: |
+  短期試用等不到低頻觸發，換模型又靠體感猜。這篇按型態拆事前驗法：規則查事故歸屬、程式重放舊 session 與 commit、換模型鎖輸入、文字 skill 封存真題盲評。
 pubDate: "2026-11-20"
 tags: ["ai-workflow", "tool-evaluation", "evaluation", "trial-review", "hook", "methodology"]
 ---

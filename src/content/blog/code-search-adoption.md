@@ -1,6 +1,8 @@
 ---
 title: "裝了一堆 codebase 搜尋工具，agent 幾乎都不用"
 description: "兩個月在一個 codebase 上前後評估了 8 個程式碼搜尋工具，前 7 個 agent 幾乎都不主動用。工具有沒有能力，跟它會不會被 agent 用起來，是兩件不同的事。"
+tldr: |
+  有能力不等於會被選用，agent 對陌生 MCP 工具預設保守。這篇拆解採用、脈絡效率與工具效能三軸框架，說明如何用專案指令配輕量工具打破僵局，並附實測過關的 [semble](https://github.com/MinishLab/semble)。
 pubDate: 2026-05-31
 tags: ["claude-code", "mcp", "code-search", "tool-adoption"]
 ---

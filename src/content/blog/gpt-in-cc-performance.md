@@ -1,6 +1,8 @@
 ---
 title: 聽話，不代表懂你：GPT 接進 Claude Code 第二週的性格觀察
 description: 接入後第二週八場對話的逐場統計對照：GPT 對寫下來的規則執行得比 Claude 徹底，卻讀不到規則之外的訊號。附一場對話壓縮吃掉關鍵結論的完整事故。
+tldr: |
+  換模型不只是換推理引擎，更會改寫規則、skill 與 hook 的執行方式。這篇剖析字面高服從的雙面代價：寫太寬的規則會現形、規則外節奏會失靈，且視窗縮小時須補上壓縮的證據回溯路徑。
 pubDate: 2026-07-21
 tags: ["claude-code", "vendor-swap", "gpt", "llm", "model-behavior"]
 ---

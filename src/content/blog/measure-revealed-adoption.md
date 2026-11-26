@@ -1,6 +1,8 @@
 ---
 title: "嘴上說想要，但 agent 根本沒在用"
 description: "量 revealed adoption 的方法：為什麼口頭意願不能當投資依據，怎麼從 session log 數出真實的自發採用率，還有量法本身踩過的坑。"
+tldr: |
+  別靠口頭意願或概念對口決定投資，改從 session 紀錄量出真實自發採用率。這篇拆解如何排除人為點名與名稱污染、用主力對照校驗量測盲點，把增強落在有流量的 agent 路徑。
 pubDate: "2026-06-20"
 tags: ["claude-code", "tool-adoption", "subagent", "methodology", "revealed-preference"]
 ---

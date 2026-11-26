@@ -1,6 +1,8 @@
 ---
 title: "一個模型不夠：五軸交叉審的 code review 工作流"
 description: "四個 AI reviewer 全漏掉一顆死掉的 Save 按鈕，第五個抓到了。從這個案例拆我的 /pr-review command 三個設計哲學：視角是餵出來的、找的不准自己驗、模型不可信的部分用程式保證。"
+tldr: |
+  換更強的模型仍會落在相同盲點，想拉出視角差得餵入不對稱 context，並規定發現者不准自證。這套審查架構靠跨軸對抗複查做判斷，把齊全度與行號對位交給程式硬把關。
 pubDate: 2026-07-08
 tags: ["claude-code", "code-review", "multi-model", "workflow", "review-governance"]
 ---

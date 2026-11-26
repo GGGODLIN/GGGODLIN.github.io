@@ -1,6 +1,8 @@
 ---
 title: "MEMORY.md 只有 25KB，要當目錄用、別當倉庫塞"
 description: "MEMORY.md 超出注入上限時有三類應對方向，但 A 類根本不存在，B 類有副作用，真正走得通的是 C，而且降 size ≠ 縮敘述。"
+tldr: |
+  自動載入上限不是資訊總量天花板，壓低主檔大小也不等於刪減敘述。這篇釐清擴容無解與旁路 hook 注入的風險，整理先做主題分群、只留導航並按需讀取的決策順序。
 pubDate: 2026-05-30
 tags: ["claude-code", "memory", "auto-memory"]
 ---

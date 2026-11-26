@@ -1,6 +1,8 @@
 ---
 title: "「我記得上次解過這個問題」：當記憶記不下踩坑過程，我怎麼讓 AI 學會自己翻舊帳"
 description: "當 Claude Code、Codex 與 Pi 的歷史對話累積到 44GB 時，MEMORY.md 記不下除錯過程、grep 又搜不動。這篇記錄我如何用單檔 SQLite FTS5 搜尋器 ccsi 搭配一行路由規則與提醒 hook，讓 AI 在兩個月內主動查了 2,569 次舊對話，並從真實紀錄修掉三個搜尋體感盲區。"
+tldr: |
+  長期記憶該留定案規則，繁雜的除錯脈絡則留在對話紀錄隨時檢索。這篇以 [ccsi](https://github.com/GGGODLIN/cc-session-index) 拆解三步閉環：輕量全文索引、規則配 hook 觸發呼叫，再依真實紀錄修補搜尋盲區。
 pubDate: "2026-10-20"
 tags: ["memory", "tool-adoption", "tooling", "hook", "data-quality", "retrospective"]
 ---

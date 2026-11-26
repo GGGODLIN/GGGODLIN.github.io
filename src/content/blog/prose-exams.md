@@ -1,6 +1,8 @@
 ---
 title: skill 也要有考卷：我給 skill 上了回歸測試
 description: skill 改壞了不會有語法錯誤，只會有語意偏差。光有考卷不夠，還要讓改檔的人看得到考卷存在、改完不跑走不掉。
+tldr: |
+  純文字寫成的規範與 skill 改壞不會觸發語法錯誤，光靠提醒也攔不住 agent 跳過驗證。這篇說明如何以行為考卷測動作、在檔頭標記考卷入口，並用結案收據閘強制改後重跑才放行。
 pubDate: 2026-08-17
 tags: ["claude-code", "testing", "workflow", "methodology", "skill", "hook", "trial-review"]
 ---

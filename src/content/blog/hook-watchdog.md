@@ -1,6 +1,8 @@
 ---
 title: AI 說做完不算數：拿證據來
 description: 哪些判斷交給死規則就夠、哪些規則根本寫不成——兩條監工 hook 的實測，把邊界畫出來。
+tldr: |
+  紀律只寫進 prompt 容易落空，把語境硬拆成關鍵字比對同樣失準。這篇示範「證據住哪裡就由誰管」的 hook 分層設計：先用程式過濾工具活動與參數，只將純語言案件交給語意判斷。
 pubDate: 2026-07-17
 tags: ["claude-code", "hook", "automation", "methodology", "verify"]
 ---

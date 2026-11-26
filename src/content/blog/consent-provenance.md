@@ -1,6 +1,8 @@
 ---
 title: "我還沒點頭，AI 就寫進文件當結論"
 description: "多 agent 協作裡最常見的失控，往往源自 AI 真心以為你已經同意了；從來源貼標到原話收據對帳，我在動作出口立下的五道防越權防線。"
+tldr: |
+  多 agent 協作失控常源自 AI 把未決建議或過期同意誤當授權，靠文字規勸擋不住。這篇提出將人類同意視為有出處、範圍與效期的憑證，從上游貼標到動作出口對帳原始紀錄的防越權架構。
 pubDate: "2026-10-18"
 tags: ["ai-workflow", "scope-control", "review-governance", "skill", "verify", "methodology"]
 ---

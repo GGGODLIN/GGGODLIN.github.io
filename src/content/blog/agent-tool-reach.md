@@ -1,6 +1,8 @@
 ---
 title: "codebase 工具數據很強，到我 agent 手上剩不到一成"
 description: "FFF 宣稱快、省 token、給 AI agent 用，但接進 Claude Code 後我的 agent 實際吃得到不到一成。一個套件值不值得接，要看它宣稱的能力到你 agent 手上實際用得到多少，四個專案的 session 統計算給你看。"
+tldr: |
+  搜尋類 MCP 賣點再亮眼，攔不到 agent 常用的 shell 管線就用不上。這篇拿 [FFF](https://github.com/dmtrKovalenko/fff) 拆解結構天花板與常駐風險，示範先用 session 紀錄量測介入上限的方法。
 pubDate: "2026-06-14"
 tags: ["claude-code", "mcp", "code-search", "tool-evaluation", "FFF"]
 ---

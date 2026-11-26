@@ -1,6 +1,8 @@
 ---
 title: "GPT-5.6 Sol 沒做錯，卻做了 7,700 行我不需要的東西"
 description: "從一場個人 repo 收尾提醒的過度實作事件，拆解需求如何一路膨脹，以及事後形成的 YAGNI 審查。"
+tldr: |
+  測試全綠只能證實「做對了」，卻回答不了「值不值得做」。這篇分析需求在規格源頭如何因缺乏成本煞車而層層疊加，並建立反轉舉證責任的 YAGNI 審查，把深挖能力放回審查席位。
 pubDate: "2026-08-24"
 tags: ["claude-code", "gpt", "methodology", "scope-control"]
 ---

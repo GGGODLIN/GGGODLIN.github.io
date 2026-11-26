@@ -1,6 +1,8 @@
 ---
 title: 工作能外包給 AI，決策不能
 description: AI 幫你挑出 spec 漏洞之後，你有沒有逼它認錯過一次？三段真實對話拆開這個常常被跳過的步驟。
+tldr: |
+  模型總以自信語氣掩蓋臆測與含糊，若不反問逼它撤回，人就只是照單全收。這篇拆解如何靠固定自審提問、證據對位規則與手動選層設計，把隱藏假設逼上檯面由人拍板。
 pubDate: 2026-07-18
 tags: ["claude-code", "spec-review", "ai-workflow", "methodology", "review-governance"]
 ---
