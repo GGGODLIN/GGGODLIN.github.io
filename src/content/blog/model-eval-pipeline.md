@@ -1,6 +1,8 @@
 ---
 title: "公開跑分脫離我的日常，於是我拿自己專案考 AI"
 description: "公開排行榜答不出模型進自己 repo 後會不會出事。這篇拆解從低成本快篩、repo-to-bench 真實 PR 匿名盲審、前沿加考到四項考場校準的專案耦合評測產線，以及公開模型 Tier 表的三軸分帶與誠實邊界。"
+tldr: |
+  不看公開跑分，改拿真實私有 PR 當考卷，並把「模型能力」「判官漂移」「供應壽命」分開量。這篇拆完整評測與考場校準方法，附開源工具 [repo-to-bench](https://github.com/GGGODLIN/repo-to-bench) 與公開[模型 Tier 表](https://blog.gggodlin.com/tier/)。
 pubDate: "2026-11-26"
 tags: ["tool-evaluation", "evaluation", "llm", "multi-model", "mutation-testing", "methodology"]
 ---

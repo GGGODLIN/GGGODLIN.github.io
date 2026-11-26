@@ -6,10 +6,12 @@ import Nav from "../components/Nav.astro";
 import Analytics from "../components/Analytics.astro";
 import { canonicalTagRegistry } from "../data/tag-registry";
 import type { ArticleSeriesContext } from "../data/series-catalog";
+import { parseTldrBlocks } from "../data/tldr";
 
 interface Props {
   title: string;
   description: string;
+  tldr?: string;
   pubDate: Date;
   tags: string[];
   seriesList?: readonly ArticleSeriesContext[];
@@ -26,6 +28,7 @@ const EN_MONTHS = [
 const {
   title,
   description,
+  tldr,
   pubDate,
   tags,
   seriesList = [],
@@ -33,6 +36,8 @@ const {
   backHref = "/",
   backLabel = lang === "en" ? "← Back to home" : "← 回首頁",
 } = Astro.props;
+const tldrParagraphs = parseTldrBlocks(tldr);
+const tldrLabel = lang === "en" ? "TL;DR" : "先講結論";
 const tagLabels = tags.map((tag) => canonicalTagRegistry.getLabel(tag));
 const formattedDate =
   lang === "en"
@@ -95,7 +100,7 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
     </header>
     <main>
       <article class="container article-body">
-      <header>
+      <header class="post-header">
         <p class="post-meta">
           {formattedDate}
           {tags.length > 0 && (
@@ -115,7 +120,33 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
             </>
           )}
         </p>
+        <h1 class="post-title">{title}</h1>
       </header>
+      {tldrParagraphs.length > 0 && (
+        <aside class="article-tldr" aria-label={tldrLabel}>
+          <p class="article-tldr-label">
+            <span class="article-tldr-dot" aria-hidden="true" />
+            {tldrLabel}
+          </p>
+          <div class="article-tldr-body">
+            {tldrParagraphs.map((paragraph) => (
+              <p class="article-tldr-paragraph">
+                {paragraph.map((token) =>
+                  token.type === "link" ? (
+                    <a href={token.href}>{token.label}</a>
+                  ) : token.type === "strong" ? (
+                    <strong>{token.value}</strong>
+                  ) : token.type === "code" ? (
+                    <code>{token.value}</code>
+                  ) : (
+                    token.value
+                  ),
+                )}
+              </p>
+            ))}
+          </div>
+        </aside>
+      )}
       <slot />
       <footer class="post-footer">
         {
@@ -352,6 +383,67 @@ const serializedJsonLd = JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003
       .meta-tag-link:focus-visible {
         outline: 2px solid var(--text-primary);
         outline-offset: 2px;
+      }
+      .article-tldr {
+        position: relative;
+        overflow: hidden;
+        margin-top: calc(var(--baseline) * 3);
+        margin-bottom: calc(var(--baseline) * 4.5);
+        padding: calc(var(--baseline) * 2.25) calc(var(--baseline) * 2.5)
+          calc(var(--baseline) * 2.25) calc(var(--baseline) * 3);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .article-tldr::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 3px;
+        background: var(--accent);
+      }
+      .article-tldr-label {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--baseline) * 1);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+        margin-bottom: calc(var(--baseline) * 1.25);
+      }
+      .article-tldr-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+      .article-tldr-paragraph {
+        font-size: var(--text-sm);
+        line-height: 1.75;
+        color: var(--text-primary);
+        margin-bottom: calc(var(--baseline) * 1.5);
+      }
+      .article-tldr-paragraph:last-child {
+        margin-bottom: 0;
+      }
+      .article-tldr-paragraph a {
+        border-bottom: none;
+        text-decoration: underline;
+        text-decoration-color: var(--border);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.22em;
+        transition: text-decoration-color 150ms ease;
+      }
+      .article-tldr-paragraph a:hover {
+        text-decoration-color: var(--accent);
+      }
+      .article-tldr-paragraph code {
+        background: var(--bg-primary);
       }
       .series-nav {
         margin-bottom: calc(var(--baseline) * 4);
