@@ -44,6 +44,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "check-my-stack",
       "code-search-adoption",
       "measure-revealed-adoption",
+      "model-eval-pipeline",
       "retire-vector-memory",
       "steal-determinism-layer",
       "token-saving-tools",
