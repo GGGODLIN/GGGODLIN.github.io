@@ -97,11 +97,11 @@ GitHub Pages 部署前會跑 `npm test`，其中四份測試把文章總數與�
 
 做法：改完本地跑 `npm test` 全綠再 push。這段在 material-first-writing 的 localhost gate 之後、commit 之前執行。
 
-## 發布後同步轉發（固化；2026-08-24 依使用者拍板改版）
+## 發布後同步轉發（固化）
 
 本 blog 走「原站發布 + 多平台全文轉發」三平台策略：**GitHub Pages（canonical 原站）→ Medium → 方格子（vocus）**。
 
-**轉發由使用者自行以 codex 處理，CC 不接手、不提醒**（使用者拍板的常設政策）。`material-first-writing` skill 的 Phase 6 + localhost gate 只負責原站上線，上線即止。
+原站 push 上線並驗證 `HTTP 200` 與自我 `canonical` 通過後，由 CC 主動依序接續 `medium-syndicate`（`/medium-syndicate <slug>`）與 `vocus-syndicate`（`/vocus-syndicate <slug>`）完成雙平台全文轉發，不停在原站上線等使用者另行發起（若使用者本次明確表示只推原站或不轉發，則尊重單次指令跳過）。
 
-- 使用者若明確要求 CC 轉發，才 trigger 既有 skill：Medium → `medium-syndicate`（`/medium-syndicate <slug>`）、方格子 → `vocus-syndicate`（`/vocus-syndicate <slug>`）；防重複、canonical、轉發紀錄由 skill 自理（grep `docs/philip/syndication-log.md`）
-- Medium 24h 限發 2 篇的排隊檔仍在 `docs/philip/medium-publish-queue.md`，供使用者側流程查閱
+- **發布授權邊界**：原站 `git push` 與後續雙平台全文轉發同屬對外發布，一律在 localhost gate 過目並取得使用者放行後才執行，不在原站發布確認前偷跑轉發
+- **Medium 24 小時上限**：發 Medium 前先核對 `docs/philip/syndication-log.md` 內近 24 小時帶 `publishedAt` 的成功發布數；未滿 2 篇就正常發布並落檔，已滿 2 篇就依 `medium-syndicate` 批次草稿模式建好草稿、記進 `docs/philip/medium-publish-queue.md`（不硬發撞紅條），並照常完成方格子發布；防重複、canonical、轉發紀錄由兩支 skill 自理
