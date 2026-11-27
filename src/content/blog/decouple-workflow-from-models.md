@@ -2,7 +2,7 @@
 title: "把工作流和模型徹底解耦，讓主力模型能隨時抽換"
 description: "記錄這半年在 Claude 家族跨版與 Gemini 4 連續換代下，透過「工作角色 → 宿主槽位 → 邏輯角色群組 → 具體型號」四層抽象解耦工作流的實務架構，並整理跨 40 段雙盲稽查與數萬筆真實流量的三條治理邊界對照。"
 tldr: |
-  把模型選型拆成工作角色、宿主槽位、邏輯群組與具體型號四層，換代時不用重寫規則。同時交代會穿透抽象層的三條治理邊界與防漂移檢查，附開源專案 [cc-vendor-bridge](https://github.com/GGGODLIN/cc-vendor-bridge)。
+  規則別寫死模型名，改讓任務只認角色、型號交給轉發層集中替換，模型換代就不用重改工作流。這篇整理四層架構，以及安全、備援跟推理深度的把關做法，附 [cc-vendor-bridge](https://github.com/GGGODLIN/cc-vendor-bridge)。
 pubDate: "2026-11-27"
 tags: ["vendor-swap", "model-routing", "proxy", "subagent", "security", "methodology"]
 ---
