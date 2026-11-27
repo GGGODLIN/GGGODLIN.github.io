@@ -97,6 +97,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "模型供應商替換不是只改 endpoint；協議、生態、額度、fallback、規則遵循與 context 行為都要重新驗。",
     members: [
       "cc-vendor-swap",
+      "decouple-workflow-from-models",
       "gpt-in-cc",
       "gpt-in-cc-performance",
       "vendor-benefit",

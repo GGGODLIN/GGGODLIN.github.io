@@ -43,6 +43,7 @@ const exactTagCases = {
     "workflow-vs-skill",
   ],
   subagent: [
+    "decouple-workflow-from-models",
     "exit-0-illusion",
     "measure-revealed-adoption",
     "subagent-boot-cost",
