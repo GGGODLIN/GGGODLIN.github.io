@@ -74,6 +74,7 @@ export const expectedSeries: readonly ExpectedSeriesDefinition[] = [
       "cc-session-index",
       "keep-the-wiki-alive",
       "memory-cap-reframe",
+      "memory-origin-audit",
       "retire-vector-memory",
     ],
     validConnectors: ["memory"],
